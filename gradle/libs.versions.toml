@@ -1,0 +1,20 @@
+# https://docs.gradle.org/current/userguide/platforms.html#sub::toml-dependencies-format
+
+[versions]
+kotlin = "1.9.24"
+springboot = "3.3.0"
+guava = "33.0.0-jre"
+junit-jupiter-engine = "5.10.2"
+kotest = "5.9.0"
+
+[libraries]
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter-engine" }
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core-jvm", version.ref = "kotest" }
+
+[plugins]
+jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+springboot = { id = "org.springframework.boot", version.ref = "springboot"}
+springbootManagement = { id = "io.spring.dependency-management", version = "1.1.5"}
+palantir = { id = "com.palantir.docker", version = "0.35.0" }
