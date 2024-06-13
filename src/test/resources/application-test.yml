@@ -1,0 +1,5 @@
+providers:
+  switchbot:
+    baseUrl: https://switch-bot.fake
+    token: fake-token
+    secret: fake-secret

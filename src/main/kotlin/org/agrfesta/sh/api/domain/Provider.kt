@@ -1,4 +1,4 @@
-package org.agrfesta.sh.domain
+package org.agrfesta.sh.api.domain
 
 enum class Provider {
     SWITCHBOT
