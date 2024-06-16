@@ -4,10 +4,15 @@ plugins {
 	alias(libs.plugins.springbootManagement)
 	alias(libs.plugins.kotlin.spring)
 	alias(libs.plugins.palantir)
+	alias(libs.plugins.flyway)
 }
 
 group = "org.agrfesta.sh"
 version = "0.1.0"
+
+val smartHomeDbUrl: String by project
+val smartHomeDbUser: String by project
+val smartHomeDbPassword: String by project
 
 java {
 	toolchain {
@@ -21,10 +26,10 @@ repositories {
 
 dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
-	//implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation(libs.ktor.core)
 	implementation(libs.ktor.okhttp)
+	implementation("org.postgresql:postgresql:42.7.3")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(module = "junit")
@@ -44,6 +49,13 @@ docker {
 	pull(true)
 	setDockerfile(file("Dockerfile"))
 }
+
+flyway {
+	url = smartHomeDbUrl
+	user = smartHomeDbUser
+	password = smartHomeDbPassword
+}
+
 
 kotlin {
 	compilerOptions {
