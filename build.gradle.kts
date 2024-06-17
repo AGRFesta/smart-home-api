@@ -3,6 +3,7 @@ plugins {
 	alias(libs.plugins.springboot)
 	alias(libs.plugins.springbootManagement)
 	alias(libs.plugins.kotlin.spring)
+	alias(libs.plugins.kotlin.jpa)
 	alias(libs.plugins.palantir)
 	alias(libs.plugins.flyway)
 }
@@ -27,9 +28,11 @@ repositories {
 dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("org.hibernate.orm:hibernate-core")
+	implementation("org.postgresql:postgresql")
 	implementation(libs.ktor.core)
 	implementation(libs.ktor.okhttp)
-	implementation("org.postgresql:postgresql:42.7.3")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(module = "junit")

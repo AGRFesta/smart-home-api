@@ -22,8 +22,13 @@ class DevicesController(
         val devices = devicesDao.getAll()
 
         val result = devicesService.refresh(providersDevices, devices)
+
         //TODO persist new devices
+        result.newDevices.forEach { devicesDao.save(it) }
+
         //TODO update persisted devices
+        result.updatedDevices.forEach { devicesDao.update(it) }
+
         //TODO update detached devices
 
         return result
