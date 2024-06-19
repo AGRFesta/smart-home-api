@@ -3,6 +3,7 @@
 [versions]
 kotlin = "1.9.24"
 springboot = "3.3.0"
+flyway = "10.15.0"
 ktor = "2.3.11"
 guava = "33.0.0-jre"
 junit-jupiter-engine = "5.10.2"
@@ -11,7 +12,8 @@ kotest = "5.9.0"
 [libraries]
 ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-okhttp = { module = "io.ktor:ktor-client-okhttp-jvm", version.ref = "ktor" }
-guava = { module = "com.google.guava:guava", version.ref = "guava" }
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+flyway-postgress = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter-engine" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core-jvm", version.ref = "kotest" }
 
@@ -22,4 +24,3 @@ kotlin-jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
 springboot = { id = "org.springframework.boot", version.ref = "springboot"}
 springbootManagement = { id = "io.spring.dependency-management", version = "1.1.5"}
 palantir = { id = "com.palantir.docker", version = "0.35.0" }
-flyway = { id = "org.flywaydb.flyway", version = "9.22.3" }
