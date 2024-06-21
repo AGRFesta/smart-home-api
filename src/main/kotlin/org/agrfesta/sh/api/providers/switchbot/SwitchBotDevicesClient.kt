@@ -9,8 +9,9 @@ import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import org.agrfesta.sh.api.domain.Device
+import org.agrfesta.sh.api.domain.DeviceStatus
 import org.agrfesta.sh.api.domain.Provider
-import org.agrfesta.sh.api.domain.ProviderDevice
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.*
@@ -30,7 +31,7 @@ class SwitchBotDevicesClient(
         }
     }
 
-    suspend fun getDevices(): Collection<ProviderDevice> {
+    suspend fun getDevices(): Collection<Device> {
         val header = generateRequestHeader()
         val content = client.get("${config.baseUrl}/devices") {
             headers {
@@ -44,9 +45,10 @@ class SwitchBotDevicesClient(
         val devices = actualObj.at("/body/deviceList") as ArrayNode
         return devices
             .map { mapper.treeToValue(it, SwitchBotDevice::class.java) }
-            .map { ProviderDevice(
-                id = it.deviceId,
+            .map { Device(
+                providerId = it.deviceId,
                 provider = Provider.SWITCHBOT,
+                status = DeviceStatus.PAIRED,
                 name = it.deviceName
             ) }
     }

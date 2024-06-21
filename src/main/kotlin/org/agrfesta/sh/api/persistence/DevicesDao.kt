@@ -3,8 +3,8 @@ package org.agrfesta.sh.api.persistence
 import org.agrfesta.sh.api.domain.Device
 import org.agrfesta.sh.api.persistence.entities.DeviceEntity
 import org.agrfesta.sh.api.persistence.repositories.DevicesRepository
+import org.agrfesta.sh.api.utils.TimeService
 import org.springframework.stereotype.Service
-import java.time.Instant
 
 interface DevicesDao {
     fun getAll(): Collection<Device>
@@ -14,22 +14,26 @@ interface DevicesDao {
 
 @Service
 class DevicesDaoImpl(
-    private val devicesRepository: DevicesRepository
+    private val devicesRepository: DevicesRepository,
+    private val timeService: TimeService
 ): DevicesDao {
     override fun getAll(): Collection<Device> = devicesRepository.findAll().map { it.toDevice() }
     override fun save(device: Device) {
         val entity = DeviceEntity(
-            uuid = device.uuid,
             name = device.name,
             provider = device.provider,
             providerId = device.providerId,
-            createdOn = Instant.now()
+            status = device.status,
+            createdOn = timeService.now()
         )
         devicesRepository.save(entity)
     }
     override fun update(device: Device) {
-//        val entity = devicesRepository.findById(device.uuid).get()
-//
-//        devicesRepository.save(entity)
+        devicesRepository.findByProviderAndProviderId(device.provider, device.providerId)?.let {
+            it.name = device.name
+            it.status = device.status
+            it.updatedOn = timeService.now()
+            devicesRepository.save(it)
+        }
     }
 }

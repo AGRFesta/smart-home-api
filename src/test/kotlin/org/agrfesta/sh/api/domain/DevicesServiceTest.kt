@@ -21,21 +21,16 @@ class DevicesServiceTest {
 
     @Test
     fun `refresh() returns new devices only when there are no devices`() {
-        val deviceA = aProviderDevice()
-        val deviceB = aProviderDevice()
-        val deviceC = aProviderDevice()
+        val deviceA = aDevice()
+        val deviceB = aDevice()
+        val deviceC = aDevice()
 
         val result = sut.refresh(
             providersDevices = listOf(deviceA, deviceB, deviceC),
             devices = emptyList()
         )
 
-        result.newDevices.map { listOf(it.providerId, it.name, it.provider) }
-            .shouldContainExactlyInAnyOrder(
-                listOf(deviceB.id, deviceB.name, deviceB.provider),
-                listOf(deviceA.id, deviceA.name, deviceA.provider),
-                listOf(deviceC.id, deviceC.name, deviceC.provider)
-            )
+        result.newDevices.shouldContainExactlyInAnyOrder(deviceB, deviceA, deviceC)
         result.updatedDevices.shouldBeEmpty()
         result.detachedDevices.shouldBeEmpty()
     }
@@ -53,17 +48,20 @@ class DevicesServiceTest {
 
         result.newDevices.shouldBeEmpty()
         result.updatedDevices.shouldBeEmpty()
-        result.detachedDevices.shouldContainExactlyInAnyOrder(deviceC, deviceA, deviceB)
+        result.detachedDevices.shouldContainExactlyInAnyOrder(
+            deviceC.copy(status = DeviceStatus.DETACHED),
+            deviceA.copy(status = DeviceStatus.DETACHED),
+            deviceB.copy(status = DeviceStatus.DETACHED))
     }
 
     @Test
     fun `refresh() returns updated devices only providers devices are exactly the same devices`() {
-        val providerDeviceA = aProviderDevice()
-        val providerDeviceB = aProviderDevice()
-        val providerDeviceC = aProviderDevice()
-        val deviceA = aDevice(providerId = providerDeviceA.id, provider = providerDeviceA.provider)
-        val deviceB = aDevice(providerId = providerDeviceB.id, provider = providerDeviceB.provider)
-        val deviceC = aDevice(providerId = providerDeviceC.id, provider = providerDeviceC.provider)
+        val providerDeviceA = aDevice()
+        val providerDeviceB = aDevice()
+        val providerDeviceC = aDevice()
+        val deviceA = aDevice(providerId = providerDeviceA.providerId, provider = providerDeviceA.provider)
+        val deviceB = aDevice(providerId = providerDeviceB.providerId, provider = providerDeviceB.provider)
+        val deviceC = aDevice(providerId = providerDeviceC.providerId, provider = providerDeviceC.provider)
 
         val result = sut.refresh(
             providersDevices = listOf(providerDeviceA, providerDeviceB, providerDeviceC),
@@ -71,11 +69,44 @@ class DevicesServiceTest {
         )
 
         result.newDevices.shouldBeEmpty()
-        result.updatedDevices.map { listOf(it.uuid, it.providerId, it.provider, it.name) }
+        result.updatedDevices.map { listOf(it.providerId, it.provider, it.name) }
             .shouldContainExactlyInAnyOrder(
-                listOf(deviceB.uuid, deviceB.providerId, deviceB.provider, providerDeviceB.name),
-                listOf(deviceA.uuid, deviceA.providerId, deviceA.provider, providerDeviceA.name),
-                listOf(deviceC.uuid, deviceC.providerId, deviceC.provider, providerDeviceC.name)
+                listOf(deviceB.providerId, deviceB.provider, providerDeviceB.name),
+                listOf(deviceA.providerId, deviceA.provider, providerDeviceA.name),
+                listOf(deviceC.providerId, deviceC.provider, providerDeviceC.name)
+            )
+        result.detachedDevices.shouldBeEmpty()
+    }
+
+    @Test
+    fun `refresh() returns updated detached devices as paired when provider returns them`() {
+        val providerDeviceA = aDevice()
+        val providerDeviceB = aDevice()
+        val providerDeviceC = aDevice()
+        val deviceA = aDevice(
+            providerId = providerDeviceA.providerId,
+            provider = providerDeviceA.provider,
+            status = DeviceStatus.DETACHED)
+        val deviceB = aDevice(
+            providerId = providerDeviceB.providerId,
+            provider = providerDeviceB.provider,
+            status = DeviceStatus.DETACHED)
+        val deviceC = aDevice(
+            providerId = providerDeviceC.providerId,
+            provider = providerDeviceC.provider,
+            status = DeviceStatus.DETACHED)
+
+        val result = sut.refresh(
+            providersDevices = listOf(providerDeviceA, providerDeviceB, providerDeviceC),
+            devices = listOf(deviceA, deviceB, deviceC)
+        )
+
+        result.newDevices.shouldBeEmpty()
+        result.updatedDevices.map { listOf(it.providerId, it.provider, it.name, it.status) }
+            .shouldContainExactlyInAnyOrder(
+                listOf(deviceB.providerId, deviceB.provider, providerDeviceB.name, DeviceStatus.PAIRED),
+                listOf(deviceA.providerId, deviceA.provider, providerDeviceA.name, DeviceStatus.PAIRED),
+                listOf(deviceC.providerId, deviceC.provider, providerDeviceC.name, DeviceStatus.PAIRED)
             )
         result.detachedDevices.shouldBeEmpty()
     }

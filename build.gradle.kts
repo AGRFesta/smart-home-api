@@ -41,6 +41,9 @@ dependencies {
 	testImplementation(libs.kotest.assertions.core)
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:postgresql")
+	testImplementation("io.rest-assured:rest-assured")
+	testImplementation("io.mockk:mockk:1.13.10")
+	testImplementation("com.ninja-squad:springmockk:4.0.2")
 }
 
 docker {
