@@ -1,5 +1,7 @@
 package org.agrfesta.sh.api.controllers
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -12,6 +14,7 @@ import io.mockk.every
 import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
+import org.agrfesta.sh.api.domain.Device
 import org.agrfesta.sh.api.domain.DeviceStatus
 import org.agrfesta.sh.api.domain.DevicesRefreshResult
 import org.agrfesta.sh.api.domain.Provider
@@ -19,6 +22,8 @@ import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.repositories.DevicesRepository
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
+import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDevice
+import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDevicesListSuccessResponse
 import org.agrfesta.sh.api.utils.TimeService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -39,6 +44,7 @@ import java.time.temporal.ChronoUnit
 class DevicesControllerIntegrationTest(
     @Autowired private val devicesDao: DevicesDao,
     @Autowired private val devicesRepository: DevicesRepository,
+    @Autowired private val objectMapper: ObjectMapper,
     @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient,
     @Autowired @MockkBean private val timeService: TimeService
 ) {
@@ -65,8 +71,10 @@ class DevicesControllerIntegrationTest(
 
     @Test
     fun `refresh() correctly save new device`() {
-        val newSBDevice = aDevice(provider = Provider.SWITCHBOT)
-        coEvery { switchBotDevicesClient.getDevices() } returns listOf(newSBDevice)
+        val expectedSBDevice = aDevice(provider = Provider.SWITCHBOT)
+        coEvery {
+            switchBotDevicesClient.getDevices()
+        } returns objectMapper.aSwitchBotDevicesListSuccessResponse(listOf(expectedSBDevice.asSBDeviceJsonNode()))
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -77,27 +85,30 @@ class DevicesControllerIntegrationTest(
             .extract()
             .`as`(DevicesRefreshResult::class.java)
 
-        result.newDevices.shouldContainExactly(newSBDevice)
+        result.newDevices.shouldContainExactly(expectedSBDevice)
         result.updatedDevices.shouldBeEmpty()
         result.detachedDevices.shouldBeEmpty()
-        devicesDao.getAll().shouldContainExactlyInAnyOrder(newSBDevice)
+        devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedSBDevice)
         val newDeviceEntity =
-            devicesRepository.findByProviderAndProviderId(newSBDevice.provider, newSBDevice.providerId)
+            devicesRepository.findByProviderAndProviderId(expectedSBDevice.provider, expectedSBDevice.providerId)
         newDeviceEntity.shouldNotBeNull()
-        newDeviceEntity.name shouldBe newSBDevice.name
+        newDeviceEntity.name shouldBe expectedSBDevice.name
         newDeviceEntity.provider shouldBe Provider.SWITCHBOT
-        newDeviceEntity.providerId shouldBe newSBDevice.providerId
+        newDeviceEntity.providerId shouldBe expectedSBDevice.providerId
         newDeviceEntity.createdOn.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
         newDeviceEntity.updatedOn.shouldBeNull()
     }
 
     @Test
     fun `refresh() correctly update existing device`() {
-        val existingSBDevice = aDevice(provider = Provider.SWITCHBOT)
-        val device = aDevice(providerId = existingSBDevice.providerId, provider = Provider.SWITCHBOT)
+        val expectedExistingSBDevice = aDevice(provider = Provider.SWITCHBOT)
+        val device = aDevice(providerId = expectedExistingSBDevice.providerId, provider = Provider.SWITCHBOT)
         devicesDao.save(device)
-        val expectedUpdatedSBDevice = device.copy(name = existingSBDevice.name)
-        coEvery { switchBotDevicesClient.getDevices() } returns listOf(existingSBDevice)
+        val expectedUpdatedSBDevice = device.copy(name = expectedExistingSBDevice.name)
+        coEvery {
+            switchBotDevicesClient.getDevices()
+        } returns objectMapper.aSwitchBotDevicesListSuccessResponse(listOf(
+            expectedExistingSBDevice.asSBDeviceJsonNode()))
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -113,7 +124,7 @@ class DevicesControllerIntegrationTest(
         result.detachedDevices.shouldBeEmpty()
         devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice)
         val updatedDeviceEntity =
-            devicesRepository.findByProviderAndProviderId(existingSBDevice.provider, existingSBDevice.providerId)
+            devicesRepository.findByProviderAndProviderId(expectedExistingSBDevice.provider, expectedExistingSBDevice.providerId)
         updatedDeviceEntity.shouldNotBeNull()
         updatedDeviceEntity.updatedOn?.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
     }
@@ -158,7 +169,10 @@ class DevicesControllerIntegrationTest(
             status = DeviceStatus.PAIRED)
         coEvery {
             switchBotDevicesClient.getDevices()
-        } returns listOf(newSBDevice, existingSBDevice, existingDetachedSBDevice)
+        } returns objectMapper.aSwitchBotDevicesListSuccessResponse(listOf(
+            newSBDevice.asSBDeviceJsonNode(),
+            existingSBDevice.asSBDeviceJsonNode(),
+            existingDetachedSBDevice.asSBDeviceJsonNode()))
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -174,5 +188,11 @@ class DevicesControllerIntegrationTest(
         result.detachedDevices.shouldBeEmpty()
         devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice, expectedPairedDevice, newSBDevice)
     }
+
+    private fun Device.asSBDeviceJsonNode(): JsonNode =
+        objectMapper.aSwitchBotDevice(
+            deviceId = providerId,
+            deviceName = name
+        )
 
 }
