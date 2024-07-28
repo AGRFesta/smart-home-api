@@ -102,8 +102,8 @@ class DevicesControllerIntegrationTest(
     @Test
     fun `refresh() correctly update existing device`() {
         val expectedExistingSBDevice = aDevice(provider = Provider.SWITCHBOT)
-        val device = aDevice(providerId = expectedExistingSBDevice.providerId, provider = Provider.SWITCHBOT)
-        devicesDao.save(device)
+        val device =
+            devicesDao.save(aDevice(providerId = expectedExistingSBDevice.providerId, provider = Provider.SWITCHBOT))
         val expectedUpdatedSBDevice = device.copy(name = expectedExistingSBDevice.name)
         coEvery {
             switchBotDevicesClient.getDevices()
@@ -123,16 +123,16 @@ class DevicesControllerIntegrationTest(
         result.updatedDevices.shouldContainExactly(expectedUpdatedSBDevice)
         result.detachedDevices.shouldBeEmpty()
         devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice)
-        val updatedDeviceEntity =
-            devicesRepository.findByProviderAndProviderId(expectedExistingSBDevice.provider, expectedExistingSBDevice.providerId)
+        val updatedDeviceEntity = devicesRepository.findByProviderAndProviderId(
+                provider = expectedExistingSBDevice.provider,
+                providerId = expectedExistingSBDevice.providerId)
         updatedDeviceEntity.shouldNotBeNull()
         updatedDeviceEntity.updatedOn?.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
     }
 
     @Test
     fun `refresh() happy case with switchbot fetch failure`() {
-        val device = aDevice(provider = Provider.SWITCHBOT)
-        devicesDao.save(device)
+        val device = devicesDao.save(aDevice(provider = Provider.SWITCHBOT))
         val expectedUpdatedSBDevice = device.copy(status = DeviceStatus.DETACHED)
         coEvery { switchBotDevicesClient.getDevices() } throws Exception("switchbot fetch failure")
 
@@ -156,14 +156,12 @@ class DevicesControllerIntegrationTest(
         val existingSBDevice = aDevice(provider = Provider.SWITCHBOT)
         val existingDetachedSBDevice = aDevice(provider = Provider.SWITCHBOT)
         val newSBDevice = aDevice(provider = Provider.SWITCHBOT)
-        val device = aDevice(providerId = existingSBDevice.providerId, provider = Provider.SWITCHBOT)
-        devicesDao.save(device)
+        val device = devicesDao.save(aDevice(providerId = existingSBDevice.providerId, provider = Provider.SWITCHBOT))
         val expectedUpdatedSBDevice = device.copy(name = existingSBDevice.name)
-        val detachedDevice = aDevice(
+        val detachedDevice = devicesDao.save(aDevice(
             providerId = existingDetachedSBDevice.providerId,
             provider = Provider.SWITCHBOT,
-            status = DeviceStatus.DETACHED)
-        devicesDao.save(detachedDevice)
+            status = DeviceStatus.DETACHED))
         val expectedPairedDevice = detachedDevice.copy(
             name = existingDetachedSBDevice.name,
             status = DeviceStatus.PAIRED)

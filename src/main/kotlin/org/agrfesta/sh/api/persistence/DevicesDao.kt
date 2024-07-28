@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service
 
 interface DevicesDao {
     fun getAll(): Collection<Device>
-    fun save(device: Device)
+    fun save(device: Device): Device
     fun update(device: Device)
 }
 
@@ -18,7 +18,7 @@ class DevicesDaoImpl(
     private val timeService: TimeService
 ): DevicesDao {
     override fun getAll(): Collection<Device> = devicesRepository.findAll().map { it.toDevice() }
-    override fun save(device: Device) {
+    override fun save(device: Device): Device {
         val entity = DeviceEntity(
             name = device.name,
             provider = device.provider,
@@ -26,7 +26,7 @@ class DevicesDaoImpl(
             status = device.status,
             createdOn = timeService.now()
         )
-        devicesRepository.save(entity)
+        return devicesRepository.save(entity).toDevice()
     }
     override fun update(device: Device) {
         devicesRepository.findByProviderAndProviderId(device.provider, device.providerId)?.let {
