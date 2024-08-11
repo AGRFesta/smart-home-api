@@ -9,9 +9,10 @@ import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import org.agrfesta.sh.api.utils.RandomGenerator
+import org.agrfesta.sh.api.utils.TimeService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Instant
 import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -20,6 +21,8 @@ import javax.crypto.spec.SecretKeySpec
 class SwitchBotDevicesClient(
     private val config: SwitchBotConfiguration,
     private val mapper: ObjectMapper,
+    private val timeService: TimeService,
+    private val randomGenerator: RandomGenerator,
     @Autowired(required = false) engine: HttpClientEngine = OkHttpEngine(OkHttpConfig())
 ) {
     private val client = HttpClient(engine) {
@@ -55,8 +58,8 @@ class SwitchBotDevicesClient(
     }
 
     private fun generateRequestHeader(): SwitchbotRequestHeader {
-        val nonce = UUID.randomUUID().toString()
-        val time = Instant.now().toEpochMilli().toString()
+        val nonce = randomGenerator.string()
+        val time = timeService.now().toEpochMilli().toString()
         val data = config.token + time + nonce
         val secretKeySpec = SecretKeySpec(config.secret.toByteArray(charset("UTF-8")), "HmacSHA256")
         val mac = Mac.getInstance("HmacSHA256")
