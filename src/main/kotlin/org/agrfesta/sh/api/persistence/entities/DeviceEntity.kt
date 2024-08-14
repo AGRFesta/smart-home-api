@@ -6,9 +6,9 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import org.agrfesta.sh.api.domain.Device
-import org.agrfesta.sh.api.domain.DeviceStatus
-import org.agrfesta.sh.api.domain.Provider
+import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.domain.devices.Provider
 import java.time.Instant
 import java.util.*
 

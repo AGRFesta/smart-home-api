@@ -1,5 +1,8 @@
 package org.agrfesta.sh.api.domain
 
+import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.domain.devices.Provider
 import java.util.*
 
 fun aDevice(

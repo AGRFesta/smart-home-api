@@ -3,10 +3,10 @@ package org.agrfesta.sh.api.providers.switchbot
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.domain.Device
-import org.agrfesta.sh.api.domain.DeviceStatus
-import org.agrfesta.sh.api.domain.DevicesProvider
-import org.agrfesta.sh.api.domain.Provider
+import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.domain.devices.DevicesProvider
+import org.agrfesta.sh.api.domain.devices.Provider
 import org.springframework.stereotype.Service
 
 @Service

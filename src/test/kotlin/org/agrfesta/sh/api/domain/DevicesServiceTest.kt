@@ -2,6 +2,8 @@ package org.agrfesta.sh.api.domain
 
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import org.agrfesta.sh.api.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.domain.devices.DevicesService
 import org.junit.jupiter.api.Test
 
 class DevicesServiceTest {

@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.domain
+package org.agrfesta.sh.api.domain.devices
 
 import org.springframework.stereotype.Service
 

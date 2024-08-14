@@ -1,8 +1,8 @@
 package org.agrfesta.sh.api.controllers
 
-import org.agrfesta.sh.api.domain.DevicesProvider
-import org.agrfesta.sh.api.domain.DevicesRefreshResult
-import org.agrfesta.sh.api.domain.DevicesService
+import org.agrfesta.sh.api.domain.devices.DevicesProvider
+import org.agrfesta.sh.api.domain.devices.DevicesRefreshResult
+import org.agrfesta.sh.api.domain.devices.DevicesService
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-
 
 @RestController
 @RequestMapping("/devices")

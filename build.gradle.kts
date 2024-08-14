@@ -26,9 +26,11 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.hibernate.orm:hibernate-core")
 	implementation("org.postgresql:postgresql")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.0")
 	implementation(libs.ktor.core)
 	implementation(libs.ktor.okhttp)
 	implementation(libs.flyway.core)
+	implementation(libs.arrow.core)
 	runtimeOnly(libs.flyway.postgress)
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
@@ -39,6 +41,7 @@ dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter-api")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 	testImplementation(libs.kotest.assertions.core)
+	testImplementation(libs.kotest.assertions.arrow)
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:postgresql")
 	testImplementation("io.rest-assured:rest-assured")

@@ -14,10 +14,10 @@ import io.mockk.every
 import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
-import org.agrfesta.sh.api.domain.Device
-import org.agrfesta.sh.api.domain.DeviceStatus
-import org.agrfesta.sh.api.domain.DevicesRefreshResult
-import org.agrfesta.sh.api.domain.Provider
+import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.domain.devices.DevicesRefreshResult
+import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.repositories.DevicesRepository

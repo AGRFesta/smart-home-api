@@ -1,6 +1,6 @@
 package org.agrfesta.sh.api.persistence
 
-import org.agrfesta.sh.api.domain.Device
+import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.persistence.entities.DeviceEntity
 import org.agrfesta.sh.api.persistence.repositories.DevicesRepository
 import org.agrfesta.sh.api.utils.TimeService
