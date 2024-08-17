@@ -36,7 +36,7 @@ class DevicesController(
                 }
             }
         val result = devicesService.refresh(providersDevices, devices)
-        result.newDevices.forEach { devicesDao.save(it) }
+        result.newDevices.forEach { devicesDao.create(it) }
         result.updatedDevices.forEach { devicesDao.update(it) }
         result.detachedDevices.forEach { devicesDao.update(it) }
         return result

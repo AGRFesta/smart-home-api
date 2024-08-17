@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @WebMvcTest(DevicesController::class)
 @Import(SwitchBotService::class)
 @ActiveProfiles("test")
-class DevicesControllerWebSliceTest(
+class DevicesControllerUnitTest(
     @Autowired private val mockMvc: MockMvc,
     @Autowired @MockkBean private val devicesDao: DevicesDao,
     @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient,

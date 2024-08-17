@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS smart_home.room (
     updated_on TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS smart_home.room_device (
+CREATE TABLE IF NOT EXISTS smart_home.association (
     uuid UUID PRIMARY KEY,
     room_uuid UUID NOT NULL,
     device_uuid UUID NOT NULL,

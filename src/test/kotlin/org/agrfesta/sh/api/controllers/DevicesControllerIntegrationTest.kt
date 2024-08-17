@@ -102,8 +102,8 @@ class DevicesControllerIntegrationTest(
     @Test
     fun `refresh() correctly update existing device`() {
         val expectedExistingSBDevice = aDevice(provider = Provider.SWITCHBOT)
-        val device =
-            devicesDao.save(aDevice(providerId = expectedExistingSBDevice.providerId, provider = Provider.SWITCHBOT))
+        val device = aDevice(providerId = expectedExistingSBDevice.providerId, provider = Provider.SWITCHBOT)
+        devicesDao.create(device)
         val expectedUpdatedSBDevice = device.copy(name = expectedExistingSBDevice.name)
         coEvery {
             switchBotDevicesClient.getDevices()
@@ -132,7 +132,8 @@ class DevicesControllerIntegrationTest(
 
     @Test
     fun `refresh() happy case with switchbot fetch failure`() {
-        val device = devicesDao.save(aDevice(provider = Provider.SWITCHBOT))
+        val device = aDevice(provider = Provider.SWITCHBOT)
+        devicesDao.create(device)
         val expectedUpdatedSBDevice = device.copy(status = DeviceStatus.DETACHED)
         coEvery { switchBotDevicesClient.getDevices() } throws Exception("switchbot fetch failure")
 
@@ -156,12 +157,14 @@ class DevicesControllerIntegrationTest(
         val existingSBDevice = aDevice(provider = Provider.SWITCHBOT)
         val existingDetachedSBDevice = aDevice(provider = Provider.SWITCHBOT)
         val newSBDevice = aDevice(provider = Provider.SWITCHBOT)
-        val device = devicesDao.save(aDevice(providerId = existingSBDevice.providerId, provider = Provider.SWITCHBOT))
+        val device = aDevice(providerId = existingSBDevice.providerId, provider = Provider.SWITCHBOT)
+        devicesDao.create(device)
         val expectedUpdatedSBDevice = device.copy(name = existingSBDevice.name)
-        val detachedDevice = devicesDao.save(aDevice(
+        val detachedDevice = aDevice(
             providerId = existingDetachedSBDevice.providerId,
             provider = Provider.SWITCHBOT,
-            status = DeviceStatus.DETACHED))
+            status = DeviceStatus.DETACHED)
+        devicesDao.create(detachedDevice)
         val expectedPairedDevice = detachedDevice.copy(
             name = existingDetachedSBDevice.name,
             status = DeviceStatus.PAIRED)

@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
+import org.agrfesta.sh.api.persistence.AssociationsDaoImpl
 import org.agrfesta.sh.api.persistence.RoomsDaoImpl
+import org.agrfesta.sh.api.persistence.repositories.DevicesRepository
+import org.agrfesta.sh.api.persistence.repositories.AssociationsRepository
 import org.agrfesta.sh.api.persistence.repositories.RoomsRepository
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
@@ -22,7 +25,7 @@ import java.util.*
 @WebMvcTest(RoomsController::class)
 @Import(RoomsDaoImpl::class)
 @ActiveProfiles("test")
-class RoomsControllerWebSliceTest(
+class RoomsControllerUnitTest(
     @Autowired private val mockMvc: MockMvc,
     @Autowired private val objectMapper: ObjectMapper,
     @Autowired @MockkBean private val randomGenerator: RandomGenerator,
@@ -34,8 +37,7 @@ class RoomsControllerWebSliceTest(
         every { randomGenerator.uuid() } returns UUID.randomUUID()
     }
 
-    @Test
-    fun `create() return 500 when persistence creation fails`() {
+    @Test fun `create() return 500 when persistence creation fails`() {
         val name = aRandomUniqueString()
         every { roomsRepository.save(any()) } throws Exception("room creation failure")
 

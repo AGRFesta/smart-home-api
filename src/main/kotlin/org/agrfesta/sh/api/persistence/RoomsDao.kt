@@ -10,21 +10,22 @@ import org.agrfesta.sh.api.persistence.entities.RoomEntity
 import org.agrfesta.sh.api.persistence.repositories.RoomsRepository
 import org.agrfesta.sh.api.utils.TimeService
 import org.springframework.stereotype.Service
+import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 interface RoomsDao {
     fun save(room: Room): Either<RoomCreationFailure, Room>
-    fun findRoomByName(name: String): Either<RoomPersistenceFailure, Room?>
+    fun findRoomByName(name: String): Either<PersistenceFailure, Room?>
+    fun getRoomById(uuid: UUID): Either<GetRoomFailure, Room>
     fun getRoomByName(name: String): Either<GetRoomFailure, Room>
-    fun getAll(): Either<RoomPersistenceFailure, Collection<Room>>
+    fun getAll(): Either<PersistenceFailure, Collection<Room>>
 }
 
-sealed interface GetRoomFailure
+sealed interface GetRoomFailure: AssociationFailure
 sealed interface RoomCreationFailure
 
 data object RoomNotFound: GetRoomFailure
 data object RoomNameConflict: RoomCreationFailure
-
-data class RoomPersistenceFailure(val exception: Exception): GetRoomFailure, RoomCreationFailure
 
 @Service
 class RoomsDaoImpl(
@@ -49,16 +50,26 @@ class RoomsDaoImpl(
                 .toRoom()
                 .right()
         } catch (e: Exception) {
-            RoomPersistenceFailure(e).left()
+            PersistenceFailure(e).left()
         }
     }
 
-    override fun findRoomByName(name: String): Either<RoomPersistenceFailure, Room?> = try {
+    override fun findRoomByName(name: String): Either<PersistenceFailure, Room?> = try {
         roomsRepository.findByName(name)
             ?.toRoom()
             .right()
     } catch (e: Exception) {
-        RoomPersistenceFailure(e).left()
+        PersistenceFailure(e).left()
+    }
+
+    override fun getRoomById(uuid: UUID): Either<GetRoomFailure, Room> = try {
+        roomsRepository.findById(uuid)
+            .map { it.toRoom() }
+            .getOrNull()
+            ?.right()
+            ?: RoomNotFound.left()
+    } catch (e: Exception) {
+        PersistenceFailure(e).left()
     }
 
     override fun getRoomByName(name: String): Either<GetRoomFailure, Room> = try {
@@ -67,15 +78,15 @@ class RoomsDaoImpl(
             ?.right()
             ?: RoomNotFound.left()
     } catch (e: Exception) {
-        RoomPersistenceFailure(e).left()
+        PersistenceFailure(e).left()
     }
 
-    override fun getAll(): Either<RoomPersistenceFailure, Collection<Room>> = try {
+    override fun getAll(): Either<PersistenceFailure, Collection<Room>> = try {
         roomsRepository.findAll()
             .map { it.toRoom() }
             .right()
     } catch (e: Exception) {
-        RoomPersistenceFailure(e).left()
+        PersistenceFailure(e).left()
     }
 
 }

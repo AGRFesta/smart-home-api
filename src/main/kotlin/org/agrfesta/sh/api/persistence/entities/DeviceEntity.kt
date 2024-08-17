@@ -16,7 +16,7 @@ import java.util.*
 @Table(name="device", schema = "smart_home")
 class DeviceEntity(
     @Id
-    val uuid: UUID = UUID.randomUUID(),
+    val uuid: UUID,
 
     var name: String,
 

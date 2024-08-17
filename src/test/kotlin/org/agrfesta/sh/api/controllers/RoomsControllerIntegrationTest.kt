@@ -8,6 +8,10 @@ import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.agrfesta.sh.api.domain.Room
+import org.agrfesta.sh.api.domain.aDevice
+import org.agrfesta.sh.api.domain.aRoom
+import org.agrfesta.sh.api.persistence.AssociationsDao
+import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.RoomsDao
 import org.agrfesta.sh.api.persistence.repositories.RoomsRepository
 import org.agrfesta.sh.api.utils.RandomGenerator
@@ -29,8 +33,9 @@ import java.util.*
 @ActiveProfiles("test")
 class RoomsControllerIntegrationTest(
     @Autowired @MockkBean private val randomGenerator: RandomGenerator,
-    @Autowired private val roomsRepository: RoomsRepository,
-    @Autowired private val roomsDao: RoomsDao
+    @Autowired private val roomsDao: RoomsDao,
+    @Autowired private val devicesDao: DevicesDao,
+    @Autowired private val associationsDao: AssociationsDao
 ) {
 
     companion object {
@@ -48,10 +53,12 @@ class RoomsControllerIntegrationTest(
     @BeforeEach
     fun setUp() {
         RestAssured.baseURI = "http://localhost:$port"
-        roomsRepository.deleteAll()
+        //roomsRepository.deleteAll()
 
         every { randomGenerator.uuid() } returns uuid
     }
+
+    ///// create ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `create() return 201 when correctly create a room`() {
         val name = aRandomUniqueString()
@@ -97,5 +104,8 @@ class RoomsControllerIntegrationTest(
 
         result.message shouldBe "A Room '$name' already exists!"
     }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 }
