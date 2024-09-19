@@ -56,6 +56,7 @@ class DevicesDaoImpl(
             name = device.name,
             provider = device.provider,
             providerId = device.providerId,
+            features = device.features.map { it.name }.toTypedArray(),
             status = device.status,
             createdOn = timeService.now()
         )

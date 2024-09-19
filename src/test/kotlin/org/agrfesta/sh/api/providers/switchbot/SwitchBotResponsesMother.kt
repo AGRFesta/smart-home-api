@@ -36,7 +36,7 @@ fun ObjectMapper.aSwitchBotDevicesListSuccessResponse(devices: Collection<JsonNo
 fun ObjectMapper.aSwitchBotDevice(
     deviceId: String = "deviceId",
     deviceName: String = "deviceName",
-    deviceType: String = "deviceType",
+    deviceType: SwitchBotDeviceType = SwitchBotDeviceType.HUB_MINI,
     enableCloudService: Boolean = true,
     hubDeviceId: String = "hubDeviceId"
 ): JsonNode {
@@ -44,7 +44,7 @@ fun ObjectMapper.aSwitchBotDevice(
         {
             "deviceId": "$deviceId",
             "deviceName": "$deviceName",
-            "deviceType": "$deviceType",
+            "deviceType": "${valueToTree<JsonNode>(deviceType).asText()}",
             "enableCloudService": $enableCloudService,
             "hubDeviceId": "$hubDeviceId"
         }

@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS smart_home.device (
     provider TEXT NOT NULL,
     status TEXT NOT NULL,
     provider_id TEXT NOT NULL,
+    features TEXT[] NOT NULL,
     created_on TIMESTAMP NOT NULL,
     updated_on TIMESTAMP
 );

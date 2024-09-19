@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.domain.devices.Provider
 import java.time.Instant
@@ -29,6 +30,9 @@ class DeviceEntity(
     @Column(name = "provider_id")
     val providerId: String,
 
+    @Column(name = "features")
+    val features: Array<String> = emptyArray(),
+
     @Column(name = "created_on")
     val createdOn: Instant,
 
@@ -39,6 +43,7 @@ class DeviceEntity(
         name = name,
         provider = provider,
         providerId = providerId,
-        status = status
+        status = status,
+        features = features.map { DeviceFeature.valueOf(it) }.toSet()
     )
 }
