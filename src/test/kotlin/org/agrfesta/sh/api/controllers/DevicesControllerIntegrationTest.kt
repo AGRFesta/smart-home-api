@@ -3,6 +3,7 @@ package org.agrfesta.sh.api.controllers
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
+import com.redis.testcontainers.RedisContainer
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -43,6 +44,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.testcontainers.utility.DockerImageName
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -62,6 +64,10 @@ class DevicesControllerIntegrationTest(
         @Container
         @ServiceConnection
         val postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:16-alpine")
+
+        @Container
+        @ServiceConnection
+        val redisContainer = RedisContainer(DockerImageName.parse("redis:7.0.10"))
 
     }
 

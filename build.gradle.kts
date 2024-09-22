@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "org.agrfesta.sh"
-version = "0.1.0"
+version = "0.2.0"
 
 java {
 	toolchain {
@@ -24,6 +24,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("org.hibernate.orm:hibernate-core")
 	implementation("org.postgresql:postgresql")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.0")
@@ -44,6 +45,7 @@ dependencies {
 	testImplementation(libs.kotest.assertions.arrow)
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:postgresql")
+	testImplementation("com.redis:testcontainers-redis:2.2.2")
 	testImplementation("io.rest-assured:rest-assured")
 	testImplementation("io.mockk:mockk:1.13.10")
 	testImplementation("com.ninja-squad:springmockk:4.0.2")
