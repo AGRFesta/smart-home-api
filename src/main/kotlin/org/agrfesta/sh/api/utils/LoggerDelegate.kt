@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.configuration
+package org.agrfesta.sh.api.utils
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

@@ -2,7 +2,7 @@ package org.agrfesta.sh.api.schedulers
 
 import arrow.core.Either
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.configuration.LoggerDelegate
+import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.HumidityValue
 import org.agrfesta.sh.api.domain.devices.TemperatureValue
