@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service
 @Service
 class DevicesService {
 
-    fun refresh(providersDevices: Collection<Device>, devices: Collection<Device>): DevicesRefreshResult {
+    fun refresh(providersDevices: Collection<DeviceDataValue>, devices: Collection<Device>): DevicesRefreshResult {
         return DevicesRefreshResult(
             newDevices = providersDevices
                 .filter { devices.find(it.providerId) == null },
@@ -18,11 +18,13 @@ class DevicesService {
     }
 
     private fun Collection<Device>.find(providerId: String): Device? = firstOrNull { it.providerId == providerId }
+    private fun Collection<DeviceDataValue>.find(providerId: String): DeviceDataValue? =
+        firstOrNull { it.providerId == providerId }
 
 }
 
 data class DevicesRefreshResult(
-    val newDevices: Collection<Device> = emptyList(),
+    val newDevices: Collection<DeviceDataValue> = emptyList(),
     val updatedDevices: Collection<Device> = emptyList(),
     val detachedDevices: Collection<Device> = emptyList()
 )

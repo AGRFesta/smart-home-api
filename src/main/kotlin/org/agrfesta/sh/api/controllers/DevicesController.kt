@@ -1,5 +1,6 @@
 package org.agrfesta.sh.api.controllers
 
+import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DevicesProvider
 import org.agrfesta.sh.api.domain.devices.DevicesRefreshResult
 import org.agrfesta.sh.api.domain.devices.DevicesService
@@ -24,7 +25,7 @@ class DevicesController(
     fun handleException(e: Exception) = ResponseEntity<Any>(e.message, HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR)
 
     @PostMapping("/refresh")
-    fun refresh(): DevicesRefreshResult {
+    fun refresh(): DevicesRefreshResponse {
         val devices = devicesDao.getAll()
         val providersDevices = devicesProviders
             .flatMap {
@@ -36,10 +37,19 @@ class DevicesController(
                 }
             }
         val result = devicesService.refresh(providersDevices, devices)
-        result.newDevices.forEach { devicesDao.create(it) }
         result.updatedDevices.forEach { devicesDao.update(it) }
         result.detachedDevices.forEach { devicesDao.update(it) }
-        return result
+        return DevicesRefreshResponse(
+            newDevices = result.newDevices.map { Device(uuid = devicesDao.create(it), dataValue = it) },
+            updatedDevices = result.updatedDevices,
+            detachedDevices = result.detachedDevices
+        )
     }
 
 }
+
+data class DevicesRefreshResponse(
+    val newDevices: Collection<Device> = emptyList(),
+    val updatedDevices: Collection<Device> = emptyList(),
+    val detachedDevices: Collection<Device> = emptyList()
+)

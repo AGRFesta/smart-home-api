@@ -23,9 +23,9 @@ class DevicesServiceTest {
 
     @Test
     fun `refresh() returns new devices only when there are no devices`() {
-        val deviceA = aDevice()
-        val deviceB = aDevice()
-        val deviceC = aDevice()
+        val deviceA = aDeviceDataValue()
+        val deviceB = aDeviceDataValue()
+        val deviceC = aDeviceDataValue()
 
         val result = sut.refresh(
             providersDevices = listOf(deviceA, deviceB, deviceC),
@@ -58,9 +58,9 @@ class DevicesServiceTest {
 
     @Test
     fun `refresh() returns updated devices only providers devices are exactly the same devices`() {
-        val providerDeviceA = aDevice()
-        val providerDeviceB = aDevice()
-        val providerDeviceC = aDevice()
+        val providerDeviceA = aDeviceDataValue()
+        val providerDeviceB = aDeviceDataValue()
+        val providerDeviceC = aDeviceDataValue()
         val deviceA = aDevice(providerId = providerDeviceA.providerId, provider = providerDeviceA.provider)
         val deviceB = aDevice(providerId = providerDeviceB.providerId, provider = providerDeviceB.provider)
         val deviceC = aDevice(providerId = providerDeviceC.providerId, provider = providerDeviceC.provider)
@@ -82,9 +82,9 @@ class DevicesServiceTest {
 
     @Test
     fun `refresh() returns updated detached devices as paired when provider returns them`() {
-        val providerDeviceA = aDevice()
-        val providerDeviceB = aDevice()
-        val providerDeviceC = aDevice()
+        val providerDeviceA = aDeviceDataValue()
+        val providerDeviceB = aDeviceDataValue()
+        val providerDeviceC = aDeviceDataValue()
         val deviceA = aDevice(
             providerId = providerDeviceA.providerId,
             provider = providerDeviceA.provider,

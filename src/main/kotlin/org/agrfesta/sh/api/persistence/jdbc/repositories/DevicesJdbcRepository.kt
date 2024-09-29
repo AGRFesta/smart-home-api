@@ -5,7 +5,9 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
+import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.persistence.DeviceNotFound
 import org.agrfesta.sh.api.persistence.GetDeviceFailure
@@ -60,7 +62,7 @@ class DevicesJdbcRepository(
     fun getAll(): Collection<DeviceEntity> =
         jdbcTemplate.query("""SELECT * FROM smart_home.device;""", DeviceRowMapper)
 
-    fun persist(device: Device): UUID {
+    fun persist(device: DeviceDataValue, deviceStatus: DeviceStatus = DeviceStatus.PAIRED): UUID {
         val uuid = randomGenerator.uuid()
         val sql = """
             INSERT INTO smart_home.device 
@@ -71,7 +73,7 @@ class DevicesJdbcRepository(
             "uuid" to uuid,
             "name" to device.name,
             "provider" to device.provider.name,
-            "status" to device.status.name,
+            "status" to deviceStatus.name,
             "providerId" to device.providerId,
             "features" to device.features.map { it.name }.toTypedArray(),
             "createdOn" to Timestamp.from(timeService.now()),

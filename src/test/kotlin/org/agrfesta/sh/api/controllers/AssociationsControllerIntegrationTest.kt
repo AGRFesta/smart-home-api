@@ -8,6 +8,7 @@ import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.agrfesta.sh.api.domain.aDevice
+import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.domain.aRoom
 import org.agrfesta.sh.api.persistence.AssociationsDao
 import org.agrfesta.sh.api.persistence.DevicesDao
@@ -23,6 +24,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.testcontainers.utility.DockerImageName
 import java.util.*
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -38,7 +40,9 @@ class AssociationsControllerIntegrationTest(
     companion object {
         @Container
         @ServiceConnection
-        val postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:16-alpine")
+        val postgres: PostgreSQLContainer<*> = DockerImageName.parse("timescale/timescaledb:latest-pg16")
+            .asCompatibleSubstituteFor("postgres")
+            .let { PostgreSQLContainer(it) }
     }
 
     @LocalServerPort private val port: Int? = null
@@ -92,7 +96,7 @@ class AssociationsControllerIntegrationTest(
     fun `create() return 201 when successfully assigns device to room`() {
         val room = aRoom()
         roomsDao.save(room).shouldBeRight()
-        val deviceId = devicesDao.create(aDevice())
+        val deviceId = devicesDao.create(aDeviceDataValue())
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -113,7 +117,7 @@ class AssociationsControllerIntegrationTest(
         roomsDao.save(roomA).shouldBeRight()
         val roomB = aRoom()
         roomsDao.save(roomB).shouldBeRight()
-        val deviceId = devicesDao.create(aDevice())
+        val deviceId = devicesDao.create(aDeviceDataValue())
         associationsDao.associate(roomId = roomA.uuid, deviceId = deviceId).shouldBeRight()
 
         val result = given()
@@ -133,7 +137,7 @@ class AssociationsControllerIntegrationTest(
     fun `create() return 400 when device is already assigned to this room`() {
         val room = aRoom()
         roomsDao.save(room).shouldBeRight()
-        val deviceId = devicesDao.create(aDevice())
+        val deviceId = devicesDao.create(aDeviceDataValue())
         associationsDao.associate(roomId = room.uuid, deviceId = deviceId).shouldBeRight()
 
         val result = given()

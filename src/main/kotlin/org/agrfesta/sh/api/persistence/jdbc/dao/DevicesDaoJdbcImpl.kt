@@ -2,6 +2,8 @@ package org.agrfesta.sh.api.persistence.jdbc.dao
 
 import arrow.core.Either
 import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceDataValue
+import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.GetDeviceFailure
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
@@ -17,7 +19,8 @@ class DevicesDaoJdbcImpl(
 
     override fun getAll(): Collection<Device> = devicesJdbcRepository.getAll().map { it.asDevice() }
 
-    override fun create(device: Device) = devicesJdbcRepository.persist(device)
+    override fun create(device: DeviceDataValue, deviceStatus: DeviceStatus) =
+        devicesJdbcRepository.persist(device, deviceStatus)
 
     override fun update(device: Device) = devicesJdbcRepository.update(device)
 }

@@ -3,6 +3,7 @@ package org.agrfesta.sh.api.utils
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import org.slf4j.Logger
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 
@@ -29,4 +30,11 @@ class RedisCache(private val template: RedisTemplate<String, String>): Cache {
             ?.right()
             ?: CachedValueNotFound(key).left()
 
+}
+
+fun Either<CacheFailure, String>.onLeftLogOn(logger: Logger) = onLeft {
+    when(it) {
+        is CacheError -> logger.error("cache fetch failure", it.reason)
+        is CachedValueNotFound -> logger.error("missing cache key: ${it.key}")
+    }
 }

@@ -8,6 +8,7 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -17,7 +18,9 @@ import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.agrfesta.sh.api.domain.aDevice
+import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.domain.devices.DevicesRefreshResult
@@ -63,7 +66,9 @@ class DevicesControllerIntegrationTest(
 
         @Container
         @ServiceConnection
-        val postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:16-alpine")
+        val postgres: PostgreSQLContainer<*> = DockerImageName.parse("timescale/timescaledb:latest-pg16")
+            .asCompatibleSubstituteFor("postgres")
+            .let { PostgreSQLContainer(it) }
 
         @Container
         @ServiceConnection
@@ -85,10 +90,10 @@ class DevicesControllerIntegrationTest(
 
     @Test
     fun `refresh() correctly save new device`() {
-        val expectedSBDevice = aDevice(provider = SWITCHBOT)
+        val expectedSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
         coEvery {
             switchBotDevicesClient.getDevices()
-        } returns objectMapper.aSwitchBotDevicesListSuccessResponse(listOf(expectedSBDevice.asSBDeviceJsonNode()))
+        } returns objectMapper.aSwitchBotDevicesListSuccessResponse(listOf(expectedSBDeviceData.asSBDeviceJsonNode()))
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -97,18 +102,20 @@ class DevicesControllerIntegrationTest(
             .then()
             .statusCode(200)
             .extract()
-            .`as`(DevicesRefreshResult::class.java)
+            .`as`(DevicesRefreshResponse::class.java)
 
-        result.newDevices.shouldContainExactly(expectedSBDevice)
+        result.newDevices.shouldHaveSize(1)
+        val newDevice = result.newDevices.first()
+        newDevice.asDataValue() shouldBe expectedSBDeviceData
         result.updatedDevices.shouldBeEmpty()
         result.detachedDevices.shouldBeEmpty()
-        devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedSBDevice)
-        devicesRepository.findByProviderAndProviderId(expectedSBDevice.provider, expectedSBDevice.providerId)
+        devicesDao.getAll().shouldContainExactly(newDevice)
+        devicesRepository.findByProviderAndProviderId(expectedSBDeviceData.provider, expectedSBDeviceData.providerId)
             .shouldBeRight().apply {
                 shouldNotBeNull()
-                name shouldBe expectedSBDevice.name
+                name shouldBe expectedSBDeviceData.name
                 provider shouldBe SWITCHBOT
-                providerId shouldBe expectedSBDevice.providerId
+                providerId shouldBe expectedSBDeviceData.providerId
                 createdOn.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
                 updatedOn.shouldBeNull()
             }
@@ -159,14 +166,14 @@ class DevicesControllerIntegrationTest(
 
     @Test
     fun `refresh() correctly update existing device`() {
-        val expectedExistingSBDevice = aDevice(provider = SWITCHBOT)
-        val device = aDevice(providerId = expectedExistingSBDevice.providerId, provider = SWITCHBOT)
-        devicesDao.create(device)
-        val expectedUpdatedSBDevice = device.copy(name = expectedExistingSBDevice.name)
+        val existingSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
+        val uuid = devicesDao.create(existingSBDeviceData)
+        val actualSBDeviceData = existingSBDeviceData.copy(name = aRandomUniqueString()) // name changed
+        val expectedUpdatedSBDevice = aDevice(actualSBDeviceData, uuid)
         coEvery {
             switchBotDevicesClient.getDevices()
         } returns objectMapper.aSwitchBotDevicesListSuccessResponse(listOf(
-            expectedExistingSBDevice.asSBDeviceJsonNode()))
+            actualSBDeviceData.asSBDeviceJsonNode()))
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -182,19 +189,20 @@ class DevicesControllerIntegrationTest(
         result.detachedDevices.shouldBeEmpty()
         devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice)
         devicesRepository.findByProviderAndProviderId(
-                provider = expectedExistingSBDevice.provider,
-                providerId = expectedExistingSBDevice.providerId)
+                provider = existingSBDeviceData.provider,
+                providerId = existingSBDeviceData.providerId)
             .shouldBeRight().apply {
                 shouldNotBeNull()
+                name shouldBe actualSBDeviceData.name
                 updatedOn?.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS) //TODO think about it
             }
     }
 
     @Test
     fun `refresh() happy case with switchbot fetch failure`() {
-        val device = aDevice(provider = SWITCHBOT)
-        devicesDao.create(device)
-        val expectedUpdatedSBDevice = device.copy(status = DeviceStatus.DETACHED)
+        val deviceData = aDeviceDataValue(provider = SWITCHBOT)
+        val uuid = devicesDao.create(deviceData)
+        val expectedUpdatedSBDevice = aDevice(deviceData, uuid, DeviceStatus.DETACHED)
         coEvery { switchBotDevicesClient.getDevices() } throws Exception("switchbot fetch failure")
 
         val result = given()
@@ -214,26 +222,19 @@ class DevicesControllerIntegrationTest(
 
     @Test
     fun `refresh() happy case with all possible device status`() {
-        val existingSBDevice = aDevice(provider = SWITCHBOT)
-        val existingDetachedSBDevice = aDevice(provider = SWITCHBOT)
-        val newSBDevice = aDevice(provider = SWITCHBOT)
-        val device = aDevice(providerId = existingSBDevice.providerId, provider = SWITCHBOT)
-        devicesDao.create(device)
-        val expectedUpdatedSBDevice = device.copy(name = existingSBDevice.name)
-        val detachedDevice = aDevice(
-            providerId = existingDetachedSBDevice.providerId,
-            provider = SWITCHBOT,
-            status = DeviceStatus.DETACHED)
-        devicesDao.create(detachedDevice)
-        val expectedPairedDevice = detachedDevice.copy(
-            name = existingDetachedSBDevice.name,
-            status = DeviceStatus.PAIRED)
+        val existingSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
+        val existingDetachedSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
+        val newSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
+        val uuid = devicesDao.create(existingSBDeviceData)
+        val expectedUpdatedSBDevice: Device = aDevice(existingSBDeviceData, uuid)
+        val detachedUuid = devicesDao.create(existingDetachedSBDeviceData, DeviceStatus.DETACHED)
+        val expectedPairedDevice = aDevice(existingDetachedSBDeviceData, detachedUuid, DeviceStatus.PAIRED)
         coEvery {
             switchBotDevicesClient.getDevices()
         } returns objectMapper.aSwitchBotDevicesListSuccessResponse(listOf(
-            newSBDevice.asSBDeviceJsonNode(),
-            existingSBDevice.asSBDeviceJsonNode(),
-            existingDetachedSBDevice.asSBDeviceJsonNode()))
+            newSBDeviceData.asSBDeviceJsonNode(),
+            existingSBDeviceData.asSBDeviceJsonNode(),
+            existingDetachedSBDeviceData.asSBDeviceJsonNode()))
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -242,15 +243,17 @@ class DevicesControllerIntegrationTest(
             .then()
             .statusCode(200)
             .extract()
-            .`as`(DevicesRefreshResult::class.java)
+            .`as`(DevicesRefreshResponse::class.java)
 
-        result.newDevices.shouldContainExactly(newSBDevice)
+        result.newDevices.shouldHaveSize(1)
+        val newDevice = result.newDevices.first()
+        newDevice.asDataValue() shouldBe newSBDeviceData
         result.updatedDevices.shouldContainExactly(expectedUpdatedSBDevice, expectedPairedDevice)
         result.detachedDevices.shouldBeEmpty()
-        devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice, expectedPairedDevice, newSBDevice)
+        devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice, expectedPairedDevice, newDevice)
     }
 
-    private fun Device.asSBDeviceJsonNode(): JsonNode =
+    private fun DeviceDataValue.asSBDeviceJsonNode(): JsonNode =
         objectMapper.aSwitchBotDevice(
             deviceId = providerId,
             deviceName = name,
