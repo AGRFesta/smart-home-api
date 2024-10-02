@@ -5,10 +5,10 @@ import com.ninjasquad.springmockk.MockkBean
 import com.redis.testcontainers.RedisContainer
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.mockk.coEvery
+import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
-import org.agrfesta.sh.api.persistence.entities.aDeviceEntity
-import org.agrfesta.sh.api.persistence.repositories.DevicesRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDeviceStatusResponse
 import org.agrfesta.sh.api.utils.Cache
@@ -29,7 +29,7 @@ import org.testcontainers.utility.DockerImageName
 @ActiveProfiles("test")
 class DevicesDataFetchSchedulerIntegrationTest(
     @Autowired private val sut: DevicesDataFetchScheduler,
-    @Autowired private val devicesRepository: DevicesRepository,
+    @Autowired private val devicesRepository: DevicesJdbcRepository,
     @Autowired private val mapper: ObjectMapper,
     @Autowired private val cache: Cache,
     @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient
@@ -53,14 +53,14 @@ class DevicesDataFetchSchedulerIntegrationTest(
         val sensorHumidity = aRandomHumidity()
         val sensorAndMoreTemperature = aRandomTemperature()
         val sensorAndMoreHumidity = aRandomHumidity()
-        val sensor = aDeviceEntity(features = setOf(SENSOR))
-        devicesRepository.save(sensor)
-        val sensorAndMore = aDeviceEntity(features = setOf(SENSOR, ACTUATOR))
-        devicesRepository.save(sensorAndMore)
-        val faultySensor = aDeviceEntity(features = setOf(SENSOR))
-        devicesRepository.save(faultySensor)
-        val device = aDeviceEntity(features = emptySet())
-        devicesRepository.save(device)
+        val sensor = aDevice(features = setOf(SENSOR))
+        devicesRepository.persist(sensor)
+        val sensorAndMore = aDevice(features = setOf(SENSOR, ACTUATOR))
+        devicesRepository.persist(sensorAndMore)
+        val faultySensor = aDevice(features = setOf(SENSOR))
+        devicesRepository.persist(faultySensor)
+        val device = aDevice(features = emptySet())
+        devicesRepository.persist(device)
         coEvery { switchBotDevicesClient.getDeviceStatus(sensor.providerId) } returns
                 mapper.aSwitchBotDeviceStatusResponse(
                     humidity = sensorHumidity,

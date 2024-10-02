@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import com.redis.testcontainers.RedisContainer
+import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -17,13 +18,12 @@ import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.devices.Device
-import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.domain.devices.DevicesRefreshResult
 import org.agrfesta.sh.api.domain.devices.Provider.SWITCHBOT
 import org.agrfesta.sh.api.persistence.DevicesDao
-import org.agrfesta.sh.api.persistence.repositories.DevicesRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType.HUB_MINI
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType.METER
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType.METER_PLUS
@@ -53,7 +53,7 @@ import java.time.temporal.ChronoUnit
 @ActiveProfiles("test")
 class DevicesControllerIntegrationTest(
     @Autowired private val devicesDao: DevicesDao,
-    @Autowired private val devicesRepository: DevicesRepository,
+    @Autowired private val devicesRepository: DevicesJdbcRepository,
     @Autowired private val objectMapper: ObjectMapper,
     @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient,
     @Autowired @MockkBean private val timeService: TimeService
@@ -103,14 +103,15 @@ class DevicesControllerIntegrationTest(
         result.updatedDevices.shouldBeEmpty()
         result.detachedDevices.shouldBeEmpty()
         devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedSBDevice)
-        val newDeviceEntity =
-            devicesRepository.findByProviderAndProviderId(expectedSBDevice.provider, expectedSBDevice.providerId)
-        newDeviceEntity.shouldNotBeNull()
-        newDeviceEntity.name shouldBe expectedSBDevice.name
-        newDeviceEntity.provider shouldBe SWITCHBOT
-        newDeviceEntity.providerId shouldBe expectedSBDevice.providerId
-        newDeviceEntity.createdOn.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
-        newDeviceEntity.updatedOn.shouldBeNull()
+        devicesRepository.findByProviderAndProviderId(expectedSBDevice.provider, expectedSBDevice.providerId)
+            .shouldBeRight().apply {
+                shouldNotBeNull()
+                name shouldBe expectedSBDevice.name
+                provider shouldBe SWITCHBOT
+                providerId shouldBe expectedSBDevice.providerId
+                createdOn.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
+                updatedOn.shouldBeNull()
+            }
     }
 
     @Test
@@ -133,19 +134,27 @@ class DevicesControllerIntegrationTest(
             .post("/devices/refresh")
             .then()
             .statusCode(200)
-        
-        val hubMiniEntity = devicesRepository.findByProviderAndProviderId(SWITCHBOT, hubMiniProviderId)
-        hubMiniEntity.shouldNotBeNull()
-        hubMiniEntity.features.shouldBeEmpty()
-        val meterPlusEntity = devicesRepository.findByProviderAndProviderId(SWITCHBOT, meterPlusProviderId)
-        meterPlusEntity.shouldNotBeNull()
-        meterPlusEntity.features.map { DeviceFeature.valueOf(it) }.shouldContainExactly(SENSOR)
-        val woIoSensorEntity = devicesRepository.findByProviderAndProviderId(SWITCHBOT, woIoSensorProviderId)
-        woIoSensorEntity.shouldNotBeNull()
-        woIoSensorEntity.features.map { DeviceFeature.valueOf(it) }.shouldContainExactly(SENSOR)
-        val meterEntity = devicesRepository.findByProviderAndProviderId(SWITCHBOT, meterProviderId)
-        meterEntity.shouldNotBeNull()
-        meterEntity.features.map { DeviceFeature.valueOf(it) }.shouldContainExactly(SENSOR)
+
+        devicesRepository.findByProviderAndProviderId(SWITCHBOT, hubMiniProviderId)
+            .shouldBeRight().apply {
+                shouldNotBeNull()
+                features.shouldBeEmpty()
+            }
+        devicesRepository.findByProviderAndProviderId(SWITCHBOT, meterPlusProviderId)
+            .shouldBeRight().apply {
+                shouldNotBeNull()
+                features.shouldContainExactly(SENSOR)
+            }
+        devicesRepository.findByProviderAndProviderId(SWITCHBOT, woIoSensorProviderId)
+            .shouldBeRight().apply {
+                shouldNotBeNull()
+                features.shouldContainExactly(SENSOR)
+            }
+        devicesRepository.findByProviderAndProviderId(SWITCHBOT, meterProviderId)
+            .shouldBeRight().apply {
+                shouldNotBeNull()
+                features.shouldContainExactly(SENSOR)
+            }
     }
 
     @Test
@@ -172,11 +181,13 @@ class DevicesControllerIntegrationTest(
         result.updatedDevices.shouldContainExactly(expectedUpdatedSBDevice)
         result.detachedDevices.shouldBeEmpty()
         devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice)
-        val updatedDeviceEntity = devicesRepository.findByProviderAndProviderId(
+        devicesRepository.findByProviderAndProviderId(
                 provider = expectedExistingSBDevice.provider,
                 providerId = expectedExistingSBDevice.providerId)
-        updatedDeviceEntity.shouldNotBeNull()
-        updatedDeviceEntity.updatedOn?.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
+            .shouldBeRight().apply {
+                shouldNotBeNull()
+                updatedOn?.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS) //TODO think about it
+            }
     }
 
     @Test

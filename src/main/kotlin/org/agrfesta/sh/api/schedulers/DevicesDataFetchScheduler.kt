@@ -2,20 +2,20 @@ package org.agrfesta.sh.api.schedulers
 
 import arrow.core.Either
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.HumidityValue
 import org.agrfesta.sh.api.domain.devices.TemperatureValue
-import org.agrfesta.sh.api.persistence.repositories.DevicesRepository
+import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotService
 import org.agrfesta.sh.api.utils.Cache
+import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
 class DevicesDataFetchScheduler(
-    private val devicesRepository: DevicesRepository,
+    private val devicesRepository: DevicesDao,
     private val switchBotService: SwitchBotService,
     private val cache: Cache
 ) {
@@ -25,8 +25,8 @@ class DevicesDataFetchScheduler(
     @Async
     fun fetchDevicesData() {
         logger.info("[SCHEDULED TASK] start fetching devices data...")
-        devicesRepository.findAll()
-            .filter { f -> f.features.map { DeviceFeature.valueOf(it) }.contains(DeviceFeature.SENSOR) }
+        devicesRepository.getAll()
+            .filter { f -> f.features.contains(DeviceFeature.SENSOR) }
             .forEach {
                 val response = runBlocking { switchBotService.fetchSensorReadings(it.providerId) }
                 when (response) {

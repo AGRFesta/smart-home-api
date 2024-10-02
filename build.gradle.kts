@@ -3,7 +3,6 @@ plugins {
 	alias(libs.plugins.springboot)
 	alias(libs.plugins.springbootManagement)
 	alias(libs.plugins.kotlin.spring)
-	alias(libs.plugins.kotlin.jpa)
 	alias(libs.plugins.palantir)
 }
 
@@ -23,7 +22,7 @@ repositories {
 dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("org.springframework.boot:spring-boot-starter-jdbc")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("org.hibernate.orm:hibernate-core")
 	implementation("org.postgresql:postgresql")

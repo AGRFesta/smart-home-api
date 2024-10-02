@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.persistence.entities
+package org.agrfesta.sh.api.persistence.jdbc.entities
 
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
@@ -20,15 +20,16 @@ fun aDeviceEntity(
     provider: Provider = Provider.entries.toTypedArray().random(),
     status: DeviceStatus = DeviceStatus.entries.toTypedArray().random(),
     providerId: String = aRandomUniqueString(),
-    features: Set<DeviceFeature> = emptySet(),
+    features: MutableSet<DeviceFeature> = mutableSetOf(),
     createdOn: Instant = Instant.now(),
     updatedOn: Instant? = null
-) = DeviceEntity(uuid, name, provider, status, providerId, features.map { it.name }.toTypedArray(), createdOn, updatedOn)
+) = DeviceEntity(uuid, providerId, provider, name, status, features, createdOn, updatedOn)
 
 fun anAssociationEntity(
     uuid: UUID = UUID.randomUUID(),
-    room: RoomEntity = aRoomEntity(),
-    device: DeviceEntity = aDeviceEntity(),
+    roomUuid: UUID = UUID.randomUUID(),
+    deviceUuid: UUID = UUID.randomUUID(),
     connectedOn: Instant = Instant.now(),
     disconnectedOn: Instant? = null
-) = AssociationEntity(uuid, room, device, connectedOn, disconnectedOn)
+) = AssociationEntity(uuid = uuid, roomUuid = roomUuid, deviceUuid = deviceUuid, connectedOn = connectedOn,
+    disconnectedOn = disconnectedOn)

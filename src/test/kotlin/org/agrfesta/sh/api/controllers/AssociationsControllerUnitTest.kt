@@ -1,20 +1,18 @@
 package org.agrfesta.sh.api.controllers
 
+import arrow.core.left
+import arrow.core.right
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.slot
-import org.agrfesta.sh.api.persistence.AssociationsDaoImpl
-import org.agrfesta.sh.api.persistence.RoomsDaoImpl
-import org.agrfesta.sh.api.persistence.entities.AssociationEntity
-import org.agrfesta.sh.api.persistence.entities.aDeviceEntity
-import org.agrfesta.sh.api.persistence.entities.anAssociationEntity
-import org.agrfesta.sh.api.persistence.entities.aRoomEntity
-import org.agrfesta.sh.api.persistence.repositories.AssociationsRepository
-import org.agrfesta.sh.api.persistence.repositories.DevicesRepository
-import org.agrfesta.sh.api.persistence.repositories.RoomsRepository
+import org.agrfesta.sh.api.persistence.AssociationSuccess
+import org.agrfesta.sh.api.persistence.PersistenceFailure
+import org.agrfesta.sh.api.persistence.jdbc.dao.AssociationsDaoJdbcImpl
+import org.agrfesta.sh.api.persistence.jdbc.entities.AssociationEntity
+import org.agrfesta.sh.api.persistence.jdbc.entities.anAssociationEntity
+import org.agrfesta.sh.api.persistence.jdbc.repositories.AssociationsJdbcRepository
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -31,16 +29,14 @@ import java.time.ZonedDateTime
 import java.util.*
 
 @WebMvcTest(AssociationsController::class)
-@Import(RoomsDaoImpl::class, AssociationsDaoImpl::class)
+@Import(AssociationsDaoJdbcImpl::class)
 @ActiveProfiles("test")
 class AssociationsControllerUnitTest(
     @Autowired private val mockMvc: MockMvc,
     @Autowired private val objectMapper: ObjectMapper,
     @Autowired @MockkBean private val randomGenerator: RandomGenerator,
     @Autowired @MockkBean private val timeService: TimeService,
-    @Autowired @MockkBean private val roomsRepository: RoomsRepository,
-    @Autowired @MockkBean private val devicesRepository: DevicesRepository,
-    @Autowired @MockkBean private val associationsRepository: AssociationsRepository
+    @Autowired @MockkBean private val associationsRepository: AssociationsJdbcRepository
 ) {
     private val now = ZonedDateTime.now()
 
@@ -49,91 +45,68 @@ class AssociationsControllerUnitTest(
         every { timeService.now() } returns now.toInstant()
     }
 
-    @Test fun `create() returns 500 when room fetch fails`() {
+    @Test fun `create() returns 500 when device association fetch fails`() {
         val failure = aRandomUniqueString()
-        val room = aRoomEntity()
-        every { roomsRepository.findById(room.uuid) } throws Exception(failure)
-        val device = aDeviceEntity()
-        every { devicesRepository.findById(device.uuid) } returns Optional.of(device)
+        val roomUuid = UUID.randomUUID()
+        val deviceUuid = UUID.randomUUID()
+        every { associationsRepository.findByDevice(deviceUuid) } returns PersistenceFailure(Exception(failure)).left()
 
         val responseBody: String = mockMvc.perform(
             post("/associations")
             .contentType("application/json")
-            .content("""{"roomId": "${room.uuid}", "deviceId": "${device.uuid}"}"""))
+            .content("""{"roomId": "$roomUuid", "deviceId": "$deviceUuid"}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
         val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
-        response.message shouldBe "Unable to associate device ${device.uuid} to room ${room.uuid}! [$failure]"
-    }
-
-    @Test fun `create() returns 500 when device fetch fails`() {
-        val failure = aRandomUniqueString()
-        val room = aRoomEntity()
-        every { roomsRepository.findById(room.uuid) } returns Optional.of(room)
-        val device = aDeviceEntity()
-        every { devicesRepository.findById(device.uuid) } throws Exception(failure)
-
-        val responseBody: String = mockMvc.perform(
-            post("/associations")
-                .contentType("application/json")
-                .content("""{"roomId": "${room.uuid}", "deviceId": "${device.uuid}"}"""))
-            .andExpect(status().isInternalServerError)
-            .andReturn().response.contentAsString
-
-        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
-        response.message shouldBe "Unable to associate device ${device.uuid} to room ${room.uuid}! [$failure]"
+        response.message shouldBe "Unable to associate device $deviceUuid to room $roomUuid! [$failure]"
     }
 
     @Test fun `create() returns 500 when association persistence fails`() {
         val failure = aRandomUniqueString()
-        val room = aRoomEntity()
-        every { roomsRepository.findById(room.uuid) } returns Optional.of(room)
-        val device = aDeviceEntity()
-        every { devicesRepository.findById(device.uuid) } throws Exception(failure)
-        every { associationsRepository.findByDevice(device) } returns emptyList() // no previous associations
-        every { associationsRepository.save(any()) } throws Exception(failure)
+        val roomUuid = UUID.randomUUID()
+        val deviceUuid = UUID.randomUUID()
+        every { associationsRepository.findByDevice(deviceUuid) } returns
+                emptyList<AssociationEntity>().right() // no previous associations
+        every { associationsRepository.persistAssociation(any(), any()) } returns
+                PersistenceFailure(Exception(failure)).left()
 
         val responseBody: String = mockMvc.perform(
             post("/associations")
                 .contentType("application/json")
-                .content("""{"roomId": "${room.uuid}", "deviceId": "${device.uuid}"}"""))
+                .content("""{"roomId": "$roomUuid", "deviceId": "$deviceUuid"}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
         val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
-        response.message shouldBe "Unable to associate device ${device.uuid} to room ${room.uuid}! [$failure]"
+        response.message shouldBe "Unable to associate device $deviceUuid to room $roomUuid! [$failure]"
     }
 
     @Test fun `create() successfully assigns device, assigned to another room in the past but not anymore`() {
-        val room = aRoomEntity()
-        every { roomsRepository.findById(room.uuid) } returns Optional.of(room)
-        val device = aDeviceEntity()
-        every { devicesRepository.findById(device.uuid) } returns Optional.of(device)
+        val roomUuid = UUID.randomUUID()
+        val deviceUuid = UUID.randomUUID()
         val associationEntity = anAssociationEntity(
-            device = device,
+            deviceUuid = deviceUuid,
             connectedOn = now.minus(Period.ofYears(1)).toInstant(), // A year ago
             disconnectedOn = now.minus(Period.ofMonths(6)).toInstant() // six months ago
         )
-        every { associationsRepository.findByDevice(device) } returns listOf(associationEntity)
-        val associationSlot = slot<AssociationEntity>()
-        every { associationsRepository.save(capture(associationSlot)) } answers
-                { call.invocation.args[0] as AssociationEntity }
+        every { associationsRepository.findByDevice(deviceUuid) } returns listOf(associationEntity).right()
+        val roomUuidSlot = slot<UUID>()
+        val deviceUuidSlot = slot<UUID>()
+        every { associationsRepository.persistAssociation(capture(roomUuidSlot), capture(deviceUuidSlot)) } returns
+                AssociationSuccess.right()
 
         val responseBody: String = mockMvc.perform(
             post("/associations")
                 .contentType("application/json")
-                .content("""{"roomId": "${room.uuid}", "deviceId": "${device.uuid}"}"""))
+                .content("""{"roomId": "$roomUuid", "deviceId": "$deviceUuid"}"""))
             .andExpect(status().isCreated)
             .andReturn().response.contentAsString
 
         val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
-        response.message shouldBe "Device with id '${device.uuid}' successfully assigned to room with id '${room.uuid}'!"
-        val association = associationSlot.captured
-        association.room shouldBe room
-        association.device shouldBe device
-        association.connectedOn shouldBe now.toInstant()
-        association.disconnectedOn.shouldBeNull()
+        response.message shouldBe "Device with id '$deviceUuid' successfully assigned to room with id '$roomUuid'!"
+        roomUuidSlot.captured shouldBe roomUuid
+        deviceUuidSlot.captured shouldBe deviceUuid
     }
 
 }

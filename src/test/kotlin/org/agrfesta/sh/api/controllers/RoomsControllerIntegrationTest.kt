@@ -8,12 +8,9 @@ import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.agrfesta.sh.api.domain.Room
-import org.agrfesta.sh.api.domain.aDevice
-import org.agrfesta.sh.api.domain.aRoom
 import org.agrfesta.sh.api.persistence.AssociationsDao
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.RoomsDao
-import org.agrfesta.sh.api.persistence.repositories.RoomsRepository
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.BeforeEach
