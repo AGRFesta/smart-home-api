@@ -53,7 +53,7 @@ class DevicesDataHistorySchedulerIntegrationTest(
 
         @Container
         @ServiceConnection
-        val redis = RedisContainer(DockerImageName.parse("redis:7.0.10"))
+        val redis = RedisContainer(DockerImageName.parse("redis:7.0.10-alpine"))
 
     }
 

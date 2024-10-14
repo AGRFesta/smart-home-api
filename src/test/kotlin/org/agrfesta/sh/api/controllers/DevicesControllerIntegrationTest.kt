@@ -72,7 +72,7 @@ class DevicesControllerIntegrationTest(
 
         @Container
         @ServiceConnection
-        val redisContainer = RedisContainer(DockerImageName.parse("redis:7.0.10"))
+        val redisContainer = RedisContainer(DockerImageName.parse("redis:7.0.10-alpine"))
 
     }
 
