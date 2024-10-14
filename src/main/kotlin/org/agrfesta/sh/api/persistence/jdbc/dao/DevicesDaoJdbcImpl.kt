@@ -19,8 +19,8 @@ class DevicesDaoJdbcImpl(
 
     override fun getAll(): Collection<Device> = devicesJdbcRepository.getAll().map { it.asDevice() }
 
-    override fun create(device: DeviceDataValue, deviceStatus: DeviceStatus) =
-        devicesJdbcRepository.persist(device, deviceStatus)
+    override fun create(device: DeviceDataValue, initialStatus: DeviceStatus) =
+        devicesJdbcRepository.persist(device, initialStatus)
 
     override fun update(device: Device) = devicesJdbcRepository.update(device)
 }
