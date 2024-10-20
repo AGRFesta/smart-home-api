@@ -1,6 +1,8 @@
 package org.agrfesta.sh.api.domain.devices
 
 import arrow.core.Either
+import org.agrfesta.sh.api.domain.commons.RelativeHumidity
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.slf4j.Logger
 
 sealed interface SensorReadings
@@ -14,7 +16,7 @@ interface TemperatureValue: SensorReadings {
 }
 
 interface HumidityValue: SensorReadings {
-    val humidity: Humidity
+    val relativeHumidity: RelativeHumidity
 }
 
 sealed interface SensorReadingsFailure

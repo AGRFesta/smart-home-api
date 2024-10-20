@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "org.agrfesta.sh"
-version = "0.3.1"
+version = "0.4.0"
 
 java {
 	toolchain {

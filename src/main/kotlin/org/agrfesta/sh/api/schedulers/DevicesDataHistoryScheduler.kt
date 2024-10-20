@@ -1,10 +1,10 @@
 package org.agrfesta.sh.api.schedulers
 
 import arrow.core.Either
+import org.agrfesta.sh.api.domain.commons.RelativeHumidity
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
-import org.agrfesta.sh.api.domain.devices.Humidity
-import org.agrfesta.sh.api.domain.devices.Temperature
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.SensorsHistoryDataDao
 import org.agrfesta.sh.api.persistence.onLeftLogOn
@@ -12,7 +12,7 @@ import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.CacheFailure
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.utils.TimeService
-import org.agrfesta.sh.api.utils.getHumidityOf
+import org.agrfesta.sh.api.utils.getRelativeHumidityOf
 import org.agrfesta.sh.api.utils.getTemperatureOf
 import org.agrfesta.sh.api.utils.onLeftLogOn
 import org.springframework.scheduling.annotation.Async
@@ -39,7 +39,7 @@ class DevicesDataHistoryScheduler(
                 cache.getTemperatureOf(it)
                     .onRightPersistAsTemperatureOf(it)
                     .onLeftLogOn(logger)
-                cache.getHumidityOf(it)
+                cache.getRelativeHumidityOf(it)
                     .onRightPersistAsHumidityOf(it)
                     .onLeftLogOn(logger)
             }
@@ -58,7 +58,7 @@ class DevicesDataHistoryScheduler(
         historyDataDao.persistHumidity(
             sensorUuid = sensor.uuid,
             time = timeService.now(),
-            humidity = Humidity(BigDecimal(it))
+            relativeHumidity = RelativeHumidity(BigDecimal(it))
         ).onLeftLogOn(logger)
     }
 

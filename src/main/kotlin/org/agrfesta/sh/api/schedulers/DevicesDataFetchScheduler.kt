@@ -33,7 +33,7 @@ class DevicesDataFetchScheduler(
                 runBlocking { switchBotService.fetchSensorReadings(it.providerId) }
                     .onRight { readings ->
                         if (readings is TemperatureValue) { cache.setTemperatureOf(device = it, readings.temperature) }
-                        if (readings is HumidityValue) { cache.setHumidityOf(device = it, readings.humidity) }
+                        if (readings is HumidityValue) { cache.setHumidityOf(device = it, readings.relativeHumidity) }
                     }.onLeftLogOn(logger)
             }
         logger.info("[SCHEDULED TASK] end fetching devices data")
