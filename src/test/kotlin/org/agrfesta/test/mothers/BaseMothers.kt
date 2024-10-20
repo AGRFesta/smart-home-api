@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import org.agrfesta.sh.api.domain.commons.Percentage
-import org.agrfesta.sh.api.domain.devices.Temperature
+import org.agrfesta.sh.api.domain.commons.Temperature
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.*

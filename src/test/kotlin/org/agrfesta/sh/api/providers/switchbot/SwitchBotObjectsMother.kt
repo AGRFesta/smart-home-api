@@ -2,8 +2,8 @@ package org.agrfesta.sh.api.providers.switchbot
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
-import org.agrfesta.sh.api.domain.devices.Temperature
 import org.agrfesta.test.mothers.aRandomIntHumidity
 import org.agrfesta.test.mothers.aRandomIntPercentage
 import org.agrfesta.test.mothers.aRandomTemperature

@@ -2,7 +2,7 @@ package org.agrfesta.sh.api.providers.switchbot
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.coEvery
-import org.agrfesta.sh.api.domain.devices.Temperature
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.springframework.stereotype.Service
 
 @Service
