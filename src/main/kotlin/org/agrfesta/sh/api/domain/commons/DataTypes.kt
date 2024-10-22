@@ -4,3 +4,4 @@ import java.math.BigDecimal
 
 typealias Temperature = BigDecimal
 typealias RelativeHumidity = Percentage
+typealias RelativeHumidityHundreds = PercentageHundreds

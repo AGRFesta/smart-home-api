@@ -5,6 +5,7 @@ import java.math.BigDecimal.ONE
 import java.math.BigDecimal.ZERO
 
 data class Percentage(val value: BigDecimal) {
+    constructor(percentage: String): this(BigDecimal(percentage))
 
     init {
         require(value >= ZERO && value <= ONE) { "Percentage must be between 0 and 1, is $value." }
@@ -23,6 +24,7 @@ data class Percentage(val value: BigDecimal) {
 }
 
 data class PercentageHundreds(val value: BigDecimal) {
+    constructor(hundredPercentage: String): this(BigDecimal(hundredPercentage))
     constructor(hundredPercentage: Int): this(BigDecimal(hundredPercentage))
 
     companion object {
