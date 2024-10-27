@@ -11,6 +11,8 @@ import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.persistence.DeviceNotFound
 import org.agrfesta.sh.api.persistence.GetDeviceFailure
+import org.agrfesta.sh.api.persistence.PersistenceFailure
+import org.agrfesta.sh.api.persistence.PersistenceSuccess
 import org.agrfesta.sh.api.persistence.jdbc.entities.DeviceEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
@@ -59,10 +61,18 @@ class DevicesJdbcRepository(
             null
         }.right()
 
-    fun getAll(): Collection<DeviceEntity> =
-        jdbcTemplate.query("""SELECT * FROM smart_home.device;""", DeviceRowMapper)
+    fun getAll(): Either<PersistenceFailure, Collection<DeviceEntity>> =
+        try {
+            jdbcTemplate.query("""SELECT * FROM smart_home.device;""", DeviceRowMapper).right()
+        } catch (e: Exception) {
+            PersistenceFailure(e).left()
+        }
 
-    fun persist(device: DeviceDataValue, deviceStatus: DeviceStatus = DeviceStatus.PAIRED): UUID {
+
+    fun persist(
+        device: DeviceDataValue,
+        deviceStatus: DeviceStatus = DeviceStatus.PAIRED
+    ): Either<PersistenceFailure, UUID> {
         val uuid = randomGenerator.uuid()
         val sql = """
             INSERT INTO smart_home.device 
@@ -79,11 +89,15 @@ class DevicesJdbcRepository(
             "createdOn" to Timestamp.from(timeService.now()),
             "updatedOn" to null
         )
-        jdbcTemplate.update(sql, params)
-        return uuid
+        return try {
+            jdbcTemplate.update(sql, params)
+            uuid.right()
+        } catch (e: Exception) {
+            PersistenceFailure(e).left()
+        }
     }
 
-    fun update(device: Device) {
+    fun update(device: Device): Either<PersistenceFailure, PersistenceSuccess> {
         val sql = """
             UPDATE smart_home.device
             SET name = :name, status = :status, updated_on = :updatedOn
@@ -96,7 +110,12 @@ class DevicesJdbcRepository(
             "provider" to device.provider.name,
             "providerId" to device.providerId
         )
-        jdbcTemplate.update(sql, params)
+        return try {
+            jdbcTemplate.update(sql, params)
+            PersistenceSuccess.right()
+        } catch (e: Exception) {
+            PersistenceFailure(e).left()
+        }
     }
 
     fun deleteAll(): Int = jdbcTemplate.update("DELETE FROM smart_home.device", emptyMap<String, Any>())

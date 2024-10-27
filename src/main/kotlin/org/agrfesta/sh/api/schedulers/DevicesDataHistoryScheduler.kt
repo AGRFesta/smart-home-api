@@ -34,15 +34,18 @@ class DevicesDataHistoryScheduler(
     fun historyDevicesData() {
         logger.info("[SCHEDULED TASK] start devices history data...")
         devicesDao.getAll()
-            .filter { it.features.contains(DeviceFeature.SENSOR) }
-            .forEach {
-                cache.getTemperatureOf(it)
-                    .onRightPersistAsTemperatureOf(it)
-                    .onLeftLogOn(logger)
-                cache.getRelativeHumidityOf(it)
-                    .onRightPersistAsHumidityOf(it)
-                    .onLeftLogOn(logger)
+            .onRight { devices ->
+                devices.filter { it.features.contains(DeviceFeature.SENSOR) }
+                .forEach {
+                    cache.getTemperatureOf(it)
+                        .onRightPersistAsTemperatureOf(it)
+                        .onLeftLogOn(logger)
+                    cache.getRelativeHumidityOf(it)
+                        .onRightPersistAsHumidityOf(it)
+                        .onLeftLogOn(logger)
+                }
             }
+            .onLeft { failure -> logger.error("unable to get devices", failure.exception) }
         logger.info("[SCHEDULED TASK] end devices history data")
     }
 

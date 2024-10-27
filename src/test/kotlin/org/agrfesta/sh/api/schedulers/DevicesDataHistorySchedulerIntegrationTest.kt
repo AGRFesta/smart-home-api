@@ -65,7 +65,7 @@ class DevicesDataHistorySchedulerIntegrationTest(
         val sensorTemperature = aRandomTemperature()
         val sensorHumidity = aRandomIntHumidity()
         val sensor = aDeviceDataValue(features = setOf(SENSOR))
-        val uuid = devicesDao.create(sensor)
+        val uuid = devicesDao.create(sensor).shouldBeRight()
         switchBotClientAsserter.givenSensorData(sensor.providerId, sensorTemperature, sensorHumidity)
         devicesDataFetchScheduler.fetchDevicesData() // Force to fetch devices data and put them in cache
 

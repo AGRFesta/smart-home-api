@@ -10,6 +10,7 @@ import io.mockk.slot
 import io.mockk.verify
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aSensor
+import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
@@ -35,7 +36,7 @@ class DevicesDataFetchSchedulerUnitTest {
     )
 
     @Test fun `fetchDevicesData() do not cache any value when there are no devices`() {
-        every { devicesDao.getAll() } returns emptyList()
+        every { devicesDao.getAll() } returns emptyList<Device>().right()
 
         sut.fetchDevicesData()
 
@@ -44,7 +45,7 @@ class DevicesDataFetchSchedulerUnitTest {
 
     @Test fun `fetchDevicesData() do not cache any value when there are no sensors`() {
         val noSensorDevice = aDevice(features = setOf(DeviceFeature.ACTUATOR))
-        every { devicesDao.getAll() } returns listOf(noSensorDevice)
+        every { devicesDao.getAll() } returns listOf(noSensorDevice).right()
 
         sut.fetchDevicesData()
 
@@ -58,7 +59,7 @@ class DevicesDataFetchSchedulerUnitTest {
         dynamicTest(it) {
             val response = mapper.aSwitchBotDeviceStatusResponse(temperatureText = it)
             val sensor = aSensor()
-            every { devicesDao.getAll() } returns listOf(sensor)
+            every { devicesDao.getAll() } returns listOf(sensor).right()
             coEvery { switchBotDevicesClient.getDeviceStatus(sensor.providerId) } returns response
             val tempSlot = slot<String>()
             every { cache.set("sensors:switchbot:${sensor.providerId}:temperature", capture(tempSlot)) } returns

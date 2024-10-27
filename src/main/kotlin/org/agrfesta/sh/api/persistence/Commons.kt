@@ -8,3 +8,5 @@ data class PersistenceFailure(val exception: Exception): GetDeviceFailure, GetRo
 fun Either<PersistenceFailure, Any>.onLeftLogOn(logger: Logger) = onLeft {
     logger.error("persistence failure", it.exception)
 }
+
+object PersistenceSuccess
