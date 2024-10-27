@@ -21,6 +21,7 @@ class SwitchBotService(
     private val devicesClient: SwitchBotDevicesClient,
     private val mapper: ObjectMapper
 ): DevicesProvider, ReadableValuesDeviceProvider {
+    override val provider: Provider = Provider.SWITCHBOT
 
     override fun getAllDevices(): Collection<DeviceDataValue> {
         return runBlocking {

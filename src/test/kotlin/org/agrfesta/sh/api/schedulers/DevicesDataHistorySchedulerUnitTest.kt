@@ -7,6 +7,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aSensor
+import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.PersistenceFailure
@@ -39,7 +40,7 @@ class DevicesDataHistorySchedulerUnitTest {
     }
 
     @Test fun `historyDevicesData() do not save any history data when there are no devices`() {
-        every { devicesDao.getAll() } returns emptyList()
+        every { devicesDao.getAll() } returns emptyList<Device>().right()
 
         sut.historyDevicesData()
 
@@ -50,7 +51,7 @@ class DevicesDataHistorySchedulerUnitTest {
 
     @Test fun `historyDevicesData() do not save any history data when there are no sensors`() {
         val noSensorDevice = aDevice(features = setOf(DeviceFeature.ACTUATOR))
-        every { devicesDao.getAll() } returns listOf(noSensorDevice)
+        every { devicesDao.getAll() } returns listOf(noSensorDevice).right()
 
         sut.historyDevicesData()
 
@@ -65,7 +66,7 @@ class DevicesDataHistorySchedulerUnitTest {
         val sensorB = aSensor()
         val sensorBTemp = aRandomTemperature()
         val sensorBHumidity = aRandomHumidity()
-        every { devicesDao.getAll() } returns listOf(sensorA, sensorB)
+        every { devicesDao.getAll() } returns listOf(sensorA, sensorB).right()
         every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:temperature") } returns
                 CacheError(Exception("cache fetch failure")).left()
         every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:humidity") } returns
@@ -95,7 +96,7 @@ class DevicesDataHistorySchedulerUnitTest {
         val sensorB = aSensor()
         val sensorBTemp = aRandomTemperature()
         val sensorBHumidity = aRandomHumidity()
-        every { devicesDao.getAll() } returns listOf(sensorA, sensorB)
+        every { devicesDao.getAll() } returns listOf(sensorA, sensorB).right()
         every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:temperature") } returns
                 sensorATemp.toString().right()
         every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:humidity") } returns
@@ -126,7 +127,7 @@ class DevicesDataHistorySchedulerUnitTest {
         val sensorB = aSensor()
         val sensorBTemp = aRandomTemperature()
         val sensorBHumidity = aRandomHumidity()
-        every { devicesDao.getAll() } returns listOf(sensorA, sensorB)
+        every { devicesDao.getAll() } returns listOf(sensorA, sensorB).right()
         every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:temperature") } returns
                 sensorATemp.toString().right()
         every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:humidity") } returns
@@ -159,7 +160,7 @@ class DevicesDataHistorySchedulerUnitTest {
         val sensorB = aSensor()
         val sensorBTemp = aRandomTemperature()
         val sensorBHumidity = aRandomHumidity()
-        every { devicesDao.getAll() } returns listOf(sensorA, sensorB)
+        every { devicesDao.getAll() } returns listOf(sensorA, sensorB).right()
         every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:temperature") } returns
                 sensorATemp.toString().right()
         every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:humidity") } returns

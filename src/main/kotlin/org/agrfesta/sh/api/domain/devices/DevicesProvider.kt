@@ -1,5 +1,6 @@
 package org.agrfesta.sh.api.domain.devices
 
 interface DevicesProvider {
-    fun getAllDevices(): Collection<DeviceDataValue>
+    val provider: Provider
+    fun getAllDevices(): Collection<DeviceDataValue> //TODO introduce monads
 }

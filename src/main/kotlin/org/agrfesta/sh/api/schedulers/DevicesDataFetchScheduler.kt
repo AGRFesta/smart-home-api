@@ -9,6 +9,9 @@ import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotService
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.LoggerDelegate
+import org.agrfesta.sh.api.utils.getRelativeHumidityOf
+import org.agrfesta.sh.api.utils.getTemperatureOf
+import org.agrfesta.sh.api.utils.onLeftLogOn
 import org.agrfesta.sh.api.utils.setHumidityOf
 import org.agrfesta.sh.api.utils.setTemperatureOf
 import org.springframework.scheduling.annotation.Async
@@ -28,14 +31,17 @@ class DevicesDataFetchScheduler(
     fun fetchDevicesData() {
         logger.info("[SCHEDULED TASK] start fetching devices data...")
         devicesDao.getAll()
-            .filter { f -> f.features.contains(DeviceFeature.SENSOR) }
-            .forEach {
-                runBlocking { switchBotService.fetchSensorReadings(it.providerId) }
-                    .onRight { readings ->
-                        if (readings is TemperatureValue) { cache.setTemperatureOf(device = it, readings.temperature) }
-                        if (readings is HumidityValue) { cache.setHumidityOf(device = it, readings.relativeHumidity) }
-                    }.onLeftLogOn(logger)
+            .onRight { devices ->
+                devices.filter { f -> f.features.contains(DeviceFeature.SENSOR) }
+                    .forEach {
+                        runBlocking { switchBotService.fetchSensorReadings(it.providerId) }
+                            .onRight { readings ->
+                                if (readings is TemperatureValue) { cache.setTemperatureOf(device = it, readings.temperature) }
+                                if (readings is HumidityValue) { cache.setHumidityOf(device = it, readings.relativeHumidity) }
+                            }.onLeftLogOn(logger)
+                    }
             }
+            .onLeft { failure -> logger.error("unable to get devices", failure.exception) }
         logger.info("[SCHEDULED TASK] end fetching devices data")
     }
 

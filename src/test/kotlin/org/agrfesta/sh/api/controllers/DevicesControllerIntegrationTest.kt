@@ -109,7 +109,7 @@ class DevicesControllerIntegrationTest(
         newDevice.asDataValue() shouldBe expectedSBDeviceData
         result.updatedDevices.shouldBeEmpty()
         result.detachedDevices.shouldBeEmpty()
-        devicesDao.getAll().shouldContainExactly(newDevice)
+        devicesDao.getAll().shouldBeRight(listOf(newDevice))
         devicesRepository.findByProviderAndProviderId(expectedSBDeviceData.provider, expectedSBDeviceData.providerId)
             .shouldBeRight().apply {
                 shouldNotBeNull()
@@ -167,7 +167,7 @@ class DevicesControllerIntegrationTest(
     @Test
     fun `refresh() correctly update existing device`() {
         val existingSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
-        val uuid = devicesDao.create(existingSBDeviceData)
+        val uuid = devicesDao.create(existingSBDeviceData).shouldBeRight()
         val actualSBDeviceData = existingSBDeviceData.copy(name = aRandomUniqueString()) // name changed
         val expectedUpdatedSBDevice = aDevice(actualSBDeviceData, uuid)
         coEvery {
@@ -187,7 +187,8 @@ class DevicesControllerIntegrationTest(
         result.newDevices.shouldBeEmpty()
         result.updatedDevices.shouldContainExactly(expectedUpdatedSBDevice)
         result.detachedDevices.shouldBeEmpty()
-        devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice)
+        devicesDao.getAll().shouldBeRight()
+            .shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice)
         devicesRepository.findByProviderAndProviderId(
                 provider = existingSBDeviceData.provider,
                 providerId = existingSBDeviceData.providerId)
@@ -201,7 +202,7 @@ class DevicesControllerIntegrationTest(
     @Test
     fun `refresh() happy case with switchbot fetch failure`() {
         val deviceData = aDeviceDataValue(provider = SWITCHBOT)
-        val uuid = devicesDao.create(deviceData)
+        val uuid = devicesDao.create(deviceData).shouldBeRight()
         val expectedUpdatedSBDevice = aDevice(deviceData, uuid, DeviceStatus.DETACHED)
         coEvery { switchBotDevicesClient.getDevices() } throws Exception("switchbot fetch failure")
 
@@ -217,7 +218,8 @@ class DevicesControllerIntegrationTest(
         result.newDevices.shouldBeEmpty()
         result.updatedDevices.shouldBeEmpty()
         result.detachedDevices.shouldContainExactly(expectedUpdatedSBDevice)
-        devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice)
+        devicesDao.getAll().shouldBeRight()
+            .shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice)
     }
 
     @Test
@@ -225,9 +227,9 @@ class DevicesControllerIntegrationTest(
         val existingSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
         val existingDetachedSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
         val newSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
-        val uuid = devicesDao.create(existingSBDeviceData)
+        val uuid = devicesDao.create(existingSBDeviceData).shouldBeRight()
         val expectedUpdatedSBDevice: Device = aDevice(existingSBDeviceData, uuid)
-        val detachedUuid = devicesDao.create(existingDetachedSBDeviceData, DeviceStatus.DETACHED)
+        val detachedUuid = devicesDao.create(existingDetachedSBDeviceData, DeviceStatus.DETACHED).shouldBeRight()
         val expectedPairedDevice = aDevice(existingDetachedSBDeviceData, detachedUuid, DeviceStatus.PAIRED)
         coEvery {
             switchBotDevicesClient.getDevices()
@@ -250,7 +252,8 @@ class DevicesControllerIntegrationTest(
         newDevice.asDataValue() shouldBe newSBDeviceData
         result.updatedDevices.shouldContainExactly(expectedUpdatedSBDevice, expectedPairedDevice)
         result.detachedDevices.shouldBeEmpty()
-        devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice, expectedPairedDevice, newDevice)
+        devicesDao.getAll().shouldBeRight()
+            .shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice, expectedPairedDevice, newDevice)
     }
 
     private fun DeviceDataValue.asSBDeviceJsonNode(): JsonNode =

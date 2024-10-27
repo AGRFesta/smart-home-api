@@ -96,7 +96,7 @@ class AssociationsControllerIntegrationTest(
     fun `create() return 201 when successfully assigns device to room`() {
         val room = aRoom()
         roomsDao.save(room).shouldBeRight()
-        val deviceId = devicesDao.create(aDeviceDataValue())
+        val deviceId = devicesDao.create(aDeviceDataValue()).shouldBeRight()
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -117,7 +117,7 @@ class AssociationsControllerIntegrationTest(
         roomsDao.save(roomA).shouldBeRight()
         val roomB = aRoom()
         roomsDao.save(roomB).shouldBeRight()
-        val deviceId = devicesDao.create(aDeviceDataValue())
+        val deviceId = devicesDao.create(aDeviceDataValue()).shouldBeRight()
         associationsDao.associate(roomId = roomA.uuid, deviceId = deviceId).shouldBeRight()
 
         val result = given()
@@ -137,7 +137,7 @@ class AssociationsControllerIntegrationTest(
     fun `create() return 400 when device is already assigned to this room`() {
         val room = aRoom()
         roomsDao.save(room).shouldBeRight()
-        val deviceId = devicesDao.create(aDeviceDataValue())
+        val deviceId = devicesDao.create(aDeviceDataValue()).shouldBeRight()
         associationsDao.associate(roomId = room.uuid, deviceId = deviceId).shouldBeRight()
 
         val result = given()

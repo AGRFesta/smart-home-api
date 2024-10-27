@@ -1,10 +1,13 @@
 package org.agrfesta.sh.api.controllers
 
+import arrow.core.left
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import org.agrfesta.sh.api.domain.devices.DevicesService
 import org.agrfesta.sh.api.persistence.DevicesDao
+import org.agrfesta.sh.api.persistence.PersistenceFailure
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotService
 import org.junit.jupiter.api.Test
@@ -22,6 +25,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @ActiveProfiles("test")
 class DevicesControllerUnitTest(
     @Autowired private val mockMvc: MockMvc,
+    @Autowired private val objectMapper: ObjectMapper,
     @Autowired @MockkBean private val devicesDao: DevicesDao,
     @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient,
     @Autowired @MockkBean private val devicesService: DevicesService
@@ -29,13 +33,15 @@ class DevicesControllerUnitTest(
 
     @Test
     fun `refresh() returns 500 when is unable to fetch devices from db`() {
-        every { devicesDao.getAll() } throws Exception("devices fetch failure")
+        val failure = Exception("devices fetch failure")
+        every { devicesDao.getAll() } returns PersistenceFailure(failure).left()
 
         val resultContent: String = mockMvc.perform(post("/devices/refresh"))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
-        resultContent shouldBe "devices fetch failure"
+        val response: MessageResponse = objectMapper.readValue(resultContent, MessageResponse::class.java)
+        response.message shouldBe "Unable to fetch persisted devices!"
     }
 
 }
