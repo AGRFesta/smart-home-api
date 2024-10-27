@@ -10,6 +10,7 @@ import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DevicesProvider
 import org.agrfesta.sh.api.domain.devices.FailureByException
 import org.agrfesta.sh.api.domain.devices.Provider
+import org.agrfesta.sh.api.domain.devices.ProviderFailure
 import org.agrfesta.sh.api.domain.devices.ReadableValuesDeviceProvider
 import org.agrfesta.sh.api.domain.devices.SensorReadings
 import org.agrfesta.sh.api.domain.devices.SensorReadingsFailure
@@ -23,22 +24,22 @@ class SwitchBotService(
 ): DevicesProvider, ReadableValuesDeviceProvider {
     override val provider: Provider = Provider.SWITCHBOT
 
-    override fun getAllDevices(): Collection<DeviceDataValue> {
-        return runBlocking {
-            val response = devicesClient.getDevices()
-            val devices = response.at("/body/deviceList") as ArrayNode
-            devices
-                .map { mapper.treeToValue(it, SwitchBotDevice::class.java) }
-                .map {
-                    DeviceDataValue(
-                        providerId = it.deviceId,
-                        provider = Provider.SWITCHBOT,
-                        name = it.deviceName,
-                        features = it.deviceType.features
-                    )
-                }
+    override fun getAllDevices(): Either<ProviderFailure, Collection<DeviceDataValue>> = runBlocking {
+            try {
+                (devicesClient.getDevices().at("/body/deviceList") as ArrayNode)
+                    .map { mapper.treeToValue(it, SwitchBotDevice::class.java) }
+                    .map {
+                        DeviceDataValue(
+                            providerId = it.deviceId,
+                            provider = Provider.SWITCHBOT,
+                            name = it.deviceName,
+                            features = it.deviceType.features
+                        )
+                    }.right()
+            } catch (e: Exception) {
+                ProviderFailure(e).left()
+            }
         }
-    }
 
     override suspend fun fetchSensorReadings(deviceProviderId: String): Either<SensorReadingsFailure, SensorReadings> {
         val jsonNode = try{

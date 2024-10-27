@@ -1,11 +1,9 @@
 package org.agrfesta.sh.api.controllers
 
 import arrow.core.Either
-import arrow.core.right
 import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DevicesProvider
-import org.agrfesta.sh.api.domain.devices.DevicesRefreshResult
 import org.agrfesta.sh.api.domain.devices.DevicesService
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.utils.LoggerDelegate
@@ -41,13 +39,15 @@ class DevicesController(
             is Either.Right -> result.value
         }
         val providersDevices: List<DeviceDataValue> = devicesProviders
-            .flatMap {
-                try {
-                    it.getAllDevices()
-                } catch (e: Exception) {
-                    logger.error("Unable to get providers from ${it.provider}", e)
-                    emptyList()
-                }
+            .flatMap { service ->
+                service.getAllDevices()
+                    .fold(
+                        {
+                            logger.error("Unable to get providers from ${service.provider}", it.exception)
+                            emptyList()
+                        },
+                        { it }
+                    )
             }
         val result = devicesService.refresh(providersDevices, devices)
         result.updatedDevices.forEach { devicesDao.update(it) }
