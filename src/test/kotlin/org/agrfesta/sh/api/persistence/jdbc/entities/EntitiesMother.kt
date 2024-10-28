@@ -12,12 +12,13 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.util.*
 
-fun aRoomEntity(
+fun anAreaEntity(
     uuid: UUID = UUID.randomUUID(),
     name: String = aRandomUniqueString(),
+    isIndoor: Boolean = true,
     createdOn: Instant = Instant.now(),
     updatedOn: Instant? = null
-) = RoomEntity(uuid, name, createdOn, updatedOn)
+) = AreaEntity(uuid, name, isIndoor, createdOn, updatedOn)
 
 fun aDeviceEntity(
     uuid: UUID = UUID.randomUUID(),
@@ -43,11 +44,11 @@ fun aSensorEntity(
 
 fun anAssociationEntity(
     uuid: UUID = UUID.randomUUID(),
-    roomUuid: UUID = UUID.randomUUID(),
+    AreaUuid: UUID = UUID.randomUUID(),
     deviceUuid: UUID = UUID.randomUUID(),
     connectedOn: Instant = Instant.now(),
     disconnectedOn: Instant? = null
-) = AssociationEntity(uuid = uuid, roomUuid = roomUuid, deviceUuid = deviceUuid, connectedOn = connectedOn,
+) = AssociationEntity(uuid = uuid, areaUuid = AreaUuid, deviceUuid = deviceUuid, connectedOn = connectedOn,
     disconnectedOn = disconnectedOn)
 
 fun aSensorHistoryDataEntity(

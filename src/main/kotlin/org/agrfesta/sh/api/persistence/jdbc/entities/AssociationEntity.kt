@@ -6,9 +6,7 @@ import java.util.UUID
 class AssociationEntity(
     val uuid: UUID,
     val deviceUuid: UUID,
-    val roomUuid: UUID,
+    val areaUuid: UUID,
     val connectedOn: Instant,
     var disconnectedOn: Instant? = null
-) {
-
-}
+)
