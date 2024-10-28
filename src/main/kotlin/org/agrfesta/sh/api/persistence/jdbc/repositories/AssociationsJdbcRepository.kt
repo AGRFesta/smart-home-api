@@ -7,7 +7,7 @@ import org.agrfesta.sh.api.persistence.AssociationFailure
 import org.agrfesta.sh.api.persistence.AssociationSuccess
 import org.agrfesta.sh.api.persistence.DeviceNotFound
 import org.agrfesta.sh.api.persistence.PersistenceFailure
-import org.agrfesta.sh.api.persistence.RoomNotFound
+import org.agrfesta.sh.api.persistence.AreaNotFound
 import org.agrfesta.sh.api.persistence.jdbc.entities.AssociationEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
@@ -31,18 +31,18 @@ class AssociationsJdbcRepository(
 ) {
 
     companion object {
-        private val violateRoomFkRegex = Regex(".*violates foreign key constraint.*fk_room.*", RegexOption.IGNORE_CASE)
+        private val violateAreaFkRegex = Regex(".*violates foreign key constraint.*fk_area.*", RegexOption.IGNORE_CASE)
         private val violateDeviceFkRegex = Regex(".*violates foreign key constraint.*fk_device.*", RegexOption.IGNORE_CASE)
     }
 
-    fun persistAssociation(roomId: UUID, deviceId: UUID): Either<AssociationFailure, AssociationSuccess> {
+    fun persistAssociation(areaId: UUID, deviceId: UUID): Either<AssociationFailure, AssociationSuccess> {
         val sql = """
-            INSERT INTO smart_home.association (uuid, room_uuid, device_uuid, connected_on, disconnected_on)
-            VALUES (:uuid, :roomUuid, :deviceUuid, :connectedOn, NULL)
+            INSERT INTO smart_home.association (uuid, area_uuid, device_uuid, connected_on, disconnected_on)
+            VALUES (:uuid, :areaUuid, :deviceUuid, :connectedOn, NULL)
         """
         val params = mapOf(
             "uuid" to randomGenerator.uuid(),
-            "roomUuid" to roomId,
+            "areaUuid" to areaId,
             "deviceUuid" to deviceId,
             "connectedOn" to Timestamp.from(timeService.now())
         )
@@ -52,7 +52,7 @@ class AssociationsJdbcRepository(
             val message = e.cause?.message
             if (message!=null) {
                 return when {
-                    violateRoomFkRegex.containsMatchIn(message) -> RoomNotFound.left()
+                    violateAreaFkRegex.containsMatchIn(message) -> AreaNotFound.left()
                     violateDeviceFkRegex.containsMatchIn(message) -> DeviceNotFound.left()
                     else -> PersistenceFailure(e).left()
                 }
@@ -80,7 +80,7 @@ object AssociationRowMapper: RowMapper<AssociationEntity> {
     override fun mapRow(rs: ResultSet, rowNum: Int) = AssociationEntity(
             uuid = rs.getUuid("uuid"),
             deviceUuid = rs.getUuid("device_uuid"),
-            roomUuid = rs.getUuid("room_uuid"),
+            areaUuid = rs.getUuid("area_uuid"),
             connectedOn = rs.getInstant("connected_on"),
             disconnectedOn = rs.findInstant("disconnected_on")
         )

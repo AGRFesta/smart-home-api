@@ -47,24 +47,24 @@ class AssociationsControllerUnitTest(
 
     @Test fun `create() returns 500 when device association fetch fails`() {
         val failure = aRandomUniqueString()
-        val roomUuid = UUID.randomUUID()
+        val areaUuid = UUID.randomUUID()
         val deviceUuid = UUID.randomUUID()
         every { associationsRepository.findByDevice(deviceUuid) } returns PersistenceFailure(Exception(failure)).left()
 
         val responseBody: String = mockMvc.perform(
             post("/associations")
             .contentType("application/json")
-            .content("""{"roomId": "$roomUuid", "deviceId": "$deviceUuid"}"""))
+            .content("""{"areaId": "$areaUuid", "deviceId": "$deviceUuid"}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
         val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
-        response.message shouldBe "Unable to associate device $deviceUuid to room $roomUuid! [$failure]"
+        response.message shouldBe "Unable to associate device $deviceUuid to area $areaUuid! [$failure]"
     }
 
     @Test fun `create() returns 500 when association persistence fails`() {
         val failure = aRandomUniqueString()
-        val roomUuid = UUID.randomUUID()
+        val areaUuid = UUID.randomUUID()
         val deviceUuid = UUID.randomUUID()
         every { associationsRepository.findByDevice(deviceUuid) } returns
                 emptyList<AssociationEntity>().right() // no previous associations
@@ -74,16 +74,16 @@ class AssociationsControllerUnitTest(
         val responseBody: String = mockMvc.perform(
             post("/associations")
                 .contentType("application/json")
-                .content("""{"roomId": "$roomUuid", "deviceId": "$deviceUuid"}"""))
+                .content("""{"areaId": "$areaUuid", "deviceId": "$deviceUuid"}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
         val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
-        response.message shouldBe "Unable to associate device $deviceUuid to room $roomUuid! [$failure]"
+        response.message shouldBe "Unable to associate device $deviceUuid to area $areaUuid! [$failure]"
     }
 
-    @Test fun `create() successfully assigns device, assigned to another room in the past but not anymore`() {
-        val roomUuid = UUID.randomUUID()
+    @Test fun `create() successfully assigns device, assigned to another area in the past but not anymore`() {
+        val areaUuid = UUID.randomUUID()
         val deviceUuid = UUID.randomUUID()
         val associationEntity = anAssociationEntity(
             deviceUuid = deviceUuid,
@@ -91,21 +91,21 @@ class AssociationsControllerUnitTest(
             disconnectedOn = now.minus(Period.ofMonths(6)).toInstant() // six months ago
         )
         every { associationsRepository.findByDevice(deviceUuid) } returns listOf(associationEntity).right()
-        val roomUuidSlot = slot<UUID>()
+        val areaUuidSlot = slot<UUID>()
         val deviceUuidSlot = slot<UUID>()
-        every { associationsRepository.persistAssociation(capture(roomUuidSlot), capture(deviceUuidSlot)) } returns
+        every { associationsRepository.persistAssociation(capture(areaUuidSlot), capture(deviceUuidSlot)) } returns
                 AssociationSuccess.right()
 
         val responseBody: String = mockMvc.perform(
             post("/associations")
                 .contentType("application/json")
-                .content("""{"roomId": "$roomUuid", "deviceId": "$deviceUuid"}"""))
+                .content("""{"areaId": "$areaUuid", "deviceId": "$deviceUuid"}"""))
             .andExpect(status().isCreated)
             .andReturn().response.contentAsString
 
         val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
-        response.message shouldBe "Device with id '$deviceUuid' successfully assigned to room with id '$roomUuid'!"
-        roomUuidSlot.captured shouldBe roomUuid
+        response.message shouldBe "Device with id '$deviceUuid' successfully assigned to area with id '$areaUuid'!"
+        areaUuidSlot.captured shouldBe areaUuid
         deviceUuidSlot.captured shouldBe deviceUuid
     }
 

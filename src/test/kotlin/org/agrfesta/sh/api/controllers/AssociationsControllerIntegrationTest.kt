@@ -7,12 +7,11 @@ import io.mockk.every
 import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
-import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aDeviceDataValue
-import org.agrfesta.sh.api.domain.aRoom
+import org.agrfesta.sh.api.domain.anArea
 import org.agrfesta.sh.api.persistence.AssociationsDao
 import org.agrfesta.sh.api.persistence.DevicesDao
-import org.agrfesta.sh.api.persistence.RoomsDao
+import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -32,7 +31,7 @@ import java.util.*
 @ActiveProfiles("test")
 class AssociationsControllerIntegrationTest(
     @Autowired @MockkBean private val randomGenerator: RandomGenerator,
-    @Autowired private val roomsDao: RoomsDao,
+    @Autowired private val areasDao: AreaDao,
     @Autowired private val devicesDao: DevicesDao,
     @Autowired private val associationsDao: AssociationsDao
 ) {
@@ -58,13 +57,13 @@ class AssociationsControllerIntegrationTest(
 
     ///// create ////////////////////////////////////////////////////////////////////////////////////////////////////
     @Test
-    fun `create() return 400 when room is not found`() {
-        val deviceId = UUID.randomUUID()
-        val roomId = UUID.randomUUID()
+    fun `create() return 400 when area is not found`() {
+        val deviceId = devicesDao.create(aDeviceDataValue()).shouldBeRight()
+        val areaId = UUID.randomUUID()
 
         val result = given()
             .contentType(ContentType.JSON)
-            .body("""{"roomId": "$roomId", "deviceId": "$deviceId"}""")
+            .body("""{"areaId": "$areaId", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/associations")
             .then()
@@ -72,17 +71,17 @@ class AssociationsControllerIntegrationTest(
             .extract()
             .`as`(MessageResponse::class.java)
 
-        result.message shouldBe "Room with id '$roomId' is missing!"
+        result.message shouldBe "Area with id '$areaId' is missing!"
     }
     @Test
     fun `create() return 400 when device is not found`() {
         val deviceId = UUID.randomUUID()
-        val room = aRoom()
-        roomsDao.save(room).shouldBeRight()
+        val area = anArea()
+        areasDao.save(area).shouldBeRight()
 
         val result = given()
             .contentType(ContentType.JSON)
-            .body("""{"roomId": "${room.uuid}", "deviceId": "$deviceId"}""")
+            .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/associations")
             .then()
@@ -93,14 +92,14 @@ class AssociationsControllerIntegrationTest(
         result.message shouldBe "Device with id '$deviceId' is missing!"
     }
     @Test
-    fun `create() return 201 when successfully assigns device to room`() {
-        val room = aRoom()
-        roomsDao.save(room).shouldBeRight()
+    fun `create() return 201 when successfully assigns device to area`() {
+        val area = anArea()
+        areasDao.save(area).shouldBeRight()
         val deviceId = devicesDao.create(aDeviceDataValue()).shouldBeRight()
 
         val result = given()
             .contentType(ContentType.JSON)
-            .body("""{"roomId": "${room.uuid}", "deviceId": "$deviceId"}""")
+            .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/associations")
             .then()
@@ -108,21 +107,21 @@ class AssociationsControllerIntegrationTest(
             .extract()
             .`as`(MessageResponse::class.java)
 
-        result.message shouldBe "Device with id '$deviceId' successfully assigned to room with id '${room.uuid}'!"
+        result.message shouldBe "Device with id '$deviceId' successfully assigned to area with id '${area.uuid}'!"
     }
 
     @Test
-    fun `create() return 400 when device is already assigned to another room`() {
-        val roomA = aRoom()
-        roomsDao.save(roomA).shouldBeRight()
-        val roomB = aRoom()
-        roomsDao.save(roomB).shouldBeRight()
+    fun `create() return 400 when device is already assigned to another area`() {
+        val areaA = anArea()
+        areasDao.save(areaA).shouldBeRight()
+        val areaB = anArea()
+        areasDao.save(areaB).shouldBeRight()
         val deviceId = devicesDao.create(aDeviceDataValue()).shouldBeRight()
-        associationsDao.associate(roomId = roomA.uuid, deviceId = deviceId).shouldBeRight()
+        associationsDao.associate(areaId = areaA.uuid, deviceId = deviceId).shouldBeRight()
 
         val result = given()
             .contentType(ContentType.JSON)
-            .body("""{"roomId": "${roomB.uuid}", "deviceId": "$deviceId"}""")
+            .body("""{"areaId": "${areaB.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/associations")
             .then()
@@ -130,19 +129,19 @@ class AssociationsControllerIntegrationTest(
             .extract()
             .`as`(MessageResponse::class.java)
 
-        result.message shouldBe "Device with id '$deviceId' is already assigned to another room!"
+        result.message shouldBe "Device with id '$deviceId' is already assigned to another area!"
     }
 
     @Test
-    fun `create() return 400 when device is already assigned to this room`() {
-        val room = aRoom()
-        roomsDao.save(room).shouldBeRight()
+    fun `create() return 400 when device is already assigned to this area`() {
+        val area = anArea()
+        areasDao.save(area).shouldBeRight()
         val deviceId = devicesDao.create(aDeviceDataValue()).shouldBeRight()
-        associationsDao.associate(roomId = room.uuid, deviceId = deviceId).shouldBeRight()
+        associationsDao.associate(areaId = area.uuid, deviceId = deviceId).shouldBeRight()
 
         val result = given()
             .contentType(ContentType.JSON)
-            .body("""{"roomId": "${room.uuid}", "deviceId": "$deviceId"}""")
+            .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/associations")
             .then()
@@ -150,7 +149,7 @@ class AssociationsControllerIntegrationTest(
             .extract()
             .`as`(MessageResponse::class.java)
 
-        result.message shouldBe "Device with id '$deviceId' is already assigned to room with id '${room.uuid}'!"
+        result.message shouldBe "Device with id '$deviceId' is already assigned to area with id '${area.uuid}'!"
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
