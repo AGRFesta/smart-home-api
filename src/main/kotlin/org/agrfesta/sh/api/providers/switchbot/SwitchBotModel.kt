@@ -2,12 +2,12 @@ package org.agrfesta.sh.api.providers.switchbot
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.agrfesta.sh.api.domain.commons.PercentageHundreds
-import org.agrfesta.sh.api.domain.commons.RelativeHumidity
+import org.agrfesta.sh.api.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.domain.devices.BatteryValue
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
-import org.agrfesta.sh.api.domain.devices.HumidityValue
-import org.agrfesta.sh.api.domain.devices.TemperatureValue
+import org.agrfesta.sh.api.domain.devices.SensorReadings
+import org.agrfesta.sh.api.domain.devices.ThermoHygroDataValue
 import java.math.BigDecimal
 
 enum class SwitchBotDeviceType(val features: Set<DeviceFeature>) {
@@ -18,9 +18,17 @@ enum class SwitchBotDeviceType(val features: Set<DeviceFeature>) {
 }
 
 data class SwitchBotSensorReadings(
-    override val temperature: BigDecimal,
+    val temperature: BigDecimal,
     val humidityInt: Int,
-    override val battery: Int
-): TemperatureValue, HumidityValue, BatteryValue {
-    override val relativeHumidity: RelativeHumidity = PercentageHundreds(humidityInt).toPercentage()
+    val batteryLevel: Int
+) {
+
+    fun toSensorReadings(): SensorReadings = object : ThermoHygroDataValue, BatteryValue {
+        override val thermoHygroData = ThermoHygroData(
+            temperature = temperature,
+            relativeHumidity = PercentageHundreds(humidityInt).toPercentage()
+        )
+        override val battery: Int = batteryLevel
+    }
+
 }

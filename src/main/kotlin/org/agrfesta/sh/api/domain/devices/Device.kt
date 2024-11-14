@@ -2,14 +2,19 @@ package org.agrfesta.sh.api.domain.devices
 
 import java.util.UUID
 
+interface DeviceProviderIdentity {
+    val providerId: String
+    val provider: Provider
+}
+
 data class Device (
     val uuid: UUID,
     val status: DeviceStatus,
-    val providerId: String,
-    val provider: Provider,
+    override val providerId: String,
+    override val provider: Provider,
     val name: String,
     val features: Set<DeviceFeature>
-) {
+): DeviceProviderIdentity {
     constructor(uuid: UUID,  dataValue: DeviceDataValue, status: DeviceStatus = DeviceStatus.PAIRED) : this(
         uuid = uuid,
         status = status,
@@ -23,8 +28,8 @@ data class Device (
 }
 
 data class DeviceDataValue(
-    val providerId: String,
-    val provider: Provider,
+    override val providerId: String,
+    override val provider: Provider,
     val name: String,
     val features: Set<DeviceFeature>
-)
+): DeviceProviderIdentity
