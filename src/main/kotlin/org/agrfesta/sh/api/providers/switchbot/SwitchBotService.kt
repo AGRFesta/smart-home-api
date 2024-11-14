@@ -50,7 +50,8 @@ class SwitchBotService(
         return SwitchBotSensorReadings(
             temperature = jsonNode.at("/body/temperature").asText().let { BigDecimal(it) },
             humidityInt = jsonNode.at("/body/humidity").intValue(),
-            battery = jsonNode.at("/body/battery").intValue()
-        ).right()
+            batteryLevel = jsonNode.at("/body/battery").intValue())
+            .toSensorReadings()
+            .right()
     }
 }

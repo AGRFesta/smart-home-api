@@ -13,16 +13,15 @@ import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.PersistenceFailure
 import org.agrfesta.sh.api.persistence.SensorDataPersistenceSuccess
 import org.agrfesta.sh.api.persistence.SensorsHistoryDataDao
-import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.CacheError
+import org.agrfesta.sh.api.utils.SmartCache
 import org.agrfesta.sh.api.utils.TimeService
-import org.agrfesta.test.mothers.aRandomHumidity
-import org.agrfesta.test.mothers.aRandomTemperature
+import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
 class DevicesDataHistorySchedulerUnitTest {
-    private val cache: Cache = mockk()
+    private val smartCache: SmartCache = mockk()
     private val timeService: TimeService = mockk()
     private val devicesDao: DevicesDao = mockk()
     private val historyDataDao: SensorsHistoryDataDao = mockk()
@@ -31,7 +30,7 @@ class DevicesDataHistorySchedulerUnitTest {
     private val sut = DevicesDataHistoryScheduler(
         devicesDao = devicesDao,
         historyDataDao = historyDataDao,
-        cache = cache,
+        cache = smartCache,
         timeService = timeService
     )
 
@@ -44,7 +43,7 @@ class DevicesDataHistorySchedulerUnitTest {
 
         sut.historyDevicesData()
 
-        verify(exactly = 0) { cache.get(any()) }
+        verify(exactly = 0) { smartCache.getThermoHygroOf(any()) }
         verify(exactly = 0) { historyDataDao.persistHumidity(any(), any(),any()) }
         verify(exactly = 0) { historyDataDao.persistTemperature(any(), any(),any()) }
     }
@@ -55,135 +54,79 @@ class DevicesDataHistorySchedulerUnitTest {
 
         sut.historyDevicesData()
 
-        verify(exactly = 0) { cache.get(any()) }
+        verify(exactly = 0) { smartCache.getThermoHygroOf(any()) }
         verify(exactly = 0) { historyDataDao.persistHumidity(any(), any(),any()) }
         verify(exactly = 0) { historyDataDao.persistTemperature(any(), any(),any()) }
     }
 
-    @Test fun `historyDevicesData() ignores temperature cache fetch failures`() {
+    @Test fun `historyDevicesData() ignores data cache fetch failures`() {
         val sensorA = aSensor()
-        val sensorAHumidity = aRandomHumidity()
         val sensorB = aSensor()
-        val sensorBTemp = aRandomTemperature()
-        val sensorBHumidity = aRandomHumidity()
+        val sensorBData = aRandomThermoHygroData()
         every { devicesDao.getAll() } returns listOf(sensorA, sensorB).right()
-        every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:temperature") } returns
-                CacheError(Exception("cache fetch failure")).left()
-        every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:humidity") } returns
-                sensorAHumidity.asText().right()
-        every { cache.get("sensors:${sensorB.provider.name.lowercase()}:${sensorB.providerId}:temperature") } returns
-                sensorBTemp.toString().right()
-        every { cache.get("sensors:${sensorB.provider.name.lowercase()}:${sensorB.providerId}:humidity") } returns
-                sensorBHumidity.asText().right()
-        every { historyDataDao.persistHumidity(sensorA.uuid, now, sensorAHumidity) } returns
+        every { smartCache.getThermoHygroOf(sensorA) } returns CacheError(Exception("cache fetch failure")).left()
+        every { smartCache.getThermoHygroOf(sensorB) } returns sensorBData.right()
+        every { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBData.relativeHumidity) } returns
                 SensorDataPersistenceSuccess.right()
-        every { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBHumidity) } returns
-                SensorDataPersistenceSuccess.right()
-        every { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBTemp) } returns
-                SensorDataPersistenceSuccess.right()
-
-        sut.historyDevicesData()
-
-        verify(exactly = 1) { historyDataDao.persistHumidity(sensorA.uuid, now, sensorAHumidity) }
-        verify(exactly = 0) { historyDataDao.persistTemperature(sensorA.uuid, any(), any()) }
-        verify(exactly = 1) { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBHumidity) }
-        verify(exactly = 1) { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBTemp) }
-    }
-
-    @Test fun `historyDevicesData() ignores humidity cache fetch failures`() {
-        val sensorA = aSensor()
-        val sensorATemp = aRandomTemperature()
-        val sensorB = aSensor()
-        val sensorBTemp = aRandomTemperature()
-        val sensorBHumidity = aRandomHumidity()
-        every { devicesDao.getAll() } returns listOf(sensorA, sensorB).right()
-        every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:temperature") } returns
-                sensorATemp.toString().right()
-        every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:humidity") } returns
-                CacheError(Exception("cache fetch failure")).left()
-        every { cache.get("sensors:${sensorB.provider.name.lowercase()}:${sensorB.providerId}:temperature") } returns
-                sensorBTemp.toString().right()
-        every { cache.get("sensors:${sensorB.provider.name.lowercase()}:${sensorB.providerId}:humidity") } returns
-                sensorBHumidity.asText().right()
-        every { historyDataDao.persistTemperature(sensorA.uuid, now, sensorATemp) } returns
-                SensorDataPersistenceSuccess.right()
-        every { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBHumidity) } returns
-                SensorDataPersistenceSuccess.right()
-        every { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBTemp) } returns
+        every { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBData.temperature) } returns
                 SensorDataPersistenceSuccess.right()
 
         sut.historyDevicesData()
 
         verify(exactly = 0) { historyDataDao.persistHumidity(sensorA.uuid, any(), any()) }
-        verify(exactly = 1) { historyDataDao.persistTemperature(sensorA.uuid, now, sensorATemp) }
-        verify(exactly = 1) { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBHumidity) }
-        verify(exactly = 1) { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBTemp) }
+        verify(exactly = 0) { historyDataDao.persistTemperature(sensorA.uuid, any(), any()) }
+        verify(exactly = 1) { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBData.relativeHumidity) }
+        verify(exactly = 1) { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBData.temperature) }
     }
 
     @Test fun `historyDevicesData() ignores temperature persist failures`() {
         val sensorA = aSensor()
-        val sensorATemp = aRandomTemperature()
-        val sensorAHumidity = aRandomHumidity()
+        val sensorAData = aRandomThermoHygroData()
         val sensorB = aSensor()
-        val sensorBTemp = aRandomTemperature()
-        val sensorBHumidity = aRandomHumidity()
+        val sensorBData = aRandomThermoHygroData()
         every { devicesDao.getAll() } returns listOf(sensorA, sensorB).right()
-        every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:temperature") } returns
-                sensorATemp.toString().right()
-        every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:humidity") } returns
-                sensorAHumidity.asText().right()
-        every { cache.get("sensors:${sensorB.provider.name.lowercase()}:${sensorB.providerId}:temperature") } returns
-                sensorBTemp.toString().right()
-        every { cache.get("sensors:${sensorB.provider.name.lowercase()}:${sensorB.providerId}:humidity") } returns
-                sensorBHumidity.asText().right()
-        every { historyDataDao.persistHumidity(sensorA.uuid, now, sensorAHumidity) } returns
+        every { smartCache.getThermoHygroOf(sensorA) } returns sensorAData.right()
+        every { smartCache.getThermoHygroOf(sensorB) } returns sensorBData.right()
+        every { historyDataDao.persistHumidity(sensorA.uuid, now, sensorAData.relativeHumidity) } returns
                 SensorDataPersistenceSuccess.right()
-        every { historyDataDao.persistTemperature(sensorA.uuid, now, sensorATemp) } returns
+        every { historyDataDao.persistTemperature(sensorA.uuid, now, sensorAData.temperature) } returns
                 PersistenceFailure(Exception("persistence failure")).left()
-        every { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBHumidity) } returns
+        every { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBData.relativeHumidity) } returns
                 SensorDataPersistenceSuccess.right()
-        every { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBTemp) } returns
+        every { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBData.temperature) } returns
                 SensorDataPersistenceSuccess.right()
 
         sut.historyDevicesData()
 
-        verify(exactly = 1) { historyDataDao.persistHumidity(sensorA.uuid, now, sensorAHumidity) }
-        verify(exactly = 1) { historyDataDao.persistTemperature(sensorA.uuid, now, sensorATemp) }
-        verify(exactly = 1) { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBHumidity) }
-        verify(exactly = 1) { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBTemp) }
+        verify(exactly = 1) { historyDataDao.persistHumidity(sensorA.uuid, now, sensorAData.relativeHumidity) }
+        verify(exactly = 1) { historyDataDao.persistTemperature(sensorA.uuid, now, sensorAData.temperature) }
+        verify(exactly = 1) { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBData.relativeHumidity) }
+        verify(exactly = 1) { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBData.temperature) }
     }
 
     @Test fun `historyDevicesData() ignores humidity persist failures`() {
         val sensorA = aSensor()
-        val sensorATemp = aRandomTemperature()
-        val sensorAHumidity = aRandomHumidity()
+        val sensorAData = aRandomThermoHygroData()
         val sensorB = aSensor()
-        val sensorBTemp = aRandomTemperature()
-        val sensorBHumidity = aRandomHumidity()
+        val sensorBData = aRandomThermoHygroData()
         every { devicesDao.getAll() } returns listOf(sensorA, sensorB).right()
-        every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:temperature") } returns
-                sensorATemp.toString().right()
-        every { cache.get("sensors:${sensorA.provider.name.lowercase()}:${sensorA.providerId}:humidity") } returns
-                sensorAHumidity.asText().right()
-        every { cache.get("sensors:${sensorB.provider.name.lowercase()}:${sensorB.providerId}:temperature") } returns
-                sensorBTemp.toString().right()
-        every { cache.get("sensors:${sensorB.provider.name.lowercase()}:${sensorB.providerId}:humidity") } returns
-                sensorBHumidity.asText().right()
-        every { historyDataDao.persistHumidity(sensorA.uuid, now, sensorAHumidity) } returns
+        every { smartCache.getThermoHygroOf(sensorA) } returns sensorAData.right()
+        every { smartCache.getThermoHygroOf(sensorB) } returns sensorBData.right()
+        every { historyDataDao.persistHumidity(sensorA.uuid, now, sensorAData.relativeHumidity) } returns
                 PersistenceFailure(Exception("persistence failure")).left()
-        every { historyDataDao.persistTemperature(sensorA.uuid, now, sensorATemp) } returns
+        every { historyDataDao.persistTemperature(sensorA.uuid, now, sensorAData.temperature) } returns
                 SensorDataPersistenceSuccess.right()
-        every { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBHumidity) } returns
+        every { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBData.relativeHumidity) } returns
                 SensorDataPersistenceSuccess.right()
-        every { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBTemp) } returns
+        every { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBData.temperature) } returns
                 SensorDataPersistenceSuccess.right()
 
         sut.historyDevicesData()
 
-        verify(exactly = 1) { historyDataDao.persistHumidity(sensorA.uuid, now, sensorAHumidity) }
-        verify(exactly = 1) { historyDataDao.persistTemperature(sensorA.uuid, now, sensorATemp) }
-        verify(exactly = 1) { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBHumidity) }
-        verify(exactly = 1) { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBTemp) }
+        verify(exactly = 1) { historyDataDao.persistHumidity(sensorA.uuid, now, sensorAData.relativeHumidity) }
+        verify(exactly = 1) { historyDataDao.persistTemperature(sensorA.uuid, now, sensorAData.temperature) }
+        verify(exactly = 1) { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBData.relativeHumidity) }
+        verify(exactly = 1) { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBData.temperature) }
     }
 
 }
