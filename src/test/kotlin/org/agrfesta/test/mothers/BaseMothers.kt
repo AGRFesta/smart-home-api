@@ -9,6 +9,8 @@ import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.commons.ThermoHygroData
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlin.random.Random
 
@@ -17,6 +19,8 @@ fun aRandomPercentage(scale: Int = 10) = Percentage(BigDecimal(Random.nextDouble
     .setScale(scale, RoundingMode.CEILING)
     .stripTrailingZeros())
 fun aRandomIntPercentage(): Int = Random.nextInt(from = 0, until = 101)
+fun aRandomTtl(): Long = Random.nextLong(from = 1, until = 2_628_000) // max five years
+fun nowNoMills(): Instant = Instant.now().truncatedTo(ChronoUnit.SECONDS)
 
 fun anUrl(): String = "https://${aRandomUniqueString()}.org"
 
