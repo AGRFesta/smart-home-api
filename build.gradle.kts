@@ -29,6 +29,8 @@ dependencies {
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.0")
 	implementation(libs.ktor.core)
 	implementation(libs.ktor.okhttp)
+	implementation(libs.ktor.content.negotiation)
+	implementation(libs.ktor.jackson)
 	implementation(libs.flyway.core)
 	implementation(libs.arrow.core)
 	runtimeOnly(libs.flyway.postgress)
