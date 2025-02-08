@@ -1,6 +1,7 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
 import java.sql.Timestamp
+import java.time.temporal.ChronoUnit
 import org.agrfesta.sh.api.domain.commons.CacheEntry
 import org.agrfesta.sh.api.utils.TimeService
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
@@ -13,7 +14,7 @@ class CacheJdbcRepository(
     private val timeService: TimeService
 ) {
 
-    fun upsert(key: String, value: String, ttl: Long) {
+    fun upsert(key: String, value: String, ttl: Long? = null) {
         val sql = """
             INSERT INTO smart_home.cache (key, value, created_at, expires_at)
             VALUES (:key, :value, :createdAt, :expiresAt)
@@ -21,31 +22,23 @@ class CacheJdbcRepository(
             SET value = EXCLUDED.value, expires_at = EXCLUDED.expires_at
         """.trimIndent()
         val createdAt = Timestamp.from(timeService.now())
-        val expiresAt = Timestamp.from(timeService.now().plusSeconds(ttl))
-
+        val expiresAt = ttl?.let { Timestamp.from(timeService.now().truncatedTo(ChronoUnit.SECONDS).plusSeconds(it)) }
         val params = MapSqlParameterSource()
             .addValue("key", key)
             .addValue("value", value)
             .addValue("createdAt", createdAt)
             .addValue("expiresAt", expiresAt)
-
         jdbcTemplate.update(sql, params)
     }
 
     fun findEntry(key: String): CacheEntry? {
         val sql = """
-            SELECT value, expires_at FROM smart_home.cache 
-            WHERE key = :key
+            SELECT value, expires_at FROM smart_home.cache
+            WHERE key = :key AND (expires_at IS NULL OR expires_at > :currentTime)
         """.trimIndent()
-//        val sql = """
-//            SELECT value, expires_at FROM smart_home.cache
-//            WHERE key = :key AND (expires_at IS NULL OR expires_at > :currentTime)
-//        """.trimIndent()
-
         val params = MapSqlParameterSource()
             .addValue("key", key)
             .addValue("currentTime", Timestamp.from(timeService.now()))
-
         return jdbcTemplate.query(sql, params) { rs, _ ->
             CacheEntry(
                 value = rs.getString("value"),
