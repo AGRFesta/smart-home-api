@@ -1,5 +1,10 @@
 providers:
+  netatmo:
+    base-url: https://netatmo.fake
+    client-id: fake-client-id
+    client-secret: fake-client-secret
+    home-id: fake-home-id
   switchbot:
-    baseUrl: https://switch-bot.fake
+    base-url: https://switch-bot.fake
     token: fake-token
     secret: fake-secret

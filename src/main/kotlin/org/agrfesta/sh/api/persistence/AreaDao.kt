@@ -3,6 +3,9 @@ package org.agrfesta.sh.api.persistence
 import arrow.core.Either
 import org.agrfesta.sh.api.domain.Area
 import java.util.*
+import org.agrfesta.sh.api.domain.failures.AreaCreationFailure
+import org.agrfesta.sh.api.domain.failures.GetAreaFailure
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 
 interface AreaDao {
     fun save(area: Area): Either<AreaCreationFailure, Area>
@@ -12,8 +15,4 @@ interface AreaDao {
     fun getAll(): Either<PersistenceFailure, Collection<Area>>
 }
 
-sealed interface GetAreaFailure: AssociationFailure
-sealed interface AreaCreationFailure
 
-data object AreaNotFound: GetAreaFailure
-data object AreaNameConflict: AreaCreationFailure

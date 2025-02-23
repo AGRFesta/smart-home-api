@@ -5,6 +5,8 @@ import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DevicesProvider
 import org.agrfesta.sh.api.domain.devices.DevicesService
+import org.agrfesta.sh.api.domain.failures.ExceptionFailure
+import org.agrfesta.sh.api.domain.failures.MessageFailure
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.http.HttpHeaders
@@ -43,7 +45,13 @@ class DevicesController(
                 service.getAllDevices()
                     .fold(
                         {
-                            logger.error("Unable to get providers from ${service.provider}", it.exception)
+                            if (it is MessageFailure) {
+                                logger.error("Unable to get providers from ${service.provider}, cause: ${it.message}")
+                            } else if (it is ExceptionFailure) {
+                                logger.error("Unable to get providers from ${service.provider}", it.exception)
+                            } else {
+                                TODO()
+                            }
                             emptyList()
                         },
                         { it }

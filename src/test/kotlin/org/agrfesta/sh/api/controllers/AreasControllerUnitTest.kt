@@ -9,8 +9,10 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.slot
+import java.time.Instant
+import java.util.*
 import org.agrfesta.sh.api.domain.Area
-import org.agrfesta.sh.api.persistence.PersistenceFailure
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.jdbc.dao.AreasDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.utils.RandomGenerator
@@ -24,8 +26,6 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import java.time.Instant
-import java.util.*
 
 @WebMvcTest(AreasController::class)
 @Import(AreasDaoJdbcImpl::class)

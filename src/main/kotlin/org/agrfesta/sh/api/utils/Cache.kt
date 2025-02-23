@@ -3,6 +3,7 @@ package org.agrfesta.sh.api.utils
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import org.agrfesta.sh.api.domain.failures.ExceptionFailure
 import org.slf4j.Logger
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
@@ -15,7 +16,7 @@ interface Cache {
 sealed interface CacheResponse
 data object CacheOkResponse: CacheResponse
 sealed interface CacheFailure
-class CacheError(val reason: Throwable): CacheFailure, CacheResponse
+class CacheError(override val exception: Exception): CacheFailure, CacheResponse, ExceptionFailure
 data class CachedValueNotFound(val key: String): CacheFailure
 
 @Service
@@ -34,7 +35,7 @@ class RedisCache(private val template: RedisTemplate<String, String>): Cache {
 
 fun Either<CacheFailure, String>.onLeftLogOn(logger: Logger) = onLeft {
     when(it) {
-        is CacheError -> logger.error("cache fetch failure", it.reason)
+        is CacheError -> logger.error("cache fetch failure", it.exception)
         is CachedValueNotFound -> logger.error("missing cache key: ${it.key}")
     }
 }

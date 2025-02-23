@@ -6,6 +6,7 @@ import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.devices.SensorHistoryData
 import java.time.Instant
 import java.util.*
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 
 interface SensorsHistoryDataDao {
 

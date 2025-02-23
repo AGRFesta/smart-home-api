@@ -1,14 +1,14 @@
 package org.agrfesta.sh.api.persistence.jdbc.dao
 
 import arrow.core.Either
+import java.util.*
 import org.agrfesta.sh.api.domain.Area
-import org.agrfesta.sh.api.persistence.GetAreaFailure
-import org.agrfesta.sh.api.persistence.PersistenceFailure
-import org.agrfesta.sh.api.persistence.AreaCreationFailure
+import org.agrfesta.sh.api.domain.failures.AreaCreationFailure
+import org.agrfesta.sh.api.domain.failures.GetAreaFailure
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.springframework.stereotype.Service
-import java.util.*
 
 @Service
 class AreasDaoJdbcImpl(

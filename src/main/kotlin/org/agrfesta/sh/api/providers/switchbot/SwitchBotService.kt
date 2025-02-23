@@ -10,7 +10,7 @@ import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DevicesProvider
 import org.agrfesta.sh.api.domain.devices.FailureByException
 import org.agrfesta.sh.api.domain.devices.Provider
-import org.agrfesta.sh.api.domain.devices.ProviderFailure
+import org.agrfesta.sh.api.domain.failures.ProviderFailure
 import org.agrfesta.sh.api.domain.devices.ReadableValuesDeviceProvider
 import org.agrfesta.sh.api.domain.devices.SensorReadings
 import org.agrfesta.sh.api.domain.devices.SensorReadingsFailure

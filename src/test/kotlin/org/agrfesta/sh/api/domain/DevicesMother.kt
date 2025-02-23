@@ -5,23 +5,24 @@ import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.domain.devices.Provider
+import org.agrfesta.test.mothers.aRandomUniqueString
 import java.util.*
 
 fun aDevice(
     uuid: UUID = UUID.randomUUID(),
-    providerId: String = UUID.randomUUID().toString(),
+    providerId: String = aRandomUniqueString(),
     provider: Provider = Provider.SWITCHBOT,
     status: DeviceStatus = DeviceStatus.PAIRED,
-    name: String = UUID.randomUUID().toString(),
+    name: String = aRandomUniqueString(),
     features: Set<DeviceFeature> = emptySet()
 ) = Device(uuid, status, providerId, provider, name, features)
 
 fun aSensor(
     uuid: UUID = UUID.randomUUID(),
-    providerId: String = UUID.randomUUID().toString(),
+    providerId: String = aRandomUniqueString(),
     provider: Provider = Provider.SWITCHBOT,
     status: DeviceStatus = DeviceStatus.PAIRED,
-    name: String = UUID.randomUUID().toString(),
+    name: String = aRandomUniqueString(),
     additionalFeatures: Set<DeviceFeature> = emptySet()
 ) = Device(uuid, status, providerId, provider, name, additionalFeatures + DeviceFeature.SENSOR)
 
@@ -39,8 +40,8 @@ fun aDevice(
 )
 
 fun aDeviceDataValue(
-    providerId: String = UUID.randomUUID().toString(),
+    providerId: String = aRandomUniqueString(),
     provider: Provider = Provider.SWITCHBOT,
-    name: String = UUID.randomUUID().toString(),
+    name: String = aRandomUniqueString(),
     features: Set<DeviceFeature> = emptySet()
 ) = DeviceDataValue(providerId, provider, name, features)

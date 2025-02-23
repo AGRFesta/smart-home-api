@@ -5,6 +5,8 @@ import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import java.util.*
+import org.agrfesta.sh.api.domain.failures.GetDeviceFailure
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 
 interface DevicesDao {
 
@@ -40,9 +42,4 @@ interface DevicesDao {
 
 }
 
-/**
- * Groups all causes of a failure fetching a [Device].
- */
-sealed interface GetDeviceFailure: AssociationFailure
 
-data object DeviceNotFound: GetDeviceFailure

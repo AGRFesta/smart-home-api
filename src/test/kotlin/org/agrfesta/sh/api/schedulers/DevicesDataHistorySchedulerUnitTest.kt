@@ -5,12 +5,13 @@ import arrow.core.right
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import java.time.Instant
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aSensor
 import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.DevicesDao
-import org.agrfesta.sh.api.persistence.PersistenceFailure
 import org.agrfesta.sh.api.persistence.SensorDataPersistenceSuccess
 import org.agrfesta.sh.api.persistence.SensorsHistoryDataDao
 import org.agrfesta.sh.api.utils.CacheError
@@ -18,7 +19,6 @@ import org.agrfesta.sh.api.utils.SmartCache
 import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.junit.jupiter.api.Test
-import java.time.Instant
 
 class DevicesDataHistorySchedulerUnitTest {
     private val smartCache: SmartCache = mockk()

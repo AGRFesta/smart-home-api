@@ -51,7 +51,7 @@ fun DeviceProviderIdentity.getThermoHygroKey() =
 
 fun Either<CacheFailure, ThermoHygroData>.onLeftLogOn(logger: Logger) = onLeft {
     when(it) {
-        is CacheError -> logger.error("ThermoHygroData cache fetch failure", it.reason)
+        is CacheError -> logger.error("ThermoHygroData cache fetch failure", it.exception)
         is CachedValueNotFound -> logger.error("missing cache key: ${it.key}")
     }
 }

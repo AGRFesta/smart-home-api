@@ -1,11 +1,12 @@
 package org.agrfesta.sh.api.controllers
 
-import org.agrfesta.sh.api.persistence.AssociationConflict
+import java.util.*
+import org.agrfesta.sh.api.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.domain.failures.AssociationConflict
+import org.agrfesta.sh.api.domain.failures.DeviceNotFound
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.domain.failures.SameAreaAssociation
 import org.agrfesta.sh.api.persistence.AssociationsDao
-import org.agrfesta.sh.api.persistence.DeviceNotFound
-import org.agrfesta.sh.api.persistence.PersistenceFailure
-import org.agrfesta.sh.api.persistence.AreaNotFound
-import org.agrfesta.sh.api.persistence.SameAreaAssociation
 import org.springframework.http.HttpStatus.CREATED
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import java.util.*
 
 @RestController
 @RequestMapping("/associations")

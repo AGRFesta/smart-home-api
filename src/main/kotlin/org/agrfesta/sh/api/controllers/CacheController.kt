@@ -1,5 +1,8 @@
 package org.agrfesta.sh.api.controllers
 
+import arrow.core.Either
+import org.agrfesta.sh.api.domain.failures.PersistedCacheEntryNotFound
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.jdbc.repositories.CacheJdbcRepository
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.ResponseEntity
@@ -26,8 +29,14 @@ class CacheController(
 
     @GetMapping("/{key}")
     fun getCacheEntry(@PathVariable key: String): ResponseEntity<Any> {
-        return cacheJdbcRepository.findEntry(key)?.let { ok(it) }
-            ?: status(NOT_FOUND).body(MessageResponse("Key '$key' is missing"))
+        val result = cacheJdbcRepository.findEntry(key)
+        return when (result) {
+            is Either.Left -> when(result.value) {
+                PersistedCacheEntryNotFound -> status(NOT_FOUND).body(MessageResponse("Key '$key' is missing"))
+                is PersistenceFailure -> TODO()
+            }
+            is Either.Right -> ok(result.value)
+        }
     }
 
 }

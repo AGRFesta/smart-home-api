@@ -1,5 +1,7 @@
 package org.agrfesta.sh.api.controllers
 
+import arrow.core.left
+import arrow.core.right
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
@@ -17,16 +19,24 @@ import io.mockk.every
 import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
+import org.agrfesta.sh.api.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.domain.devices.DevicesRefreshResult
+import org.agrfesta.sh.api.domain.devices.Provider.NETATMO
 import org.agrfesta.sh.api.domain.devices.Provider.SWITCHBOT
+import org.agrfesta.sh.api.domain.failures.ProviderFailure
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
+import org.agrfesta.sh.api.providers.netatmo.NetatmoClient
+import org.agrfesta.sh.api.providers.netatmo.aHomeData
+import org.agrfesta.sh.api.providers.netatmo.anEmptyHomeData
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType.HUB_MINI
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType.METER
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType.METER_PLUS
@@ -35,6 +45,7 @@ import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDevice
 import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDevicesListSuccessResponse
 import org.agrfesta.sh.api.providers.switchbot.toASwitchBotDeviceType
+import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.BeforeEach
@@ -48,8 +59,6 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
@@ -57,8 +66,10 @@ import java.time.temporal.ChronoUnit
 class DevicesControllerIntegrationTest(
     @Autowired private val devicesDao: DevicesDao,
     @Autowired private val devicesRepository: DevicesJdbcRepository,
+    @Autowired private val cache: Cache,
     @Autowired private val objectMapper: ObjectMapper,
     @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient,
+    @Autowired @MockkBean private val netatmoClient: NetatmoClient,
     @Autowired @MockkBean private val timeService: TimeService
 ) {
 
@@ -90,10 +101,17 @@ class DevicesControllerIntegrationTest(
 
     @Test
     fun `refresh() correctly save new device`() {
-        val expectedSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
+        val expectedSBDeviceData = givenASBDeviceData()
+
+        val token = aRandomUniqueString()
+        cache.set("provider.netatmo.access-token", token)
+        val expectedNetatmoDeviceData = aDeviceDataValue(provider = NETATMO, features = setOf(SENSOR, ACTUATOR))
         coEvery {
-            switchBotDevicesClient.getDevices()
-        } returns objectMapper.aSwitchBotDevicesListSuccessResponse(listOf(expectedSBDeviceData.asSBDeviceJsonNode()))
+            netatmoClient.getHomesData(token)
+        } returns objectMapper.aHomeData(
+            name = expectedNetatmoDeviceData.name,
+            deviceId = expectedNetatmoDeviceData.providerId
+        ).right()
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -104,12 +122,14 @@ class DevicesControllerIntegrationTest(
             .extract()
             .`as`(DevicesRefreshResponse::class.java)
 
-        result.newDevices.shouldHaveSize(1)
-        val newDevice = result.newDevices.first()
-        newDevice.asDataValue() shouldBe expectedSBDeviceData
+        result.newDevices.shouldHaveSize(2)
         result.updatedDevices.shouldBeEmpty()
         result.detachedDevices.shouldBeEmpty()
-        devicesDao.getAll().shouldBeRight(listOf(newDevice))
+        val newDevices = result.newDevices.associateBy { it.provider }
+
+        val sbNewDevice = newDevices[SWITCHBOT]
+        sbNewDevice.shouldNotBeNull()
+        sbNewDevice.asDataValue() shouldBe expectedSBDeviceData
         devicesRepository.findByProviderAndProviderId(expectedSBDeviceData.provider, expectedSBDeviceData.providerId)
             .shouldBeRight().apply {
                 shouldNotBeNull()
@@ -119,6 +139,22 @@ class DevicesControllerIntegrationTest(
                 createdOn.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
                 updatedOn.shouldBeNull()
             }
+
+        val netatmoNewDevice = newDevices[NETATMO]
+        netatmoNewDevice.shouldNotBeNull()
+        netatmoNewDevice.asDataValue() shouldBe expectedNetatmoDeviceData
+        devicesRepository.findByProviderAndProviderId(expectedSBDeviceData.provider, expectedSBDeviceData.providerId)
+            .shouldBeRight().apply {
+                shouldNotBeNull()
+                name shouldBe expectedSBDeviceData.name
+                provider shouldBe SWITCHBOT
+                providerId shouldBe expectedSBDeviceData.providerId
+                createdOn.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
+                updatedOn.shouldBeNull()
+            }
+
+        val allDevices = devicesDao.getAll().shouldBeRight()
+        allDevices.shouldContainExactlyInAnyOrder(netatmoNewDevice, sbNewDevice)
     }
 
     @Test
@@ -134,6 +170,8 @@ class DevicesControllerIntegrationTest(
         coEvery {
             switchBotDevicesClient.getDevices()
         } returns objectMapper.aSwitchBotDevicesListSuccessResponse(listOf(hubMini, meterPlus, woIoSensor, meter))
+
+        givenNoNetatmoDevices()
 
         given()
             .contentType(ContentType.JSON)
@@ -167,13 +205,26 @@ class DevicesControllerIntegrationTest(
     @Test
     fun `refresh() correctly update existing device`() {
         val existingSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
-        val uuid = devicesDao.create(existingSBDeviceData).shouldBeRight()
+        val uuid0 = devicesDao.create(existingSBDeviceData).shouldBeRight()
         val actualSBDeviceData = existingSBDeviceData.copy(name = aRandomUniqueString()) // name changed
-        val expectedUpdatedSBDevice = aDevice(actualSBDeviceData, uuid)
+        val expectedUpdatedSBDevice = aDevice(actualSBDeviceData, uuid0)
         coEvery {
             switchBotDevicesClient.getDevices()
         } returns objectMapper.aSwitchBotDevicesListSuccessResponse(listOf(
             actualSBDeviceData.asSBDeviceJsonNode()))
+
+        val existingNetatmoDeviceData = aDeviceDataValue(provider = NETATMO, features = setOf(SENSOR, ACTUATOR))
+        val uuid1 = devicesDao.create(existingNetatmoDeviceData).shouldBeRight()
+        val actualNetatmoDeviceData = existingNetatmoDeviceData.copy(name = aRandomUniqueString()) // name changed
+        val expectedUpdatedNetatmoDevice = aDevice(actualNetatmoDeviceData, uuid1)
+        val token = aRandomUniqueString()
+        cache.set("provider.netatmo.access-token", token)
+        coEvery {
+            netatmoClient.getHomesData(token)
+        } returns objectMapper.aHomeData(
+            name = expectedUpdatedNetatmoDevice.name,
+            deviceId = expectedUpdatedNetatmoDevice.providerId
+        ).right()
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -185,10 +236,11 @@ class DevicesControllerIntegrationTest(
             .`as`(DevicesRefreshResult::class.java)
 
         result.newDevices.shouldBeEmpty()
-        result.updatedDevices.shouldContainExactly(expectedUpdatedSBDevice)
+        result.updatedDevices.shouldContainExactlyInAnyOrder(expectedUpdatedNetatmoDevice, expectedUpdatedSBDevice)
         result.detachedDevices.shouldBeEmpty()
         devicesDao.getAll().shouldBeRight()
-            .shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice)
+            .shouldContainExactlyInAnyOrder(expectedUpdatedNetatmoDevice, expectedUpdatedSBDevice)
+
         devicesRepository.findByProviderAndProviderId(
                 provider = existingSBDeviceData.provider,
                 providerId = existingSBDeviceData.providerId)
@@ -200,11 +252,18 @@ class DevicesControllerIntegrationTest(
     }
 
     @Test
-    fun `refresh() happy case with switchbot fetch failure`() {
+    fun `refresh() Update existing devices to 'DETACHED' when fails to fetch them from provider`() {
         val deviceData = aDeviceDataValue(provider = SWITCHBOT)
         val uuid = devicesDao.create(deviceData).shouldBeRight()
         val expectedUpdatedSBDevice = aDevice(deviceData, uuid, DeviceStatus.DETACHED)
         coEvery { switchBotDevicesClient.getDevices() } throws Exception("switchbot fetch failure")
+
+        val existingNetatmoDeviceData = aDeviceDataValue(provider = NETATMO, features = setOf(SENSOR, ACTUATOR))
+        val uuid1 = devicesDao.create(existingNetatmoDeviceData).shouldBeRight()
+        val expectedUpdatedNetatmoDevice = aDevice(existingNetatmoDeviceData, uuid1, DeviceStatus.DETACHED)
+        val token = aRandomUniqueString()
+        cache.set("provider.netatmo.access-token", token)
+        coEvery { netatmoClient.getHomesData(token) } returns ProviderFailure(Exception("netatmo fetch failure")).left()
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -217,9 +276,9 @@ class DevicesControllerIntegrationTest(
 
         result.newDevices.shouldBeEmpty()
         result.updatedDevices.shouldBeEmpty()
-        result.detachedDevices.shouldContainExactly(expectedUpdatedSBDevice)
+        result.detachedDevices.shouldContainExactlyInAnyOrder(expectedUpdatedNetatmoDevice, expectedUpdatedSBDevice)
         devicesDao.getAll().shouldBeRight()
-            .shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice)
+            .shouldContainExactlyInAnyOrder(expectedUpdatedNetatmoDevice, expectedUpdatedSBDevice)
     }
 
     @Test
@@ -237,6 +296,8 @@ class DevicesControllerIntegrationTest(
             newSBDeviceData.asSBDeviceJsonNode(),
             existingSBDeviceData.asSBDeviceJsonNode(),
             existingDetachedSBDeviceData.asSBDeviceJsonNode()))
+
+        givenNoNetatmoDevices() // Depends on what to test for Netatmo
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -262,5 +323,21 @@ class DevicesControllerIntegrationTest(
             deviceName = name,
             deviceType = features.toASwitchBotDeviceType()
         )
+
+    private fun givenASBDeviceData(): DeviceDataValue {
+        val expectedSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
+        coEvery {
+            switchBotDevicesClient.getDevices()
+        } returns objectMapper.aSwitchBotDevicesListSuccessResponse(listOf(expectedSBDeviceData.asSBDeviceJsonNode()))
+        return expectedSBDeviceData
+    }
+
+    private fun givenNoNetatmoDevices() {
+        val token = aRandomUniqueString()
+        cache.set("provider.netatmo.access-token", token)
+        coEvery {
+            netatmoClient.getHomesData(token)
+        } returns objectMapper.anEmptyHomeData().right()
+    }
 
 }

@@ -4,14 +4,17 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.util.*
 import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.domain.devices.Provider
-import org.agrfesta.sh.api.persistence.DeviceNotFound
-import org.agrfesta.sh.api.persistence.GetDeviceFailure
-import org.agrfesta.sh.api.persistence.PersistenceFailure
+import org.agrfesta.sh.api.domain.failures.DeviceNotFound
+import org.agrfesta.sh.api.domain.failures.GetDeviceFailure
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.PersistenceSuccess
 import org.agrfesta.sh.api.persistence.jdbc.entities.DeviceEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
@@ -25,9 +28,6 @@ import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.util.*
 
 @Service
 class DevicesJdbcRepository(

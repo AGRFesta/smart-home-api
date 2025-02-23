@@ -3,8 +3,8 @@ package org.agrfesta.sh.api.controllers
 import arrow.core.Either.Left
 import arrow.core.Either.Right
 import org.agrfesta.sh.api.domain.Area
-import org.agrfesta.sh.api.persistence.PersistenceFailure
-import org.agrfesta.sh.api.persistence.AreaNameConflict
+import org.agrfesta.sh.api.domain.failures.AreaNameConflict
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.springframework.http.HttpStatus.CREATED
