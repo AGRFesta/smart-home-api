@@ -7,8 +7,11 @@ import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.slot
+import java.time.Period
+import java.time.ZonedDateTime
+import java.util.*
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.AssociationSuccess
-import org.agrfesta.sh.api.persistence.PersistenceFailure
 import org.agrfesta.sh.api.persistence.jdbc.dao.AssociationsDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.entities.AssociationEntity
 import org.agrfesta.sh.api.persistence.jdbc.entities.anAssociationEntity
@@ -24,9 +27,6 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import java.time.Period
-import java.time.ZonedDateTime
-import java.util.*
 
 @WebMvcTest(AssociationsController::class)
 @Import(AssociationsDaoJdbcImpl::class)

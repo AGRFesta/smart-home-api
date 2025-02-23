@@ -2,16 +2,16 @@ package org.agrfesta.sh.api.persistence.jdbc.dao
 
 import arrow.core.Either
 import arrow.core.left
+import java.util.*
 import org.agrfesta.sh.api.domain.Area
-import org.agrfesta.sh.api.persistence.AssociationConflict
-import org.agrfesta.sh.api.persistence.AssociationFailure
+import org.agrfesta.sh.api.domain.failures.AssociationConflict
+import org.agrfesta.sh.api.domain.failures.AssociationFailure
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.domain.failures.SameAreaAssociation
 import org.agrfesta.sh.api.persistence.AssociationSuccess
 import org.agrfesta.sh.api.persistence.AssociationsDao
-import org.agrfesta.sh.api.persistence.PersistenceFailure
-import org.agrfesta.sh.api.persistence.SameAreaAssociation
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AssociationsJdbcRepository
 import org.springframework.stereotype.Service
-import java.util.*
 
 @Service
 class AssociationsDaoJdbcImpl(

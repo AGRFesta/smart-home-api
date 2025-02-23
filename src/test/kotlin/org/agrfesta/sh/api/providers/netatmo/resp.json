@@ -1,0 +1,35 @@
+{
+  "status": "ok",
+  "time_server": 1739100358,
+  "body": {
+    "home": {
+      "id": "6759635b4f8cc3a6d8063736",
+      "rooms": [
+        {
+          "id": "793525095",
+          "reachable": true,
+          "anticipating": false,
+          "heating_power_request": 0,
+          "open_window": false,
+          "humidity": 54,
+          "therm_measured_temperature": 17.7,
+          "therm_setpoint_temperature": 18,
+          "therm_setpoint_start_time": 1738519112,
+          "therm_setpoint_end_time": null,
+          "therm_setpoint_mode": "home"
+        }
+      ],
+      "modules": [
+        {
+          "id": "00:03:50:d0:7a:80",
+          "type": "BNS",
+          "firmware_revision": 37,
+          "wifi_strength": 51,
+          "boiler_valve_comfort_boost": false,
+          "boiler_status": true,
+          "cooler_status": false
+        }
+      ]
+    }
+  }
+}

@@ -4,12 +4,15 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.util.*
 import org.agrfesta.sh.api.domain.Area
-import org.agrfesta.sh.api.persistence.GetAreaFailure
-import org.agrfesta.sh.api.persistence.PersistenceFailure
-import org.agrfesta.sh.api.persistence.AreaCreationFailure
-import org.agrfesta.sh.api.persistence.AreaNameConflict
-import org.agrfesta.sh.api.persistence.AreaNotFound
+import org.agrfesta.sh.api.domain.failures.AreaCreationFailure
+import org.agrfesta.sh.api.domain.failures.AreaNameConflict
+import org.agrfesta.sh.api.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.domain.failures.GetAreaFailure
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.jdbc.entities.AreaEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
@@ -20,9 +23,6 @@ import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.util.*
 
 @Service
 class AreasJdbcRepository(

@@ -1,17 +1,18 @@
 package org.agrfesta.test.mothers
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import org.agrfesta.sh.api.domain.commons.Percentage
-import org.agrfesta.sh.api.domain.commons.RelativeHumidity
-import org.agrfesta.sh.api.domain.commons.Temperature
-import org.agrfesta.sh.api.domain.commons.ThermoHygroData
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
+import org.agrfesta.sh.api.domain.commons.Percentage
+import org.agrfesta.sh.api.domain.commons.RelativeHumidity
+import org.agrfesta.sh.api.domain.commons.Temperature
+import org.agrfesta.sh.api.domain.commons.ThermoHygroData
+import org.agrfesta.sh.api.domain.devices.Provider
 import kotlin.random.Random
 
 fun aRandomUniqueString(): String = UUID.randomUUID().toString()
@@ -25,11 +26,13 @@ fun nowNoMills(): Instant = Instant.now().truncatedTo(ChronoUnit.SECONDS)
 fun anUrl(): String = "https://${aRandomUniqueString()}.org"
 
 fun aJsonNode(): JsonNode {
-    val mapper = ObjectMapper()
+    val mapper = jacksonObjectMapper()
     val rootNode: ObjectNode = mapper.createObjectNode()
     rootNode.put("property", aRandomUniqueString())
     return rootNode
 }
+
+fun aProvider() = Provider.entries.random()
 
 fun aRandomTemperature(scale: Int = 10): Temperature = BigDecimal(Random.nextDouble(from = -100.0, until = 100.0))
     .setScale(scale, RoundingMode.CEILING)

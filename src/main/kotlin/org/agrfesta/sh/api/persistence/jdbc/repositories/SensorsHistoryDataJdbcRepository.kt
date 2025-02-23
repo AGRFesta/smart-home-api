@@ -3,8 +3,13 @@ package org.agrfesta.sh.api.persistence.jdbc.repositories
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import java.math.BigDecimal
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.time.Instant
+import java.util.*
 import org.agrfesta.sh.api.domain.devices.SensorDataType
-import org.agrfesta.sh.api.persistence.PersistenceFailure
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.SensorDataPersistenceSuccess
 import org.agrfesta.sh.api.persistence.jdbc.entities.SensorHistoryDataEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
@@ -13,11 +18,6 @@ import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.time.Instant
-import java.util.*
 
 @Service
 class SensorsHistoryDataJdbcRepository(

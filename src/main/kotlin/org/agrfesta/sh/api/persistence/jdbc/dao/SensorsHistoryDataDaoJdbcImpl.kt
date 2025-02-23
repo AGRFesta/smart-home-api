@@ -2,18 +2,18 @@ package org.agrfesta.sh.api.persistence.jdbc.dao
 
 import arrow.core.Either
 import arrow.core.right
+import java.time.Instant
+import java.util.*
 import org.agrfesta.sh.api.domain.commons.RelativeHumidity
 import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.devices.SensorDataType.HUMIDITY
 import org.agrfesta.sh.api.domain.devices.SensorDataType.TEMPERATURE
 import org.agrfesta.sh.api.domain.devices.SensorHistoryData
-import org.agrfesta.sh.api.persistence.PersistenceFailure
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.SensorDataPersistenceSuccess
 import org.agrfesta.sh.api.persistence.SensorsHistoryDataDao
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsHistoryDataJdbcRepository
 import org.springframework.stereotype.Service
-import java.time.Instant
-import java.util.*
 
 @Service
 class SensorsHistoryDataDaoJdbcImpl(

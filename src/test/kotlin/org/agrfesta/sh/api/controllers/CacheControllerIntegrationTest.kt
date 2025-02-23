@@ -1,6 +1,8 @@
 package org.agrfesta.sh.api.controllers
 
 import com.ninjasquad.springmockk.MockkBean
+import io.kotest.assertions.arrow.core.shouldBeLeft
+import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -58,7 +60,7 @@ class CacheControllerIntegrationTest(
         val key = aRandomUniqueString()
         val ttl = aRandomTtl()
         val value = aRandomUniqueString()
-        cacheRepository.findEntry(key).shouldBeNull()
+        cacheRepository.findEntry(key).shouldBeLeft()
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -71,8 +73,7 @@ class CacheControllerIntegrationTest(
             .`as`(MessageResponse::class.java)
 
         result.message shouldBe "Inserted key '$key' with value '$value'"
-        val cacheEntry = cacheRepository.findEntry(key)
-        cacheEntry.shouldNotBeNull()
+        val cacheEntry = cacheRepository.findEntry(key).shouldBeRight()
         cacheEntry.value shouldBe value
         cacheEntry.expiresAt shouldBe now.plusSeconds(ttl)
     }
@@ -80,7 +81,7 @@ class CacheControllerIntegrationTest(
     @Test fun `putCacheEntry() entry never expires when inserted with no ttl`() {
         val key = aRandomUniqueString()
         val value = aRandomUniqueString()
-        cacheRepository.findEntry(key).shouldBeNull()
+        cacheRepository.findEntry(key).shouldBeLeft()
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -93,8 +94,7 @@ class CacheControllerIntegrationTest(
             .`as`(MessageResponse::class.java)
 
         result.message shouldBe "Inserted key '$key' with value '$value'"
-        val cacheEntry = cacheRepository.findEntry(key)
-        cacheEntry.shouldNotBeNull()
+        val cacheEntry = cacheRepository.findEntry(key).shouldBeRight()
         cacheEntry.value shouldBe value
         cacheEntry.expiresAt.shouldBeNull()
     }
@@ -117,8 +117,7 @@ class CacheControllerIntegrationTest(
             .`as`(MessageResponse::class.java)
 
         result.message shouldBe "Inserted key '$key' with value '$value'"
-        val cacheEntry = cacheRepository.findEntry(key)
-        cacheEntry.shouldNotBeNull()
+        val cacheEntry = cacheRepository.findEntry(key).shouldBeRight()
         cacheEntry.value shouldBe value
         cacheEntry.expiresAt shouldBe now.plusSeconds(ttl)
     }
@@ -127,7 +126,7 @@ class CacheControllerIntegrationTest(
 
     @Test fun `getCacheEntry() return 404 when key is missing`() {
         val key = aRandomUniqueString()
-        cacheRepository.findEntry(key).shouldBeNull()
+        cacheRepository.findEntry(key).shouldBeLeft()
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -146,7 +145,7 @@ class CacheControllerIntegrationTest(
         val ttl = aRandomTtl()
         every { timeService.now() } returns now andThen now andThen now andThen now.plusSeconds(ttl+10)
         cacheRepository.upsert(key, aRandomUniqueString(), ttl)
-        cacheRepository.findEntry(key).shouldNotBeNull()
+        cacheRepository.findEntry(key).shouldBeRight()
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -166,7 +165,7 @@ class CacheControllerIntegrationTest(
         val ttl = aRandomTtl()
         every { timeService.now() } returns now andThen now.plusSeconds(ttl-1)
         cacheRepository.upsert(key, aRandomUniqueString(), aRandomTtl())
-        cacheRepository.findEntry(key).shouldNotBeNull()
+        cacheRepository.findEntry(key).shouldBeRight()
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -177,7 +176,7 @@ class CacheControllerIntegrationTest(
             .extract()
             .`as`(CacheEntry::class.java)
 
-        val cacheEntry = cacheRepository.findEntry(key)
+        val cacheEntry = cacheRepository.findEntry(key).shouldBeRight()
         cacheEntry shouldBe result
     }
 
