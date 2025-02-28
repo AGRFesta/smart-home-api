@@ -1,6 +1,7 @@
 package org.agrfesta.sh.api.domain.devices
 
-import java.util.UUID
+import com.fasterxml.jackson.annotation.JsonIgnore
+import java.util.*
 
 interface DeviceProviderIdentity {
     val providerId: String
@@ -25,6 +26,9 @@ data class Device (
     )
 
     fun asDataValue() = DeviceDataValue(providerId, provider, name, features)
+
+    @JsonIgnore
+    fun isSensor(): Boolean = features.contains(DeviceFeature.SENSOR)
 }
 
 data class DeviceDataValue(

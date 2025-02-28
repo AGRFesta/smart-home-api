@@ -3,7 +3,7 @@ package org.agrfesta.sh.api.persistence.jdbc.entities
 import java.time.Instant
 import java.util.UUID
 
-class AssociationEntity(
+class AssignmentEntity(
     val uuid: UUID,
     val deviceUuid: UUID,
     val areaUuid: UUID,

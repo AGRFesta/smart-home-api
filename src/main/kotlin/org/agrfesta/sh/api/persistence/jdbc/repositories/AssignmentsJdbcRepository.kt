@@ -7,11 +7,11 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import java.util.*
 import org.agrfesta.sh.api.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.domain.failures.AssociationFailure
+import org.agrfesta.sh.api.domain.failures.SensorAssignmentFailure
 import org.agrfesta.sh.api.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.AssociationSuccess
-import org.agrfesta.sh.api.persistence.jdbc.entities.AssociationEntity
+import org.agrfesta.sh.api.persistence.AssignmentSuccess
+import org.agrfesta.sh.api.persistence.jdbc.entities.AssignmentEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
@@ -24,7 +24,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 
 @Service
-class AssociationsJdbcRepository(
+class AssignmentsJdbcRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
     private val randomGenerator: RandomGenerator,
     private val timeService: TimeService
@@ -35,9 +35,9 @@ class AssociationsJdbcRepository(
         private val violateDeviceFkRegex = Regex(".*violates foreign key constraint.*fk_device.*", RegexOption.IGNORE_CASE)
     }
 
-    fun persistAssociation(areaId: UUID, deviceId: UUID): Either<AssociationFailure, AssociationSuccess> {
+    fun persistAssignment(areaId: UUID, deviceId: UUID): Either<SensorAssignmentFailure, AssignmentSuccess> {
         val sql = """
-            INSERT INTO smart_home.association (uuid, area_uuid, device_uuid, connected_on, disconnected_on)
+            INSERT INTO smart_home.sensor_assignment (uuid, area_uuid, device_uuid, connected_on, disconnected_on)
             VALUES (:uuid, :areaUuid, :deviceUuid, :connectedOn, NULL)
         """
         val params = mapOf(
@@ -61,14 +61,14 @@ class AssociationsJdbcRepository(
         } catch (e: Exception) {
             return PersistenceFailure(e).left()
         }
-        return AssociationSuccess.right()
+        return AssignmentSuccess.right()
     }
 
-    fun findByDevice(deviceUuid: UUID): Either<PersistenceFailure, Collection<AssociationEntity>> = try {
+    fun findByDevice(deviceUuid: UUID): Either<PersistenceFailure, Collection<AssignmentEntity>> = try {
         jdbcTemplate.query(
-            """SELECT * FROM smart_home.association WHERE device_uuid = :deviceUuid;""",
+            """SELECT * FROM smart_home.sensor_assignment WHERE device_uuid = :deviceUuid;""",
             MapSqlParameterSource(mapOf("deviceUuid" to deviceUuid)), //TODO maybe just a map?
-            AssociationRowMapper
+            AssignmentRowMapper
         ).right()
     } catch (e: Exception) {
         PersistenceFailure(e).left()
@@ -76,8 +76,8 @@ class AssociationsJdbcRepository(
 
 }
 
-object AssociationRowMapper: RowMapper<AssociationEntity> {
-    override fun mapRow(rs: ResultSet, rowNum: Int) = AssociationEntity(
+object AssignmentRowMapper: RowMapper<AssignmentEntity> {
+    override fun mapRow(rs: ResultSet, rowNum: Int) = AssignmentEntity(
             uuid = rs.getUuid("uuid"),
             deviceUuid = rs.getUuid("device_uuid"),
             areaUuid = rs.getUuid("area_uuid"),
