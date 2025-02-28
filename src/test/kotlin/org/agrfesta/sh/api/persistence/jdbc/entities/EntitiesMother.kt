@@ -42,13 +42,13 @@ fun aSensorEntity(
     updatedOn: Instant? = null
 ) = aDeviceEntity(uuid, name, provider, status, providerId, features, createdOn, updatedOn)
 
-fun anAssociationEntity(
+fun anAssignmentEntity(
     uuid: UUID = UUID.randomUUID(),
     AreaUuid: UUID = UUID.randomUUID(),
     deviceUuid: UUID = UUID.randomUUID(),
     connectedOn: Instant = Instant.now(),
     disconnectedOn: Instant? = null
-) = AssociationEntity(uuid = uuid, areaUuid = AreaUuid, deviceUuid = deviceUuid, connectedOn = connectedOn,
+) = AssignmentEntity(uuid = uuid, areaUuid = AreaUuid, deviceUuid = deviceUuid, connectedOn = connectedOn,
     disconnectedOn = disconnectedOn)
 
 fun aSensorHistoryDataEntity(

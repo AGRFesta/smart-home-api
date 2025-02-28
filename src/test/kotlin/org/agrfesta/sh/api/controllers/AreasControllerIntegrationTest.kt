@@ -9,7 +9,7 @@ import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.agrfesta.sh.api.domain.Area
 import org.agrfesta.sh.api.domain.anArea
-import org.agrfesta.sh.api.persistence.AssociationsDao
+import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.utils.RandomGenerator
@@ -34,7 +34,7 @@ class AreasControllerIntegrationTest(
     @Autowired @MockkBean private val randomGenerator: RandomGenerator,
     @Autowired private val areasDao: AreaDao,
     @Autowired private val devicesDao: DevicesDao,
-    @Autowired private val associationsDao: AssociationsDao
+    @Autowired private val sensorsAssignmentsDao: SensorsAssignmentsDao
 ) {
 
     companion object {

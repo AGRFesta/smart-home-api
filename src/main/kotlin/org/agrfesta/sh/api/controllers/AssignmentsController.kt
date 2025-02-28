@@ -2,11 +2,12 @@ package org.agrfesta.sh.api.controllers
 
 import java.util.*
 import org.agrfesta.sh.api.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.domain.failures.AssociationConflict
+import org.agrfesta.sh.api.domain.failures.SensorAlreadyAssigned
 import org.agrfesta.sh.api.domain.failures.DeviceNotFound
+import org.agrfesta.sh.api.domain.failures.NotASensor
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.domain.failures.SameAreaAssociation
-import org.agrfesta.sh.api.persistence.AssociationsDao
+import org.agrfesta.sh.api.domain.failures.SameAreaAssignment
+import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
 import org.springframework.http.HttpStatus.CREATED
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
@@ -19,25 +20,27 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/associations")
-class AssociationsController(
-    private val associationsDao: AssociationsDao
+@RequestMapping("/assignments")
+class AssignmentsController(
+    private val sensorsAssignmentsDao: SensorsAssignmentsDao
 ) {
 
-    @PostMapping
-    fun create(@RequestBody request: CreateAssociationRequest): ResponseEntity<Any> {
-        associationsDao.associate(request.areaId, request.deviceId)
+    @PostMapping("/sensors")
+    fun assignSensorToArea(@RequestBody request: CreateAssignmentRequest): ResponseEntity<Any> {
+        sensorsAssignmentsDao.assign(request.areaId, request.deviceId)
             .mapLeft { when(it) {
                 DeviceNotFound -> return status(NOT_FOUND)
                     .body(MessageResponse("Device with id '${request.deviceId}' is missing!"))
                 is PersistenceFailure -> return status(INTERNAL_SERVER_ERROR)
-                    .body(MessageResponse("Unable to associate device ${request.deviceId} to area ${request.areaId}! [${it.exception.message}]"))
+                    .body(MessageResponse("Unable to assign device ${request.deviceId} to area ${request.areaId}! [${it.exception.message}]"))
                 AreaNotFound -> return status(NOT_FOUND)
                     .body(MessageResponse("Area with id '${request.areaId}' is missing!"))
-                AssociationConflict -> return badRequest()
+                SensorAlreadyAssigned -> return badRequest()
                     .body(MessageResponse("Device with id '${request.deviceId}' is already assigned to another area!"))
-                SameAreaAssociation -> return badRequest()
+                SameAreaAssignment -> return badRequest()
                     .body(MessageResponse("Device with id '${request.deviceId}' is already assigned to area with id '${request.areaId}'!"))
+                NotASensor -> return badRequest()
+                    .body(MessageResponse("Device with id '${request.deviceId}' is not a sensor!"))
             } }
         return status(CREATED)
             .body(MessageResponse("Device with id '${request.deviceId}' successfully assigned to area with id '${request.areaId}'!"))
@@ -45,4 +48,4 @@ class AssociationsController(
 
 }
 
-data class CreateAssociationRequest(val areaId: UUID, val deviceId: UUID)
+data class CreateAssignmentRequest(val areaId: UUID, val deviceId: UUID)

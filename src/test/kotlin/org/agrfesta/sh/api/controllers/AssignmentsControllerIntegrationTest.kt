@@ -9,7 +9,7 @@ import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.domain.anArea
-import org.agrfesta.sh.api.persistence.AssociationsDao
+import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.utils.RandomGenerator
@@ -25,15 +25,17 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
 import java.util.*
+import org.agrfesta.sh.api.domain.aSensorDataValue
+import org.agrfesta.sh.api.domain.anActuatorDataValue
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 @ActiveProfiles("test")
-class AssociationsControllerIntegrationTest(
+class AssignmentsControllerIntegrationTest(
     @Autowired @MockkBean private val randomGenerator: RandomGenerator,
     @Autowired private val areasDao: AreaDao,
     @Autowired private val devicesDao: DevicesDao,
-    @Autowired private val associationsDao: AssociationsDao
+    @Autowired private val sensorsAssignmentsDao: SensorsAssignmentsDao
 ) {
 
     companion object {
@@ -55,17 +57,17 @@ class AssociationsControllerIntegrationTest(
         every { randomGenerator.uuid() } returns uuid
     }
 
-    ///// create ////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///// assignSensorToArea ///////////////////////////////////////////////////////////////////////////////////////////
     @Test
-    fun `create() return 400 when area is not found`() {
-        val deviceId = devicesDao.create(aDeviceDataValue()).shouldBeRight()
+    fun `assignSensorToArea() return 400 when area is not found`() {
+        val deviceId = devicesDao.create(aSensorDataValue()).shouldBeRight()
         val areaId = UUID.randomUUID()
 
         val result = given()
             .contentType(ContentType.JSON)
             .body("""{"areaId": "$areaId", "deviceId": "$deviceId"}""")
             .`when`()
-            .post("/associations")
+            .post("/assignments/sensors")
             .then()
             .statusCode(404)
             .extract()
@@ -74,7 +76,7 @@ class AssociationsControllerIntegrationTest(
         result.message shouldBe "Area with id '$areaId' is missing!"
     }
     @Test
-    fun `create() return 400 when device is not found`() {
+    fun `assignSensorToArea() return 400 when device is not found`() {
         val deviceId = UUID.randomUUID()
         val area = anArea()
         areasDao.save(area).shouldBeRight()
@@ -83,7 +85,7 @@ class AssociationsControllerIntegrationTest(
             .contentType(ContentType.JSON)
             .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
-            .post("/associations")
+            .post("/assignments/sensors")
             .then()
             .statusCode(404)
             .extract()
@@ -92,16 +94,16 @@ class AssociationsControllerIntegrationTest(
         result.message shouldBe "Device with id '$deviceId' is missing!"
     }
     @Test
-    fun `create() return 201 when successfully assigns device to area`() {
+    fun `assignSensorToArea() return 201 when successfully assigns device to area`() {
         val area = anArea()
         areasDao.save(area).shouldBeRight()
-        val deviceId = devicesDao.create(aDeviceDataValue()).shouldBeRight()
+        val deviceId = devicesDao.create(aSensorDataValue()).shouldBeRight()
 
         val result = given()
             .contentType(ContentType.JSON)
             .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
-            .post("/associations")
+            .post("/assignments/sensors")
             .then()
             .statusCode(201)
             .extract()
@@ -111,19 +113,19 @@ class AssociationsControllerIntegrationTest(
     }
 
     @Test
-    fun `create() return 400 when device is already assigned to another area`() {
+    fun `assignSensorToArea() return 400 when device is already assigned to another area`() {
         val areaA = anArea()
         areasDao.save(areaA).shouldBeRight()
         val areaB = anArea()
         areasDao.save(areaB).shouldBeRight()
-        val deviceId = devicesDao.create(aDeviceDataValue()).shouldBeRight()
-        associationsDao.associate(areaId = areaA.uuid, deviceId = deviceId).shouldBeRight()
+        val deviceId = devicesDao.create(aSensorDataValue()).shouldBeRight()
+        sensorsAssignmentsDao.assign(areaId = areaA.uuid, sensorId = deviceId).shouldBeRight()
 
         val result = given()
             .contentType(ContentType.JSON)
             .body("""{"areaId": "${areaB.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
-            .post("/associations")
+            .post("/assignments/sensors")
             .then()
             .statusCode(400)
             .extract()
@@ -133,23 +135,41 @@ class AssociationsControllerIntegrationTest(
     }
 
     @Test
-    fun `create() return 400 when device is already assigned to this area`() {
+    fun `assignSensorToArea() return 400 when device is already assigned to this area`() {
         val area = anArea()
         areasDao.save(area).shouldBeRight()
-        val deviceId = devicesDao.create(aDeviceDataValue()).shouldBeRight()
-        associationsDao.associate(areaId = area.uuid, deviceId = deviceId).shouldBeRight()
+        val deviceId = devicesDao.create(aSensorDataValue()).shouldBeRight()
+        sensorsAssignmentsDao.assign(areaId = area.uuid, sensorId = deviceId).shouldBeRight()
 
         val result = given()
             .contentType(ContentType.JSON)
             .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
-            .post("/associations")
+            .post("/assignments/sensors")
             .then()
             .statusCode(400)
             .extract()
             .`as`(MessageResponse::class.java)
 
         result.message shouldBe "Device with id '$deviceId' is already assigned to area with id '${area.uuid}'!"
+    }
+
+    @Test fun `assignSensorToArea() return 400 when device is not a sensor`() {
+        val area = anArea()
+        areasDao.save(area).shouldBeRight()
+        val deviceId = devicesDao.create(anActuatorDataValue()).shouldBeRight()
+
+        val result = given()
+            .contentType(ContentType.JSON)
+            .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
+            .`when`()
+            .post("/assignments/sensors")
+            .then()
+            .statusCode(400)
+            .extract()
+            .`as`(MessageResponse::class.java)
+
+        result.message shouldBe "Device with id '$deviceId' is not a sensor!"
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
