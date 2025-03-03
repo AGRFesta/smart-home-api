@@ -11,7 +11,7 @@ import org.agrfesta.sh.api.domain.failures.SensorAssignmentFailure
 import org.agrfesta.sh.api.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.AssignmentSuccess
-import org.agrfesta.sh.api.persistence.jdbc.entities.AssignmentEntity
+import org.agrfesta.sh.api.persistence.jdbc.entities.SensorAssignmentEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
@@ -24,7 +24,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 
 @Service
-class AssignmentsJdbcRepository(
+class SensorsAssignmentsJdbcRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
     private val randomGenerator: RandomGenerator,
     private val timeService: TimeService
@@ -64,11 +64,11 @@ class AssignmentsJdbcRepository(
         return AssignmentSuccess.right()
     }
 
-    fun findByDevice(deviceUuid: UUID): Either<PersistenceFailure, Collection<AssignmentEntity>> = try {
+    fun findByDevice(deviceUuid: UUID): Either<PersistenceFailure, Collection<SensorAssignmentEntity>> = try {
         jdbcTemplate.query(
             """SELECT * FROM smart_home.sensor_assignment WHERE device_uuid = :deviceUuid;""",
             MapSqlParameterSource(mapOf("deviceUuid" to deviceUuid)), //TODO maybe just a map?
-            AssignmentRowMapper
+            SensorAssignmentRowMapper
         ).right()
     } catch (e: Exception) {
         PersistenceFailure(e).left()
@@ -76,10 +76,10 @@ class AssignmentsJdbcRepository(
 
 }
 
-object AssignmentRowMapper: RowMapper<AssignmentEntity> {
-    override fun mapRow(rs: ResultSet, rowNum: Int) = AssignmentEntity(
+object SensorAssignmentRowMapper: RowMapper<SensorAssignmentEntity> {
+    override fun mapRow(rs: ResultSet, rowNum: Int) = SensorAssignmentEntity(
             uuid = rs.getUuid("uuid"),
-            deviceUuid = rs.getUuid("device_uuid"),
+            sensorUuid = rs.getUuid("device_uuid"),
             areaUuid = rs.getUuid("area_uuid"),
             connectedOn = rs.getInstant("connected_on"),
             disconnectedOn = rs.findInstant("disconnected_on")

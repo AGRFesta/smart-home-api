@@ -3,9 +3,9 @@ package org.agrfesta.sh.api.persistence.jdbc.entities
 import java.time.Instant
 import java.util.UUID
 
-class AssignmentEntity(
+class SensorAssignmentEntity(
     val uuid: UUID,
-    val deviceUuid: UUID,
+    val sensorUuid: UUID,
     val areaUuid: UUID,
     val connectedOn: Instant,
     var disconnectedOn: Instant? = null
