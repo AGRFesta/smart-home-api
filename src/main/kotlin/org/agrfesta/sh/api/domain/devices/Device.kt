@@ -2,6 +2,8 @@ package org.agrfesta.sh.api.domain.devices
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.util.*
+import org.agrfesta.sh.api.domain.devices.DeviceFeature.ACTUATOR
+import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
 
 interface DeviceProviderIdentity {
     val providerId: String
@@ -28,7 +30,10 @@ data class Device (
     fun asDataValue() = DeviceDataValue(providerId, provider, name, features)
 
     @JsonIgnore
-    fun isSensor(): Boolean = features.contains(DeviceFeature.SENSOR)
+    fun isSensor(): Boolean = features.contains(SENSOR)
+
+    @JsonIgnore
+    fun isActuator(): Boolean = features.contains(ACTUATOR)
 }
 
 data class DeviceDataValue(

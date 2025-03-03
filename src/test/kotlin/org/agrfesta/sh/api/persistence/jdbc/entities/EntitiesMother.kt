@@ -11,6 +11,7 @@ import org.agrfesta.test.mothers.aRandomUniqueString
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.*
+import org.agrfesta.sh.api.domain.devices.DeviceFeature.ACTUATOR
 
 fun anAreaEntity(
     uuid: UUID = UUID.randomUUID(),
@@ -42,14 +43,31 @@ fun aSensorEntity(
     updatedOn: Instant? = null
 ) = aDeviceEntity(uuid, name, provider, status, providerId, features, createdOn, updatedOn)
 
-fun anAssignmentEntity(
+fun anActuatorEntity(
     uuid: UUID = UUID.randomUUID(),
-    AreaUuid: UUID = UUID.randomUUID(),
+    name: String = aRandomUniqueString(),
+    provider: Provider = Provider.entries.toTypedArray().random(),
+    status: DeviceStatus = DeviceStatus.entries.toTypedArray().random(),
+    providerId: String = aRandomUniqueString(),
+    features: MutableSet<DeviceFeature> = mutableSetOf(ACTUATOR),
+    createdOn: Instant = Instant.now(),
+    updatedOn: Instant? = null
+) = aDeviceEntity(uuid, name, provider, status, providerId, features, createdOn, updatedOn)
+
+fun aSensorAssignmentEntity(
+    uuid: UUID = UUID.randomUUID(),
+    areaUuid: UUID = UUID.randomUUID(),
     deviceUuid: UUID = UUID.randomUUID(),
     connectedOn: Instant = Instant.now(),
     disconnectedOn: Instant? = null
-) = AssignmentEntity(uuid = uuid, areaUuid = AreaUuid, deviceUuid = deviceUuid, connectedOn = connectedOn,
+) = SensorAssignmentEntity(uuid = uuid, areaUuid = areaUuid, sensorUuid = deviceUuid, connectedOn = connectedOn,
     disconnectedOn = disconnectedOn)
+
+fun anActuatorAssignmentEntity(
+    uuid: UUID = UUID.randomUUID(),
+    areaUuid: UUID = UUID.randomUUID(),
+    deviceUuid: UUID = UUID.randomUUID()
+) = ActuatorAssignmentEntity(uuid = uuid, areaUuid = areaUuid, actuatorUuid = deviceUuid)
 
 fun aSensorHistoryDataEntity(
     sensor: DeviceEntity = aSensorEntity(),
