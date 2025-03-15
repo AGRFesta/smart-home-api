@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
+import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import java.util.*
 import org.agrfesta.sh.api.domain.commons.Percentage
@@ -44,3 +45,9 @@ fun aRandomThermoHygroData(
     relativeHumidity: RelativeHumidity = aRandomHumidity()
 ) = ThermoHygroData(temperature, relativeHumidity)
 
+fun aRandomHour(): Int = Random.nextInt(24)
+fun aRandomMinute(): Int = Random.nextInt(60)
+fun aDailyTime(
+    hour: Int = aRandomHour(),
+    minutes: Int = aRandomMinute()
+): LocalTime = LocalTime.parse("${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}")
