@@ -5,7 +5,6 @@ import arrow.core.right
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
-import com.redis.testcontainers.RedisContainer
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -16,7 +15,6 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
-import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import java.time.Instant
@@ -51,18 +49,9 @@ import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.springframework.test.context.ActiveProfiles
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.utility.DockerImageName
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
-@ActiveProfiles("test")
 class DevicesControllerIntegrationTest(
     @Autowired private val devicesDao: DevicesDao,
     @Autowired private val devicesRepository: DevicesJdbcRepository,
@@ -71,29 +60,21 @@ class DevicesControllerIntegrationTest(
     @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient,
     @Autowired @MockkBean private val netatmoClient: NetatmoClient,
     @Autowired @MockkBean private val timeService: TimeService
-) {
-
-    companion object {
-
-        @Container
-        @ServiceConnection
-        val postgres: PostgreSQLContainer<*> = DockerImageName.parse("timescale/timescaledb:latest-pg16")
-            .asCompatibleSubstituteFor("postgres")
-            .let { PostgreSQLContainer(it) }
-
-        @Container
-        @ServiceConnection
-        val redisContainer = RedisContainer(DockerImageName.parse("redis:7.0.10-alpine"))
-
-    }
-
-    @LocalServerPort private val port: Int? = null
-
+): AbstractIntegrationTest() {
     private val now = Instant.now()
 
+    companion object {
+        @Container
+        @ServiceConnection
+        val postgres = createPostgresContainer()
+
+        @Container
+        @ServiceConnection
+        val redis = createRedisContainer()
+    }
+
     @BeforeEach
-    fun setUp() {
-        RestAssured.baseURI = "http://localhost:$port"
+    fun init() {
         devicesRepository.deleteAll()
 
         every { timeService.now() } returns now

@@ -4,58 +4,38 @@ import com.ninjasquad.springmockk.MockkBean
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
+import java.util.*
 import org.agrfesta.sh.api.domain.Area
 import org.agrfesta.sh.api.domain.anArea
-import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
-import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.springframework.test.context.ActiveProfiles
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.utility.DockerImageName
-import java.util.*
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
-@ActiveProfiles("test")
 class AreasControllerIntegrationTest(
     @Autowired @MockkBean private val randomGenerator: RandomGenerator,
-    @Autowired private val areasDao: AreaDao,
-    @Autowired private val devicesDao: DevicesDao,
-    @Autowired private val sensorsAssignmentsDao: SensorsAssignmentsDao
-) {
+    @Autowired private val areasDao: AreaDao
+): AbstractIntegrationTest() {
+    private val uuid: UUID = UUID.randomUUID()
 
     companion object {
+        @Container
+        @ServiceConnection
+        val postgres = createPostgresContainer()
 
         @Container
         @ServiceConnection
-        val postgres: PostgreSQLContainer<*> = DockerImageName.parse("timescale/timescaledb:latest-pg16")
-            .asCompatibleSubstituteFor("postgres")
-            .let { PostgreSQLContainer(it) }
-
+        val redis = createRedisContainer()
     }
 
-    @LocalServerPort private val port: Int? = null
-
-    private val uuid: UUID = UUID.randomUUID()
-
     @BeforeEach
-    fun setUp() {
-        RestAssured.baseURI = "http://localhost:$port"
-        //areasRepository.deleteAll()
-
+    fun init() {
         every { randomGenerator.uuid() } returns uuid
     }
 
