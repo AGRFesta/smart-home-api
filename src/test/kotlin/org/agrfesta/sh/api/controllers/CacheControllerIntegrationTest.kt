@@ -8,7 +8,6 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.verify
-import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.agrfesta.sh.api.domain.commons.CacheEntry
@@ -20,39 +19,27 @@ import org.agrfesta.test.mothers.nowNoMills
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.springframework.test.context.ActiveProfiles
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.utility.DockerImageName
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
-@ActiveProfiles("test")
 class CacheControllerIntegrationTest(
     @Autowired private val cacheRepository: CacheJdbcRepository,
     @Autowired @MockkBean private val timeService: TimeService
-) {
+): AbstractIntegrationTest() {
+    private val now = nowNoMills()
 
     companion object {
+        @Container
+        @ServiceConnection
+        val postgres = createPostgresContainer()
 
         @Container
         @ServiceConnection
-        val postgres: PostgreSQLContainer<*> = DockerImageName.parse("timescale/timescaledb:latest-pg16")
-            .asCompatibleSubstituteFor("postgres")
-            .let { PostgreSQLContainer(it) }
-
+        val redis = createRedisContainer()
     }
 
-    @LocalServerPort private val port: Int? = null
-    private val now = nowNoMills()
-
     @BeforeEach
-    fun setUp() {
-        RestAssured.baseURI = "http://localhost:$port"
+    fun init() {
         every { timeService.now() } returns now
     }
 

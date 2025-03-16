@@ -4,58 +4,44 @@ import com.ninjasquad.springmockk.MockkBean
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
-import org.agrfesta.sh.api.domain.aDeviceDataValue
+import java.util.*
+import org.agrfesta.sh.api.domain.aSensorDataValue
+import org.agrfesta.sh.api.domain.anActuatorDataValue
 import org.agrfesta.sh.api.domain.anArea
-import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
-import org.agrfesta.sh.api.persistence.DevicesDao
+import org.agrfesta.sh.api.persistence.ActuatorsAssignmentsDao
 import org.agrfesta.sh.api.persistence.AreaDao
+import org.agrfesta.sh.api.persistence.DevicesDao
+import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.springframework.test.context.ActiveProfiles
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.utility.DockerImageName
-import java.util.*
-import org.agrfesta.sh.api.domain.aSensorDataValue
-import org.agrfesta.sh.api.domain.anActuatorDataValue
-import org.agrfesta.sh.api.persistence.ActuatorsAssignmentsDao
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
-@ActiveProfiles("test")
 class AssignmentsControllerIntegrationTest(
     @Autowired @MockkBean private val randomGenerator: RandomGenerator,
     @Autowired private val areasDao: AreaDao,
     @Autowired private val devicesDao: DevicesDao,
     @Autowired private val sensorsAssignmentsDao: SensorsAssignmentsDao,
     @Autowired private val actuatorsAssignmentsDao: ActuatorsAssignmentsDao
-) {
+): AbstractIntegrationTest() {
+    private val uuid: UUID = UUID.randomUUID()
 
     companion object {
         @Container
         @ServiceConnection
-        val postgres: PostgreSQLContainer<*> = DockerImageName.parse("timescale/timescaledb:latest-pg16")
-            .asCompatibleSubstituteFor("postgres")
-            .let { PostgreSQLContainer(it) }
+        val postgres = createPostgresContainer()
+
+        @Container
+        @ServiceConnection
+        val redis = createRedisContainer()
     }
 
-    @LocalServerPort private val port: Int? = null
-
-    private val uuid: UUID = UUID.randomUUID()
-
     @BeforeEach
-    fun setUp() {
-        RestAssured.baseURI = "http://localhost:$port"
-
+    fun init() {
         every { randomGenerator.uuid() } returns uuid
     }
 
