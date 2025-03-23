@@ -55,7 +55,7 @@ class AreasJdbcRepository(
         return area.right()
     }
 
-    fun findAreaById(uuid: UUID): Either<GetAreaFailure, AreaEntity?> {
+    fun findAreaById(uuid: UUID): AreaEntity? {
         val sql = """SELECT * FROM smart_home.area WHERE uuid = :uuid"""
         val params = mapOf("uuid" to uuid)
         val area: AreaEntity? = try {
@@ -63,11 +63,10 @@ class AreasJdbcRepository(
         } catch (e: EmptyResultDataAccessException) {
             null
         }
-        return area.right()
+        return area
     }
 
-    fun getAreaById(uuid: UUID): Either<GetAreaFailure, AreaEntity> = findAreaById(uuid)
-        .flatMap { it?.right() ?: AreaNotFound.left() }
+    fun getAreaById(uuid: UUID): AreaEntity = findAreaById(uuid) ?: throw AreaNotFoundException()
 
     fun findAreaByName(name: String): Either<PersistenceFailure, AreaEntity?> {
         val sql = """SELECT * FROM smart_home.area WHERE name = :name"""

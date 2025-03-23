@@ -20,8 +20,7 @@ class AreasDaoJdbcImpl(
     override fun findAreaByName(name: String): Either<PersistenceFailure, Area?> =
         areasRepository.findAreaByName(name).map { it?.asArea() }
 
-    override fun getAreaById(uuid: UUID): Either<GetAreaFailure, Area> =
-        areasRepository.getAreaById(uuid).map { it.asArea() }
+    override fun getAreaById(uuid: UUID): Area = areasRepository.getAreaById(uuid).asArea()
 
     override fun getAreaByName(name: String): Either<GetAreaFailure, Area> =
         areasRepository.getAreaByName(name).map { it.asArea() }

@@ -26,4 +26,6 @@ interface TemperatureSettingsDao {
 
     fun findAreaSetting(areaId: UUID): Either<PersistenceFailure, AreaTemperatureSetting?>
 
+    fun deleteAreaSetting(areaId: UUID)
+
 }

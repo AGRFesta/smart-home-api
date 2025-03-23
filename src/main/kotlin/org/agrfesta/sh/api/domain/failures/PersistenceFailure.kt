@@ -5,4 +5,5 @@ data class PersistenceFailure(override val exception: Exception): ExceptionFailu
     GetAreaFailure,
     AreaCreationFailure,
     GetPersistedCacheEntryFailure,
-    TemperatureSettingCreationFailure
+    TemperatureSettingCreationFailure,
+    TemperatureSettingDeletionFailure

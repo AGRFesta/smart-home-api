@@ -2,6 +2,7 @@ package org.agrfesta.sh.api.controllers
 
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.restassured.RestAssured.given
@@ -157,7 +158,41 @@ class HeatingAreasControllerIntegrationTest(
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///// deleteHeatingSchedule ////////////////////////////////////////////////////////////////////////////////////////
 
+    @Test fun `deleteHeatingSchedule() returns 200 when successfully deletes area's heating schedule`() {
+        val area = anArea()
+        areasDao.save(area).shouldBeRight()
+        val existingSetting = anAreaTemperatureSetting(
+            areaId = area.uuid,
+            temperatureSchedule = setOf(aTemperatureInterval())
+        )
+        tempSettingsDao.createSetting(existingSetting)
+        tempSettingsDao.findAreaSetting(area.uuid).shouldBeRight().shouldNotBeNull()
 
+        val result = given()
+            .`when`()
+            .delete("/heating/areas/${area.uuid}")
+            .then()
+            .statusCode(200)
+            .extract()
+            .`as`(MessageResponse::class.java)
+
+        result.message shouldBe "Successfully deleted heating schedule for area with id '${area.uuid}'!"
+        tempSettingsDao.findAreaSetting(area.uuid).shouldBeRight().shouldBeNull()
+    }
+
+    @Test fun `deleteHeatingSchedule() returns 404 when area is not found`() {
+        val area = anArea()
+
+        val result = given()
+            .`when`()
+            .delete("/heating/areas/${area.uuid}")
+            .then()
+            .statusCode(404)
+            .extract()
+            .`as`(MessageResponse::class.java)
+
+        result.message shouldBe "Area with id '${area.uuid}' is missing!"
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
