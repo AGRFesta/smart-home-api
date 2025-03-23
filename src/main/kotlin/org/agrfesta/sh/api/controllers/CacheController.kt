@@ -3,7 +3,7 @@ package org.agrfesta.sh.api.controllers
 import arrow.core.Either
 import org.agrfesta.sh.api.domain.failures.PersistedCacheEntryNotFound
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.jdbc.repositories.CacheJdbcRepository
+import org.agrfesta.sh.api.services.PersistedCacheService
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.ok
@@ -18,18 +18,18 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/cache")
 class CacheController(
-    private val cacheJdbcRepository: CacheJdbcRepository
+    private val persistedCacheService: PersistedCacheService
 ) {
 
     @PutMapping("/{key}")
     fun putCacheEntry(@PathVariable key: String, @RequestBody request: CacheRequest): ResponseEntity<MessageResponse> {
-        cacheJdbcRepository.upsert(key, request.value, request.ttl)
+        persistedCacheService.upsert(key, request.value, request.ttl)
         return ok(MessageResponse("Inserted key '$key' with value '${request.value}'"))
     }
 
     @GetMapping("/{key}")
     fun getCacheEntry(@PathVariable key: String): ResponseEntity<Any> {
-        val result = cacheJdbcRepository.findEntry(key)
+        val result = persistedCacheService.getEntry(key)
         return when (result) {
             is Either.Left -> when(result.value) {
                 PersistedCacheEntryNotFound -> status(NOT_FOUND).body(MessageResponse("Key '$key' is missing"))

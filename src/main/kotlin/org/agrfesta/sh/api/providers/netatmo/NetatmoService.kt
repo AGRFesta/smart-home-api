@@ -13,8 +13,8 @@ import org.agrfesta.sh.api.domain.devices.DevicesProvider
 import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.domain.devices.Provider.NETATMO
 import org.agrfesta.sh.api.domain.failures.Failure
-import org.agrfesta.sh.api.persistence.jdbc.repositories.CacheJdbcRepository
-import org.agrfesta.sh.api.persistence.onLeftLogOn
+import org.agrfesta.sh.api.services.onLeftLogOn
+import org.agrfesta.sh.api.services.PersistedCacheService
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.CacheError
 import org.agrfesta.sh.api.utils.CachedValueNotFound
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service
 @Service
 class NetatmoService(
     private val cache: Cache,
-    private val cacheRepository: CacheJdbcRepository,
+    private val cacheService: PersistedCacheService,
     private val netatmoClient: NetatmoClient,
     private val objectMapper: ObjectMapper
 ): DevicesProvider {
@@ -64,11 +64,11 @@ class NetatmoService(
         )
 
     private suspend fun fetchAndCacheNewToken(): Either<Failure, String> =
-        cacheRepository.findEntry(REFRESH_TOKEN_CACHE_KEY)
+        cacheService.getEntry(REFRESH_TOKEN_CACHE_KEY)
             .flatMap { netatmoClient.refreshToken(it.value) }
             .map { refreshResp ->
                 cache.set(ACCESS_TOKEN_CACHE_KEY, refreshResp.accessToken)
-                cacheRepository.upsert(REFRESH_TOKEN_CACHE_KEY, refreshResp.refreshToken)
+                cacheService.upsert(REFRESH_TOKEN_CACHE_KEY, refreshResp.refreshToken)
                     .onLeftLogOn(logger)
                 refreshResp.accessToken
             }

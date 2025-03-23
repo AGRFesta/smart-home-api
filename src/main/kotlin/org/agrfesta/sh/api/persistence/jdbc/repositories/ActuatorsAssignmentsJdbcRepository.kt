@@ -1,15 +1,9 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
 import java.sql.ResultSet
 import java.util.*
-import org.agrfesta.sh.api.domain.failures.ActuatorAssignmentFailure
-import org.agrfesta.sh.api.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.domain.failures.DeviceNotFound
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.AssignmentSuccess
+import org.agrfesta.sh.api.persistence.AreaNotFoundException
+import org.agrfesta.sh.api.persistence.DeviceNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.entities.ActuatorAssignmentEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
 import org.agrfesta.sh.api.utils.RandomGenerator
@@ -30,7 +24,7 @@ class ActuatorsAssignmentsJdbcRepository(
         private val violateDeviceFkRegex = Regex(".*violates foreign key constraint.*fk_device.*", RegexOption.IGNORE_CASE)
     }
 
-    fun persistAssignment(areaId: UUID, deviceId: UUID): Either<ActuatorAssignmentFailure, AssignmentSuccess> {
+    fun persistAssignment(areaId: UUID, deviceId: UUID) {
         val sql = """
             INSERT INTO smart_home.actuator_assignment (uuid, area_uuid, device_uuid)
             VALUES (:uuid, :areaUuid, :deviceUuid)
@@ -44,29 +38,22 @@ class ActuatorsAssignmentsJdbcRepository(
             jdbcTemplate.update(sql, params)
         } catch (e: DataIntegrityViolationException) {
             val message = e.cause?.message
-            if (message!=null) {
-                return when {
-                    violateAreaFkRegex.containsMatchIn(message) -> AreaNotFound.left()
-                    violateDeviceFkRegex.containsMatchIn(message) -> DeviceNotFound.left()
-                    else -> PersistenceFailure(e).left()
+            if (message != null) {
+                when {
+                    violateAreaFkRegex.containsMatchIn(message) -> throw AreaNotFoundException()
+                    violateDeviceFkRegex.containsMatchIn(message) -> throw DeviceNotFoundException()
+                    else -> throw e
                 }
             }
-            return PersistenceFailure(e).left()
-        } catch (e: Exception) {
-            return PersistenceFailure(e).left()
+            throw e
         }
-        return AssignmentSuccess.right()
     }
 
-    fun findByDevice(deviceUuid: UUID): Either<PersistenceFailure, Collection<ActuatorAssignmentEntity>> = try {
-        jdbcTemplate.query(
+    fun findByDevice(deviceUuid: UUID): Collection<ActuatorAssignmentEntity> = jdbcTemplate.query(
             """SELECT * FROM smart_home.actuator_assignment WHERE device_uuid = :deviceUuid;""",
             MapSqlParameterSource(mapOf("deviceUuid" to deviceUuid)), //TODO maybe just a map?
             ActuatorAssignmentRowMapper
-        ).right()
-    } catch (e: Exception) {
-        PersistenceFailure(e).left()
-    }
+        )
 
 }
 

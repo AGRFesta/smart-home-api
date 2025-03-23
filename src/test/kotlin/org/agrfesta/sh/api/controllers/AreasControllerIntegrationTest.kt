@@ -1,7 +1,6 @@
 package org.agrfesta.sh.api.controllers
 
 import com.ninjasquad.springmockk.MockkBean
-import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.restassured.RestAssured.given
@@ -62,13 +61,13 @@ class AreasControllerIntegrationTest(
             devices = emptyList(),
             isIndoor = true
         )
-        areasDao.getAreaByName(name).shouldBeRight(expectedArea)
+        areasDao.getAreaByName(name) shouldBe expectedArea
     }
 
     @Test fun `create() return 400 when create a area with an already existing name`() {
         val name = aRandomUniqueString()
         val area = anArea(name = name)
-        areasDao.save(area).shouldBeRight()
+        areasDao.save(area)
 
         val result = given()
             .contentType(ContentType.JSON)

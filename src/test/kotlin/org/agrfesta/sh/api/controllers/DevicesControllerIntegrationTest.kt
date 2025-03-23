@@ -26,7 +26,7 @@ import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
-import org.agrfesta.sh.api.domain.devices.DevicesRefreshResult
+import org.agrfesta.sh.api.services.DevicesRefreshResult
 import org.agrfesta.sh.api.domain.devices.Provider.NETATMO
 import org.agrfesta.sh.api.domain.devices.Provider.SWITCHBOT
 import org.agrfesta.sh.api.domain.failures.ProviderFailure
@@ -134,7 +134,7 @@ class DevicesControllerIntegrationTest(
                 updatedOn.shouldBeNull()
             }
 
-        val allDevices = devicesDao.getAll().shouldBeRight()
+        val allDevices = devicesDao.getAll()
         allDevices.shouldContainExactlyInAnyOrder(netatmoNewDevice, sbNewDevice)
     }
 
@@ -186,7 +186,7 @@ class DevicesControllerIntegrationTest(
     @Test
     fun `refresh() correctly update existing device`() {
         val existingSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
-        val uuid0 = devicesDao.create(existingSBDeviceData).shouldBeRight()
+        val uuid0 = devicesDao.create(existingSBDeviceData)
         val actualSBDeviceData = existingSBDeviceData.copy(name = aRandomUniqueString()) // name changed
         val expectedUpdatedSBDevice = aDevice(actualSBDeviceData, uuid0)
         coEvery {
@@ -195,7 +195,7 @@ class DevicesControllerIntegrationTest(
             actualSBDeviceData.asSBDeviceJsonNode()))
 
         val existingNetatmoDeviceData = aDeviceDataValue(provider = NETATMO, features = setOf(SENSOR, ACTUATOR))
-        val uuid1 = devicesDao.create(existingNetatmoDeviceData).shouldBeRight()
+        val uuid1 = devicesDao.create(existingNetatmoDeviceData)
         val actualNetatmoDeviceData = existingNetatmoDeviceData.copy(name = aRandomUniqueString()) // name changed
         val expectedUpdatedNetatmoDevice = aDevice(actualNetatmoDeviceData, uuid1)
         val token = aRandomUniqueString()
@@ -219,8 +219,7 @@ class DevicesControllerIntegrationTest(
         result.newDevices.shouldBeEmpty()
         result.updatedDevices.shouldContainExactlyInAnyOrder(expectedUpdatedNetatmoDevice, expectedUpdatedSBDevice)
         result.detachedDevices.shouldBeEmpty()
-        devicesDao.getAll().shouldBeRight()
-            .shouldContainExactlyInAnyOrder(expectedUpdatedNetatmoDevice, expectedUpdatedSBDevice)
+        devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedUpdatedNetatmoDevice, expectedUpdatedSBDevice)
 
         devicesRepository.findByProviderAndProviderId(
                 provider = existingSBDeviceData.provider,
@@ -235,12 +234,12 @@ class DevicesControllerIntegrationTest(
     @Test
     fun `refresh() Update existing devices to 'DETACHED' when fails to fetch them from provider`() {
         val deviceData = aDeviceDataValue(provider = SWITCHBOT)
-        val uuid = devicesDao.create(deviceData).shouldBeRight()
+        val uuid = devicesDao.create(deviceData)
         val expectedUpdatedSBDevice = aDevice(deviceData, uuid, DeviceStatus.DETACHED)
         coEvery { switchBotDevicesClient.getDevices() } throws Exception("switchbot fetch failure")
 
         val existingNetatmoDeviceData = aDeviceDataValue(provider = NETATMO, features = setOf(SENSOR, ACTUATOR))
-        val uuid1 = devicesDao.create(existingNetatmoDeviceData).shouldBeRight()
+        val uuid1 = devicesDao.create(existingNetatmoDeviceData)
         val expectedUpdatedNetatmoDevice = aDevice(existingNetatmoDeviceData, uuid1, DeviceStatus.DETACHED)
         val token = aRandomUniqueString()
         cache.set("provider.netatmo.access-token", token)
@@ -258,8 +257,7 @@ class DevicesControllerIntegrationTest(
         result.newDevices.shouldBeEmpty()
         result.updatedDevices.shouldBeEmpty()
         result.detachedDevices.shouldContainExactlyInAnyOrder(expectedUpdatedNetatmoDevice, expectedUpdatedSBDevice)
-        devicesDao.getAll().shouldBeRight()
-            .shouldContainExactlyInAnyOrder(expectedUpdatedNetatmoDevice, expectedUpdatedSBDevice)
+        devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedUpdatedNetatmoDevice, expectedUpdatedSBDevice)
     }
 
     @Test
@@ -267,9 +265,9 @@ class DevicesControllerIntegrationTest(
         val existingSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
         val existingDetachedSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
         val newSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
-        val uuid = devicesDao.create(existingSBDeviceData).shouldBeRight()
+        val uuid = devicesDao.create(existingSBDeviceData)
         val expectedUpdatedSBDevice: Device = aDevice(existingSBDeviceData, uuid)
-        val detachedUuid = devicesDao.create(existingDetachedSBDeviceData, DeviceStatus.DETACHED).shouldBeRight()
+        val detachedUuid = devicesDao.create(existingDetachedSBDeviceData, DeviceStatus.DETACHED)
         val expectedPairedDevice = aDevice(existingDetachedSBDeviceData, detachedUuid, DeviceStatus.PAIRED)
         coEvery {
             switchBotDevicesClient.getDevices()
@@ -294,8 +292,7 @@ class DevicesControllerIntegrationTest(
         newDevice.asDataValue() shouldBe newSBDeviceData
         result.updatedDevices.shouldContainExactly(expectedUpdatedSBDevice, expectedPairedDevice)
         result.detachedDevices.shouldBeEmpty()
-        devicesDao.getAll().shouldBeRight()
-            .shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice, expectedPairedDevice, newDevice)
+        devicesDao.getAll().shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice, expectedPairedDevice, newDevice)
     }
 
     private fun DeviceDataValue.asSBDeviceJsonNode(): JsonNode =

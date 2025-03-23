@@ -3,15 +3,14 @@ package org.agrfesta.sh.api.controllers
 import java.util.*
 import org.agrfesta.sh.api.domain.failures.ActuatorAssignmentFailure
 import org.agrfesta.sh.api.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.domain.failures.SensorAlreadyAssigned
 import org.agrfesta.sh.api.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.domain.failures.NotASensor
 import org.agrfesta.sh.api.domain.failures.NotAnActuator
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.domain.failures.SameAreaAssignment
+import org.agrfesta.sh.api.domain.failures.SensorAlreadyAssigned
 import org.agrfesta.sh.api.domain.failures.SensorAssignmentFailure
-import org.agrfesta.sh.api.persistence.ActuatorsAssignmentsDao
-import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
+import org.agrfesta.sh.api.services.AssignmentsService
 import org.springframework.http.HttpStatus.CREATED
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
@@ -26,13 +25,12 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/assignments")
 class AssignmentsController(
-    private val sensorsAssignmentsDao: SensorsAssignmentsDao,
-    private val actuatorsAssignmentsDao: ActuatorsAssignmentsDao,
+    private val assignmentsService: AssignmentsService
 ) {
 
     @PostMapping("/sensors")
     fun assignSensorToArea(@RequestBody request: CreateAssignmentRequest): ResponseEntity<Any> {
-        sensorsAssignmentsDao.assign(request.areaId, request.deviceId).onLeft {
+        assignmentsService.assignSensorToArea(request.areaId, request.deviceId).onLeft {
             return it.mapErrorByRequest(request)
         }
         return status(CREATED).body(successfulAssignmentMessage(deviceId = request.deviceId, areaId = request.areaId))
@@ -40,7 +38,7 @@ class AssignmentsController(
 
     @PostMapping("/actuators")
     fun assignActuatorToArea(@RequestBody request: CreateAssignmentRequest): ResponseEntity<Any> {
-        actuatorsAssignmentsDao.assign(request.areaId, request.deviceId).onLeft {
+        assignmentsService.assignActuatorToArea(request.areaId, request.deviceId).onLeft {
             return it.mapErrorByRequest(request)
         }
         return status(CREATED).body(successfulAssignmentMessage(deviceId = request.deviceId, areaId = request.areaId))

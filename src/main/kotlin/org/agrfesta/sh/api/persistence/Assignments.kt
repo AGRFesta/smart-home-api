@@ -1,16 +1,32 @@
 package org.agrfesta.sh.api.persistence
 
-import arrow.core.Either
 import java.util.*
-import org.agrfesta.sh.api.domain.failures.ActuatorAssignmentFailure
-import org.agrfesta.sh.api.domain.failures.SensorAssignmentFailure
 
 interface ActuatorsAssignmentsDao {
-    fun assign(areaId: UUID, actuatorId: UUID): Either<ActuatorAssignmentFailure, AssignmentSuccess>
+
+    /**
+     *
+     *
+     * @throws AreaNotFoundException when area with id [areaId] is missing.
+     * @throws DeviceNotFoundException when device with id [actuatorId] is missing.
+     * @throws NotAnActuatorException when device with id [actuatorId] is not an actuator.
+     * @throws SameAreaAssignmentException when actuator is already assigned to this area.
+     */
+    fun assign(areaId: UUID, actuatorId: UUID)
 }
 
 interface SensorsAssignmentsDao {
-    fun assign(areaId: UUID, sensorId: UUID): Either<SensorAssignmentFailure, AssignmentSuccess>
+
+    /**
+     *
+     *
+     * @throws AreaNotFoundException when area with id [areaId] is missing.
+     * @throws DeviceNotFoundException when device with id [sensorId] is missing.
+     * @throws NotASensorException when device with id [sensorId] is not a sensor.
+     * @throws SensorAlreadyAssignedException when sensor with id [sensorId] is already assigned to another area.
+     */
+    fun assign(areaId: UUID, sensorId: UUID)
 }
 
-object AssignmentSuccess
+class SameAreaAssignmentException: Exception()
+class SensorAlreadyAssignedException: Exception()

@@ -1,6 +1,5 @@
 package org.agrfesta.sh.api.controllers
 
-import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
@@ -12,9 +11,9 @@ import io.mockk.slot
 import java.time.Instant
 import java.util.*
 import org.agrfesta.sh.api.domain.Area
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.jdbc.dao.AreasDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
+import org.agrfesta.sh.api.services.AreasService
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -28,7 +27,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(AreasController::class)
-@Import(AreasDaoJdbcImpl::class)
+@Import(AreasService::class, AreasDaoJdbcImpl::class)
 @ActiveProfiles("test")
 class AreasControllerUnitTest(
     @Autowired private val mockMvc: MockMvc,
@@ -45,7 +44,7 @@ class AreasControllerUnitTest(
 
     @Test fun `create() return 500 when persistence creation fails`() {
         val name = aRandomUniqueString()
-        every { areasRepository.persist(any()) } returns PersistenceFailure(Exception("area creation failure")).left()
+        every { areasRepository.persist(any()) } throws Exception("area creation failure")
 
         val responseBody: String = mockMvc.perform(post("/areas")
             .contentType("application/json")

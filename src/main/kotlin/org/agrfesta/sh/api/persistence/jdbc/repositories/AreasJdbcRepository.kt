@@ -1,18 +1,11 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
-import arrow.core.Either
-import arrow.core.flatMap
-import arrow.core.left
-import arrow.core.right
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.util.*
 import org.agrfesta.sh.api.domain.Area
-import org.agrfesta.sh.api.domain.failures.AreaCreationFailure
-import org.agrfesta.sh.api.domain.failures.AreaNameConflict
-import org.agrfesta.sh.api.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.domain.failures.GetAreaFailure
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.persistence.AreaNotFoundException
+import org.agrfesta.sh.api.persistence.SameNameAreaException
 import org.agrfesta.sh.api.persistence.jdbc.entities.AreaEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
@@ -34,7 +27,7 @@ class AreasJdbcRepository(
         private val nameConflictRegex = Regex(".*duplicate key.*Area_name_key.*", RegexOption.IGNORE_CASE)
     }
 
-    fun persist(area: Area): Either<AreaCreationFailure, Area> {
+    fun persist(area: Area) {
         val sql = """
             INSERT INTO smart_home.area (uuid, name, created_on, updated_on)
             VALUES (:uuid, :name, :createdOn, :updatedOn)
@@ -49,10 +42,9 @@ class AreasJdbcRepository(
             jdbcTemplate.update(sql, params)
         } catch (e: DuplicateKeyException) {
             val message = e.cause?.message
-            return if (message!=null && nameConflictRegex.containsMatchIn(message)) AreaNameConflict.left()
-            else PersistenceFailure(e).left()
+            if (message!=null && nameConflictRegex.containsMatchIn(message)) throw SameNameAreaException()
+            throw e
         }
-        return area.right()
     }
 
     fun findAreaById(uuid: UUID): AreaEntity? {
@@ -68,28 +60,19 @@ class AreasJdbcRepository(
 
     fun getAreaById(uuid: UUID): AreaEntity = findAreaById(uuid) ?: throw AreaNotFoundException()
 
-    fun findAreaByName(name: String): Either<PersistenceFailure, AreaEntity?> {
+    fun findAreaByName(name: String): AreaEntity? {
         val sql = """SELECT * FROM smart_home.area WHERE name = :name"""
         val params = mapOf("name" to name)
-        val area: AreaEntity? = try {
+        return try {
             jdbcTemplate.queryForObject(sql, params, AreaRowMapper)
         } catch (e: EmptyResultDataAccessException) {
             null
         }
-        return area.right()
     }
 
-    fun getAreaByName(name: String): Either<GetAreaFailure, AreaEntity> = findAreaByName(name)
-        .flatMap { it?.right() ?: AreaNotFound.left() }
+    fun getAreaByName(name: String): AreaEntity = findAreaByName(name) ?: throw AreaNotFoundException()
 
-    fun getAll(): Either<PersistenceFailure, Collection<AreaEntity>> {
-        val sql = """SELECT * FROM smart_home.area"""
-        return try {
-            jdbcTemplate.query(sql, AreaRowMapper).right()
-        } catch (e: Exception) {
-            PersistenceFailure(e).left()
-        }
-    }
+    fun getAll(): Collection<AreaEntity> = jdbcTemplate.query("""SELECT * FROM smart_home.area""", AreaRowMapper)
 
 }
 

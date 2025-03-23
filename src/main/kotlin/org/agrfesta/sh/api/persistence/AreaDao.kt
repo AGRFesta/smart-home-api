@@ -1,18 +1,29 @@
 package org.agrfesta.sh.api.persistence
 
-import arrow.core.Either
-import org.agrfesta.sh.api.domain.Area
 import java.util.*
-import org.agrfesta.sh.api.domain.failures.AreaCreationFailure
-import org.agrfesta.sh.api.domain.failures.GetAreaFailure
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.domain.Area
 
 interface AreaDao {
-    fun save(area: Area): Either<AreaCreationFailure, Area>
-    fun findAreaByName(name: String): Either<PersistenceFailure, Area?>
+
+    /**
+     * @throws SameNameAreaException when an [Area] with that name already exist.
+     */
+    fun save(area: Area)
+
+    fun findAreaByName(name: String): Area?
+
+    /**
+     * @throws AreaNotFoundException when an [Area] with id [uuid] is missing.
+     */
     fun getAreaById(uuid: UUID): Area
-    fun getAreaByName(name: String): Either<GetAreaFailure, Area>
-    fun getAll(): Either<PersistenceFailure, Collection<Area>>
+
+    /**
+     * @throws AreaNotFoundException when an [Area] with name [name] is missing.
+     */
+    fun getAreaByName(name: String): Area
+
+    fun getAll(): Collection<Area>
 }
 
-
+class AreaNotFoundException: Exception()
+class SameNameAreaException: Exception()

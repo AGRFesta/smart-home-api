@@ -1,7 +1,5 @@
 package org.agrfesta.sh.api.controllers
 
-import arrow.core.left
-import arrow.core.right
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
@@ -10,18 +8,15 @@ import io.mockk.slot
 import java.time.Period
 import java.time.ZonedDateTime
 import java.util.*
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.AssignmentSuccess
 import org.agrfesta.sh.api.persistence.jdbc.dao.ActuatorsAssignmentsDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.dao.SensorsAssignmentsDaoJdbcImpl
-import org.agrfesta.sh.api.persistence.jdbc.entities.ActuatorAssignmentEntity
-import org.agrfesta.sh.api.persistence.jdbc.entities.SensorAssignmentEntity
 import org.agrfesta.sh.api.persistence.jdbc.entities.aSensorAssignmentEntity
 import org.agrfesta.sh.api.persistence.jdbc.entities.aSensorEntity
 import org.agrfesta.sh.api.persistence.jdbc.entities.anActuatorEntity
 import org.agrfesta.sh.api.persistence.jdbc.repositories.ActuatorsAssignmentsJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcRepository
+import org.agrfesta.sh.api.services.AssignmentsService
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -35,7 +30,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(AssignmentsController::class)
-@Import(SensorsAssignmentsDaoJdbcImpl::class, ActuatorsAssignmentsDaoJdbcImpl::class)
+@Import(AssignmentsService::class, SensorsAssignmentsDaoJdbcImpl::class, ActuatorsAssignmentsDaoJdbcImpl::class)
 @ActiveProfiles("test")
 class AssignmentsControllerUnitTest(
     @Autowired private val mockMvc: MockMvc,
@@ -58,7 +53,7 @@ class AssignmentsControllerUnitTest(
         val failure = aRandomUniqueString()
         val areaUuid = UUID.randomUUID()
         val deviceUuid = UUID.randomUUID()
-        every { devicesJdbcRepository.getDeviceById(deviceUuid) } returns PersistenceFailure(Exception(failure)).left()
+        every { devicesJdbcRepository.getDeviceById(deviceUuid) } throws Exception(failure)
 
         val responseBody: String = mockMvc.perform(
             post("/assignments/sensors")
@@ -76,10 +71,8 @@ class AssignmentsControllerUnitTest(
         val areaUuid = UUID.randomUUID()
         val sensorDeviceEntity = aSensorEntity()
         val deviceUuid = sensorDeviceEntity.uuid
-        every { devicesJdbcRepository.getDeviceById(deviceUuid) } returns sensorDeviceEntity.right()
-        every {
-            sensorsAssignmentsRepository.findByDevice(deviceUuid)
-        } returns PersistenceFailure(Exception(failure)).left()
+        every { devicesJdbcRepository.getDeviceById(deviceUuid) } returns sensorDeviceEntity
+        every { sensorsAssignmentsRepository.findByDevice(deviceUuid) } throws Exception(failure)
 
         val responseBody: String = mockMvc.perform(
             post("/assignments/sensors")
@@ -97,11 +90,9 @@ class AssignmentsControllerUnitTest(
         val areaUuid = UUID.randomUUID()
         val sensorDeviceEntity = aSensorEntity()
         val deviceUuid = sensorDeviceEntity.uuid
-        every { devicesJdbcRepository.getDeviceById(deviceUuid) } returns sensorDeviceEntity.right()
-        every { sensorsAssignmentsRepository.findByDevice(deviceUuid) } returns
-                emptyList<SensorAssignmentEntity>().right() // no previous assignments
-        every { sensorsAssignmentsRepository.persistAssignment(any(), any()) } returns
-                PersistenceFailure(Exception(failure)).left()
+        every { devicesJdbcRepository.getDeviceById(deviceUuid) } returns sensorDeviceEntity
+        every { sensorsAssignmentsRepository.findByDevice(deviceUuid) } returns emptyList() // no previous assignments
+        every { sensorsAssignmentsRepository.persistAssignment(any(), any()) } throws Exception(failure)
 
         val responseBody: String = mockMvc.perform(
             post("/assignments/sensors")
@@ -119,17 +110,18 @@ class AssignmentsControllerUnitTest(
         val areaUuid = UUID.randomUUID()
         val sensorDeviceEntity = aSensorEntity()
         val deviceUuid = sensorDeviceEntity.uuid
-        every { devicesJdbcRepository.getDeviceById(deviceUuid) } returns sensorDeviceEntity.right()
+        every { devicesJdbcRepository.getDeviceById(deviceUuid) } returns sensorDeviceEntity
         val assignmentEntity = aSensorAssignmentEntity(
             deviceUuid = deviceUuid,
             connectedOn = now.minus(Period.ofYears(1)).toInstant(), // A year ago
             disconnectedOn = now.minus(Period.ofMonths(6)).toInstant() // six months ago
         )
-        every { sensorsAssignmentsRepository.findByDevice(deviceUuid) } returns listOf(assignmentEntity).right()
+        every { sensorsAssignmentsRepository.findByDevice(deviceUuid) } returns listOf(assignmentEntity)
         val areaUuidSlot = slot<UUID>()
         val deviceUuidSlot = slot<UUID>()
-        every { sensorsAssignmentsRepository.persistAssignment(capture(areaUuidSlot), capture(deviceUuidSlot)) } returns
-                AssignmentSuccess.right()
+        every {
+            sensorsAssignmentsRepository.persistAssignment(capture(areaUuidSlot), capture(deviceUuidSlot))
+        } returns Unit
 
         val responseBody: String = mockMvc.perform(
             post("/assignments/sensors")
@@ -150,7 +142,7 @@ class AssignmentsControllerUnitTest(
         val failure = aRandomUniqueString()
         val areaUuid = UUID.randomUUID()
         val deviceUuid = UUID.randomUUID()
-        every { devicesJdbcRepository.getDeviceById(deviceUuid) } returns PersistenceFailure(Exception(failure)).left()
+        every { devicesJdbcRepository.getDeviceById(deviceUuid) } throws Exception(failure)
 
         val responseBody: String = mockMvc.perform(
             post("/assignments/actuators")
@@ -168,10 +160,8 @@ class AssignmentsControllerUnitTest(
         val areaUuid = UUID.randomUUID()
         val actuatorDeviceEntity = anActuatorEntity()
         val deviceUuid = actuatorDeviceEntity.uuid
-        every { devicesJdbcRepository.getDeviceById(deviceUuid) } returns actuatorDeviceEntity.right()
-        every {
-            actuatorsAssignmentsRepository.findByDevice(deviceUuid)
-        } returns PersistenceFailure(Exception(failure)).left()
+        every { devicesJdbcRepository.getDeviceById(deviceUuid) } returns actuatorDeviceEntity
+        every { actuatorsAssignmentsRepository.findByDevice(deviceUuid) } throws Exception(failure)
 
         val responseBody: String = mockMvc.perform(
             post("/assignments/actuators")
@@ -189,11 +179,9 @@ class AssignmentsControllerUnitTest(
         val areaUuid = UUID.randomUUID()
         val actuatorDeviceEntity = anActuatorEntity()
         val deviceUuid = actuatorDeviceEntity.uuid
-        every { devicesJdbcRepository.getDeviceById(deviceUuid) } returns actuatorDeviceEntity.right()
-        every { actuatorsAssignmentsRepository.findByDevice(deviceUuid) } returns
-                emptyList<ActuatorAssignmentEntity>().right() // no previous assignments
-        every { actuatorsAssignmentsRepository.persistAssignment(any(), any()) } returns
-                PersistenceFailure(Exception(failure)).left()
+        every { devicesJdbcRepository.getDeviceById(deviceUuid) } returns actuatorDeviceEntity
+        every { actuatorsAssignmentsRepository.findByDevice(deviceUuid) } returns emptyList() // no previous assignments
+        every { actuatorsAssignmentsRepository.persistAssignment(any(), any()) } throws Exception(failure)
 
         val responseBody: String = mockMvc.perform(
             post("/assignments/actuators")

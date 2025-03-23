@@ -1,10 +1,7 @@
 package org.agrfesta.sh.api.persistence
 
-import arrow.core.Either
 import java.util.*
 import org.agrfesta.sh.api.domain.AreaTemperatureSetting
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.jdbc.repositories.AreaNotFoundException
 
 interface TemperatureSettingsDao {
 
@@ -24,7 +21,7 @@ interface TemperatureSettingsDao {
      */
     fun createSetting(setting: AreaTemperatureSetting): UUID
 
-    fun findAreaSetting(areaId: UUID): Either<PersistenceFailure, AreaTemperatureSetting?>
+    fun findAreaSetting(areaId: UUID): AreaTemperatureSetting?
 
     fun deleteAreaSetting(areaId: UUID)
 

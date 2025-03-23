@@ -1,7 +1,6 @@
 package org.agrfesta.sh.api.controllers
 
 import com.ninjasquad.springmockk.MockkBean
-import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.restassured.RestAssured.given
@@ -47,7 +46,7 @@ class AssignmentsControllerIntegrationTest(
 
     ///// assignSensorToArea ///////////////////////////////////////////////////////////////////////////////////////////
     @Test fun `assignSensorToArea() return 404 when area is not found`() {
-        val deviceId = devicesDao.create(aSensorDataValue()).shouldBeRight()
+        val deviceId = devicesDao.create(aSensorDataValue())
         val areaId = UUID.randomUUID()
 
         val result = given()
@@ -65,7 +64,7 @@ class AssignmentsControllerIntegrationTest(
     @Test fun `assignSensorToArea() return 404 when device is not found`() {
         val deviceId = UUID.randomUUID()
         val area = anArea()
-        areasDao.save(area).shouldBeRight()
+        areasDao.save(area)
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -81,8 +80,8 @@ class AssignmentsControllerIntegrationTest(
     }
     @Test fun `assignSensorToArea() return 201 when successfully assigns device to area`() {
         val area = anArea()
-        areasDao.save(area).shouldBeRight()
-        val deviceId = devicesDao.create(aSensorDataValue()).shouldBeRight()
+        areasDao.save(area)
+        val deviceId = devicesDao.create(aSensorDataValue())
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -99,11 +98,11 @@ class AssignmentsControllerIntegrationTest(
 
     @Test fun `assignSensorToArea() return 400 when device is already assigned to another area`() {
         val areaA = anArea()
-        areasDao.save(areaA).shouldBeRight()
+        areasDao.save(areaA)
         val areaB = anArea()
-        areasDao.save(areaB).shouldBeRight()
-        val deviceId = devicesDao.create(aSensorDataValue()).shouldBeRight()
-        sensorsAssignmentsDao.assign(areaId = areaA.uuid, sensorId = deviceId).shouldBeRight()
+        areasDao.save(areaB)
+        val deviceId = devicesDao.create(aSensorDataValue())
+        sensorsAssignmentsDao.assign(areaId = areaA.uuid, sensorId = deviceId)
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -120,9 +119,9 @@ class AssignmentsControllerIntegrationTest(
 
     @Test fun `assignSensorToArea() return 400 when device is already assigned to this area`() {
         val area = anArea()
-        areasDao.save(area).shouldBeRight()
-        val deviceId = devicesDao.create(aSensorDataValue()).shouldBeRight()
-        sensorsAssignmentsDao.assign(areaId = area.uuid, sensorId = deviceId).shouldBeRight()
+        areasDao.save(area)
+        val deviceId = devicesDao.create(aSensorDataValue())
+        sensorsAssignmentsDao.assign(areaId = area.uuid, sensorId = deviceId)
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -139,8 +138,8 @@ class AssignmentsControllerIntegrationTest(
 
     @Test fun `assignSensorToArea() return 400 when device is not a sensor`() {
         val area = anArea()
-        areasDao.save(area).shouldBeRight()
-        val deviceId = devicesDao.create(anActuatorDataValue()).shouldBeRight()
+        areasDao.save(area)
+        val deviceId = devicesDao.create(anActuatorDataValue())
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -159,7 +158,7 @@ class AssignmentsControllerIntegrationTest(
     ///// assignActuatorToArea /////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `assignActuatorToArea() return 404 when area is not found`() {
-        val deviceId = devicesDao.create(anActuatorDataValue()).shouldBeRight()
+        val deviceId = devicesDao.create(anActuatorDataValue())
         val areaId = UUID.randomUUID()
 
         val result = given()
@@ -178,7 +177,7 @@ class AssignmentsControllerIntegrationTest(
     @Test fun `assignActuatorToArea() return 404 when device is not found`() {
         val deviceId = UUID.randomUUID()
         val area = anArea()
-        areasDao.save(area).shouldBeRight()
+        areasDao.save(area)
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -195,8 +194,8 @@ class AssignmentsControllerIntegrationTest(
 
     @Test fun `assignActuatorToArea() return 400 when device is not an actuator`() {
         val area = anArea()
-        areasDao.save(area).shouldBeRight()
-        val deviceId = devicesDao.create(aSensorDataValue()).shouldBeRight()
+        areasDao.save(area)
+        val deviceId = devicesDao.create(aSensorDataValue())
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -213,8 +212,8 @@ class AssignmentsControllerIntegrationTest(
 
     @Test fun `assignActuatorToArea() return 201 when successfully assigns device to area`() {
         val area = anArea()
-        areasDao.save(area).shouldBeRight()
-        val deviceId = devicesDao.create(anActuatorDataValue()).shouldBeRight()
+        areasDao.save(area)
+        val deviceId = devicesDao.create(anActuatorDataValue())
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -231,9 +230,9 @@ class AssignmentsControllerIntegrationTest(
 
     @Test fun `assignActuatorToArea() return 400 when device is already assigned to this area`() {
         val area = anArea()
-        areasDao.save(area).shouldBeRight()
-        val deviceId = devicesDao.create(anActuatorDataValue()).shouldBeRight()
-        actuatorsAssignmentsDao.assign(areaId = area.uuid, actuatorId = deviceId).shouldBeRight()
+        areasDao.save(area)
+        val deviceId = devicesDao.create(anActuatorDataValue())
+        actuatorsAssignmentsDao.assign(areaId = area.uuid, actuatorId = deviceId)
 
         val result = given()
             .contentType(ContentType.JSON)

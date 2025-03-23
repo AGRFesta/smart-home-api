@@ -2,12 +2,16 @@ package org.agrfesta.sh.api.domain
 
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.mockk.mockk
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
-import org.agrfesta.sh.api.domain.devices.DevicesService
+import org.agrfesta.sh.api.services.DevicesService
+import org.agrfesta.sh.api.persistence.DevicesDao
 import org.junit.jupiter.api.Test
 
 class DevicesServiceTest {
-    private val sut: DevicesService = DevicesService()
+    private val devicesDao: DevicesDao = mockk()
+
+    private val sut: DevicesService = DevicesService(devicesDao)
 
     @Test
     fun `refresh() returns empty result when there are no devices and no provider devices`() {

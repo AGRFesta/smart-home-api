@@ -1,6 +1,7 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
 import java.util.*
+import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate

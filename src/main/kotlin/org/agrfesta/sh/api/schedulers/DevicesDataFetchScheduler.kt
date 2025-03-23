@@ -2,9 +2,9 @@ package org.agrfesta.sh.api.schedulers
 
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
+import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.domain.devices.ThermoHygroDataValue
 import org.agrfesta.sh.api.domain.devices.onLeftLogOn
-import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotService
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.utils.SmartCache
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class DevicesDataFetchScheduler(
-    private val devicesDao: DevicesDao,
+    private val devicesService: DevicesService,
     private val switchBotService: SwitchBotService,
     private val cache: SmartCache
 ) {
@@ -24,7 +24,7 @@ class DevicesDataFetchScheduler(
     @Async
     fun fetchDevicesData() {
         logger.info("[SCHEDULED TASK] start fetching devices data...")
-        devicesDao.getAll()
+        devicesService.getAll()
             .onRight { devices ->
                 devices.filter { f -> f.features.contains(DeviceFeature.SENSOR) }
                     .forEach {

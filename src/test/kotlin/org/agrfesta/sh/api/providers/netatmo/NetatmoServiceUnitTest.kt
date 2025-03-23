@@ -19,9 +19,9 @@ import org.agrfesta.sh.api.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.domain.devices.Provider.NETATMO
 import org.agrfesta.sh.api.domain.failures.ExceptionFailure
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.PersistenceSuccess
+import org.agrfesta.sh.api.persistence.jdbc.dao.CacheDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.repositories.CacheJdbcRepository
+import org.agrfesta.sh.api.services.PersistedCacheService
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.CacheError
 import org.agrfesta.sh.api.utils.CacheOkResponse
@@ -47,7 +47,7 @@ class NetatmoServiceUnitTest {
 
     private val sut = NetatmoService(
         cache = cache,
-        cacheRepository = cacheRepository,
+        cacheService = PersistedCacheService(CacheDaoJdbcImpl(cacheRepository)),
         netatmoClient = netatmoClient,
         objectMapper = mapper
     )
@@ -80,11 +80,11 @@ class NetatmoServiceUnitTest {
         every {
             cache.get("provider.netatmo.access-token")
         } returns CachedValueNotFound("provider.netatmo.access-token").left()
-        every { cacheRepository.findEntry("provider.netatmo.refresh-token") } returns
-                CacheEntry(prevRefreshToken).right()
+        every { cacheRepository.findEntry("provider.netatmo.refresh-token") } returns CacheEntry(prevRefreshToken)
         coEvery { netatmoClient.refreshToken(prevRefreshToken) } returns expectedResponse.right()
-        every { cacheRepository.upsert("provider.netatmo.refresh-token", expectedResponse.refreshToken) } returns
-                PersistenceSuccess.right()
+        every {
+            cacheRepository.upsert("provider.netatmo.refresh-token", expectedResponse.refreshToken)
+        } returns Unit
         every { cache.set("provider.netatmo.access-token", expectedResponse.accessToken) } returns CacheOkResponse
         coEvery { netatmoClient.getHomesData(accessToken) } returns homeDataResp.right()
 
@@ -117,8 +117,7 @@ class NetatmoServiceUnitTest {
         every {
             cache.get("provider.netatmo.access-token")
         } returns CachedValueNotFound("provider.netatmo.access-token").left()
-        every { cacheRepository.findEntry("provider.netatmo.refresh-token") } returns
-                PersistenceFailure(tokenFetchFailure).left()
+        every { cacheRepository.findEntry("provider.netatmo.refresh-token") } throws tokenFetchFailure
 
         val res = sut.getAllDevices()
 
@@ -137,8 +136,7 @@ class NetatmoServiceUnitTest {
         every {
             cache.get("provider.netatmo.access-token")
         } returns CachedValueNotFound("provider.netatmo.access-token").left()
-        every { cacheRepository.findEntry("provider.netatmo.refresh-token") } returns
-                CacheEntry(prevRefreshToken).right()
+        every { cacheRepository.findEntry("provider.netatmo.refresh-token") } returns CacheEntry(prevRefreshToken)
         coEvery { netatmoClient.refreshToken(prevRefreshToken) } returns NetatmoAuthFailure(refreshTokenFailure).left()
 
         val res = sut.getAllDevices()
@@ -160,11 +158,11 @@ class NetatmoServiceUnitTest {
         every {
             cache.get("provider.netatmo.access-token")
         } returns CachedValueNotFound("provider.netatmo.access-token").left()
-        every { cacheRepository.findEntry("provider.netatmo.refresh-token") } returns
-                CacheEntry(prevRefreshToken).right()
+        every { cacheRepository.findEntry("provider.netatmo.refresh-token") } returns CacheEntry(prevRefreshToken)
         coEvery { netatmoClient.refreshToken(prevRefreshToken) } returns expectedResponse.right()
-        every { cacheRepository.upsert("provider.netatmo.refresh-token", expectedResponse.refreshToken) } returns
-                PersistenceFailure(Exception("failure")).left()
+        every {
+            cacheRepository.upsert("provider.netatmo.refresh-token", expectedResponse.refreshToken)
+        } throws Exception("failure")
         every { cache.set("provider.netatmo.access-token", expectedResponse.accessToken) } returns CacheOkResponse
         coEvery { netatmoClient.getHomesData(accessToken) } returns homeDataResp.right()
 

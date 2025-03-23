@@ -4,10 +4,9 @@ import arrow.core.Either
 import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DevicesProvider
-import org.agrfesta.sh.api.domain.devices.DevicesService
 import org.agrfesta.sh.api.domain.failures.ExceptionFailure
 import org.agrfesta.sh.api.domain.failures.MessageFailure
-import org.agrfesta.sh.api.persistence.DevicesDao
+import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -23,8 +22,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/devices")
 class DevicesController(
     private val devicesProviders: Set<DevicesProvider>,
-    private val devicesService: DevicesService,
-    private val devicesDao: DevicesDao
+    private val devicesService: DevicesService
 ) {
     private val logger by LoggerDelegate()
 
@@ -33,7 +31,7 @@ class DevicesController(
 
     @PostMapping("/refresh")
     fun refresh(): ResponseEntity<Any> {
-        val devices = when (val result = devicesDao.getAll()) {
+        val devices = when (val result = devicesService.getAll()) {
             is Either.Left -> {
                 logger.error("Unable to fetch persisted devices", result.value.exception)
                 return internalServerError().body(MessageResponse("Unable to fetch persisted devices!"))
@@ -58,11 +56,11 @@ class DevicesController(
                     )
             }
         val result = devicesService.refresh(providersDevices, devices)
-        result.updatedDevices.forEach { devicesDao.update(it) }
-        result.detachedDevices.forEach { devicesDao.update(it) }
+        result.updatedDevices.forEach { devicesService.update(it) }
+        result.detachedDevices.forEach { devicesService.update(it) }
         return ok(DevicesRefreshResponse(
             newDevices = result.newDevices.mapNotNull {
-                devicesDao.create(it).fold(
+                devicesService.createDevice(it).fold(
                     {
                         failure -> logger.error("Unable to persist device ${failure.exception}")
                         null

@@ -47,7 +47,7 @@ class TemperatureSettingsDaoJdbcImpl(
         return uuid
     }
 
-    override fun findAreaSetting(areaId: UUID): Either<PersistenceFailure, AreaTemperatureSetting?> =
+    override fun findAreaSetting(areaId: UUID): AreaTemperatureSetting? =
         tempSettingsRepository.findSettingByAreaId(areaId)?.let { setting ->
             val intervals = tempIntervalsRepo.findAllBySetting(setting.uuid)
             AreaTemperatureSetting(
@@ -61,7 +61,7 @@ class TemperatureSettingsDaoJdbcImpl(
                     )
                 }.toSet()
             )
-        }.right()
+        }
 
     override fun deleteAreaSetting(areaId: UUID) {
         tempSettingsRepository.deleteByByAreaId(areaId)

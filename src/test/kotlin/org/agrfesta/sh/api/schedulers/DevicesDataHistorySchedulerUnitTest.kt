@@ -8,12 +8,11 @@ import io.mockk.verify
 import java.time.Instant
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aSensor
-import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.DevicesDao
-import org.agrfesta.sh.api.persistence.SensorDataPersistenceSuccess
 import org.agrfesta.sh.api.persistence.SensorsHistoryDataDao
+import org.agrfesta.sh.api.services.DevicesService
+import org.agrfesta.sh.api.services.SensorsHistoryDataService
 import org.agrfesta.sh.api.utils.CacheError
 import org.agrfesta.sh.api.utils.SmartCache
 import org.agrfesta.sh.api.utils.TimeService
@@ -28,8 +27,8 @@ class DevicesDataHistorySchedulerUnitTest {
     private val now = Instant.now()
 
     private val sut = DevicesDataHistoryScheduler(
-        devicesDao = devicesDao,
-        historyDataDao = historyDataDao,
+        devicesService = DevicesService(devicesDao),
+        historyDataService = SensorsHistoryDataService(historyDataDao),
         cache = smartCache,
         timeService = timeService
     )
@@ -39,7 +38,7 @@ class DevicesDataHistorySchedulerUnitTest {
     }
 
     @Test fun `historyDevicesData() do not save any history data when there are no devices`() {
-        every { devicesDao.getAll() } returns emptyList<Device>().right()
+        every { devicesDao.getAll() } returns emptyList()
 
         sut.historyDevicesData()
 
@@ -50,7 +49,7 @@ class DevicesDataHistorySchedulerUnitTest {
 
     @Test fun `historyDevicesData() do not save any history data when there are no sensors`() {
         val noSensorDevice = aDevice(features = setOf(DeviceFeature.ACTUATOR))
-        every { devicesDao.getAll() } returns listOf(noSensorDevice).right()
+        every { devicesDao.getAll() } returns listOf(noSensorDevice)
 
         sut.historyDevicesData()
 
@@ -63,13 +62,11 @@ class DevicesDataHistorySchedulerUnitTest {
         val sensorA = aSensor()
         val sensorB = aSensor()
         val sensorBData = aRandomThermoHygroData()
-        every { devicesDao.getAll() } returns listOf(sensorA, sensorB).right()
+        every { devicesDao.getAll() } returns listOf(sensorA, sensorB)
         every { smartCache.getThermoHygroOf(sensorA) } returns CacheError(Exception("cache fetch failure")).left()
         every { smartCache.getThermoHygroOf(sensorB) } returns sensorBData.right()
-        every { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBData.relativeHumidity) } returns
-                SensorDataPersistenceSuccess.right()
-        every { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBData.temperature) } returns
-                SensorDataPersistenceSuccess.right()
+        every { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBData.relativeHumidity) } returns Unit
+        every { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBData.temperature) } returns Unit
 
         sut.historyDevicesData()
 
@@ -84,17 +81,13 @@ class DevicesDataHistorySchedulerUnitTest {
         val sensorAData = aRandomThermoHygroData()
         val sensorB = aSensor()
         val sensorBData = aRandomThermoHygroData()
-        every { devicesDao.getAll() } returns listOf(sensorA, sensorB).right()
+        every { devicesDao.getAll() } returns listOf(sensorA, sensorB)
         every { smartCache.getThermoHygroOf(sensorA) } returns sensorAData.right()
         every { smartCache.getThermoHygroOf(sensorB) } returns sensorBData.right()
-        every { historyDataDao.persistHumidity(sensorA.uuid, now, sensorAData.relativeHumidity) } returns
-                SensorDataPersistenceSuccess.right()
-        every { historyDataDao.persistTemperature(sensorA.uuid, now, sensorAData.temperature) } returns
-                PersistenceFailure(Exception("persistence failure")).left()
-        every { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBData.relativeHumidity) } returns
-                SensorDataPersistenceSuccess.right()
-        every { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBData.temperature) } returns
-                SensorDataPersistenceSuccess.right()
+        every { historyDataDao.persistHumidity(sensorA.uuid, now, sensorAData.relativeHumidity) } returns Unit
+        every { historyDataDao.persistTemperature(sensorA.uuid, now, sensorAData.temperature) } returns Unit
+        every { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBData.relativeHumidity) } returns Unit
+        every { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBData.temperature) } returns Unit
 
         sut.historyDevicesData()
 
@@ -109,17 +102,14 @@ class DevicesDataHistorySchedulerUnitTest {
         val sensorAData = aRandomThermoHygroData()
         val sensorB = aSensor()
         val sensorBData = aRandomThermoHygroData()
-        every { devicesDao.getAll() } returns listOf(sensorA, sensorB).right()
+        every { devicesDao.getAll() } returns listOf(sensorA, sensorB)
         every { smartCache.getThermoHygroOf(sensorA) } returns sensorAData.right()
         every { smartCache.getThermoHygroOf(sensorB) } returns sensorBData.right()
-        every { historyDataDao.persistHumidity(sensorA.uuid, now, sensorAData.relativeHumidity) } returns
-                PersistenceFailure(Exception("persistence failure")).left()
-        every { historyDataDao.persistTemperature(sensorA.uuid, now, sensorAData.temperature) } returns
-                SensorDataPersistenceSuccess.right()
-        every { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBData.relativeHumidity) } returns
-                SensorDataPersistenceSuccess.right()
-        every { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBData.temperature) } returns
-                SensorDataPersistenceSuccess.right()
+        every { historyDataDao.persistHumidity(sensorA.uuid, now, sensorAData.relativeHumidity) } throws
+                Exception("persistence failure")
+        every { historyDataDao.persistTemperature(sensorA.uuid, now, sensorAData.temperature) } returns Unit
+        every { historyDataDao.persistHumidity(sensorB.uuid, now, sensorBData.relativeHumidity) } returns Unit
+        every { historyDataDao.persistTemperature(sensorB.uuid, now, sensorBData.temperature) } returns Unit
 
         sut.historyDevicesData()
 

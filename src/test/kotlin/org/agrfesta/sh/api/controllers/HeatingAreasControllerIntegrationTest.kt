@@ -56,7 +56,7 @@ class HeatingAreasControllerIntegrationTest(
     @Test fun `createHeatingSchedule() return 201 when successfully creates area's heating schedule`() {
         val defaultTemperature = aRandomTemperature()
         val area = anArea()
-        areasDao.save(area).shouldBeRight()
+        areasDao.save(area)
         val tempIntA = aTemperatureInterval(startTime = aDailyTime(hour = 0), endTime = aDailyTime(hour = 1))
         val tempIntB = aTemperatureInterval(startTime = aDailyTime(hour = 2), endTime = aDailyTime(hour = 3))
         val tempIntC = aTemperatureInterval(startTime = aDailyTime(hour = 4), endTime = aDailyTime(hour = 5))
@@ -82,7 +82,7 @@ class HeatingAreasControllerIntegrationTest(
             .`as`(MessageResponse::class.java)
 
         result.message shouldBe "Successfully created heating schedule for area with id '${area.uuid}'!"
-        val savedSetting = tempSettingsDao.findAreaSetting(area.uuid).shouldBeRight().shouldNotBeNull()
+        val savedSetting = tempSettingsDao.findAreaSetting(area.uuid).shouldNotBeNull()
         savedSetting.defaultTemperature shouldBe defaultTemperature
         savedSetting.temperatureSchedule.shouldContainExactlyInAnyOrder(tempIntB, tempIntC, tempIntA)
     }
@@ -90,7 +90,7 @@ class HeatingAreasControllerIntegrationTest(
     @Test fun `createHeatingSchedule() return 400 when an interval overlaps with another`() {
         val defaultTemperature = aRandomTemperature()
         val area = anArea()
-        areasDao.save(area).shouldBeRight()
+        areasDao.save(area)
         val tempIntA = aTemperatureInterval(startTime = aDailyTime(hour = 4), endTime = aDailyTime(hour = 7))
         val tempIntB = aTemperatureInterval(startTime = aDailyTime(hour = 5), endTime = aDailyTime(hour = 6))
         val body = """
@@ -119,7 +119,7 @@ class HeatingAreasControllerIntegrationTest(
     @Test fun `createHeatingSchedule() return 201 when replaces existing area's heating schedule`() {
         val defaultTemperature = aRandomTemperature()
         val area = anArea()
-        areasDao.save(area).shouldBeRight()
+        areasDao.save(area)
         val existingSetting = anAreaTemperatureSetting(
             areaId = area.uuid,
             temperatureSchedule = setOf(aTemperatureInterval())
@@ -150,7 +150,7 @@ class HeatingAreasControllerIntegrationTest(
             .`as`(MessageResponse::class.java)
 
         result.message shouldBe "Successfully created heating schedule for area with id '${area.uuid}'!"
-        val savedSetting = tempSettingsDao.findAreaSetting(area.uuid).shouldBeRight().shouldNotBeNull()
+        val savedSetting = tempSettingsDao.findAreaSetting(area.uuid).shouldNotBeNull()
         savedSetting.defaultTemperature shouldBe defaultTemperature
         savedSetting.temperatureSchedule.shouldContainExactlyInAnyOrder(tempIntB, tempIntC, tempIntA)
     }
@@ -160,13 +160,13 @@ class HeatingAreasControllerIntegrationTest(
 
     @Test fun `deleteHeatingSchedule() returns 200 when successfully deletes area's heating schedule`() {
         val area = anArea()
-        areasDao.save(area).shouldBeRight()
+        areasDao.save(area)
         val existingSetting = anAreaTemperatureSetting(
             areaId = area.uuid,
             temperatureSchedule = setOf(aTemperatureInterval())
         )
         tempSettingsDao.createSetting(existingSetting)
-        tempSettingsDao.findAreaSetting(area.uuid).shouldBeRight().shouldNotBeNull()
+        tempSettingsDao.findAreaSetting(area.uuid).shouldNotBeNull()
 
         val result = given()
             .`when`()
@@ -177,7 +177,7 @@ class HeatingAreasControllerIntegrationTest(
             .`as`(MessageResponse::class.java)
 
         result.message shouldBe "Successfully deleted heating schedule for area with id '${area.uuid}'!"
-        tempSettingsDao.findAreaSetting(area.uuid).shouldBeRight().shouldBeNull()
+        tempSettingsDao.findAreaSetting(area.uuid).shouldBeNull()
     }
 
     @Test fun `deleteHeatingSchedule() returns 404 when area is not found`() {

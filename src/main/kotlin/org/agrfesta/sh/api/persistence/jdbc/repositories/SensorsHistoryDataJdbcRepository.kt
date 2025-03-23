@@ -1,16 +1,11 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
 import java.math.BigDecimal
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
 import java.util.*
 import org.agrfesta.sh.api.domain.devices.SensorDataType
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.SensorDataPersistenceSuccess
 import org.agrfesta.sh.api.persistence.jdbc.entities.SensorHistoryDataEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
@@ -24,12 +19,7 @@ class SensorsHistoryDataJdbcRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate
 ) {
 
-    fun persist(
-        sensorUuid: UUID,
-        time: Instant,
-        dataType: SensorDataType,
-        value: BigDecimal
-    ): Either<PersistenceFailure, SensorDataPersistenceSuccess> {
+    fun persist(sensorUuid: UUID, time: Instant, dataType: SensorDataType, value: BigDecimal) {
         val sql = """
             INSERT INTO smart_home.sensor_history_data (sensor_uuid, time, data_type, value)
             VALUES (:sensorUuid, :time, :dataType, :value)
@@ -41,13 +31,7 @@ class SensorsHistoryDataJdbcRepository(
             .addValue("dataType", dataType.name)
             .addValue("value", value)
 
-        try {
-            jdbcTemplate.update(sql, parameters)
-        } catch (e: Exception) {
-            return PersistenceFailure(e).left()
-        }
-
-        return SensorDataPersistenceSuccess.right()
+        jdbcTemplate.update(sql, parameters)
     }
 
     fun findAllBySensorUuid(sensorUuid: UUID): List<SensorHistoryDataEntity> {

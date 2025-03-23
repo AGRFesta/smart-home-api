@@ -4,9 +4,9 @@ import arrow.core.Either
 import org.agrfesta.sh.api.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
-import org.agrfesta.sh.api.persistence.DevicesDao
-import org.agrfesta.sh.api.persistence.SensorsHistoryDataDao
-import org.agrfesta.sh.api.persistence.onLeftLogOn
+import org.agrfesta.sh.api.services.onLeftLogOn
+import org.agrfesta.sh.api.services.DevicesService
+import org.agrfesta.sh.api.services.SensorsHistoryDataService
 import org.agrfesta.sh.api.utils.CacheFailure
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.utils.SmartCache
@@ -18,8 +18,8 @@ import org.springframework.stereotype.Component
 
 @Component
 class DevicesDataHistoryScheduler(
-    private val devicesDao: DevicesDao,
-    private val historyDataDao: SensorsHistoryDataDao,
+    private val devicesService: DevicesService,
+    private val historyDataService: SensorsHistoryDataService,
     private val cache: SmartCache,
     private val timeService: TimeService
 ) {
@@ -29,7 +29,7 @@ class DevicesDataHistoryScheduler(
     @Async
     fun historyDevicesData() {
         logger.info("[SCHEDULED TASK] start devices history data...")
-        devicesDao.getAll()
+        devicesService.getAll()
             .onRight { devices ->
                 devices.filter { it.features.contains(DeviceFeature.SENSOR) }
                 .forEach {
@@ -44,12 +44,12 @@ class DevicesDataHistoryScheduler(
 
     private fun Either<CacheFailure, ThermoHygroData>.onRightPersistAsTemperatureAndHumidityOf(sensor: Device) =
         onRight {
-            historyDataDao.persistTemperature(
+            historyDataService.persistTemperature(
                 sensorUuid = sensor.uuid,
                 time = timeService.now(),
                 temperature = it.temperature
             ).onLeftLogOn(logger)
-            historyDataDao.persistHumidity(
+            historyDataService.persistHumidity(
                 sensorUuid = sensor.uuid,
                 time = timeService.now(),
                 relativeHumidity = it.relativeHumidity

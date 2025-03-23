@@ -1,8 +1,6 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
 import arrow.core.Either
-import arrow.core.flatMap
-import arrow.core.left
 import arrow.core.right
 import java.sql.ResultSet
 import java.sql.Timestamp
@@ -12,10 +10,8 @@ import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.domain.devices.Provider
-import org.agrfesta.sh.api.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.domain.failures.GetDeviceFailure
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.PersistenceSuccess
+import org.agrfesta.sh.api.persistence.DeviceNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.entities.DeviceEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
@@ -36,7 +32,7 @@ class DevicesJdbcRepository(
     private val timeService: TimeService
 ) {
 
-    fun findDeviceById(uuid: UUID): Either<GetDeviceFailure, DeviceEntity?> =
+    fun findDeviceById(uuid: UUID): DeviceEntity? =
         try {
             jdbcTemplate.queryForObject(
                 """SELECT * FROM smart_home.device WHERE uuid = :uuid;""",
@@ -45,10 +41,9 @@ class DevicesJdbcRepository(
             )
         } catch (e: EmptyResultDataAccessException) {
             null
-        }.right()
+        }
 
-    fun getDeviceById(uuid: UUID): Either<GetDeviceFailure, DeviceEntity> = findDeviceById(uuid)
-        .flatMap { it?.right() ?: DeviceNotFound.left() }
+    fun getDeviceById(uuid: UUID): DeviceEntity = findDeviceById(uuid) ?: throw DeviceNotFoundException()
 
     fun findByProviderAndProviderId(provider: Provider, providerId: String): Either<GetDeviceFailure, DeviceEntity?> =
         try {
@@ -61,18 +56,10 @@ class DevicesJdbcRepository(
             null
         }.right()
 
-    fun getAll(): Either<PersistenceFailure, Collection<DeviceEntity>> =
-        try {
-            jdbcTemplate.query("""SELECT * FROM smart_home.device;""", DeviceRowMapper).right()
-        } catch (e: Exception) {
-            PersistenceFailure(e).left()
-        }
+    fun getAll(): Collection<DeviceEntity> = jdbcTemplate
+        .query("""SELECT * FROM smart_home.device;""", DeviceRowMapper)
 
-
-    fun persist(
-        device: DeviceDataValue,
-        deviceStatus: DeviceStatus = DeviceStatus.PAIRED
-    ): Either<PersistenceFailure, UUID> {
+    fun persist(device: DeviceDataValue, deviceStatus: DeviceStatus = DeviceStatus.PAIRED): UUID {
         val uuid = randomGenerator.uuid()
         val sql = """
             INSERT INTO smart_home.device 
@@ -89,15 +76,11 @@ class DevicesJdbcRepository(
             "createdOn" to Timestamp.from(timeService.now()),
             "updatedOn" to null
         )
-        return try {
-            jdbcTemplate.update(sql, params)
-            uuid.right()
-        } catch (e: Exception) {
-            PersistenceFailure(e).left()
-        }
+        jdbcTemplate.update(sql, params)
+        return uuid
     }
 
-    fun update(device: Device): Either<PersistenceFailure, PersistenceSuccess> {
+    fun update(device: Device) {
         val sql = """
             UPDATE smart_home.device
             SET name = :name, status = :status, updated_on = :updatedOn
@@ -110,12 +93,7 @@ class DevicesJdbcRepository(
             "provider" to device.provider.name,
             "providerId" to device.providerId
         )
-        return try {
-            jdbcTemplate.update(sql, params)
-            PersistenceSuccess.right()
-        } catch (e: Exception) {
-            PersistenceFailure(e).left()
-        }
+        jdbcTemplate.update(sql, params)
     }
 
     fun deleteAll(): Int = jdbcTemplate.update("DELETE FROM smart_home.device", emptyMap<String, Any>())
