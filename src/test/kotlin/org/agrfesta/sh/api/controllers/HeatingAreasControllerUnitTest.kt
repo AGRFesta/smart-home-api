@@ -11,6 +11,8 @@ import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.anArea
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.persistence.jdbc.dao.TemperatureSettingsDaoJdbcImpl
+import org.agrfesta.sh.api.persistence.jdbc.entities.anAreaEntity
+import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureSettingRepository
 import org.agrfesta.sh.api.services.HeatingAreasService
@@ -25,6 +27,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
@@ -36,12 +39,19 @@ class HeatingAreasControllerUnitTest(
     @Autowired private val objectMapper: ObjectMapper,
     @Autowired @MockkBean private val tempSettingsRepo: TemperatureSettingRepository,
     @Autowired @MockkBean private val tempIntervalsRepo: TemperatureIntervalRepository,
+    @Autowired @MockkBean private val areasJdbcRepository: AreasJdbcRepository,
     @Autowired @MockkBean private val randomGenerator: RandomGenerator
 ) {
     private val area = anArea()
+    private val areaEntity = anAreaEntity(
+        uuid = area.uuid,
+        name = area.name,
+        isIndoor = area.isIndoor,
+    )
     private val uuid = UUID.randomUUID()
 
     init {
+        every { areasJdbcRepository.findAreaById(area.uuid) } returns areaEntity
         every { tempSettingsRepo.existsSettingByAreaId(area.uuid) } returns false
         every { tempIntervalsRepo.save(any()) } returns Unit
         every { randomGenerator.uuid() } returns uuid
@@ -216,6 +226,35 @@ class HeatingAreasControllerUnitTest(
         val response: MessageResponse = objectMapper.readValue(resultContent, MessageResponse::class.java)
         response.message shouldBe "Unable to persist setting for area '${area.uuid}'!"
         verify(exactly = 2) { tempIntervalsRepo.save(any()) }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///// deleteHeatingSchedule ////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test fun `createHeatingSchedule() returns 500 when is unable to fetch area on db`() {
+        val failure = Exception("area fetch failure")
+        every { areasJdbcRepository.findAreaById(area.uuid) } throws failure
+
+        val resultContent: String = mockMvc.perform(delete("/heating/areas/${area.uuid}"))
+            .andExpect(status().isInternalServerError)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(resultContent, MessageResponse::class.java)
+        response.message shouldBe "Unable to delete setting for area '${area.uuid}'!"
+    }
+
+    @Test fun `createHeatingSchedule() returns 500 when is unable to delete setting on db`() {
+        val failure = Exception("setting delete failure")
+        every { tempSettingsRepo.deleteByByAreaId(area.uuid) } throws failure
+
+        val resultContent: String = mockMvc.perform(delete("/heating/areas/${area.uuid}"))
+            .andExpect(status().isInternalServerError)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(resultContent, MessageResponse::class.java)
+        response.message shouldBe "Unable to delete setting for area '${area.uuid}'!"
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

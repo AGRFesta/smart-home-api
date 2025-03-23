@@ -63,6 +63,10 @@ class TemperatureSettingsDaoJdbcImpl(
             )
         }.right()
 
+    override fun deleteAreaSetting(areaId: UUID) {
+        tempSettingsRepository.deleteByByAreaId(areaId)
+    }
+
     private fun areaTempSettingAlreadyExist(areaId: UUID): Boolean = try {
         tempSettingsRepository.existsSettingByAreaId(areaId)
     } catch (e: Exception) {

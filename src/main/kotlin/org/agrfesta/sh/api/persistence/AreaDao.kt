@@ -10,7 +10,7 @@ import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 interface AreaDao {
     fun save(area: Area): Either<AreaCreationFailure, Area>
     fun findAreaByName(name: String): Either<PersistenceFailure, Area?>
-    fun getAreaById(uuid: UUID): Either<GetAreaFailure, Area>
+    fun getAreaById(uuid: UUID): Area
     fun getAreaByName(name: String): Either<GetAreaFailure, Area>
     fun getAll(): Either<PersistenceFailure, Collection<Area>>
 }
