@@ -58,7 +58,6 @@ class AreasControllerIntegrationTest(
         val expectedArea = Area(
             uuid = uuid,
             name = name,
-            devices = emptyList(),
             isIndoor = true
         )
         areasDao.getAreaByName(name) shouldBe expectedArea

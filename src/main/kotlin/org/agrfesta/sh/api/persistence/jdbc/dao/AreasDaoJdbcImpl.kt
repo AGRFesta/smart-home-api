@@ -21,4 +21,6 @@ class AreasDaoJdbcImpl(
 
     override fun getAll(): Collection<Area> = areasRepository.getAll().map { it.asArea() }
 
+    override fun deleteAreaById(uuid: UUID) = areasRepository.deleteAreaById(uuid)
+
 }

@@ -4,10 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.persistence.DevicesDao
+import org.agrfesta.sh.api.persistence.jdbc.dao.SensorsAssignmentsDaoJdbcImpl
+import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcRepository
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotService
+import org.agrfesta.sh.api.services.DevicesService
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -18,13 +21,15 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(DevicesController::class)
-@Import(SwitchBotService::class, DevicesService::class)
+@Import(SwitchBotService::class, DevicesService::class, SensorsAssignmentsDaoJdbcImpl::class)
 @ActiveProfiles("test")
 class DevicesControllerUnitTest(
     @Autowired private val mockMvc: MockMvc,
     @Autowired private val objectMapper: ObjectMapper,
     @Autowired @MockkBean private val devicesDao: DevicesDao,
-    @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient
+    @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient,
+    @Autowired @MockkBean private val sensorsAssignmentsJdbcRepository: SensorsAssignmentsJdbcRepository,
+    @Autowired @MockkBean private val devicesJdbcRepository: DevicesJdbcRepository
 ) {
 
     @Test

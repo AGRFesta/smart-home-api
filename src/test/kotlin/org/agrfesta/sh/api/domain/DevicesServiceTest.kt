@@ -6,12 +6,14 @@ import io.mockk.mockk
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.persistence.DevicesDao
+import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
 import org.junit.jupiter.api.Test
 
 class DevicesServiceTest {
     private val devicesDao: DevicesDao = mockk()
+    private val sensorsAssignmentsDao: SensorsAssignmentsDao = mockk()
 
-    private val sut: DevicesService = DevicesService(devicesDao)
+    private val sut: DevicesService = DevicesService(devicesDao, sensorsAssignmentsDao)
 
     @Test
     fun `refresh() returns empty result when there are no devices and no provider devices`() {

@@ -55,6 +55,16 @@ class SensorsAssignmentsJdbcRepository(
         }
     }
 
+    fun deleteByDevice(deviceId: UUID) {
+        val sql = """
+            DELETE FROM smart_home.sensor_assignment
+            WHERE device_uuid = :deviceUuid;
+        """
+        jdbcTemplate.update(sql, mapOf("deviceUuid" to deviceId))
+    }
+
+    fun deleteAll(): Int = jdbcTemplate.update("DELETE FROM smart_home.sensor_assignment", emptyMap<String, Any>())
+
     fun findByDevice(deviceUuid: UUID): Collection<SensorAssignmentEntity> = jdbcTemplate.query(
             """SELECT * FROM smart_home.sensor_assignment WHERE device_uuid = :deviceUuid;""",
             MapSqlParameterSource(mapOf("deviceUuid" to deviceUuid)),
