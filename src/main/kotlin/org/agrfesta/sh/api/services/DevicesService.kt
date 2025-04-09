@@ -9,11 +9,13 @@ import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.DevicesDao
+import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
 import org.springframework.stereotype.Service
 
 @Service
 class DevicesService(
-    private val devicesDao: DevicesDao
+    private val devicesDao: DevicesDao,
+    private val sensorsAssignmentsDao: SensorsAssignmentsDao,
 ) {
 
     fun createDevice(

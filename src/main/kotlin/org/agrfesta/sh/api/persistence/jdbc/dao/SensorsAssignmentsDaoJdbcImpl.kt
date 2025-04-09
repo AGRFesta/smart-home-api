@@ -29,4 +29,8 @@ class SensorsAssignmentsDaoJdbcImpl(
         sensorsAssignmentsJdbcRepository.persistAssignment(areaId, sensorId)
     }
 
+    override fun unassign(sensorId: UUID) {
+        sensorsAssignmentsJdbcRepository.deleteByDevice(sensorId)
+    }
+
 }

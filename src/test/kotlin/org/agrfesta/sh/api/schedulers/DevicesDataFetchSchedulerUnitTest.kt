@@ -8,6 +8,7 @@ import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.persistence.DevicesDao
+import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotService
 import org.agrfesta.sh.api.utils.Cache
@@ -17,13 +18,14 @@ import org.junit.jupiter.api.Test
 class DevicesDataFetchSchedulerUnitTest {
     private val cache: Cache = mockk()
     private val devicesDao: DevicesDao = mockk()
+    private val sensorsAssignmentsDao: SensorsAssignmentsDao = mockk()
     private val switchBotDevicesClient: SwitchBotDevicesClient = mockk()
 
     private val mapper = ObjectMapper()
     private val smartCache = SmartCache(cache, mapper)
     private val switchBotService = SwitchBotService(devicesClient = switchBotDevicesClient, mapper = mapper)
     private val sut = DevicesDataFetchScheduler(
-        devicesService = DevicesService(devicesDao),
+        devicesService = DevicesService(devicesDao, sensorsAssignmentsDao),
         switchBotService = switchBotService,
         cache = smartCache
     )

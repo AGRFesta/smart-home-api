@@ -1,12 +1,10 @@
 package org.agrfesta.sh.api.domain
 
-import org.agrfesta.sh.api.domain.devices.Device
-import org.agrfesta.test.mothers.aRandomUniqueString
 import java.util.*
+import org.agrfesta.test.mothers.aRandomUniqueString
 
 fun anArea(
     uuid: UUID = UUID.randomUUID(),
     name: String = aRandomUniqueString(),
-    devices: Collection<Device> = emptyList(),
     isIndoor: Boolean = true
-) = Area(uuid, name, devices, isIndoor)
+) = Area(uuid, name, isIndoor)

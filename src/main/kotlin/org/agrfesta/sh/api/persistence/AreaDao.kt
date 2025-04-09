@@ -23,6 +23,8 @@ interface AreaDao {
     fun getAreaByName(name: String): Area
 
     fun getAll(): Collection<Area>
+
+    fun deleteAreaById(uuid: UUID)
 }
 
 class AreaNotFoundException: Exception()

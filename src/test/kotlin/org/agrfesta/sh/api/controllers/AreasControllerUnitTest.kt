@@ -11,8 +11,15 @@ import io.mockk.slot
 import java.time.Instant
 import java.util.*
 import org.agrfesta.sh.api.domain.Area
+import org.agrfesta.sh.api.persistence.AreasWithDevicesDao
+import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
 import org.agrfesta.sh.api.persistence.jdbc.dao.AreasDaoJdbcImpl
+import org.agrfesta.sh.api.persistence.jdbc.dao.AreasWithDevicesDaoJdbcImpl
+import org.agrfesta.sh.api.persistence.jdbc.dao.SensorsAssignmentsDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasWithDevicesJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcRepository
 import org.agrfesta.sh.api.services.AreasService
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
@@ -27,14 +34,21 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(AreasController::class)
-@Import(AreasService::class, AreasDaoJdbcImpl::class)
+@Import(
+    AreasService::class,
+    AreasDaoJdbcImpl::class,
+    AreasWithDevicesDaoJdbcImpl::class,
+    SensorsAssignmentsDaoJdbcImpl::class)
 @ActiveProfiles("test")
 class AreasControllerUnitTest(
     @Autowired private val mockMvc: MockMvc,
     @Autowired private val objectMapper: ObjectMapper,
     @Autowired @MockkBean private val randomGenerator: RandomGenerator,
     @Autowired @MockkBean private val timeService: TimeService,
-    @Autowired @MockkBean private val areasRepository: AreasJdbcRepository
+    @Autowired @MockkBean private val areasRepository: AreasJdbcRepository,
+    @Autowired @MockkBean private val areasWithDevicesJdbcRepository: AreasWithDevicesJdbcRepository,
+    @Autowired @MockkBean private val sensorsAssignmentsJdbcRepository: SensorsAssignmentsJdbcRepository,
+    @Autowired @MockkBean private val DevicesJdbcRepository: DevicesJdbcRepository
 ) {
 
     init {

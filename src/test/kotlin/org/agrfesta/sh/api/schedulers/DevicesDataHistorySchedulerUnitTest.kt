@@ -10,6 +10,7 @@ import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aSensor
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.persistence.DevicesDao
+import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
 import org.agrfesta.sh.api.persistence.SensorsHistoryDataDao
 import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.services.SensorsHistoryDataService
@@ -23,11 +24,12 @@ class DevicesDataHistorySchedulerUnitTest {
     private val smartCache: SmartCache = mockk()
     private val timeService: TimeService = mockk()
     private val devicesDao: DevicesDao = mockk()
+    private val sensorsAssignmentsDao: SensorsAssignmentsDao = mockk()
     private val historyDataDao: SensorsHistoryDataDao = mockk()
     private val now = Instant.now()
 
     private val sut = DevicesDataHistoryScheduler(
-        devicesService = DevicesService(devicesDao),
+        devicesService = DevicesService(devicesDao, sensorsAssignmentsDao),
         historyDataService = SensorsHistoryDataService(historyDataDao),
         cache = smartCache,
         timeService = timeService

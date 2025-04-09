@@ -15,15 +15,31 @@ import org.springframework.stereotype.Service
 
 @Service
 class SmartCache(
-    val cache: Cache,
+    private val cache: Cache,
     private val objectMapper: ObjectMapper
 ) {
-    fun getThermoHygroOf(device: Device): Either<CacheFailure, ThermoHygroData> {
+
+    /**
+     * Retrieves the cached thermo-hygrometric data for the specified [device].
+     *
+     * This method attempts to fetch a raw string representation of the thermo-hygrometric data
+     * from the cache using a key derived from the given [device]. If the cached data exists
+     * and is successfully retrieved, it is then parsed into a [ThermoHygroData] object.
+     *
+     * The result is wrapped in an [Either] type to represent success or failure:
+     * - On success, it returns [Either.Right] containing the parsed [ThermoHygroData].
+     * - On failure (e.g., missing cache entry or parsing error), it returns [Either.Left]
+     *   with a [CacheFailure] describing the reason.
+     *
+     * @param device the [DeviceProviderIdentity] for which to retrieve thermo-hygrometric data.
+     * @return an [Either] containing a [CacheFailure] on the left, or the [ThermoHygroData] on the right.
+     */
+    fun getThermoHygroOf(device: DeviceProviderIdentity): Either<CacheFailure, ThermoHygroData> {
         val result = cache.get(device.getThermoHygroKey())
         return result.flatMap { parseThermoHygroData(it) }
     }
 
-    fun setThermoHygroOf(device: Device, thermoHygro: ThermoHygroData) =
+    fun setThermoHygroOf(device: DeviceProviderIdentity, thermoHygro: ThermoHygroData) =
         cache.set(device.getThermoHygroKey(), objectMapper.writeValueAsString(thermoHygro.toThermoHygroCacheEntry()))
 
     private fun parseThermoHygroData(json: String): Either<CacheFailure, ThermoHygroData> {
