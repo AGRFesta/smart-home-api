@@ -49,6 +49,7 @@ class CacheControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"value": "$value", "ttl": $ttl}""")
             .`when`()
             .put("/cache/$key")
@@ -70,6 +71,7 @@ class CacheControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"value": "$value"}""")
             .`when`()
             .put("/cache/$key")
@@ -93,6 +95,7 @@ class CacheControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"value": "$value", "ttl": $ttl}""")
             .`when`()
             .put("/cache/$key")
@@ -115,6 +118,7 @@ class CacheControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .`when`()
             .get("/cache/$key")
             .then()
@@ -134,6 +138,7 @@ class CacheControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .`when`()
             .get("/cache/$key")
             .then()
@@ -154,6 +159,7 @@ class CacheControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .`when`()
             .get("/cache/$key")
             .then()

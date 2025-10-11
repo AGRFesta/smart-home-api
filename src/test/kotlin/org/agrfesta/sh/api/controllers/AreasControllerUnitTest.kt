@@ -11,8 +11,6 @@ import io.mockk.slot
 import java.time.Instant
 import java.util.*
 import org.agrfesta.sh.api.domain.Area
-import org.agrfesta.sh.api.persistence.AreasWithDevicesDao
-import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
 import org.agrfesta.sh.api.persistence.jdbc.dao.AreasDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.dao.AreasWithDevicesDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.dao.SensorsAssignmentsDaoJdbcImpl
@@ -20,6 +18,8 @@ import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasWithDevicesJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcRepository
+import org.agrfesta.sh.api.security.SecurityConfig
+import org.agrfesta.sh.api.security.SimpleApiKeyFilter
 import org.agrfesta.sh.api.services.AreasService
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
@@ -38,7 +38,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
     AreasService::class,
     AreasDaoJdbcImpl::class,
     AreasWithDevicesDaoJdbcImpl::class,
-    SensorsAssignmentsDaoJdbcImpl::class)
+    SensorsAssignmentsDaoJdbcImpl::class,
+    SecurityConfig::class
+)
 @ActiveProfiles("test")
 class AreasControllerUnitTest(
     @Autowired private val mockMvc: MockMvc,
@@ -56,12 +58,48 @@ class AreasControllerUnitTest(
         every { timeService.now() } returns Instant.now()
     }
 
+    @Test fun `create() return 401 when auth is missing`() {
+        val responseBody: String = mockMvc.perform(post("/areas")
+            .contentType("application/json")
+            .content("""{"name": "${aRandomUniqueString()}"}"""))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Missing Authorization header"
+    }
+
+    @Test fun `create() return 401 when token is empty`() {
+        val responseBody: String = mockMvc.perform(post("/areas")
+            .contentType("application/json")
+            .header("Authorization", "Bearer ")
+            .content("""{"name": "${aRandomUniqueString()}"}"""))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Empty token"
+    }
+
+    @Test fun `create() return 401 when token is invalid`() {
+        val responseBody: String = mockMvc.perform(post("/areas")
+            .contentType("application/json")
+            .header("Authorization", "Bearer ${aRandomUniqueString()}")
+            .content("""{"name": "${aRandomUniqueString()}"}"""))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Invalid token"
+    }
+
     @Test fun `create() return 500 when persistence creation fails`() {
         val name = aRandomUniqueString()
         every { areasRepository.persist(any()) } throws Exception("area creation failure")
 
         val responseBody: String = mockMvc.perform(post("/areas")
             .contentType("application/json")
+            .authenticated()
             .content("""{"name": "$name"}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
@@ -77,6 +115,7 @@ class AreasControllerUnitTest(
 
         val responseBody: String = mockMvc.perform(post("/areas")
             .contentType("application/json")
+            .authenticated()
             .content("""{"name": "$name", "isIndoor": true}"""))
             .andExpect(status().isCreated)
             .andReturn().response.contentAsString
@@ -93,6 +132,7 @@ class AreasControllerUnitTest(
 
         val responseBody: String = mockMvc.perform(post("/areas")
             .contentType("application/json")
+            .authenticated()
             .content("""{"name": "$name", "isIndoor": false}"""))
             .andExpect(status().isCreated)
             .andReturn().response.contentAsString

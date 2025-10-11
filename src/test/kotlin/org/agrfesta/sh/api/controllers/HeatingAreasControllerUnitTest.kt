@@ -15,10 +15,12 @@ import org.agrfesta.sh.api.persistence.jdbc.entities.anAreaEntity
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureSettingRepository
+import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.sh.api.services.HeatingAreasService
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.test.mothers.aDailyTime
 import org.agrfesta.test.mothers.aRandomTemperature
+import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
@@ -33,7 +35,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(HeatingAreasController::class)
 @ActiveProfiles("test")
-@Import(HeatingAreasService::class, TemperatureSettingsDaoJdbcImpl::class)
+@Import(HeatingAreasService::class, TemperatureSettingsDaoJdbcImpl::class, SecurityConfig::class)
 class HeatingAreasControllerUnitTest(
     @Autowired private val mockMvc: MockMvc,
     @Autowired private val objectMapper: ObjectMapper,
@@ -59,13 +61,53 @@ class HeatingAreasControllerUnitTest(
 
     ///// createHeatingSchedule ////////////////////////////////////////////////////////////////////////////////////////
 
+    @Test fun `createHeatingSchedule() return 401 when auth is missing`() {
+        val responseBody: String = mockMvc.perform(
+            post("/heating/areas/${area.uuid}")
+                .contentType("application/json")
+                .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Missing Authorization header"
+    }
+
+    @Test fun `createHeatingSchedule() return 401 when token is empty`() {
+        val responseBody: String = mockMvc.perform(
+            post("/heating/areas/${area.uuid}")
+                .header("Authorization", "Bearer ")
+                .contentType("application/json")
+                .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Empty token"
+    }
+
+    @Test fun `createHeatingSchedule() return 401 when token is invalid`() {
+        val responseBody: String = mockMvc.perform(
+            post("/heating/areas/${area.uuid}")
+                .header("Authorization", "Bearer ${aRandomUniqueString()}")
+                .contentType("application/json")
+                .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Invalid token"
+    }
+
     @Test fun `createHeatingSchedule() returns 500 when is unable to persist setting on db`() {
         val failure = Exception("setting creation failure")
         every { tempSettingsRepo.save(any()) } throws failure
 
-        val resultContent: String = mockMvc.perform(post("/heating/areas/${area.uuid}")
-            .contentType("application/json")
-            .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
+        val resultContent: String = mockMvc.perform(
+            post("/heating/areas/${area.uuid}")
+                .contentType("application/json")
+                .authenticated()
+                .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -111,9 +153,11 @@ class HeatingAreasControllerUnitTest(
                     }
                 """.trimIndent()
 
-                val resultContent: String = mockMvc.perform(post("/heating/areas/${area.uuid}")
-                    .contentType("application/json")
-                    .content(body))
+                val resultContent: String = mockMvc.perform(
+                    post("/heating/areas/${area.uuid}")
+                        .contentType("application/json")
+                        .authenticated()
+                        .content(body))
                     .andExpect(status().isCreated)
                     .andReturn().response.contentAsString
 
@@ -166,9 +210,11 @@ class HeatingAreasControllerUnitTest(
                     }
                 """.trimIndent()
 
-                val resultContent: String = mockMvc.perform(post("/heating/areas/${area.uuid}")
-                    .contentType("application/json")
-                    .content(body))
+                val resultContent: String = mockMvc.perform(
+                    post("/heating/areas/${area.uuid}")
+                        .contentType("application/json")
+                        .authenticated()
+                        .content(body))
                     .andExpect(status().isBadRequest)
                     .andReturn().response.contentAsString
 
@@ -182,9 +228,11 @@ class HeatingAreasControllerUnitTest(
         every { tempSettingsRepo.existsSettingByAreaId(area.uuid) } throws failure
         every { tempSettingsRepo.save(any()) } returns uuid
 
-        mockMvc.perform(post("/heating/areas/${area.uuid}")
-            .contentType("application/json")
-            .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
+        mockMvc.perform(
+            post("/heating/areas/${area.uuid}")
+                .contentType("application/json")
+                .authenticated()
+                .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
             .andExpect(status().isCreated)
     }
 
@@ -193,9 +241,11 @@ class HeatingAreasControllerUnitTest(
         every { tempSettingsRepo.existsSettingByAreaId(area.uuid) } returns true
         every { tempSettingsRepo.deleteByByAreaId(area.uuid) } throws failure
 
-        val resultContent: String = mockMvc.perform(post("/heating/areas/${area.uuid}")
-            .contentType("application/json")
-            .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
+        val resultContent: String = mockMvc.perform(
+            post("/heating/areas/${area.uuid}")
+                .contentType("application/json")
+                .authenticated()
+                .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -217,9 +267,11 @@ class HeatingAreasControllerUnitTest(
         every { tempSettingsRepo.save(any()) } returns uuid
         every { tempIntervalsRepo.save(any()) } returns Unit andThenThrows failure
 
-        val resultContent: String = mockMvc.perform(post("/heating/areas/${area.uuid}")
-            .contentType("application/json")
-            .content(requestBody))
+        val resultContent: String = mockMvc.perform(
+            post("/heating/areas/${area.uuid}")
+                .contentType("application/json")
+                .authenticated()
+                .content(requestBody))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -233,11 +285,45 @@ class HeatingAreasControllerUnitTest(
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///// deleteHeatingSchedule ////////////////////////////////////////////////////////////////////////////////////////
 
-    @Test fun `createHeatingSchedule() returns 500 when is unable to fetch area on db`() {
+    @Test fun `deleteHeatingSchedule() return 401 when auth is missing`() {
+        val responseBody: String = mockMvc.perform(
+            delete("/heating/areas/${area.uuid}"))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Missing Authorization header"
+    }
+
+    @Test fun `deleteHeatingSchedule() return 401 when token is empty`() {
+        val responseBody: String = mockMvc.perform(
+            delete("/heating/areas/${area.uuid}")
+                .header("Authorization", "Bearer "))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Empty token"
+    }
+
+    @Test fun `deleteHeatingSchedule() return 401 when token is invalid`() {
+        val responseBody: String = mockMvc.perform(
+            delete("/heating/areas/${area.uuid}")
+                .header("Authorization", "Bearer ${aRandomUniqueString()}"))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Invalid token"
+    }
+
+    @Test fun `deleteHeatingSchedule() returns 500 when is unable to fetch area on db`() {
         val failure = Exception("area fetch failure")
         every { areasJdbcRepository.findAreaById(area.uuid) } throws failure
 
-        val resultContent: String = mockMvc.perform(delete("/heating/areas/${area.uuid}"))
+        val resultContent: String = mockMvc.perform(
+            delete("/heating/areas/${area.uuid}")
+                .authenticated())
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -245,11 +331,13 @@ class HeatingAreasControllerUnitTest(
         response.message shouldBe "Unable to delete setting for area '${area.uuid}'!"
     }
 
-    @Test fun `createHeatingSchedule() returns 500 when is unable to delete setting on db`() {
+    @Test fun `deleteHeatingSchedule() returns 500 when is unable to delete setting on db`() {
         val failure = Exception("setting delete failure")
         every { tempSettingsRepo.deleteByByAreaId(area.uuid) } throws failure
 
-        val resultContent: String = mockMvc.perform(delete("/heating/areas/${area.uuid}"))
+        val resultContent: String = mockMvc.perform(
+            delete("/heating/areas/${area.uuid}")
+                .authenticated())
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 

@@ -42,6 +42,7 @@ class HeatingAreasControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}""")
             .`when`()
             .post("/heating/areas/${area.uuid}")
@@ -73,6 +74,7 @@ class HeatingAreasControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body(body)
             .`when`()
             .post("/heating/areas/${area.uuid}")
@@ -105,6 +107,7 @@ class HeatingAreasControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body(body)
             .`when`()
             .post("/heating/areas/${area.uuid}")
@@ -141,6 +144,7 @@ class HeatingAreasControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body(body)
             .`when`()
             .post("/heating/areas/${area.uuid}")
@@ -169,6 +173,7 @@ class HeatingAreasControllerIntegrationTest(
         tempSettingsDao.findAreaSetting(area.uuid).shouldNotBeNull()
 
         val result = given()
+            .authenticated()
             .`when`()
             .delete("/heating/areas/${area.uuid}")
             .then()
@@ -184,6 +189,7 @@ class HeatingAreasControllerIntegrationTest(
         val area = anArea()
 
         val result = given()
+            .authenticated()
             .`when`()
             .delete("/heating/areas/${area.uuid}")
             .then()

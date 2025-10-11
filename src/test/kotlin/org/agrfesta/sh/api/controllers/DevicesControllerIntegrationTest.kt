@@ -96,6 +96,7 @@ class DevicesControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .`when`()
             .post("/devices/refresh")
             .then()
@@ -156,6 +157,7 @@ class DevicesControllerIntegrationTest(
 
         given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .`when`()
             .post("/devices/refresh")
             .then()
@@ -209,6 +211,7 @@ class DevicesControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .`when`()
             .post("/devices/refresh")
             .then()
@@ -247,6 +250,7 @@ class DevicesControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .`when`()
             .post("/devices/refresh")
             .then()
@@ -280,6 +284,7 @@ class DevicesControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .`when`()
             .post("/devices/refresh")
             .then()
