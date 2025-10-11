@@ -51,6 +51,7 @@ class HomeStatusControllerIntegrationTest(
 
     @Test fun `getHomeStatus() returns an empty collection when there are no areas`() {
         val areaStatuses: Collection<AreaStatusView> = given()
+            .authenticated()
             .`when`()
             .get("/home/status")
             .then()
@@ -71,6 +72,7 @@ class HomeStatusControllerIntegrationTest(
         areasDao.save(areaC)
 
         val areaStatuses: Collection<AreaStatusView> = given()
+            .authenticated()
             .`when`()
             .get("/home/status")
             .then()
@@ -114,6 +116,7 @@ class HomeStatusControllerIntegrationTest(
         cache.setThermoHygroOf(sensorC0Data, aRandomThermoHygroData(temperature = BigDecimal("30")))
 
         val areaStatuses: Collection<AreaStatusView> = given()
+            .authenticated()
             .`when`()
             .get("/home/status")
             .then()
@@ -155,6 +158,7 @@ class HomeStatusControllerIntegrationTest(
         assignmentsService.assignSensorToArea(areaC.uuid, sensorC0Id).shouldBeRight()
 
         val areaStatuses: Collection<AreaStatusView> = given()
+            .authenticated()
             .`when`()
             .get("/home/status")
             .then()

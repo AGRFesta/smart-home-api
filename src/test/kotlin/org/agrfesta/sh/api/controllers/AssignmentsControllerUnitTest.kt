@@ -16,6 +16,7 @@ import org.agrfesta.sh.api.persistence.jdbc.entities.anActuatorEntity
 import org.agrfesta.sh.api.persistence.jdbc.repositories.ActuatorsAssignmentsJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcRepository
+import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.sh.api.services.AssignmentsService
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
@@ -30,7 +31,12 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(AssignmentsController::class)
-@Import(AssignmentsService::class, SensorsAssignmentsDaoJdbcImpl::class, ActuatorsAssignmentsDaoJdbcImpl::class)
+@Import(
+    AssignmentsService::class,
+    SensorsAssignmentsDaoJdbcImpl::class,
+    ActuatorsAssignmentsDaoJdbcImpl::class,
+    SecurityConfig::class
+)
 @ActiveProfiles("test")
 class AssignmentsControllerUnitTest(
     @Autowired private val mockMvc: MockMvc,
@@ -49,6 +55,44 @@ class AssignmentsControllerUnitTest(
     }
 
     ///// assignSensorToArea ///////////////////////////////////////////////////////////////////////////////////////////
+    @Test fun `assignSensorToArea() return 401 when auth is missing`() {
+        val responseBody: String = mockMvc.perform(
+            post("/assignments/sensors")
+                .contentType("application/json")
+                .content("""{"areaId": "${UUID.randomUUID()}", "deviceId": "${UUID.randomUUID()}"}"""))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Missing Authorization header"
+    }
+
+    @Test fun `assignSensorToArea() return 401 when token is empty`() {
+        val responseBody: String = mockMvc.perform(
+            post("/assignments/sensors")
+                .contentType("application/json")
+                .header("Authorization", "Bearer ")
+                .content("""{"areaId": "${UUID.randomUUID()}", "deviceId": "${UUID.randomUUID()}"}"""))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Empty token"
+    }
+
+    @Test fun `assignSensorToArea() return 401 when token is invalid`() {
+        val responseBody: String = mockMvc.perform(
+            post("/assignments/sensors")
+                .contentType("application/json")
+                .header("Authorization", "Bearer ${aRandomUniqueString()}")
+                .content("""{"areaId": "${UUID.randomUUID()}", "deviceId": "${UUID.randomUUID()}"}"""))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Invalid token"
+    }
+
     @Test fun `assignSensorToArea() returns 500 when device fetch fails`() {
         val failure = aRandomUniqueString()
         val areaUuid = UUID.randomUUID()
@@ -58,6 +102,7 @@ class AssignmentsControllerUnitTest(
         val responseBody: String = mockMvc.perform(
             post("/assignments/sensors")
                 .contentType("application/json")
+                .authenticated()
                 .content("""{"areaId": "$areaUuid", "deviceId": "$deviceUuid"}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
@@ -77,6 +122,7 @@ class AssignmentsControllerUnitTest(
         val responseBody: String = mockMvc.perform(
             post("/assignments/sensors")
             .contentType("application/json")
+                .authenticated()
             .content("""{"areaId": "$areaUuid", "deviceId": "$deviceUuid"}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
@@ -97,6 +143,7 @@ class AssignmentsControllerUnitTest(
         val responseBody: String = mockMvc.perform(
             post("/assignments/sensors")
                 .contentType("application/json")
+                .authenticated()
                 .content("""{"areaId": "$areaUuid", "deviceId": "$deviceUuid"}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
@@ -126,6 +173,7 @@ class AssignmentsControllerUnitTest(
         val responseBody: String = mockMvc.perform(
             post("/assignments/sensors")
                 .contentType("application/json")
+                .authenticated()
                 .content("""{"areaId": "$areaUuid", "deviceId": "$deviceUuid"}"""))
             .andExpect(status().isCreated)
             .andReturn().response.contentAsString
@@ -138,6 +186,44 @@ class AssignmentsControllerUnitTest(
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     ///// assignActuatorToArea /////////////////////////////////////////////////////////////////////////////////////////
+    @Test fun `assignActuatorToArea() return 401 when auth is missing`() {
+        val responseBody: String = mockMvc.perform(
+            post("/assignments/actuators")
+                .contentType("application/json")
+                .content("""{"areaId": "${UUID.randomUUID()}", "deviceId": "${UUID.randomUUID()}"}"""))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Missing Authorization header"
+    }
+
+    @Test fun `assignActuatorToArea() return 401 when token is empty`() {
+        val responseBody: String = mockMvc.perform(
+            post("/assignments/actuators")
+                .contentType("application/json")
+                .header("Authorization", "Bearer ")
+                .content("""{"areaId": "${UUID.randomUUID()}", "deviceId": "${UUID.randomUUID()}"}"""))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Empty token"
+    }
+
+    @Test fun `assignActuatorToArea() return 401 when token is invalid`() {
+        val responseBody: String = mockMvc.perform(
+            post("/assignments/actuators")
+                .contentType("application/json")
+                .header("Authorization", "Bearer ${aRandomUniqueString()}")
+                .content("""{"areaId": "${UUID.randomUUID()}", "deviceId": "${UUID.randomUUID()}"}"""))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Invalid token"
+    }
+
     @Test fun `assignActuatorToArea() returns 500 when device fetch fails`() {
         val failure = aRandomUniqueString()
         val areaUuid = UUID.randomUUID()
@@ -147,6 +233,7 @@ class AssignmentsControllerUnitTest(
         val responseBody: String = mockMvc.perform(
             post("/assignments/actuators")
                 .contentType("application/json")
+                .authenticated()
                 .content("""{"areaId": "$areaUuid", "deviceId": "$deviceUuid"}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
@@ -166,6 +253,7 @@ class AssignmentsControllerUnitTest(
         val responseBody: String = mockMvc.perform(
             post("/assignments/actuators")
                 .contentType("application/json")
+                .authenticated()
                 .content("""{"areaId": "$areaUuid", "deviceId": "$deviceUuid"}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
@@ -186,6 +274,7 @@ class AssignmentsControllerUnitTest(
         val responseBody: String = mockMvc.perform(
             post("/assignments/actuators")
                 .contentType("application/json")
+                .authenticated()
                 .content("""{"areaId": "$areaUuid", "deviceId": "$deviceUuid"}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString

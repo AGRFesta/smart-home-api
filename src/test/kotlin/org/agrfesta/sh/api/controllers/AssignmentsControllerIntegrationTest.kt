@@ -51,6 +51,7 @@ class AssignmentsControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"areaId": "$areaId", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/assignments/sensors")
@@ -68,6 +69,7 @@ class AssignmentsControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/assignments/sensors")
@@ -85,6 +87,7 @@ class AssignmentsControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/assignments/sensors")
@@ -106,6 +109,7 @@ class AssignmentsControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"areaId": "${areaB.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/assignments/sensors")
@@ -125,6 +129,7 @@ class AssignmentsControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/assignments/sensors")
@@ -143,6 +148,7 @@ class AssignmentsControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/assignments/sensors")
@@ -163,6 +169,7 @@ class AssignmentsControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"areaId": "$areaId", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/assignments/actuators")
@@ -181,6 +188,7 @@ class AssignmentsControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/assignments/actuators")
@@ -199,6 +207,7 @@ class AssignmentsControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/assignments/actuators")
@@ -217,6 +226,7 @@ class AssignmentsControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/assignments/actuators")
@@ -236,6 +246,7 @@ class AssignmentsControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
             .`when`()
             .post("/assignments/actuators")

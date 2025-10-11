@@ -45,6 +45,7 @@ class AreasControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"name": "$name"}""")
             .`when`()
             .post("/areas")
@@ -70,6 +71,7 @@ class AreasControllerIntegrationTest(
 
         val result = given()
             .contentType(ContentType.JSON)
+            .authenticated()
             .body("""{"name": "$name"}""")
             .`when`()
             .post("/areas")
