@@ -41,17 +41,17 @@ class SwitchBotService(
             }
         }
 
-    override suspend fun fetchSensorReadings(deviceProviderId: String): Either<SensorReadingsFailure, SensorReadings> {
-        val jsonNode = try{
-            devicesClient.getDeviceStatus(deviceProviderId)
+    override suspend fun fetchSensorReadings(deviceProviderId: String): Either<SensorReadingsFailure, SensorReadings> =
+        try{
+            val jsonNode = devicesClient.getDeviceStatus(deviceProviderId)
+            SwitchBotSensorReadings(
+                temperature = jsonNode.at("/body/temperature").asText().let { BigDecimal(it) },
+                humidityInt = jsonNode.at("/body/humidity").intValue(),
+                batteryLevel = jsonNode.at("/body/battery").intValue())
+                .toSensorReadings()
+                .right()
         } catch (e: Exception) {
-            return FailureByException(e).left()
+            FailureByException(e).left()
         }
-        return SwitchBotSensorReadings(
-            temperature = jsonNode.at("/body/temperature").asText().let { BigDecimal(it) },
-            humidityInt = jsonNode.at("/body/humidity").intValue(),
-            batteryLevel = jsonNode.at("/body/battery").intValue())
-            .toSensorReadings()
-            .right()
-    }
+
 }

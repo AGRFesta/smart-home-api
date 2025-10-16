@@ -48,7 +48,7 @@ class DevicesController(
                             } else if (it is ExceptionFailure) {
                                 logger.error("Unable to get providers from ${service.provider}", it.exception)
                             } else {
-                                TODO()
+                                logger.error("Unexpected fetch failure from ${service.provider}")
                             }
                             emptyList()
                         },
