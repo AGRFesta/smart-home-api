@@ -2,7 +2,7 @@
 
 [versions]
 kotlin = "1.9.24"
-springboot = "3.3.13"
+springboot = "3.5.6"
 flyway = "10.15.0"
 ktor = "2.3.13"
 junit-jupiter-engine = "5.10.2"

@@ -1,4 +1,4 @@
-FROM bellsoft/liberica-runtime-container:jdk-17-slim-musl
+FROM bellsoft/liberica-runtime-container:jdk-21-slim-musl
 ARG DEPENDENCY=build
 RUN echo ${DEPENDENCY}
 COPY ${DEPENDENCY}/libs/*.jar /app/lib/app.jar

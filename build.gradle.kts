@@ -7,11 +7,19 @@ plugins {
 }
 
 group = "org.agrfesta.sh"
-version = "0.4.5"
+version = "0.5.0"
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+kotlin {
+	jvmToolchain(21)
+	compilerOptions {
+		freeCompilerArgs.addAll("-Xjsr305=strict")
+		jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
 	}
 }
 
@@ -27,7 +35,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.hibernate.orm:hibernate-core")
 	implementation("org.postgresql:postgresql")
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.0")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation(libs.ktor.core)
 	implementation(libs.ktor.okhttp)
 	implementation(libs.ktor.content.negotiation)
@@ -62,12 +70,6 @@ docker {
 	copySpec.from("build").into("build")
 	pull(true)
 	setDockerfile(file("Dockerfile"))
-}
-
-kotlin {
-	compilerOptions {
-		freeCompilerArgs.addAll("-Xjsr305=strict")
-	}
 }
 
 tasks.withType<Test> {
