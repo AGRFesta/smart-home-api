@@ -4,16 +4,18 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.mockk.mockk
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
-import org.agrfesta.sh.api.services.DevicesService
+import org.agrfesta.sh.api.domain.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.persistence.DevicesDao
-import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
+import org.agrfesta.sh.api.services.DevicesService
 import org.junit.jupiter.api.Test
 
+//TODO consider to "merge" these tests in refresh controller test
 class DevicesServiceTest {
-    private val devicesDao: DevicesDao = mockk()
-    private val sensorsAssignmentsDao: SensorsAssignmentsDao = mockk()
+    private val devicesFactories: Collection<ProviderDevicesFactory> = listOf()
 
-    private val sut: DevicesService = DevicesService(devicesDao, sensorsAssignmentsDao)
+    private val devicesDao: DevicesDao = mockk()
+
+    private val sut: DevicesService = DevicesService(devicesDao, devicesFactories)
 
     @Test
     fun `refresh() returns empty result when there are no devices and no provider devices`() {
@@ -67,9 +69,9 @@ class DevicesServiceTest {
         val providerDeviceA = aDeviceDataValue()
         val providerDeviceB = aDeviceDataValue()
         val providerDeviceC = aDeviceDataValue()
-        val deviceA = aDevice(providerId = providerDeviceA.providerId, provider = providerDeviceA.provider)
-        val deviceB = aDevice(providerId = providerDeviceB.providerId, provider = providerDeviceB.provider)
-        val deviceC = aDevice(providerId = providerDeviceC.providerId, provider = providerDeviceC.provider)
+        val deviceA = aDevice(providerId = providerDeviceA.deviceProviderId, provider = providerDeviceA.provider)
+        val deviceB = aDevice(providerId = providerDeviceB.deviceProviderId, provider = providerDeviceB.provider)
+        val deviceC = aDevice(providerId = providerDeviceC.deviceProviderId, provider = providerDeviceC.provider)
 
         val result = sut.refresh(
             providersDevices = listOf(providerDeviceA, providerDeviceB, providerDeviceC),
@@ -77,11 +79,11 @@ class DevicesServiceTest {
         )
 
         result.newDevices.shouldBeEmpty()
-        result.updatedDevices.map { listOf(it.providerId, it.provider, it.name) }
+        result.updatedDevices.map { listOf(it.deviceProviderId, it.provider, it.name) }
             .shouldContainExactlyInAnyOrder(
-                listOf(deviceB.providerId, deviceB.provider, providerDeviceB.name),
-                listOf(deviceA.providerId, deviceA.provider, providerDeviceA.name),
-                listOf(deviceC.providerId, deviceC.provider, providerDeviceC.name)
+                listOf(deviceB.deviceProviderId, deviceB.provider, providerDeviceB.name),
+                listOf(deviceA.deviceProviderId, deviceA.provider, providerDeviceA.name),
+                listOf(deviceC.deviceProviderId, deviceC.provider, providerDeviceC.name)
             )
         result.detachedDevices.shouldBeEmpty()
     }
@@ -92,15 +94,15 @@ class DevicesServiceTest {
         val providerDeviceB = aDeviceDataValue()
         val providerDeviceC = aDeviceDataValue()
         val deviceA = aDevice(
-            providerId = providerDeviceA.providerId,
+            providerId = providerDeviceA.deviceProviderId,
             provider = providerDeviceA.provider,
             status = DeviceStatus.DETACHED)
         val deviceB = aDevice(
-            providerId = providerDeviceB.providerId,
+            providerId = providerDeviceB.deviceProviderId,
             provider = providerDeviceB.provider,
             status = DeviceStatus.DETACHED)
         val deviceC = aDevice(
-            providerId = providerDeviceC.providerId,
+            providerId = providerDeviceC.deviceProviderId,
             provider = providerDeviceC.provider,
             status = DeviceStatus.DETACHED)
 
@@ -110,11 +112,11 @@ class DevicesServiceTest {
         )
 
         result.newDevices.shouldBeEmpty()
-        result.updatedDevices.map { listOf(it.providerId, it.provider, it.name, it.status) }
+        result.updatedDevices.map { listOf(it.deviceProviderId, it.provider, it.name, it.status) }
             .shouldContainExactlyInAnyOrder(
-                listOf(deviceB.providerId, deviceB.provider, providerDeviceB.name, DeviceStatus.PAIRED),
-                listOf(deviceA.providerId, deviceA.provider, providerDeviceA.name, DeviceStatus.PAIRED),
-                listOf(deviceC.providerId, deviceC.provider, providerDeviceC.name, DeviceStatus.PAIRED)
+                listOf(deviceB.deviceProviderId, deviceB.provider, providerDeviceB.name, DeviceStatus.PAIRED),
+                listOf(deviceA.deviceProviderId, deviceA.provider, providerDeviceA.name, DeviceStatus.PAIRED),
+                listOf(deviceC.deviceProviderId, deviceC.provider, providerDeviceC.name, DeviceStatus.PAIRED)
             )
         result.detachedDevices.shouldBeEmpty()
     }

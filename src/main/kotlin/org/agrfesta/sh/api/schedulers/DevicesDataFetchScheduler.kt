@@ -1,12 +1,11 @@
 package org.agrfesta.sh.api.schedulers
 
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.Provider
-import org.agrfesta.sh.api.services.DevicesService
+import org.agrfesta.sh.api.domain.devices.Sensor
 import org.agrfesta.sh.api.domain.devices.ThermoHygroDataValue
 import org.agrfesta.sh.api.domain.devices.onLeftLogOn
-import org.agrfesta.sh.api.providers.switchbot.SwitchBotService
+import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.utils.SmartCache
 import org.springframework.scheduling.annotation.Async
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component
 @Component
 class DevicesDataFetchScheduler(
     private val devicesService: DevicesService,
-    private val switchBotService: SwitchBotService,
     private val cache: SmartCache
 ) {
     private val logger by LoggerDelegate()
@@ -25,17 +23,16 @@ class DevicesDataFetchScheduler(
     @Async
     fun fetchDevicesData() {
         logger.info("[SCHEDULED TASK] start fetching devices data...")
-        devicesService.getAll()
-            .onRight { devices ->
-                devices
-                    .filter { f -> f.features.contains(DeviceFeature.SENSOR) }
-                    .filter { f -> f.provider == Provider.SWITCHBOT } //TODO temporary fix
-                    .forEach {
-                        logger.info("Reading ${it.provider} sensor [${it.providerId}] data")
-                        runBlocking { switchBotService.fetchSensorReadings(it.providerId) }
+        devicesService.getAllDevices()
+            .onRight {
+                it.filterIsInstance<Sensor>()
+                    .filter { s -> s.provider == Provider.SWITCHBOT } //TODO temporary fix
+                    .forEach { s ->
+                        logger.info("Reading ${s.provider} sensor [${s.deviceProviderId}] data")
+                        runBlocking { s.fetchReadings() }
                             .onRight { readings ->
                                 if (readings is ThermoHygroDataValue) {
-                                    cache.setThermoHygroOf(device = it, thermoHygro = readings.thermoHygroData)
+                                    cache.setThermoHygroOf(device = s, thermoHygro = readings.thermoHygroData)
                                 }
                             }.onLeftLogOn(logger)
                     }

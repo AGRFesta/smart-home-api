@@ -72,9 +72,9 @@ class DevicesDataFetchSchedulerIntegrationTest(
         devicesRepository.persist(faultySensor)
         val device = aDeviceDataValue(features = emptySet())
         devicesRepository.persist(device)
-        switchBotClientAsserter.givenSensorData(sensor.providerId, sensorData)
-        switchBotClientAsserter.givenSensorData(sensorAndMore.providerId, sensorAndMoreData)
-        switchBotClientAsserter.givenSensorDataFailure(faultySensor.providerId)
+        switchBotClientAsserter.givenSensorData(sensor.deviceProviderId, sensorData)
+        switchBotClientAsserter.givenSensorData(sensorAndMore.deviceProviderId, sensorAndMoreData)
+        switchBotClientAsserter.givenSensorDataFailure(faultySensor.deviceProviderId)
 
         sut.fetchDevicesData()
 
@@ -96,7 +96,7 @@ class DevicesDataFetchSchedulerIntegrationTest(
             val response = objectMapper.aSwitchBotDeviceStatusResponse(temperatureText = it)
             val sensor = aDeviceDataValue(provider = Provider.SWITCHBOT, features = setOf(SENSOR))
             devicesRepository.persist(sensor)
-            coEvery { switchBotDevicesClient.getDeviceStatus(sensor.providerId) } returns response
+            coEvery { switchBotDevicesClient.getDeviceStatus(sensor.deviceProviderId) } returns response
 
             sut.fetchDevicesData()
 

@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.controllers
 
 import arrow.core.Either
-import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceDto
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DevicesProvider
 import org.agrfesta.sh.api.domain.failures.ExceptionFailure
@@ -31,7 +31,7 @@ class DevicesController(
 
     @PostMapping("/refresh")
     fun refresh(): ResponseEntity<Any> {
-        val devices = when (val result = devicesService.getAll()) {
+        val devices = when (val result = devicesService.getAllDto()) {
             is Either.Left -> {
                 logger.error("Unable to fetch persisted devices", result.value.exception)
                 return internalServerError().body(MessageResponse("Unable to fetch persisted devices!"))
@@ -65,7 +65,7 @@ class DevicesController(
                         failure -> logger.error("Unable to persist device ${failure.exception}")
                         null
                     },
-                    { uuid -> Device(uuid = uuid, dataValue = it) }
+                    { uuid -> DeviceDto(uuid = uuid, dataValue = it) }
                 )},
             updatedDevices = result.updatedDevices,
             detachedDevices = result.detachedDevices
@@ -75,7 +75,7 @@ class DevicesController(
 }
 
 data class DevicesRefreshResponse(
-    val newDevices: Collection<Device> = emptyList(),
-    val updatedDevices: Collection<Device> = emptyList(),
-    val detachedDevices: Collection<Device> = emptyList()
+    val newDevices: Collection<DeviceDto> = emptyList(),
+    val updatedDevices: Collection<DeviceDto> = emptyList(),
+    val detachedDevices: Collection<DeviceDto> = emptyList()
 )

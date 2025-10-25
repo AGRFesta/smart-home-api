@@ -67,7 +67,7 @@ class DevicesDataHistorySchedulerIntegrationTest(
 //        val sensorHumidity = aRandomIntHumidity()
         val sensor = aDeviceDataValue(features = setOf(SENSOR))
         val uuid = devicesDao.create(sensor)
-        switchBotClientAsserter.givenSensorData(sensor.providerId, sensorData)
+        switchBotClientAsserter.givenSensorData(sensor.deviceProviderId, sensorData)
         devicesDataFetchScheduler.fetchDevicesData() // Force to fetch devices data and put them in cache
 
         sut.historyDevicesData()

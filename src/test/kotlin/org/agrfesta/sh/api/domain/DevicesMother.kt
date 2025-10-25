@@ -1,6 +1,6 @@
 package org.agrfesta.sh.api.domain
 
-import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceDto
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.ACTUATOR
@@ -17,7 +17,7 @@ fun aDevice(
     status: DeviceStatus = DeviceStatus.PAIRED,
     name: String = aRandomUniqueString(),
     features: Set<DeviceFeature> = emptySet()
-) = Device(uuid, status, providerId, provider, name, features)
+) = DeviceDto(uuid, status, providerId, provider, name, features)
 
 fun aSensor(
     uuid: UUID = UUID.randomUUID(),
@@ -26,16 +26,16 @@ fun aSensor(
     status: DeviceStatus = DeviceStatus.PAIRED,
     name: String = aRandomUniqueString(),
     additionalFeatures: Set<DeviceFeature> = emptySet()
-) = Device(uuid, status, providerId, provider, name, additionalFeatures + SENSOR)
+) = DeviceDto(uuid, status, providerId, provider, name, additionalFeatures + SENSOR)
 
 fun aDevice(
     data: DeviceDataValue,
     uuid: UUID = UUID.randomUUID(),
     status: DeviceStatus = DeviceStatus.PAIRED
-) = Device(
+) = DeviceDto(
     uuid = uuid,
     status = status,
-    providerId = data.providerId,
+    deviceProviderId = data.deviceProviderId,
     provider = data.provider,
     name = data.name,
     features = data.features

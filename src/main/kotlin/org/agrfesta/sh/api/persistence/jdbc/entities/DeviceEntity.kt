@@ -1,6 +1,6 @@
 package org.agrfesta.sh.api.persistence.jdbc.entities
 
-import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceDto
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
@@ -19,5 +19,5 @@ class DeviceEntity(
     var updatedOn: Instant? = null
 ) {
     fun asDeviceDataValue(): DeviceDataValue = DeviceDataValue(providerId, provider, name, features)
-    fun asDevice() = Device(uuid, status, providerId, provider, name, features)
+    fun asDevice() = DeviceDto(uuid, status, providerId, provider, name, features)
 }

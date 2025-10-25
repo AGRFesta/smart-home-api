@@ -2,7 +2,7 @@ package org.agrfesta.sh.api.persistence.jdbc.repositories
 
 import java.util.*
 import org.agrfesta.sh.api.domain.AreaWithDevices
-import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceDto
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.domain.devices.Provider
@@ -55,11 +55,11 @@ class AreasWithDevicesJdbcRepository(
 
                 val deviceUuid = rs.getString("device_uuid")
                 if (deviceUuid != null) {
-                    val device = Device(
+                    val device = DeviceDto(
                         uuid = UUID.fromString(deviceUuid),
                         name = rs.getString("device_name"),
                         provider = Provider.valueOf(rs.getString("provider")),
-                        providerId = rs.getString("provider_id"),
+                        deviceProviderId = rs.getString("provider_id"),
                         status = DeviceStatus.valueOf(rs.getString("status")),
                         features = parseFeatures(rs.getArray("features"))
                     )
@@ -84,7 +84,7 @@ private data class MutableAreaWithDevicesBuilder(
     val uuid: UUID,
     val name: String,
     val isIndoor: Boolean,
-    val devices: MutableList<Device>
+    val devices: MutableList<DeviceDto>
 ) {
     fun toAreaWithDevices() = AreaWithDevices(uuid, name, devices, isIndoor)
 }

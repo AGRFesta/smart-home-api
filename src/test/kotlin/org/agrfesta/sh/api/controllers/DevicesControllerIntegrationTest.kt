@@ -21,7 +21,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aDeviceDataValue
-import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceDto
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
@@ -91,7 +91,7 @@ class DevicesControllerIntegrationTest(
             netatmoClient.getHomesData(token)
         } returns objectMapper.aHomeData(
             name = expectedNetatmoDeviceData.name,
-            deviceId = expectedNetatmoDeviceData.providerId
+            deviceId = expectedNetatmoDeviceData.deviceProviderId
         ).right()
 
         val result = given()
@@ -112,12 +112,12 @@ class DevicesControllerIntegrationTest(
         val sbNewDevice = newDevices[SWITCHBOT]
         sbNewDevice.shouldNotBeNull()
         sbNewDevice.asDataValue() shouldBe expectedSBDeviceData
-        devicesRepository.findByProviderAndProviderId(expectedSBDeviceData.provider, expectedSBDeviceData.providerId)
+        devicesRepository.findByProviderAndProviderId(expectedSBDeviceData.provider, expectedSBDeviceData.deviceProviderId)
             .shouldBeRight().apply {
                 shouldNotBeNull()
                 name shouldBe expectedSBDeviceData.name
                 provider shouldBe SWITCHBOT
-                providerId shouldBe expectedSBDeviceData.providerId
+                providerId shouldBe expectedSBDeviceData.deviceProviderId
                 createdOn.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
                 updatedOn.shouldBeNull()
             }
@@ -125,12 +125,12 @@ class DevicesControllerIntegrationTest(
         val netatmoNewDevice = newDevices[NETATMO]
         netatmoNewDevice.shouldNotBeNull()
         netatmoNewDevice.asDataValue() shouldBe expectedNetatmoDeviceData
-        devicesRepository.findByProviderAndProviderId(expectedSBDeviceData.provider, expectedSBDeviceData.providerId)
+        devicesRepository.findByProviderAndProviderId(expectedSBDeviceData.provider, expectedSBDeviceData.deviceProviderId)
             .shouldBeRight().apply {
                 shouldNotBeNull()
                 name shouldBe expectedSBDeviceData.name
                 provider shouldBe SWITCHBOT
-                providerId shouldBe expectedSBDeviceData.providerId
+                providerId shouldBe expectedSBDeviceData.deviceProviderId
                 createdOn.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
                 updatedOn.shouldBeNull()
             }
@@ -206,7 +206,7 @@ class DevicesControllerIntegrationTest(
             netatmoClient.getHomesData(token)
         } returns objectMapper.aHomeData(
             name = expectedUpdatedNetatmoDevice.name,
-            deviceId = expectedUpdatedNetatmoDevice.providerId
+            deviceId = expectedUpdatedNetatmoDevice.deviceProviderId
         ).right()
 
         val result = given()
@@ -226,7 +226,7 @@ class DevicesControllerIntegrationTest(
 
         devicesRepository.findByProviderAndProviderId(
                 provider = existingSBDeviceData.provider,
-                providerId = existingSBDeviceData.providerId)
+                providerId = existingSBDeviceData.deviceProviderId)
             .shouldBeRight().apply {
                 shouldNotBeNull()
                 name shouldBe actualSBDeviceData.name
@@ -270,7 +270,7 @@ class DevicesControllerIntegrationTest(
         val existingDetachedSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
         val newSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
         val uuid = devicesDao.create(existingSBDeviceData)
-        val expectedUpdatedSBDevice: Device = aDevice(existingSBDeviceData, uuid)
+        val expectedUpdatedSBDevice: DeviceDto = aDevice(existingSBDeviceData, uuid)
         val detachedUuid = devicesDao.create(existingDetachedSBDeviceData, DeviceStatus.DETACHED)
         val expectedPairedDevice = aDevice(existingDetachedSBDeviceData, detachedUuid, DeviceStatus.PAIRED)
         coEvery {
@@ -302,7 +302,7 @@ class DevicesControllerIntegrationTest(
 
     private fun DeviceDataValue.asSBDeviceJsonNode(): JsonNode =
         objectMapper.aSwitchBotDevice(
-            deviceId = providerId,
+            deviceId = deviceProviderId,
             deviceName = name,
             deviceType = features.toASwitchBotDeviceType()
         )

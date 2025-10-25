@@ -43,7 +43,7 @@ class NetatmoService(
                     .map { node -> objectMapper.treeToValue(node, NetatmoModule::class.java) }
                     .map { module ->
                         DeviceDataValue(
-                            providerId = module.id,
+                            deviceProviderId = module.id,
                             provider = provider,
                             name = module.name,
                             features = setOf(SENSOR, ACTUATOR)

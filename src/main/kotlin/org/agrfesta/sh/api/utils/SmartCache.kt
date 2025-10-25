@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.agrfesta.sh.api.domain.commons.RelativeHumidity
 import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.commons.ThermoHygroData
-import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DeviceProviderIdentity
 import org.slf4j.Logger
 import org.springframework.stereotype.Service
@@ -63,7 +62,7 @@ class SmartCache(
 }
 
 fun DeviceProviderIdentity.getThermoHygroKey() =
-    "sensors:${provider.name.lowercase()}:${providerId}:thermohygro"
+    "sensors:${provider.name.lowercase()}:${deviceProviderId}:thermohygro"
 
 fun Either<CacheFailure, ThermoHygroData>.onLeftLogOn(logger: Logger) = onLeft {
     when(it) {

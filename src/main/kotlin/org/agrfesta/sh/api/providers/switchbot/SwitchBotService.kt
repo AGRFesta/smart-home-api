@@ -21,7 +21,7 @@ import java.math.BigDecimal
 class SwitchBotService(
     private val devicesClient: SwitchBotDevicesClient,
     private val mapper: ObjectMapper
-): DevicesProvider, ReadableValuesDeviceProvider {
+): DevicesProvider {
     override val provider: Provider = Provider.SWITCHBOT
 
     override fun getAllDevices(): Either<ProviderFailure, Collection<DeviceDataValue>> = runBlocking {
@@ -30,7 +30,7 @@ class SwitchBotService(
                     .map { mapper.treeToValue(it, SwitchBotDevice::class.java) }
                     .map {
                         DeviceDataValue(
-                            providerId = it.deviceId,
+                            deviceProviderId = it.deviceId,
                             provider = Provider.SWITCHBOT,
                             name = it.deviceName,
                             features = it.deviceType.features
@@ -41,17 +41,17 @@ class SwitchBotService(
             }
         }
 
-    override suspend fun fetchSensorReadings(deviceProviderId: String): Either<SensorReadingsFailure, SensorReadings> =
-        try{
-            val jsonNode = devicesClient.getDeviceStatus(deviceProviderId)
-            SwitchBotSensorReadings(
-                temperature = jsonNode.at("/body/temperature").asText().let { BigDecimal(it) },
-                humidityInt = jsonNode.at("/body/humidity").intValue(),
-                batteryLevel = jsonNode.at("/body/battery").intValue())
-                .toSensorReadings()
-                .right()
-        } catch (e: Exception) {
-            FailureByException(e).left()
-        }
+//    override suspend fun fetchSensorReadings(deviceProviderId: String): Either<SensorReadingsFailure, SensorReadings> =
+//        try{
+//            val jsonNode = devicesClient.getDeviceStatus(deviceProviderId)
+//            SwitchBotSensorReadings(
+//                temperature = jsonNode.at("/body/temperature").asText().let { BigDecimal(it) },
+//                humidityInt = jsonNode.at("/body/humidity").intValue(),
+//                batteryLevel = jsonNode.at("/body/battery").intValue())
+//                .toSensorReadings()
+//                .right()
+//        } catch (e: Exception) {
+//            FailureByException(e).left()
+//        }
 
 }

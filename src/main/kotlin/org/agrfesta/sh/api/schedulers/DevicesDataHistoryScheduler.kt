@@ -2,7 +2,7 @@ package org.agrfesta.sh.api.schedulers
 
 import arrow.core.Either
 import org.agrfesta.sh.api.domain.commons.ThermoHygroData
-import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceDto
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.services.onLeftLogOn
 import org.agrfesta.sh.api.services.DevicesService
@@ -29,7 +29,7 @@ class DevicesDataHistoryScheduler(
     @Async
     fun historyDevicesData() {
         logger.info("[SCHEDULED TASK] start devices history data...")
-        devicesService.getAll()
+        devicesService.getAllDto()
             .onRight { devices ->
                 devices.filter { it.features.contains(DeviceFeature.SENSOR) }
                 .forEach {
@@ -42,7 +42,7 @@ class DevicesDataHistoryScheduler(
         logger.info("[SCHEDULED TASK] end devices history data")
     }
 
-    private fun Either<CacheFailure, ThermoHygroData>.onRightPersistAsTemperatureAndHumidityOf(sensor: Device) =
+    private fun Either<CacheFailure, ThermoHygroData>.onRightPersistAsTemperatureAndHumidityOf(sensor: DeviceDto) =
         onRight {
             historyDataService.persistTemperature(
                 sensorUuid = sensor.uuid,

@@ -5,7 +5,7 @@ import arrow.core.right
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.util.*
-import org.agrfesta.sh.api.domain.devices.Device
+import org.agrfesta.sh.api.domain.devices.DeviceDto
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
@@ -71,7 +71,7 @@ class DevicesJdbcRepository(
             "name" to device.name,
             "provider" to device.provider.name,
             "status" to deviceStatus.name,
-            "providerId" to device.providerId,
+            "providerId" to device.deviceProviderId,
             "features" to device.features.map { it.name }.toTypedArray(),
             "createdOn" to Timestamp.from(timeService.now()),
             "updatedOn" to null
@@ -80,7 +80,7 @@ class DevicesJdbcRepository(
         return uuid
     }
 
-    fun update(device: Device) {
+    fun update(device: DeviceDto) {
         val sql = """
             UPDATE smart_home.device
             SET name = :name, status = :status, updated_on = :updatedOn
@@ -91,7 +91,7 @@ class DevicesJdbcRepository(
             "status" to device.status.name,
             "updatedOn" to Timestamp.from(timeService.now()),
             "provider" to device.provider.name,
-            "providerId" to device.providerId
+            "providerId" to device.deviceProviderId
         )
         jdbcTemplate.update(sql, params)
     }

@@ -65,7 +65,7 @@ class NetatmoServiceUnitTest {
         val devices = res.shouldBeRight()
         devices shouldHaveSize 1
         val device = devices.first()
-        device.providerId shouldBe deviceId
+        device.deviceProviderId shouldBe deviceId
         device.name shouldBe name
         device.provider shouldBe NETATMO
         device.features.shouldContainExactlyInAnyOrder(SENSOR, ACTUATOR)
