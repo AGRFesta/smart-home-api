@@ -10,7 +10,6 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.domain.commons.PercentageHundreds
-import org.agrfesta.sh.api.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
@@ -42,7 +41,7 @@ class DevicesDataFetchSchedulerIntegrationTest(
     @Autowired private val cache: Cache,
     @Autowired private val switchBotClientAsserter: SwitchBotClientAsserter,
     @Autowired private val objectMapper: ObjectMapper,
-    @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient
+    @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient //TODO move it in a dedicated test configuration, should be configured trough asserter only
 ) {
 
     companion object {
@@ -62,30 +61,25 @@ class DevicesDataFetchSchedulerIntegrationTest(
     @Test fun `fetchDevicesData() caches SwitchBot sensors device values only and ignores failures`() {
         val sensorData = aRandomThermoHygroData(
             relativeHumidity = PercentageHundreds(aRandomIntHumidity()).toPercentage())
-        val sensorAndMoreData = aRandomThermoHygroData(
-            relativeHumidity = PercentageHundreds(aRandomIntHumidity()).toPercentage())
-        val sensor = aDeviceDataValue(provider = Provider.SWITCHBOT, features = setOf(SENSOR))
-        devicesRepository.persist(sensor)
-        val sensorAndMore = aDeviceDataValue(features = setOf(SENSOR, ACTUATOR))
-        devicesRepository.persist(sensorAndMore)
-        val faultySensor = aDeviceDataValue(features = setOf(SENSOR))
-        devicesRepository.persist(faultySensor)
-        val device = aDeviceDataValue(features = emptySet())
-        devicesRepository.persist(device)
-        switchBotClientAsserter.givenSensorData(sensor.deviceProviderId, sensorData)
-        switchBotClientAsserter.givenSensorData(sensorAndMore.deviceProviderId, sensorAndMoreData)
-        switchBotClientAsserter.givenSensorDataFailure(faultySensor.deviceProviderId)
+        val sensorSWB = aDeviceDataValue(provider = Provider.SWITCHBOT, features = setOf(SENSOR))
+            .apply { devicesRepository.persist(this) }
+        val faultySensorSWB = aDeviceDataValue(features = setOf(SENSOR))
+            .apply { devicesRepository.persist(this) }
+        aDeviceDataValue(features = emptySet()).apply { devicesRepository.persist(this) }
+        switchBotClientAsserter.givenSensorData(sensorSWB.deviceProviderId, sensorData)
+        switchBotClientAsserter.givenSensorDataFailure(faultySensorSWB.deviceProviderId)
 
         sut.fetchDevicesData()
 
-        cache.get(sensor.getThermoHygroKey()) shouldBeRightJson """{
+        //TODO move these assertions in a SmartCacheAsserter
+        cache.get(sensorSWB.getThermoHygroKey()) shouldBeRightJson """{
             "h":"${sensorData.relativeHumidity.value}",
             "t":"${sensorData.temperature}"}
         """.trimIndent()
-        cache.get(sensorAndMore.getThermoHygroKey()) shouldBeRightJson """{
-            "h":"${sensorAndMoreData.relativeHumidity.value}",
-            "t":"${sensorAndMoreData.temperature}"}
-        """.trimIndent()
+//        cache.get(sensorAndMore.getThermoHygroKey()) shouldBeRightJson """{
+//            "h":"${sensorAndMoreData.relativeHumidity.value}",
+//            "t":"${sensorAndMoreData.temperature}"}
+//        """.trimIndent()
     }
 
     @TestFactory

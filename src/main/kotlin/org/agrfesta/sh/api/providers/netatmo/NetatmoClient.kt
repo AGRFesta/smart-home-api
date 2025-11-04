@@ -1,6 +1,7 @@
 package org.agrfesta.sh.api.providers.netatmo
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.databind.JsonNode
@@ -11,6 +12,7 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttpConfig
 import io.ktor.client.engine.okhttp.OkHttpEngine
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.forms.submitForm
@@ -25,7 +27,14 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.Parameters
 import io.ktor.serialization.jackson.jackson
-import org.agrfesta.sh.api.domain.failures.ProviderFailure
+import org.agrfesta.sh.api.domain.failures.Failure
+import org.agrfesta.sh.api.domain.failures.KtorRequestFailure
+import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.ACCESS_TOKEN_CACHE_KEY
+import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.REFRESH_TOKEN_CACHE_KEY
+import org.agrfesta.sh.api.services.PersistedCacheService
+import org.agrfesta.sh.api.services.onLeftLogOn
+import org.agrfesta.sh.api.utils.Cache
+import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.utils.toDetailedString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -33,10 +42,13 @@ import org.springframework.stereotype.Service
 @Service
 class NetatmoClient(
     private val config: NetatmoConfiguration,
+    private val cache: Cache,
+    private val cacheService: PersistedCacheService,
     private val mapper: ObjectMapper,
-    @Autowired(required = false) engine: HttpClientEngine = OkHttpEngine(OkHttpConfig())
+    @Autowired(required = false) netatmoClientEngine: HttpClientEngine = OkHttpEngine(OkHttpConfig())
 ) {
-    private val client = HttpClient(engine) {
+    private val logger by LoggerDelegate()
+    private val client = HttpClient(netatmoClientEngine) {
         expectSuccess = true
         install(HttpTimeout) {
             requestTimeoutMillis = 60_000
@@ -72,28 +84,42 @@ class NetatmoClient(
      * This endpoint permits to retrieve the actual topology and static information of all devices present into a user
      * account. It is possible to specify a [homeId] to focus on one home.
      */
-    suspend fun getHomesData(token: String, homeId: String? = null): Either<ProviderFailure, JsonNode> {
-        return try {
-            val content = client.get("${config.baseUrl}/api/homesdata") {
-                homeId?.let { parameter("homeId", it) }
-                headers { append(HttpHeaders.Authorization, "Bearer $token") }
-            }.bodyAsText()
-            mapper.readTree(content).right()
-        } catch (e: Exception) {
-            ProviderFailure(e).left()
+    suspend fun getHomesData(homeId: String? = null): Either<Failure, JsonNode> {
+        return getToken().flatMap { token ->
+            try {
+                val content = client.get("${config.baseUrl}/api/homesdata") {
+                    homeId?.let { parameter("homeId", it) }
+                    headers { append(HttpHeaders.Authorization, "Bearer $token") }
+                }.bodyAsText()
+                mapper.readTree(content).right()
+            } catch (e: ClientRequestException) {
+                KtorRequestFailure(
+                    failureStatusCode = e.response.status,
+                    body = e.response.bodyAsText()
+                ).left()
+            }
         }
     }
 
     /**
      * This endpoint permits to retrieve the actual status of all devices present into a specific home.
      */
-    suspend fun getHomeStatus(token: String, homeId: String): Either<ProviderFailure, JsonNode> {
-        val content = client.get("${config.baseUrl}/api/homestatus") {
-            parameter("homeId", homeId)
-            headers { append(HttpHeaders.Authorization, "Bearer $token") }
-        }.bodyAsText()
-        return mapper.readTree(content).right()
-    }
+    suspend fun getHomeStatus(homeId: String): Either<Failure, NetatmoHomeStatus> =
+        getToken().flatMap { token ->
+            try {
+                val content = client.get("${config.baseUrl}/api/homestatus") {
+                    parameter("homeId", homeId)
+                    headers { append(HttpHeaders.Authorization, "Bearer $token") }
+                }.bodyAsText()
+                val node = mapper.readTree(content).at("/body/home")
+                mapper.treeToValue(node, NetatmoHomeStatus::class.java).right()
+            } catch (e: ClientRequestException) {
+                KtorRequestFailure(
+                    failureStatusCode = e.response.status,
+                    body = e.response.bodyAsText()
+                ).left()
+            }
+        }
 
     /**
      * This endpoint permits to modify the actual status of devices present into a specific home.
@@ -102,16 +128,45 @@ class NetatmoClient(
      * For heating modules, the state can be controlled at the room level.
      * For other modules, the state is controlled at the module level.
      */
-    suspend fun setState(token: String, newState: JsonNode): Either<ProviderFailure, NetatmoSetStatusSuccess> {
-        client.post("${config.baseUrl}/api/setstate") {
-            header(HttpHeaders.Accept, ContentType.Application.Json)
-            header(HttpHeaders.ContentType, ContentType.Application.Json)
-            setBody(newState)
-            headers {
-                append(HttpHeaders.Authorization, "Bearer $token")
+    suspend fun setState(newState: NetatmoHomeStatus): Either<Failure, NetatmoSetStatusSuccess> {
+        return getToken().flatMap { token ->
+            try {
+                client.post("${config.baseUrl}/api/setstate") {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
+                    setBody(newState)
+                    headers {
+                        append(HttpHeaders.Authorization, "Bearer $token")
+                    }
+                }
+                NetatmoSetStatusSuccess.right()
+            } catch (e: ClientRequestException) {
+                KtorRequestFailure(
+                    failureStatusCode = e.response.status,
+                    body = e.response.bodyAsText()
+                ).left()
             }
-        }.bodyAsText()
-        return NetatmoSetStatusSuccess.right()
+        }
     }
+
+    private suspend fun getToken(): Either<Failure, String> =
+        cache.get(ACCESS_TOKEN_CACHE_KEY).fold(
+            ifLeft = { fetchAndCacheNewToken() },
+            ifRight = { it.right() }
+        )
+
+    private suspend fun fetchAndCacheNewToken(): Either<Failure, String> =
+        cacheService.getEntry(REFRESH_TOKEN_CACHE_KEY)
+            .flatMap { refreshToken(it.value) }
+            .map { refreshResp ->
+                try {
+                    cache.set(ACCESS_TOKEN_CACHE_KEY, refreshResp.accessToken)
+                } catch (e: Exception) {
+                    logger.error("Unable to refresh Netatmo token in cache. ${e.toDetailedString()}")
+                }
+                cacheService.upsert(REFRESH_TOKEN_CACHE_KEY, refreshResp.refreshToken)
+                    .onLeftLogOn(logger)
+                refreshResp.accessToken
+            }
 
 }

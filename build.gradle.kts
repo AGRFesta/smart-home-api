@@ -53,6 +53,7 @@ dependencies {
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 	testImplementation(libs.kotest.assertions.core)
 	testImplementation(libs.kotest.assertions.arrow)
+	testImplementation(libs.kotest.assertions.json)
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:postgresql")
 	testImplementation("com.redis:testcontainers-redis:2.2.2")

@@ -37,40 +37,18 @@ class NetatmoService(
     }
 
     override fun getAllDevices(): Either<Failure, Collection<DeviceDataValue>> = runBlocking {
-        getToken().flatMap {
-            netatmoClient.getHomesData(it).map { data ->
-                data.at("/body/homes/0/modules")
-                    .map { node -> objectMapper.treeToValue(node, NetatmoModule::class.java) }
-                    .map { module ->
-                        DeviceDataValue(
-                            deviceProviderId = module.id,
-                            provider = provider,
-                            name = module.name,
-                            features = setOf(SENSOR, ACTUATOR)
-                        )
-                    }
-            }
+        netatmoClient.getHomesData().map { data ->
+            data.at("/body/homes/0/modules")
+                .map { node -> objectMapper.treeToValue(node, NetatmoModuleData::class.java) }
+                .map { module ->
+                    DeviceDataValue(
+                        deviceProviderId = module.id,
+                        provider = provider,
+                        name = module.name,
+                        features = setOf(SENSOR, ACTUATOR)
+                    )
+                }
         }
     }
-
-    private suspend fun getToken(): Either<Failure, String> = cache.get(ACCESS_TOKEN_CACHE_KEY).fold(
-            ifLeft = { failure ->
-                when (failure) {
-                    is CacheError -> failure.left()
-                    is CachedValueNotFound -> fetchAndCacheNewToken()
-                }
-            },
-            ifRight = { it.right() }
-        )
-
-    private suspend fun fetchAndCacheNewToken(): Either<Failure, String> =
-        cacheService.getEntry(REFRESH_TOKEN_CACHE_KEY)
-            .flatMap { netatmoClient.refreshToken(it.value) }
-            .map { refreshResp ->
-                cache.set(ACCESS_TOKEN_CACHE_KEY, refreshResp.accessToken)
-                cacheService.upsert(REFRESH_TOKEN_CACHE_KEY, refreshResp.refreshToken)
-                    .onLeftLogOn(logger)
-                refreshResp.accessToken
-            }
 
 }

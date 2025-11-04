@@ -3,65 +3,57 @@ package org.agrfesta.sh.api.providers.netatmo
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
-import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.maps.shouldContainAll
-import io.kotest.matchers.maps.shouldContainExactly
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.respond
-import io.ktor.client.engine.mock.toByteArray
 import io.ktor.client.plugins.ClientRequestException
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.Parameters
-import io.ktor.http.headersOf
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import org.agrfesta.sh.api.controllers.createMockEngine
+import org.agrfesta.sh.api.domain.failures.KtorRequestFailure
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.persistence.CacheDao
+import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.ACCESS_TOKEN_CACHE_KEY
+import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.REFRESH_TOKEN_CACHE_KEY
+import org.agrfesta.sh.api.services.PersistedCacheService
+import org.agrfesta.sh.api.utils.Cache
+import org.agrfesta.sh.api.utils.CacheAsserter
 import org.agrfesta.test.mothers.aJsonNode
 import org.agrfesta.test.mothers.aRandomUniqueString
-import org.agrfesta.test.mothers.anUrl
 import org.junit.jupiter.api.Test
 
 class NetatmoClientTest {
+    private val accessToken = aRandomUniqueString()
     private val mapper = jacksonObjectMapper()
-    private val config = NetatmoConfiguration(
-        baseUrl = anUrl(),
-        clientSecret = aRandomUniqueString(),
-        clientId = aRandomUniqueString(),
-        homeId = aRandomUniqueString()
-    )
+
+    private val cache: Cache = mockk(relaxed = true)
+    private val cacheDao: CacheDao = mockk(relaxed = true)
+    private val registry = BehaviorRegistry()
+    private val engine = createMockEngine(registry)
+
+    private val cacheAsserter = CacheAsserter(cache, cacheDao)
+    private val clientAsserter = NetatmoClientAsserter(registry, mapper)
+
+    private val cacheService = PersistedCacheService(cacheDao)
+    private val sut = NetatmoClient(clientAsserter.config, cache, cacheService, mapper, engine)
+
+    init {
+        // Default behaviour
+        cacheAsserter.givenCacheEntry(ACCESS_TOKEN_CACHE_KEY, accessToken)
+    }
+
+    ///// refreshToken() ///////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `refreshToken() handle ok response`() {
         val prevRefreshToken = aRandomUniqueString()
-        val expectedParams = mapOf(
-            "grant_type" to "refresh_token",
-            "refresh_token" to prevRefreshToken,
-            "client_id" to config.clientId,
-            "client_secret" to config.clientSecret
-        )
         val expectedResponse = NetatmoRefreshTokenResponse(
             accessToken = aRandomUniqueString(),
             refreshToken = aRandomUniqueString()
         )
         runBlocking {
-            val engine = MockEngine { request ->
-                request.method shouldBe HttpMethod.Post
-                request.url.toString() shouldBe "${config.baseUrl}/oauth2/token"
-                //request.headers[HttpHeaders.ContentType] shouldBe ContentType.Application.FormUrlEncoded.toString()
-                val requestBody = request.body.toByteArray().decodeToString()
-                val parsedBody = parseFormBody(requestBody)
-                parsedBody shouldContainAll expectedParams
-                respond(
-                    content = mapper.writeValueAsString(expectedResponse),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
-            }
-            val client = NetatmoClient(config, mapper, engine)
+            clientAsserter.givenTokenFetchResponse(expectedResponse)
 
-            val result = client.refreshToken(prevRefreshToken)
+            val result = sut.refreshToken(prevRefreshToken)
 
+            clientAsserter.verifyTokenFetchRequest(prevRefreshToken)
             result shouldBeRight expectedResponse
         }
     }
@@ -69,134 +61,371 @@ class NetatmoClientTest {
     @Test fun `refreshToken() handle error response`() {
         val prevRefreshToken = aRandomUniqueString()
         val errorMessage = aRandomUniqueString()
-        val response = """{"error":"$errorMessage"}"""
         runBlocking {
-            val engine = MockEngine { request ->
-                request.method shouldBe HttpMethod.Post
-                request.url.toString() shouldBe "${config.baseUrl}/oauth2/token"
-                respond(
-                    content = mapper.writeValueAsString(response),
-                    status = HttpStatusCode.BadRequest,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
-            }
-            val client = NetatmoClient(config, mapper, engine)
+            clientAsserter.givenTokenFetchFailure(errorMessage)
 
-            val result = client.refreshToken(prevRefreshToken)
+            val result = sut.refreshToken(prevRefreshToken)
 
             val failure = result.shouldBeLeft()
             failure.exception.shouldBeInstanceOf<ClientRequestException>()
+            clientAsserter.verifyTokenFetchRequest(prevRefreshToken)
         }
     }
 
-    @Test fun `getHomesData() Returns as right, json response, when it is ok`() {
-        val accessToken = aRandomUniqueString()
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ///// getHomesData() ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test fun `getHomesData() Returns default home data`() {
         val expectedResponse = aJsonNode()
         runBlocking {
-            val engine = MockEngine { request ->
-                request.method shouldBe HttpMethod.Get
-                request.url.toString() shouldBe "${config.baseUrl}/api/homesdata"
-                request.headers[HttpHeaders.Authorization] shouldBe "Bearer $accessToken"
-                respond(
-                    content = expectedResponse.toString(),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
-            }
-            val client = NetatmoClient(config, mapper, engine)
+            clientAsserter.givenHomeDataFetchResponse(expectedResponse)
 
-            val result = client.getHomesData(accessToken)
+            val result = sut.getHomesData()
 
             result shouldBeRight expectedResponse
+            clientAsserter.verifyHomeDataFetchRequest(accessToken)
         }
     }
 
-    @Test fun `getHomesData() Returns as right, json response, by homeId when it is ok`() {
+    @Test fun `getHomesData() Returns home data by home id`() {
         val homeId = aRandomUniqueString()
-        val accessToken = aRandomUniqueString()
         val expectedResponse = aJsonNode()
         runBlocking {
-            val engine = MockEngine { request ->
-                request.method shouldBe HttpMethod.Get
-                "https://${request.url.host}" shouldBe config.baseUrl
-                request.url.encodedPath shouldBe "/api/homesdata"
-                request.url.parameters.asMap() shouldContainExactly mapOf("homeId" to homeId)
-                request.url.parameters.contains("homeId", homeId).shouldBeTrue()
-                request.headers[HttpHeaders.Authorization] shouldBe "Bearer $accessToken"
-                respond(
-                    content = expectedResponse.toString(),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
-            }
-            val client = NetatmoClient(config, mapper, engine)
+            clientAsserter.givenHomeDataFetchResponse(expectedResponse)
 
-            val result = client.getHomesData(accessToken, homeId)
+            val result = sut.getHomesData(homeId)
 
             result shouldBeRight expectedResponse
+            clientAsserter.verifyHomeDataFetchRequest(accessToken, homeId)
         }
     }
 
-    @Test fun `getHomeStatus() Returns as right, json response, when it is ok`() {
+    @Test fun `getHomesData() Returns home data and refreshes token when missing in cache`() {
         val homeId = aRandomUniqueString()
-        val accessToken = aRandomUniqueString()
         val expectedResponse = aJsonNode()
+        val refreshTokenResponse = NetatmoRefreshTokenResponse(
+            accessToken = aRandomUniqueString(),
+            refreshToken = aRandomUniqueString()
+        )
+        val refreshToken = aRandomUniqueString()
+        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, refreshToken)
         runBlocking {
-            val engine = MockEngine { request ->
-                request.method shouldBe HttpMethod.Get
-                "https://${request.url.host}" shouldBe config.baseUrl
-                request.url.encodedPath shouldBe "/api/homestatus"
-                request.url.parameters.asMap() shouldContainExactly mapOf("homeId" to homeId)
-                request.url.parameters.contains("homeId", homeId).shouldBeTrue()
-                request.headers[HttpHeaders.Authorization] shouldBe "Bearer $accessToken"
-                respond(
-                    content = expectedResponse.toString(),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
-            }
-            val client = NetatmoClient(config, mapper, engine)
+            clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
+            clientAsserter.givenHomeDataFetchResponse(expectedResponse)
 
-            val result = client.getHomeStatus(accessToken, homeId)
+            val result = sut.getHomesData(homeId)
 
             result shouldBeRight expectedResponse
+            clientAsserter.verifyTokenFetchRequest(refreshToken)
+            clientAsserter.verifyHomeDataFetchRequest(refreshTokenResponse.accessToken, homeId)
+            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
+            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
         }
     }
 
-    @Test fun `setState() Returns as right, json response, when it is ok`() {
-        val expectedRequest = aJsonNode()
-        val accessToken = aRandomUniqueString()
+    @Test fun `getHomesData() Returns home data with refreshed token even when cache fails`() {
+        val homeId = aRandomUniqueString()
+        val expectedResponse = aJsonNode()
+        val refreshTokenResponse = NetatmoRefreshTokenResponse(
+            accessToken = aRandomUniqueString(),
+            refreshToken = aRandomUniqueString()
+        )
+        val persistedRefreshToken = aRandomUniqueString()
+        cacheAsserter.givenFailingCache()
+        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
+        runBlocking {
+            clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
+            clientAsserter.givenHomeDataFetchResponse(expectedResponse)
+
+            val result = sut.getHomesData(homeId)
+
+            result shouldBeRight expectedResponse
+            clientAsserter.verifyTokenFetchRequest(persistedRefreshToken)
+            clientAsserter.verifyHomeDataFetchRequest(refreshTokenResponse.accessToken, homeId)
+            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
+            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+        }
+    }
+
+    @Test fun `getHomesData() Returns home data with refreshed token even when persisted cache set fails`() {
+        val homeId = aRandomUniqueString()
+        val expectedResponse = aJsonNode()
+        val refreshTokenResponse = NetatmoRefreshTokenResponse(
+            accessToken = aRandomUniqueString(),
+            refreshToken = aRandomUniqueString()
+        )
+        val persistedRefreshToken = aRandomUniqueString()
+        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
+        cacheAsserter.givenPersistedCacheEntryUpsertFailure()
+        runBlocking {
+            clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
+            clientAsserter.givenHomeDataFetchResponse(expectedResponse)
+
+            val result = sut.getHomesData(homeId)
+
+            result shouldBeRight expectedResponse
+            clientAsserter.verifyTokenFetchRequest(persistedRefreshToken)
+            clientAsserter.verifyHomeDataFetchRequest(refreshTokenResponse.accessToken, homeId)
+            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
+            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+        }
+    }
+
+    @Test fun `getHomesData() Returns a failure when fails to fetch home data`() {
+        val homeId = aRandomUniqueString()
+        runBlocking {
+            clientAsserter.givenHomeDataFetchFailure()
+
+            val result = sut.getHomesData(homeId)
+
+            result.shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
+            clientAsserter.verifyHomeDataFetchRequest(accessToken, homeId)
+        }
+    }
+
+    @Test fun `getHomesData() Returns a failure when fails to fetch persisted token`() {
+        val homeId = aRandomUniqueString()
+        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntryFetchFailure()
+        runBlocking {
+            val result = sut.getHomesData(homeId)
+
+            result.shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
+            clientAsserter.verifyNoHomeStatusFetchRequest()
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ///// getHomeStatus() //////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test fun `getHomeStatus() Returns home status`() {
+        val homeId = aRandomUniqueString()
+        val expectedHomeStatus = aNetatmoHomeStatus()
+        runBlocking {
+            clientAsserter.givenHomeStatusFetchResponse(expectedHomeStatus)
+
+            val result = sut.getHomeStatus(homeId)
+
+            result shouldBeRight expectedHomeStatus
+            clientAsserter.verifyHomeStatusFetchRequest(accessToken, homeId)
+        }
+    }
+
+    @Test fun `getHomeStatus() Returns home status and refreshes token when missing in cache`() {
+        val homeId = aRandomUniqueString()
+        val expectedHomeStatus = aNetatmoHomeStatus()
+        val refreshTokenResponse = NetatmoRefreshTokenResponse(
+            accessToken = aRandomUniqueString(),
+            refreshToken = aRandomUniqueString()
+        )
+        val refreshToken = aRandomUniqueString()
+        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, refreshToken)
+        runBlocking {
+            clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
+            clientAsserter.givenHomeStatusFetchResponse(expectedHomeStatus)
+
+            val result = sut.getHomeStatus(homeId)
+
+            result shouldBeRight expectedHomeStatus
+            clientAsserter.verifyTokenFetchRequest(refreshToken)
+            clientAsserter.verifyHomeStatusFetchRequest(refreshTokenResponse.accessToken, homeId)
+            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
+            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+        }
+    }
+
+    @Test fun `getHomeStatus() Returns home status with refreshed token even when cache fails`() {
+        val homeId = aRandomUniqueString()
+        val expectedHomeStatus = aNetatmoHomeStatus()
+        val refreshTokenResponse = NetatmoRefreshTokenResponse(
+            accessToken = aRandomUniqueString(),
+            refreshToken = aRandomUniqueString()
+        )
+        val persistedRefreshToken = aRandomUniqueString()
+        cacheAsserter.givenFailingCache()
+        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
+        runBlocking {
+            clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
+            clientAsserter.givenHomeStatusFetchResponse(expectedHomeStatus)
+
+            val result = sut.getHomeStatus(homeId)
+
+            result shouldBeRight expectedHomeStatus
+            clientAsserter.verifyTokenFetchRequest(persistedRefreshToken)
+            clientAsserter.verifyHomeStatusFetchRequest(refreshTokenResponse.accessToken, homeId)
+            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
+            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+        }
+    }
+
+    @Test fun `getHomeStatus() Returns home status with refreshed token even when persisted cache set fails`() {
+        val homeId = aRandomUniqueString()
+        val expectedHomeStatus = aNetatmoHomeStatus()
+        val refreshTokenResponse = NetatmoRefreshTokenResponse(
+            accessToken = aRandomUniqueString(),
+            refreshToken = aRandomUniqueString()
+        )
+        val persistedRefreshToken = aRandomUniqueString()
+        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
+        cacheAsserter.givenPersistedCacheEntryUpsertFailure()
+        runBlocking {
+            clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
+            clientAsserter.givenHomeStatusFetchResponse(expectedHomeStatus)
+
+            val result = sut.getHomeStatus(homeId)
+
+            result shouldBeRight expectedHomeStatus
+            clientAsserter.verifyTokenFetchRequest(persistedRefreshToken)
+            clientAsserter.verifyHomeStatusFetchRequest(refreshTokenResponse.accessToken, homeId)
+            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
+            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+        }
+    }
+
+    @Test fun `getHomeStatus() Returns a failure when fails to fetch home status`() {
+        val homeId = aRandomUniqueString()
+        runBlocking {
+            clientAsserter.givenHomeStatusFetchFailure()
+
+            val result = sut.getHomeStatus(homeId)
+
+            result.shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
+            clientAsserter.verifyHomeStatusFetchRequest(accessToken, homeId)
+        }
+    }
+
+    @Test fun `getHomeStatus() Returns a failure when fails to fetch persisted token`() {
+        val homeId = aRandomUniqueString()
+        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntryFetchFailure()
+        runBlocking {
+            val result = sut.getHomeStatus(homeId)
+
+            result.shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
+            clientAsserter.verifyNoHomeStatusFetchRequest()
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ///// setState() ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test fun `setState() Returns NetatmoSetStatusSuccess when successfully sets home status`() {
+        val newStatus = aNetatmoHomeStatus()
         val expectedResponse = aJsonNode()
         runBlocking {
-            val engine = MockEngine { request ->
-                request.method shouldBe HttpMethod.Post
-                "https://${request.url.host}" shouldBe config.baseUrl
-                request.url.encodedPath shouldBe "/api/setstate"
-                request.headers[HttpHeaders.Authorization] shouldBe "Bearer $accessToken"
-                val requestBody = request.body.toByteArray().decodeToString()
-                val parsedBody = mapper.readTree(requestBody)
-                parsedBody shouldBe expectedRequest
-                respond(
-                    content = expectedResponse.toString(),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
-            }
-            val client = NetatmoClient(config, mapper, engine)
+            clientAsserter.givenSetStatusResponse(expectedResponse)
 
-            val result = client.setState(accessToken, expectedRequest)
+            val result = sut.setState(newStatus)
 
             result shouldBeRight NetatmoSetStatusSuccess
+            clientAsserter.verifySetStatusRequest(accessToken, newStatus)
         }
     }
 
-    private fun parseFormBody(body: String): Map<String, String> {
-        return body.split("&").associate {
-            val (key, value) = it.split("=")
-            key to value
+    @Test fun `setState() Refreshes token when missing in cache`() {
+        val newStatus = aNetatmoHomeStatus()
+        val expectedResponse = aJsonNode()
+        val refreshTokenResponse = NetatmoRefreshTokenResponse(
+            accessToken = aRandomUniqueString(),
+            refreshToken = aRandomUniqueString()
+        )
+        val refreshToken = aRandomUniqueString()
+        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, refreshToken)
+        runBlocking {
+            clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
+            clientAsserter.givenSetStatusResponse(expectedResponse)
+
+            val result = sut.setState(newStatus)
+
+            result shouldBeRight NetatmoSetStatusSuccess
+            clientAsserter.verifyTokenFetchRequest(refreshToken)
+            clientAsserter.verifySetStatusRequest(refreshTokenResponse.accessToken, newStatus)
+            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
+            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
         }
     }
 
-    private fun Parameters.asMap() = entries().associate { it.key to it.value.firstOrNull() }
+    @Test fun `setState() Refreshes token even when cache fails`() {
+        val newStatus = aNetatmoHomeStatus()
+        val expectedResponse = aJsonNode()
+        val refreshTokenResponse = NetatmoRefreshTokenResponse(
+            accessToken = aRandomUniqueString(),
+            refreshToken = aRandomUniqueString()
+        )
+        val persistedRefreshToken = aRandomUniqueString()
+        cacheAsserter.givenFailingCache()
+        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
+        runBlocking {
+            clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
+            clientAsserter.givenSetStatusResponse(expectedResponse)
+
+            val result = sut.setState(newStatus)
+
+            result shouldBeRight NetatmoSetStatusSuccess
+            clientAsserter.verifyTokenFetchRequest(persistedRefreshToken)
+            clientAsserter.verifySetStatusRequest(refreshTokenResponse.accessToken, newStatus)
+            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
+            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+        }
+    }
+
+    @Test fun `setState() Refreshes token even when persisted cache set fails`() {
+        val newStatus = aNetatmoHomeStatus()
+        val expectedResponse = aJsonNode()
+        val refreshTokenResponse = NetatmoRefreshTokenResponse(
+            accessToken = aRandomUniqueString(),
+            refreshToken = aRandomUniqueString()
+        )
+        val persistedRefreshToken = aRandomUniqueString()
+        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
+        cacheAsserter.givenPersistedCacheEntryUpsertFailure()
+        runBlocking {
+            clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
+            clientAsserter.givenSetStatusResponse(expectedResponse)
+
+            val result = sut.setState(newStatus)
+
+            result shouldBeRight NetatmoSetStatusSuccess
+            clientAsserter.verifyTokenFetchRequest(persistedRefreshToken)
+            clientAsserter.verifySetStatusRequest(refreshTokenResponse.accessToken, newStatus)
+            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
+            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+        }
+    }
+
+    @Test fun `setState() Returns a failure when fails to set home status`() {
+        val newStatus = aNetatmoHomeStatus()
+        runBlocking {
+            clientAsserter.givenSetStatusFailure()
+
+            val result = sut.setState(newStatus)
+
+            result.shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
+            clientAsserter.verifySetStatusRequest(accessToken, newStatus)
+        }
+    }
+
+    @Test fun `setState() Returns a failure when fails to fetch persisted token`() {
+        val newStatus = aNetatmoHomeStatus()
+        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntryFetchFailure()
+        runBlocking {
+            val result = sut.setState(newStatus)
+
+            result.shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
+            clientAsserter.verifyNoSetStatusRequest()
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }
