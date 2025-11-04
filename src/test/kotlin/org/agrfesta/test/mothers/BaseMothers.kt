@@ -16,6 +16,7 @@ import org.agrfesta.sh.api.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.domain.devices.Provider
 import kotlin.random.Random
 
+fun aRandomBoolean(): Boolean = Random.nextBoolean()
 fun aRandomUniqueString(): String = UUID.randomUUID().toString()
 fun aRandomPercentage(scale: Int = 10) = Percentage(BigDecimal(Random.nextDouble(0.0, 1.0))
     .setScale(scale, RoundingMode.CEILING)
