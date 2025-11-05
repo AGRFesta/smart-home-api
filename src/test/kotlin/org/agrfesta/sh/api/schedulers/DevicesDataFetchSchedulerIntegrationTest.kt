@@ -3,11 +3,10 @@ package org.agrfesta.sh.api.schedulers
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
-import com.redis.testcontainers.RedisContainer
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import org.agrfesta.sh.api.SmartHomeTestConfiguration
+import org.agrfesta.sh.api.controllers.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.domain.commons.PercentageHundreds
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
@@ -27,19 +26,9 @@ import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.springframework.context.annotation.Import
-import org.springframework.test.context.ActiveProfiles
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.utility.DockerImageName
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(SmartHomeTestConfiguration::class)
-@Testcontainers
-@ActiveProfiles("test")
 class DevicesDataFetchSchedulerIntegrationTest(
     @Autowired private val sut: DevicesDataFetchScheduler,
     @Autowired private val devicesRepository: DevicesJdbcRepository,
@@ -49,20 +38,16 @@ class DevicesDataFetchSchedulerIntegrationTest(
     @Autowired private val cacheIntegrationAsserter: CacheIntegrationAsserter,
     @Autowired private val objectMapper: ObjectMapper,
     @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient //TODO move it in a dedicated test configuration, should be configured trough asserter only
-) {
+): AbstractIntegrationTest() {
 
     companion object {
+        @Container
+        @ServiceConnection
+        val postgres = createPostgresContainer()
 
         @Container
         @ServiceConnection
-        val postgres: PostgreSQLContainer<*> = DockerImageName.parse("timescale/timescaledb:latest-pg16")
-            .asCompatibleSubstituteFor("postgres")
-            .let { PostgreSQLContainer(it) }
-
-        @Container
-        @ServiceConnection
-        val redis = RedisContainer(DockerImageName.parse("redis:7.0.10-alpine"))
-
+        val redis = createRedisContainer()
     }
 
     @Test fun `fetchDevicesData() caches sensors device values only and ignores failures`() {
