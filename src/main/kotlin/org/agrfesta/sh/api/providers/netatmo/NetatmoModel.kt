@@ -2,7 +2,12 @@ package org.agrfesta.sh.api.providers.netatmo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.Instant
+import org.agrfesta.sh.api.domain.commons.RelativeHumidityHundreds
+import org.agrfesta.sh.api.domain.commons.Temperature
+import org.agrfesta.sh.api.domain.commons.ThermoHygroData
+import org.agrfesta.sh.api.domain.devices.ThermoHygroDataValue
 import org.agrfesta.sh.api.domain.failures.ExceptionFailure
+import org.agrfesta.sh.api.domain.failures.Failure
 
 data class NetatmoRefreshTokenResponse(
     @JsonProperty("access_token") val accessToken: String,
@@ -12,6 +17,8 @@ data class NetatmoAuthFailure(override val exception: Exception): ExceptionFailu
 
 object NetatmoSetStatusSuccess
 
+data class NetatmoContractBreak(val message: String, val response: String? = null): Failure
+
 data class NetatmoHomeStatus(
     val id: String,
     val rooms: Collection<NetatmoRoomStatus>
@@ -19,14 +26,19 @@ data class NetatmoHomeStatus(
 
 data class NetatmoRoomStatus(
     val id: String,
-    val humidity: Int,
+    val humidity: RelativeHumidityHundreds,
     @JsonProperty("open_window") val openWindow: Boolean,
-    @JsonProperty("therm_measured_temperature") val measuredTemperature: Float,
-    @JsonProperty("therm_setpoint_temperature") val setpointTemperature: Float,
+    @JsonProperty("therm_measured_temperature") val measuredTemperature: Temperature,
+    @JsonProperty("therm_setpoint_temperature") val setpointTemperature: Temperature,
     @JsonProperty("therm_setpoint_mode") val setpointMode: String,
     @JsonProperty("therm_setpoint_start_time") val setpointStartTime: Instant? = null,
     @JsonProperty("therm_setpoint_end_time") val setpointEndTime: Instant? = null
-)
+): ThermoHygroDataValue {
+    override val thermoHygroData = ThermoHygroData(
+        temperature = measuredTemperature,
+        relativeHumidity = humidity.toPercentage()
+    )
+}
 
 data class NetatmoModuleData(
     val id: String,

@@ -1,10 +1,10 @@
 package org.agrfesta.sh.api.providers.netatmo
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.Instant
+import org.agrfesta.sh.api.domain.commons.RelativeHumidityHundreds
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.test.mothers.aRandomBoolean
-import org.agrfesta.test.mothers.aRandomHour
-import org.agrfesta.test.mothers.aRandomIntPercentage
+import org.agrfesta.test.mothers.aRandomHumidity
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.agrfesta.test.mothers.aRandomUniqueString
 
@@ -18,10 +18,10 @@ fun aNetatmoModule(
 
 fun aNetatmoRoomStatus(
     id: String = aRandomUniqueString(),
-    humidity: Int = aRandomIntPercentage(),
+    humidity: RelativeHumidityHundreds = aRandomHumidity().toHundreds(),
     openWindow: Boolean = aRandomBoolean(),
-    measuredTemperature: Float = aRandomTemperature().toFloat(),
-    setpointTemperature: Float = aRandomTemperature().toFloat(),
+    measuredTemperature: Temperature = aRandomTemperature(),
+    setpointTemperature: Temperature = aRandomTemperature(),
     setpointMode: String = "home",
     setpointStartTime: Instant? = null,
     setpointEndTime: Instant? = null

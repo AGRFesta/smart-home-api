@@ -1,7 +1,6 @@
 package org.agrfesta.sh.api.schedulers
 
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.domain.devices.Sensor
 import org.agrfesta.sh.api.domain.devices.ThermoHygroDataValue
 import org.agrfesta.sh.api.domain.devices.onLeftLogOn
@@ -26,7 +25,7 @@ class DevicesDataFetchScheduler(
         devicesService.getAllDevices()
             .onRight {
                 it.filterIsInstance<Sensor>()
-                    .filter { s -> s.provider == Provider.SWITCHBOT } //TODO temporary fix
+                    //.filter { s -> s.provider == Provider.SWITCHBOT } //TODO temporary fix
                     .forEach { s ->
                         logger.info("Reading ${s.provider} sensor [${s.deviceProviderId}] data")
                         runBlocking { s.fetchReadings() }
