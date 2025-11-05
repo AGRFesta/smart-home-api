@@ -1,11 +1,11 @@
 package org.agrfesta.sh.api.schedulers
 
 import com.ninjasquad.springmockk.MockkBean
-import com.redis.testcontainers.RedisContainer
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.mockk.every
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import org.agrfesta.sh.api.controllers.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.domain.commons.PercentageHundreds
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
@@ -20,17 +20,9 @@ import org.agrfesta.test.mothers.aRandomIntHumidity
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.springframework.test.context.ActiveProfiles
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.utility.DockerImageName
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
-@ActiveProfiles("test")
 class DevicesDataHistorySchedulerIntegrationTest(
     @Autowired @MockkBean private val timeService: TimeService,
     @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient,
@@ -39,21 +31,17 @@ class DevicesDataHistorySchedulerIntegrationTest(
     @Autowired private val devicesDao: DevicesDao,
     @Autowired private val historyDao: SensorsHistoryDataDao,
     @Autowired private val switchBotClientAsserter: SwitchBotClientAsserter
-) {
+): AbstractIntegrationTest() {
     private val now = Instant.now()
 
     companion object {
+        @Container
+        @ServiceConnection
+        val postgres = createPostgresContainer()
 
         @Container
         @ServiceConnection
-        val postgres: PostgreSQLContainer<*> = DockerImageName.parse("timescale/timescaledb:latest-pg16")
-            .asCompatibleSubstituteFor("postgres")
-            .let { PostgreSQLContainer(it) }
-
-        @Container
-        @ServiceConnection
-        val redis = RedisContainer(DockerImageName.parse("redis:7.0.10-alpine"))
-
+        val redis = createRedisContainer()
     }
 
     init {
