@@ -23,15 +23,15 @@ import org.springframework.stereotype.Service
 
 @Service
 class NetatmoClientAsserter(
-    private val registry: BehaviorRegistry = BehaviorRegistry(),
-    private val mapper: ObjectMapper = jacksonObjectMapper()
-) {
-    val config = NetatmoConfiguration(
+    private val config: NetatmoConfiguration = NetatmoConfiguration(
         baseUrl = anUrl(),
         clientSecret = aRandomUniqueString(),
         clientId = aRandomUniqueString(),
         homeId = aRandomUniqueString()
-    )
+    ),
+    private val registry: BehaviorRegistry = BehaviorRegistry(),
+    private val mapper: ObjectMapper = jacksonObjectMapper()
+) {
 
     fun clear() { registry.clear() }
 
@@ -125,6 +125,9 @@ class NetatmoClientAsserter(
               }
             }
         """.trimIndent()
+        givenHomeStatusFetchResponse(expectedResponse)
+    }
+    fun givenHomeStatusFetchResponse(expectedResponse: String) {
         registry.given(
             matcher = { req -> req.method == Get && req.url.encodedPath == "/api/homestatus" },
             responses = arrayOf(

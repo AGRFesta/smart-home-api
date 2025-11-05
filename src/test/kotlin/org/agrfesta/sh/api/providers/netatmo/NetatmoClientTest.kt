@@ -18,11 +18,18 @@ import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.CacheAsserter
 import org.agrfesta.test.mothers.aJsonNode
 import org.agrfesta.test.mothers.aRandomUniqueString
+import org.agrfesta.test.mothers.anUrl
 import org.junit.jupiter.api.Test
 
 class NetatmoClientTest {
     private val accessToken = aRandomUniqueString()
     private val mapper = jacksonObjectMapper()
+    private val config = NetatmoConfiguration(
+        baseUrl = anUrl(),
+        clientSecret = aRandomUniqueString(),
+        clientId = aRandomUniqueString(),
+        homeId = aRandomUniqueString()
+    )
 
     private val cache: Cache = mockk(relaxed = true)
     private val cacheDao: CacheDao = mockk(relaxed = true)
@@ -30,10 +37,10 @@ class NetatmoClientTest {
     private val engine = createMockEngine(registry)
 
     private val cacheAsserter = CacheAsserter(cache, cacheDao)
-    private val clientAsserter = NetatmoClientAsserter(registry, mapper)
+    private val clientAsserter = NetatmoClientAsserter(config, registry, mapper)
 
     private val cacheService = PersistedCacheService(cacheDao)
-    private val sut = NetatmoClient(clientAsserter.config, cache, cacheService, mapper, engine)
+    private val sut = NetatmoClient(config, cache, cacheService, mapper, engine)
 
     init {
         // Default behaviour

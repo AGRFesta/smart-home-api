@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.providers.netatmo
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.agrfesta.sh.api.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -20,13 +20,22 @@ class NetatmoIntegrationAsserter(
         asserter.clear()
     }
 
-    fun givenDevice(device: DeviceDataValue) {
+    fun givenDevice(data: DeviceDataValue, status: ThermoHygroData? = null) {
         cache.set("provider.netatmo.access-token", token)
         val homeData = objectMapper.aHomeData(
-            name = device.name,
-            deviceId = device.deviceProviderId
+            name = data.name,
+            deviceId = data.deviceProviderId
         )
         asserter.givenHomeDataFetchResponse(homeData)
+        status?.apply {
+            val homeStatus = aNetatmoHomeStatus(
+                rooms = listOf(aNetatmoRoomStatus(
+                    humidity = relativeHumidity.toHundreds(),
+                    measuredTemperature = temperature
+                ))
+            )
+            asserter.givenHomeStatusFetchResponse(homeStatus)
+        }
     }
 
     fun givenNoDevices() {

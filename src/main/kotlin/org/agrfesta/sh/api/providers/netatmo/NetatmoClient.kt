@@ -111,8 +111,13 @@ class NetatmoClient(
                     parameter("homeId", homeId)
                     headers { append(HttpHeaders.Authorization, "Bearer $token") }
                 }.bodyAsText()
-                val node = mapper.readTree(content).at("/body/home")
-                mapper.treeToValue(node, NetatmoHomeStatus::class.java).right()
+                try {
+                    mapper.readTree(content).at("/body/home").let {
+                        mapper.treeToValue(it, NetatmoHomeStatus::class.java)
+                    }?.right() ?: NetatmoContractBreak("Unexpected home status response", content).left()
+                } catch (e: Exception) {
+                    NetatmoContractBreak("Unexpected home status response", content).left()
+                }
             } catch (e: ClientRequestException) {
                 KtorRequestFailure(
                     failureStatusCode = e.response.status,
