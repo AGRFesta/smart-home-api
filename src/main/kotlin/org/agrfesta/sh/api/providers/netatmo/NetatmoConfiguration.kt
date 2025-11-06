@@ -7,5 +7,6 @@ data class NetatmoConfiguration(
     val clientId: String,
     val clientSecret: String,
     val baseUrl: String,
-    val homeId: String
+    val homeId: String,
+    val roomId: String
 )

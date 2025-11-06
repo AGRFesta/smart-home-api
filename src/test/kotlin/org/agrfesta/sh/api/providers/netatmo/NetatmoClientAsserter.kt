@@ -27,7 +27,8 @@ class NetatmoClientAsserter(
         baseUrl = anUrl(),
         clientSecret = aRandomUniqueString(),
         clientId = aRandomUniqueString(),
-        homeId = aRandomUniqueString()
+        homeId = aRandomUniqueString(),
+        roomId = aRandomUniqueString()
     ),
     private val registry: BehaviorRegistry = BehaviorRegistry(),
     private val mapper: ObjectMapper = jacksonObjectMapper()
@@ -202,8 +203,8 @@ class NetatmoClientAsserter(
             )
         )
     }
-    suspend fun verifySetStatusRequest(accessToken: String, status: NetatmoHomeStatus) {
-        val expectedRequest: JsonNode = mapper.valueToTree(status)
+    suspend fun verifySetStatusRequest(accessToken: String, status: NetatmoHomeStatusChange) {
+        val expectedRequest: JsonNode = mapper.valueToTree(NetatmoStatusChangeRequest(status))
         registry.verifyRequest(Post, "/api/setstate") { request ->
             request.headers[Authorization] shouldBe "Bearer $accessToken"
             val requestBody = request.body.toByteArray().decodeToString()

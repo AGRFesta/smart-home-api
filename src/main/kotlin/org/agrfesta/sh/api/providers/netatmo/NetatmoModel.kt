@@ -24,21 +24,37 @@ data class NetatmoHomeStatus(
     val rooms: Collection<NetatmoRoomStatus>
 )
 
+data class NetatmoHomeStatusChange(
+    val id: String,
+    val rooms: Collection<NetatmoRoomStatusChange>
+)
+
+data class NetatmoStatusChangeRequest(
+    val home: NetatmoHomeStatusChange
+)
+
 data class NetatmoRoomStatus(
     val id: String,
     val humidity: RelativeHumidityHundreds,
     @JsonProperty("open_window") val openWindow: Boolean,
     @JsonProperty("therm_measured_temperature") val measuredTemperature: Temperature,
-    @JsonProperty("therm_setpoint_temperature") val setpointTemperature: Temperature,
-    @JsonProperty("therm_setpoint_mode") val setpointMode: String,
-    @JsonProperty("therm_setpoint_start_time") val setpointStartTime: Instant? = null,
-    @JsonProperty("therm_setpoint_end_time") val setpointEndTime: Instant? = null
+    @JsonProperty("therm_setpoint_temperature") val setPointTemperature: Temperature,
+    @JsonProperty("therm_setpoint_mode") val setPointMode: String,
+    @JsonProperty("therm_setpoint_start_time") val setPointStartTime: Instant? = null,
+    @JsonProperty("therm_setpoint_end_time") val setPointEndTime: Instant? = null
 ): ThermoHygroDataValue {
     override val thermoHygroData = ThermoHygroData(
         temperature = measuredTemperature,
         relativeHumidity = humidity.toPercentage()
     )
 }
+
+data class NetatmoRoomStatusChange(
+    val id: String,
+    @JsonProperty("therm_setpoint_temperature") val setPointTemperature: Temperature,
+    @JsonProperty("therm_setpoint_mode") val setPointMode: String,
+    @JsonProperty("therm_setpoint_end_time") val setPointEndTime: Instant
+)
 
 data class NetatmoModuleData(
     val id: String,

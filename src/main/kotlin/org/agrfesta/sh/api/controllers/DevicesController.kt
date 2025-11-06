@@ -27,7 +27,10 @@ class DevicesController(
     private val logger by LoggerDelegate()
 
     @ExceptionHandler(Exception::class)
-    fun handleException(e: Exception) = ResponseEntity<Any>(e.message, HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR)
+    fun handleException(e: Exception): ResponseEntity<Any> {
+        logger.error("Devices refresh failure!", e)
+        return ResponseEntity<Any>(e.message, HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR)
+    }
 
     @PostMapping("/refresh")
     fun refresh(): ResponseEntity<Any> {
