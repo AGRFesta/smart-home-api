@@ -98,28 +98,32 @@ class DevicesControllerIntegrationTest(
         val sbNewDevice = newDevices[SWITCHBOT]
         sbNewDevice.shouldNotBeNull()
         sbNewDevice.asDataValue() shouldBe expectedSBDeviceData
-        devicesRepository.findByProviderAndProviderId(expectedSBDeviceData.provider, expectedSBDeviceData.deviceProviderId)
-            .shouldBeRight().apply {
-                shouldNotBeNull()
-                name shouldBe expectedSBDeviceData.name
-                provider shouldBe SWITCHBOT
-                providerId shouldBe expectedSBDeviceData.deviceProviderId
-                createdOn.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
-                updatedOn.shouldBeNull()
-            }
+        devicesRepository.findByProviderAndProviderId(
+            expectedSBDeviceData.provider,
+            expectedSBDeviceData.deviceProviderId)
+                .shouldBeRight().apply {
+                    shouldNotBeNull()
+                    name shouldBe expectedSBDeviceData.name
+                    provider shouldBe SWITCHBOT
+                    providerId shouldBe expectedSBDeviceData.deviceProviderId
+                    createdOn.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
+                    updatedOn.shouldBeNull()
+                }
 
         val netatmoNewDevice = newDevices[NETATMO]
         netatmoNewDevice.shouldNotBeNull()
         netatmoNewDevice.asDataValue() shouldBe expectedNetatmoDeviceData
-        devicesRepository.findByProviderAndProviderId(expectedSBDeviceData.provider, expectedSBDeviceData.deviceProviderId)
-            .shouldBeRight().apply {
-                shouldNotBeNull()
-                name shouldBe expectedSBDeviceData.name
-                provider shouldBe SWITCHBOT
-                providerId shouldBe expectedSBDeviceData.deviceProviderId
-                createdOn.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
-                updatedOn.shouldBeNull()
-            }
+        devicesRepository.findByProviderAndProviderId(
+            expectedSBDeviceData.provider,
+            expectedSBDeviceData.deviceProviderId)
+                .shouldBeRight().apply {
+                    shouldNotBeNull()
+                    name shouldBe expectedSBDeviceData.name
+                    provider shouldBe SWITCHBOT
+                    providerId shouldBe expectedSBDeviceData.deviceProviderId
+                    createdOn.truncatedTo(ChronoUnit.SECONDS) shouldBe now.truncatedTo(ChronoUnit.SECONDS)
+                    updatedOn.shouldBeNull()
+                }
 
         val allDevices = devicesDao.getAll()
         allDevices.shouldContainExactlyInAnyOrder(netatmoNewDevice, sbNewDevice)

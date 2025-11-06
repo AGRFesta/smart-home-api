@@ -1,12 +1,12 @@
 package org.agrfesta.sh.api.providers.netatmo
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.ktor.client.plugins.ClientRequestException
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.controllers.createMockEngine
 import org.agrfesta.sh.api.domain.failures.KtorRequestFailure
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
@@ -23,12 +23,13 @@ import org.junit.jupiter.api.Test
 
 class NetatmoClientTest {
     private val accessToken = aRandomUniqueString()
-    private val mapper = jacksonObjectMapper()
+    private val mapper = SMART_HOME_OBJECT_MAPPER
     private val config = NetatmoConfiguration(
         baseUrl = anUrl(),
         clientSecret = aRandomUniqueString(),
         clientId = aRandomUniqueString(),
-        homeId = aRandomUniqueString()
+        homeId = aRandomUniqueString(),
+        roomId = aRandomUniqueString()
     )
 
     private val cache: Cache = mockk(relaxed = true)
@@ -324,7 +325,7 @@ class NetatmoClientTest {
     ///// setState() ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `setState() Returns NetatmoSetStatusSuccess when successfully sets home status`() {
-        val newStatus = aNetatmoHomeStatus()
+        val newStatus = aNetatmoHomeStatusChange()
         val expectedResponse = aJsonNode()
         runBlocking {
             clientAsserter.givenSetStatusResponse(expectedResponse)
@@ -337,7 +338,7 @@ class NetatmoClientTest {
     }
 
     @Test fun `setState() Refreshes token when missing in cache`() {
-        val newStatus = aNetatmoHomeStatus()
+        val newStatus = aNetatmoHomeStatusChange()
         val expectedResponse = aJsonNode()
         val refreshTokenResponse = NetatmoRefreshTokenResponse(
             accessToken = aRandomUniqueString(),
@@ -361,7 +362,7 @@ class NetatmoClientTest {
     }
 
     @Test fun `setState() Refreshes token even when cache fails`() {
-        val newStatus = aNetatmoHomeStatus()
+        val newStatus = aNetatmoHomeStatusChange()
         val expectedResponse = aJsonNode()
         val refreshTokenResponse = NetatmoRefreshTokenResponse(
             accessToken = aRandomUniqueString(),
@@ -385,7 +386,7 @@ class NetatmoClientTest {
     }
 
     @Test fun `setState() Refreshes token even when persisted cache set fails`() {
-        val newStatus = aNetatmoHomeStatus()
+        val newStatus = aNetatmoHomeStatusChange()
         val expectedResponse = aJsonNode()
         val refreshTokenResponse = NetatmoRefreshTokenResponse(
             accessToken = aRandomUniqueString(),
@@ -410,7 +411,7 @@ class NetatmoClientTest {
     }
 
     @Test fun `setState() Returns a failure when fails to set home status`() {
-        val newStatus = aNetatmoHomeStatus()
+        val newStatus = aNetatmoHomeStatusChange()
         runBlocking {
             clientAsserter.givenSetStatusFailure()
 
@@ -422,7 +423,7 @@ class NetatmoClientTest {
     }
 
     @Test fun `setState() Returns a failure when fails to fetch persisted token`() {
-        val newStatus = aNetatmoHomeStatus()
+        val newStatus = aNetatmoHomeStatusChange()
         cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
         cacheAsserter.givenPersistedCacheEntryFetchFailure()
         runBlocking {

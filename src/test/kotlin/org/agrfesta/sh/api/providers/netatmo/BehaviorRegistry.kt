@@ -44,8 +44,6 @@ class BehaviorRegistry {
         synchronized(recordedRequests) { recordedRequests += req }
     }
 
-//    fun getRecordedRequests(): List<HttpRequestData> = synchronized(recordedRequests) { recordedRequests.toList() }
-
     /**
      * Register a behavior. Provide one or more responses (sequence).
      */
@@ -94,13 +92,6 @@ class BehaviorRegistry {
         synchronized(recordedRequests) { recordedRequests.clear() }
     }
 
-//    private fun HttpRequestData.extractBodyAsString(): String {
-//        return when (val content = body) {
-//            is OutgoingContent.ByteArrayContent -> content.bytes().decodeToString()
-//            is OutgoingContent.NoContent -> ""
-//            else -> error("Unsupported body type: ${content::class.simpleName}")
-//        }
-//    }
 }
 
 suspend fun HttpRequestData.getBodyAsString(): String = body.toByteArray().decodeToString()

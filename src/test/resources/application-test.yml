@@ -6,6 +6,7 @@ providers:
     client-id: fake-client-id
     client-secret: fake-client-secret
     home-id: fake-home-id
+    room-id: fake-room-id
   switchbot:
     base-url: https://switch-bot.fake
     token: fake-token

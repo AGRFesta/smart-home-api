@@ -1,5 +1,6 @@
 package org.agrfesta.sh.api.providers.netatmo
 
+import java.time.Duration
 import java.time.Instant
 import org.agrfesta.sh.api.domain.commons.RelativeHumidityHundreds
 import org.agrfesta.sh.api.domain.commons.Temperature
@@ -15,7 +16,6 @@ fun aNetatmoModule(
     roomId: String = aRandomUniqueString()
 ) = NetatmoModuleData(id, type, name, roomId)
 
-
 fun aNetatmoRoomStatus(
     id: String = aRandomUniqueString(),
     humidity: RelativeHumidityHundreds = aRandomHumidity().toHundreds(),
@@ -28,7 +28,19 @@ fun aNetatmoRoomStatus(
 ) = NetatmoRoomStatus(id, humidity, openWindow, measuredTemperature, setpointTemperature, setpointMode,
     setpointStartTime, setpointEndTime)
 
+fun aNetatmoRoomStatusChange(
+    id: String = aRandomUniqueString(),
+    setPointTemperature: Temperature = aRandomTemperature(),
+    setPointMode: String = "home",
+    setPointEndTime: Instant = Instant.now().plus(Duration.ofHours(3))
+) = NetatmoRoomStatusChange(id, setPointTemperature, setPointMode, setPointEndTime)
+
 fun aNetatmoHomeStatus(
     id: String = aRandomUniqueString(),
     rooms: Collection<NetatmoRoomStatus> = listOf(aNetatmoRoomStatus())
 ) = NetatmoHomeStatus(id, rooms)
+
+fun aNetatmoHomeStatusChange(
+    id: String = aRandomUniqueString(),
+    rooms: Collection<NetatmoRoomStatusChange> = listOf(aNetatmoRoomStatusChange())
+) = NetatmoHomeStatusChange(id, rooms)

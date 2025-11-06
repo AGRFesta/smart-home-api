@@ -36,6 +36,7 @@ dependencies {
 	implementation("org.hibernate.orm:hibernate-core")
 	implementation("org.postgresql:postgresql")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 	implementation(libs.ktor.core)
 	implementation(libs.ktor.okhttp)
 	implementation(libs.ktor.content.negotiation)

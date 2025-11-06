@@ -17,7 +17,6 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.headers
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
@@ -26,7 +25,10 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.Parameters
-import io.ktor.serialization.jackson.jackson
+import io.ktor.http.content.TextContent
+import io.ktor.http.contentType
+import io.ktor.serialization.jackson.JacksonConverter
+import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.domain.failures.Failure
 import org.agrfesta.sh.api.domain.failures.KtorRequestFailure
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.ACCESS_TOKEN_CACHE_KEY
@@ -54,7 +56,7 @@ class NetatmoClient(
             requestTimeoutMillis = 60_000
         }
         install(ContentNegotiation) {
-            jackson()
+            register(ContentType.Application.Json, JacksonConverter(SMART_HOME_OBJECT_MAPPER))
         }
     }
 
@@ -133,13 +135,13 @@ class NetatmoClient(
      * For heating modules, the state can be controlled at the room level.
      * For other modules, the state is controlled at the module level.
      */
-    suspend fun setState(newState: NetatmoHomeStatus): Either<Failure, NetatmoSetStatusSuccess> {
+    suspend fun setState(newState: NetatmoHomeStatusChange): Either<Failure, NetatmoSetStatusSuccess> {
         return getToken().flatMap { token ->
             try {
+                val json = mapper.writeValueAsString(NetatmoStatusChangeRequest(newState))
                 client.post("${config.baseUrl}/api/setstate") {
-                    header(HttpHeaders.Accept, ContentType.Application.Json)
-                    header(HttpHeaders.ContentType, ContentType.Application.Json)
-                    setBody(newState)
+                    contentType(ContentType.Application.Json)
+                    setBody(TextContent(json, contentType = ContentType.Application.Json))
                     headers {
                         append(HttpHeaders.Authorization, "Bearer $token")
                     }
