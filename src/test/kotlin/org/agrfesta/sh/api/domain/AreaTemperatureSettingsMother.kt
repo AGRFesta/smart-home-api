@@ -2,6 +2,8 @@ package org.agrfesta.sh.api.domain
 
 import java.time.LocalTime
 import java.util.*
+import org.agrfesta.sh.api.domain.areas.AreaTemperatureSetting
+import org.agrfesta.sh.api.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.test.mothers.aDailyTime
 import org.agrfesta.test.mothers.aRandomTemperature

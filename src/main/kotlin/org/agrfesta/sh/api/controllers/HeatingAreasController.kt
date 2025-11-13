@@ -2,8 +2,8 @@ package org.agrfesta.sh.api.controllers
 
 import java.time.LocalTime
 import java.util.*
-import org.agrfesta.sh.api.domain.AreaTemperatureSetting
-import org.agrfesta.sh.api.domain.TemperatureInterval
+import org.agrfesta.sh.api.domain.areas.AreaTemperatureSetting
+import org.agrfesta.sh.api.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
@@ -39,11 +39,13 @@ class HeatingAreasController(
             return status(BAD_REQUEST)
                 .body(MessageResponse("A couple of intervals overlaps, this is not allowed!"))
         }
-        heatingAreasService.createSetting(AreaTemperatureSetting(
+        heatingAreasService.createSetting(
+            AreaTemperatureSetting(
             areaId = areaId,
             defaultTemperature = settings.defaultTemperature,
             temperatureSchedule = settings.temperatureSchedule.toSet()
-        )).onLeft {
+        )
+        ).onLeft {
             return when(it) {
                 is PersistenceFailure -> {
                     logger.error("heating settings creation failure", it.exception)

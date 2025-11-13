@@ -67,7 +67,8 @@ class NetatmoClient(
      * @param prevRefreshToken previous unused refresh token.
      */
     suspend fun refreshToken(prevRefreshToken: String): Either<NetatmoAuthFailure, NetatmoRefreshTokenResponse> = try {
-            val response = client.submitForm(
+        logger.info("Refreshing Netatmo token...")
+        val response = client.submitForm(
                 url = "${config.baseUrl}/oauth2/token",
                 formParameters = Parameters.build {
                     append("grant_type", "refresh_token")
@@ -79,6 +80,7 @@ class NetatmoClient(
             val body = response.body<String>()
             mapper.readValue<NetatmoRefreshTokenResponse>(body).right()
         } catch (e: Exception) {
+            logger.error("Netatmo token refresh Failure", e) //TODO should not be here
             NetatmoAuthFailure(e).left()
         }
 

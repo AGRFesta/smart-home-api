@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import java.util.*
-import org.agrfesta.sh.api.domain.AreaTemperatureSetting
+import org.agrfesta.sh.api.domain.areas.AreaTemperatureSetting
 import org.agrfesta.sh.api.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.domain.failures.TemperatureSettingCreationFailure

@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
 import java.util.*
-import org.agrfesta.sh.api.domain.AreaWithDevices
+import org.agrfesta.sh.api.domain.areas.AreaDtoWithDevices
 import org.agrfesta.sh.api.domain.devices.DeviceDto
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
@@ -16,7 +16,7 @@ class AreasWithDevicesJdbcRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate
 ) {
 
-    fun getAll(): Collection<AreaWithDevices> {
+    fun getAll(): Collection<AreaDtoWithDevices> {
         val sql = """
             SELECT 
                 a.uuid as area_uuid,
@@ -38,7 +38,7 @@ class AreasWithDevicesJdbcRepository(
             LEFT JOIN smart_home.device d ON ad.device_uuid = d.uuid
         """.trimIndent()
 
-        return jdbcTemplate.query(sql, ResultSetExtractor<Collection<AreaWithDevices>> { rs ->
+        return jdbcTemplate.query(sql, ResultSetExtractor<Collection<AreaDtoWithDevices>> { rs ->
             val areaMap = LinkedHashMap<UUID, MutableAreaWithDevicesBuilder>()
 
             while (rs.next()) {
@@ -86,5 +86,5 @@ private data class MutableAreaWithDevicesBuilder(
     val isIndoor: Boolean,
     val devices: MutableList<DeviceDto>
 ) {
-    fun toAreaWithDevices() = AreaWithDevices(uuid, name, devices, isIndoor)
+    fun toAreaWithDevices() = AreaDtoWithDevices(uuid, name, devices, isIndoor)
 }

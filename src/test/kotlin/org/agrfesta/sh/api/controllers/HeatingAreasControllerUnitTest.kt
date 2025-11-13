@@ -6,9 +6,9 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.verify
 import java.util.*
-import org.agrfesta.sh.api.domain.TemperatureInterval
+import org.agrfesta.sh.api.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.domain.aTemperatureInterval
-import org.agrfesta.sh.api.domain.anArea
+import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.persistence.jdbc.dao.TemperatureSettingsDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.entities.anAreaEntity
@@ -44,7 +44,7 @@ class HeatingAreasControllerUnitTest(
     @Autowired @MockkBean private val areasJdbcRepository: AreasJdbcRepository,
     @Autowired @MockkBean private val randomGenerator: RandomGenerator
 ) {
-    private val area = anArea()
+    private val area = anAreaDto()
     private val areaEntity = anAreaEntity(
         uuid = area.uuid,
         name = area.name,

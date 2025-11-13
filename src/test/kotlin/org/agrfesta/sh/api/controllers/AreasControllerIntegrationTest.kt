@@ -6,8 +6,8 @@ import io.mockk.every
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import java.util.*
-import org.agrfesta.sh.api.domain.Area
-import org.agrfesta.sh.api.domain.anArea
+import org.agrfesta.sh.api.domain.areas.AreaDto
+import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -56,7 +56,7 @@ class AreasControllerIntegrationTest(
 
         result.message shouldBe "Area '$name' successfully created!"
         result.resourceId shouldBe uuid.toString()
-        val expectedArea = Area(
+        val expectedArea = AreaDto(
             uuid = uuid,
             name = name,
             isIndoor = true
@@ -66,7 +66,7 @@ class AreasControllerIntegrationTest(
 
     @Test fun `create() return 400 when create a area with an already existing name`() {
         val name = aRandomUniqueString()
-        val area = anArea(name = name)
+        val area = anAreaDto(name = name)
         areasDao.save(area)
 
         val result = given()

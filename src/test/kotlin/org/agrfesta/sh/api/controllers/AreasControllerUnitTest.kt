@@ -10,17 +10,21 @@ import io.mockk.every
 import io.mockk.slot
 import java.time.Instant
 import java.util.*
-import org.agrfesta.sh.api.domain.Area
+import org.agrfesta.sh.api.domain.areas.AreaDto
+import org.agrfesta.sh.api.domain.areas.AreasFactory
 import org.agrfesta.sh.api.persistence.jdbc.dao.AreasDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.dao.AreasWithDevicesDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.dao.SensorsAssignmentsDaoJdbcImpl
+import org.agrfesta.sh.api.persistence.jdbc.dao.TemperatureSettingsDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasWithDevicesJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureSettingRepository
 import org.agrfesta.sh.api.security.SecurityConfig
-import org.agrfesta.sh.api.security.SimpleApiKeyFilter
 import org.agrfesta.sh.api.services.AreasService
+import org.agrfesta.sh.api.services.HeatingAreasService
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -36,8 +40,11 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @WebMvcTest(AreasController::class)
 @Import(
     AreasService::class,
+    AreasFactory::class,
     AreasDaoJdbcImpl::class,
     AreasWithDevicesDaoJdbcImpl::class,
+    HeatingAreasService::class,
+    TemperatureSettingsDaoJdbcImpl::class,
     SensorsAssignmentsDaoJdbcImpl::class,
     SecurityConfig::class
 )
@@ -50,7 +57,9 @@ class AreasControllerUnitTest(
     @Autowired @MockkBean private val areasRepository: AreasJdbcRepository,
     @Autowired @MockkBean private val areasWithDevicesJdbcRepository: AreasWithDevicesJdbcRepository,
     @Autowired @MockkBean private val sensorsAssignmentsJdbcRepository: SensorsAssignmentsJdbcRepository,
-    @Autowired @MockkBean private val DevicesJdbcRepository: DevicesJdbcRepository
+    @Autowired @MockkBean private val devicesJdbcRepository: DevicesJdbcRepository,
+    @Autowired @MockkBean private val temperatureSettingRepository: TemperatureSettingRepository,
+    @Autowired @MockkBean private val temperatureIntervalRepository: TemperatureIntervalRepository
 ) {
 
     init {
@@ -110,7 +119,7 @@ class AreasControllerUnitTest(
 
     @Test fun `create() an indoor area when indoor is true`() {
         val name = aRandomUniqueString()
-        val areaSlot = slot<Area>()
+        val areaSlot = slot<AreaDto>()
         every { areasRepository.persist(capture(areaSlot)) } answers { areaSlot.captured.right() }
 
         val responseBody: String = mockMvc.perform(post("/areas")
@@ -127,7 +136,7 @@ class AreasControllerUnitTest(
 
     @Test fun `create() an outdoor area when indoor is false`() {
         val name = aRandomUniqueString()
-        val areaSlot = slot<Area>()
+        val areaSlot = slot<AreaDto>()
         every { areasRepository.persist(capture(areaSlot)) } answers { areaSlot.captured.right() }
 
         val responseBody: String = mockMvc.perform(post("/areas")
