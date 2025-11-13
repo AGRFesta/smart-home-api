@@ -12,7 +12,7 @@ import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.domain.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
-import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesFactory
+import org.agrfesta.sh.api.providers.switchbot.devices.SwitchBotDevicesFactory
 import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.SmartCache

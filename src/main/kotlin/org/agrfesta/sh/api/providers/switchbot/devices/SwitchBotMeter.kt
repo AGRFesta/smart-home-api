@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.providers.switchbot
+package org.agrfesta.sh.api.providers.switchbot.devices
 
 import arrow.core.Either
 import arrow.core.left
@@ -10,6 +10,8 @@ import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.domain.devices.Sensor
 import org.agrfesta.sh.api.domain.devices.SensorReadings
 import org.agrfesta.sh.api.domain.devices.SensorReadingsFailure
+import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
+import org.agrfesta.sh.api.providers.switchbot.SwitchBotSensorReadings
 
 class SwitchBotMeter (
     override val uuid: UUID,
