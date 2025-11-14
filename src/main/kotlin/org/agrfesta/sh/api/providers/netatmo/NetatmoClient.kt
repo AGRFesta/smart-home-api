@@ -90,7 +90,7 @@ class NetatmoClient(
         return getToken().flatMap { token ->
             try {
                 val content = client.get("${config.baseUrl}/api/homesdata") {
-                    homeId?.let { parameter("homeId", it) }
+                    homeId?.let { parameter("home_id", it) }
                     headers { append(HttpHeaders.Authorization, "Bearer $token") }
                 }.bodyAsText()
                 mapper.readTree(content).right()
@@ -110,7 +110,7 @@ class NetatmoClient(
         getToken().flatMap { token ->
             try {
                 val content = client.get("${config.baseUrl}/api/homestatus") {
-                    parameter("homeId", homeId)
+                    parameter("home_id", homeId)
                     headers { append(HttpHeaders.Authorization, "Bearer $token") }
                 }.bodyAsText()
                 try {
@@ -121,6 +121,7 @@ class NetatmoClient(
                     NetatmoContractBreak("Unexpected home status response", content).left()
                 }
             } catch (e: ClientRequestException) {
+                logger.error("Netatmo get home status failure", e) //TODO should not be here
                 KtorRequestFailure(
                     failureStatusCode = e.response.status,
                     body = e.response.bodyAsText()
@@ -148,6 +149,7 @@ class NetatmoClient(
                 }
                 NetatmoSetStatusSuccess.right()
             } catch (e: ClientRequestException) {
+                logger.error("Netatmo set home status failure", e) //TODO should not be here
                 KtorRequestFailure(
                     failureStatusCode = e.response.status,
                     body = e.response.bodyAsText()
