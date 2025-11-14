@@ -110,8 +110,8 @@ class NetatmoClientAsserter(
         registry.verifyRequest(Get, "/api/homesdata") { request ->
             request.headers[Authorization] shouldBe "Bearer $accessToken"
             homeId?.let {
-                request.url.parameters.asMap() shouldContainExactly mapOf("homeId" to homeId)
-                request.url.parameters.contains("homeId", homeId).shouldBeTrue()
+                request.url.parameters.asMap() shouldContainExactly mapOf("home_id" to homeId)
+                request.url.parameters.contains("home_id", homeId).shouldBeTrue()
             }
         }
     }
@@ -163,8 +163,8 @@ class NetatmoClientAsserter(
     suspend fun verifyHomeStatusFetchRequest(accessToken: String, homeId: String) {
         registry.verifyRequest(Get, "/api/homestatus") { request ->
             request.headers[Authorization] shouldBe "Bearer $accessToken"
-            request.url.parameters.asMap() shouldContainExactly mapOf("homeId" to homeId)
-            request.url.parameters.contains("homeId", homeId).shouldBeTrue()
+            request.url.parameters.asMap() shouldContainExactly mapOf("home_id" to homeId)
+            request.url.parameters.contains("home_id", homeId).shouldBeTrue()
         }
     }
     suspend fun verifyNoHomeStatusFetchRequest() {
