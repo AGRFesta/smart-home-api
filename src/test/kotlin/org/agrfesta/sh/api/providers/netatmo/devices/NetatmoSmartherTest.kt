@@ -192,7 +192,7 @@ class NetatmoSmartherTest {
     ///// on() /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
-    fun `on() Sets setpoint with temperature of 7 degree for one hour`() {
+    fun `on() Sets setpoint with temperature of 40 degree for one hour`() {
         runBlocking {
             val expectedEndTime = now.plusSeconds(3600)
             clientAsserter.givenSetStatusResponse(aJsonNode())
@@ -210,7 +210,7 @@ class NetatmoSmartherTest {
                 requestedStatus.id shouldBe config.homeId
                 requestedStatus.rooms.shouldHaveSize(1).first().apply {
                     id shouldBe config.roomId
-                    setPointTemperature shouldBe Temperature("7.0")
+                    setPointTemperature shouldBe Temperature("40.0")
                     setPointEndTime shouldBe expectedEndTime
                     setPointMode shouldBe "manual"
                 }
@@ -232,7 +232,7 @@ class NetatmoSmartherTest {
     ///// on() /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
-    fun `off() Sets setpoint with temperature of 40 degree for one hour`() {
+    fun `off() Sets setpoint with temperature of 7 degree for one hour`() {
         runBlocking {
             val expectedEndTime = now.plusSeconds(3600)
             clientAsserter.givenSetStatusResponse(aJsonNode())
@@ -250,7 +250,7 @@ class NetatmoSmartherTest {
                 requestedStatus.id shouldBe config.homeId
                 requestedStatus.rooms.shouldHaveSize(1).first().apply {
                     id shouldBe config.roomId
-                    setPointTemperature shouldBe Temperature("40.0")
+                    setPointTemperature shouldBe Temperature("7.0")
                     setPointEndTime shouldBe expectedEndTime
                     setPointMode shouldBe "manual"
                 }
