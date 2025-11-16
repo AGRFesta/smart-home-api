@@ -21,6 +21,7 @@ fun aRandomUniqueString(): String = UUID.randomUUID().toString()
 fun aRandomPercentage(scale: Int = 10) = Percentage(BigDecimal(Random.nextDouble(0.0, 1.0))
     .setScale(scale, RoundingMode.CEILING)
     .stripTrailingZeros())
+fun aRandomNonNegativeInt(): Int = Random.nextInt(from = 0, until = Int.MAX_VALUE)
 fun aRandomIntPercentage(): Int = Random.nextInt(from = 0, until = 101)
 fun aRandomTtl(): Long = Random.nextLong(from = 1, until = 2_628_000) // max five years
 fun nowNoMills(): Instant = Instant.now().truncatedTo(ChronoUnit.SECONDS)

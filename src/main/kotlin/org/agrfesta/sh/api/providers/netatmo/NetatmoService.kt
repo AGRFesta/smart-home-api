@@ -1,9 +1,6 @@
 package org.agrfesta.sh.api.providers.netatmo
 
 import arrow.core.Either
-import arrow.core.flatMap
-import arrow.core.left
-import arrow.core.right
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
@@ -13,11 +10,8 @@ import org.agrfesta.sh.api.domain.devices.DevicesProvider
 import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.domain.devices.Provider.NETATMO
 import org.agrfesta.sh.api.domain.failures.Failure
-import org.agrfesta.sh.api.services.onLeftLogOn
 import org.agrfesta.sh.api.services.PersistedCacheService
 import org.agrfesta.sh.api.utils.Cache
-import org.agrfesta.sh.api.utils.CacheError
-import org.agrfesta.sh.api.utils.CachedValueNotFound
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.stereotype.Service
 
@@ -32,8 +26,8 @@ class NetatmoService(
     override val provider: Provider = NETATMO
 
     companion object {
-        const val ACCESS_TOKEN_CACHE_KEY = "provider.netatmo.access-token"
-        const val REFRESH_TOKEN_CACHE_KEY = "provider.netatmo.refresh-token"
+        const val NETATMO_ACCESS_TOKEN_CACHE_KEY = "provider.netatmo.access-token"
+        const val NETATMO_REFRESH_TOKEN_CACHE_KEY = "provider.netatmo.refresh-token"
     }
 
     override fun getAllDevices(): Either<Failure, Collection<DeviceDataValue>> = runBlocking {
