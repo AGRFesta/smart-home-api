@@ -24,7 +24,7 @@ import org.agrfesta.sh.api.providers.netatmo.NetatmoClientAsserter
 import org.agrfesta.sh.api.providers.netatmo.NetatmoConfiguration
 import org.agrfesta.sh.api.providers.netatmo.NetatmoContractBreak
 import org.agrfesta.sh.api.providers.netatmo.NetatmoHomeStatusChange
-import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.ACCESS_TOKEN_CACHE_KEY
+import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.providers.netatmo.aNetatmoHomeStatus
 import org.agrfesta.sh.api.providers.netatmo.aNetatmoRoomStatus
 import org.agrfesta.sh.api.services.PersistedCacheService
@@ -74,7 +74,7 @@ class NetatmoSmartherTest {
 
     init {
         // Default behaviour
-        cacheAsserter.givenCacheEntry(ACCESS_TOKEN_CACHE_KEY, accessToken)
+        cacheAsserter.givenCacheEntry(NETATMO_ACCESS_TOKEN_CACHE_KEY, accessToken)
         every { timeService.now() } returns now
     }
 

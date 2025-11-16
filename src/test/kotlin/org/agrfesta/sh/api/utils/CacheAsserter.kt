@@ -8,6 +8,7 @@ import io.mockk.verify
 import org.agrfesta.sh.api.domain.commons.CacheEntry
 import org.agrfesta.sh.api.persistence.CacheDao
 import org.springframework.stereotype.Service
+import kotlin.time.Duration
 
 @Service
 class CacheAsserter(
@@ -26,8 +27,11 @@ class CacheAsserter(
         every { cache.set(any(), any()) } throws Exception("cache failure!")
     }
 
-    fun verifyCacheEntrySet(key: String, value: String) {
-        verify { cache.set(key, value) }
+    fun verifyCacheEntrySet(key: String, value: String, duration: Duration? = null) {
+        verify { cache.set(key, value, duration) }
+    }
+    fun verifyCacheEntryRemoval(key: String) {
+        verify { cache.remove(key) }
     }
 
     fun givenPersistedCacheEntry(key: String, value: String) {

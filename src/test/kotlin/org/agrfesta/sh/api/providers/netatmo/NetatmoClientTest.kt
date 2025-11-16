@@ -4,6 +4,7 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.ktor.client.plugins.ClientRequestException
+import io.ktor.http.HttpStatusCode.Companion.Forbidden
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
@@ -11,18 +12,22 @@ import org.agrfesta.sh.api.controllers.createMockEngine
 import org.agrfesta.sh.api.domain.failures.KtorRequestFailure
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.CacheDao
-import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.ACCESS_TOKEN_CACHE_KEY
-import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.REFRESH_TOKEN_CACHE_KEY
+import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
+import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_REFRESH_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.services.PersistedCacheService
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.CacheAsserter
 import org.agrfesta.test.mothers.aJsonNode
+import org.agrfesta.test.mothers.aRandomNonNegativeInt
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.anUrl
 import org.junit.jupiter.api.Test
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 class NetatmoClientTest {
     private val accessToken = aRandomUniqueString()
+    private val expiresSeconds = aRandomNonNegativeInt()
     private val mapper = SMART_HOME_OBJECT_MAPPER
     private val config = NetatmoConfiguration(
         baseUrl = anUrl(),
@@ -45,7 +50,7 @@ class NetatmoClientTest {
 
     init {
         // Default behaviour
-        cacheAsserter.givenCacheEntry(ACCESS_TOKEN_CACHE_KEY, accessToken)
+        cacheAsserter.givenCacheEntry(NETATMO_ACCESS_TOKEN_CACHE_KEY, accessToken)
     }
 
     ///// refreshToken() ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +59,8 @@ class NetatmoClientTest {
         val prevRefreshToken = aRandomUniqueString()
         val expectedResponse = NetatmoRefreshTokenResponse(
             accessToken = aRandomUniqueString(),
-            refreshToken = aRandomUniqueString()
+            refreshToken = aRandomUniqueString(),
+            expiresIn = expiresSeconds
         )
         runBlocking {
             clientAsserter.givenTokenFetchResponse(expectedResponse)
@@ -114,11 +120,12 @@ class NetatmoClientTest {
         val expectedResponse = aJsonNode()
         val refreshTokenResponse = NetatmoRefreshTokenResponse(
             accessToken = aRandomUniqueString(),
-            refreshToken = aRandomUniqueString()
+            refreshToken = aRandomUniqueString(),
+            expiresIn = expiresSeconds
         )
         val refreshToken = aRandomUniqueString()
-        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
-        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, refreshToken)
+        cacheAsserter.givenMissingEntry(NETATMO_ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntry(NETATMO_REFRESH_TOKEN_CACHE_KEY, refreshToken)
         runBlocking {
             clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
             clientAsserter.givenHomeDataFetchResponse(expectedResponse)
@@ -128,8 +135,27 @@ class NetatmoClientTest {
             result shouldBeRight expectedResponse
             clientAsserter.verifyTokenFetchRequest(refreshToken)
             clientAsserter.verifyHomeDataFetchRequest(refreshTokenResponse.accessToken, homeId)
-            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
-            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+            cacheAsserter.verifyCacheEntrySet(
+                NETATMO_ACCESS_TOKEN_CACHE_KEY,
+                refreshTokenResponse.accessToken,
+                expiresSeconds.toDuration(DurationUnit.SECONDS))
+            cacheAsserter.verifyPersistedCacheEntryUpsert(
+                NETATMO_REFRESH_TOKEN_CACHE_KEY,
+                refreshTokenResponse.refreshToken)
+        }
+    }
+
+    @Test fun `getHomesData() Returns a failure and remove cached value when access token is not valid`() {
+        runBlocking {
+            clientAsserter.givenHomeDataFetchFailure(
+                accessToken = accessToken,
+                errorMessage = "Invalid access token",
+                status = Forbidden)
+
+            val result = sut.getHomesData()
+
+            result.shouldBeLeft().shouldBeInstanceOf<NetatmoInvalidAccessToken>()
+            cacheAsserter.verifyCacheEntryRemoval(NETATMO_ACCESS_TOKEN_CACHE_KEY)
         }
     }
 
@@ -138,11 +164,12 @@ class NetatmoClientTest {
         val expectedResponse = aJsonNode()
         val refreshTokenResponse = NetatmoRefreshTokenResponse(
             accessToken = aRandomUniqueString(),
-            refreshToken = aRandomUniqueString()
+            refreshToken = aRandomUniqueString(),
+            expiresIn = expiresSeconds
         )
         val persistedRefreshToken = aRandomUniqueString()
         cacheAsserter.givenFailingCache()
-        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
+        cacheAsserter.givenPersistedCacheEntry(NETATMO_REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
         runBlocking {
             clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
             clientAsserter.givenHomeDataFetchResponse(expectedResponse)
@@ -152,8 +179,13 @@ class NetatmoClientTest {
             result shouldBeRight expectedResponse
             clientAsserter.verifyTokenFetchRequest(persistedRefreshToken)
             clientAsserter.verifyHomeDataFetchRequest(refreshTokenResponse.accessToken, homeId)
-            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
-            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+            cacheAsserter.verifyCacheEntrySet(
+                NETATMO_ACCESS_TOKEN_CACHE_KEY,
+                refreshTokenResponse.accessToken,
+                expiresSeconds.toDuration(DurationUnit.SECONDS))
+            cacheAsserter.verifyPersistedCacheEntryUpsert(
+                NETATMO_REFRESH_TOKEN_CACHE_KEY,
+                refreshTokenResponse.refreshToken)
         }
     }
 
@@ -162,11 +194,12 @@ class NetatmoClientTest {
         val expectedResponse = aJsonNode()
         val refreshTokenResponse = NetatmoRefreshTokenResponse(
             accessToken = aRandomUniqueString(),
-            refreshToken = aRandomUniqueString()
+            refreshToken = aRandomUniqueString(),
+            expiresIn = expiresSeconds
         )
         val persistedRefreshToken = aRandomUniqueString()
-        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
-        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
+        cacheAsserter.givenMissingEntry(NETATMO_ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntry(NETATMO_REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
         cacheAsserter.givenPersistedCacheEntryUpsertFailure()
         runBlocking {
             clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
@@ -177,8 +210,13 @@ class NetatmoClientTest {
             result shouldBeRight expectedResponse
             clientAsserter.verifyTokenFetchRequest(persistedRefreshToken)
             clientAsserter.verifyHomeDataFetchRequest(refreshTokenResponse.accessToken, homeId)
-            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
-            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+                        cacheAsserter.verifyCacheEntrySet(
+                NETATMO_ACCESS_TOKEN_CACHE_KEY,
+                refreshTokenResponse.accessToken,
+                expiresSeconds.toDuration(DurationUnit.SECONDS))
+            cacheAsserter.verifyPersistedCacheEntryUpsert(
+                NETATMO_REFRESH_TOKEN_CACHE_KEY,
+                refreshTokenResponse.refreshToken)
         }
     }
 
@@ -196,7 +234,7 @@ class NetatmoClientTest {
 
     @Test fun `getHomesData() Returns a failure when fails to fetch persisted token`() {
         val homeId = aRandomUniqueString()
-        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenMissingEntry(NETATMO_ACCESS_TOKEN_CACHE_KEY)
         cacheAsserter.givenPersistedCacheEntryFetchFailure()
         runBlocking {
             val result = sut.getHomesData(homeId)
@@ -223,16 +261,31 @@ class NetatmoClientTest {
         }
     }
 
+    @Test fun `getHomeStatus() Returns a failure and remove cached value when access token is not valid`() {
+        val homeId = aRandomUniqueString()
+        runBlocking {
+            clientAsserter.givenHomeStatusFetchFailure(
+                errorMessage = "Invalid access token",
+                status = Forbidden)
+
+            val result = sut.getHomeStatus(homeId)
+
+            result.shouldBeLeft().shouldBeInstanceOf<NetatmoInvalidAccessToken>()
+            cacheAsserter.verifyCacheEntryRemoval(NETATMO_ACCESS_TOKEN_CACHE_KEY)
+        }
+    }
+
     @Test fun `getHomeStatus() Returns home status and refreshes token when missing in cache`() {
         val homeId = aRandomUniqueString()
         val expectedHomeStatus = aNetatmoHomeStatus()
         val refreshTokenResponse = NetatmoRefreshTokenResponse(
             accessToken = aRandomUniqueString(),
-            refreshToken = aRandomUniqueString()
+            refreshToken = aRandomUniqueString(),
+            expiresIn = expiresSeconds
         )
         val refreshToken = aRandomUniqueString()
-        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
-        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, refreshToken)
+        cacheAsserter.givenMissingEntry(NETATMO_ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntry(NETATMO_REFRESH_TOKEN_CACHE_KEY, refreshToken)
         runBlocking {
             clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
             clientAsserter.givenHomeStatusFetchResponse(expectedHomeStatus)
@@ -242,8 +295,13 @@ class NetatmoClientTest {
             result shouldBeRight expectedHomeStatus
             clientAsserter.verifyTokenFetchRequest(refreshToken)
             clientAsserter.verifyHomeStatusFetchRequest(refreshTokenResponse.accessToken, homeId)
-            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
-            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+                        cacheAsserter.verifyCacheEntrySet(
+                NETATMO_ACCESS_TOKEN_CACHE_KEY,
+                refreshTokenResponse.accessToken,
+                expiresSeconds.toDuration(DurationUnit.SECONDS))
+            cacheAsserter.verifyPersistedCacheEntryUpsert(
+                NETATMO_REFRESH_TOKEN_CACHE_KEY,
+                refreshTokenResponse.refreshToken)
         }
     }
 
@@ -252,11 +310,12 @@ class NetatmoClientTest {
         val expectedHomeStatus = aNetatmoHomeStatus()
         val refreshTokenResponse = NetatmoRefreshTokenResponse(
             accessToken = aRandomUniqueString(),
-            refreshToken = aRandomUniqueString()
+            refreshToken = aRandomUniqueString(),
+            expiresIn = expiresSeconds
         )
         val persistedRefreshToken = aRandomUniqueString()
         cacheAsserter.givenFailingCache()
-        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
+        cacheAsserter.givenPersistedCacheEntry(NETATMO_REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
         runBlocking {
             clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
             clientAsserter.givenHomeStatusFetchResponse(expectedHomeStatus)
@@ -266,8 +325,13 @@ class NetatmoClientTest {
             result shouldBeRight expectedHomeStatus
             clientAsserter.verifyTokenFetchRequest(persistedRefreshToken)
             clientAsserter.verifyHomeStatusFetchRequest(refreshTokenResponse.accessToken, homeId)
-            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
-            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+                        cacheAsserter.verifyCacheEntrySet(
+                NETATMO_ACCESS_TOKEN_CACHE_KEY,
+                refreshTokenResponse.accessToken,
+                expiresSeconds.toDuration(DurationUnit.SECONDS))
+            cacheAsserter.verifyPersistedCacheEntryUpsert(
+                NETATMO_REFRESH_TOKEN_CACHE_KEY,
+                refreshTokenResponse.refreshToken)
         }
     }
 
@@ -276,11 +340,12 @@ class NetatmoClientTest {
         val expectedHomeStatus = aNetatmoHomeStatus()
         val refreshTokenResponse = NetatmoRefreshTokenResponse(
             accessToken = aRandomUniqueString(),
-            refreshToken = aRandomUniqueString()
+            refreshToken = aRandomUniqueString(),
+            expiresIn = expiresSeconds
         )
         val persistedRefreshToken = aRandomUniqueString()
-        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
-        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
+        cacheAsserter.givenMissingEntry(NETATMO_ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntry(NETATMO_REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
         cacheAsserter.givenPersistedCacheEntryUpsertFailure()
         runBlocking {
             clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
@@ -291,8 +356,13 @@ class NetatmoClientTest {
             result shouldBeRight expectedHomeStatus
             clientAsserter.verifyTokenFetchRequest(persistedRefreshToken)
             clientAsserter.verifyHomeStatusFetchRequest(refreshTokenResponse.accessToken, homeId)
-            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
-            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+                        cacheAsserter.verifyCacheEntrySet(
+                NETATMO_ACCESS_TOKEN_CACHE_KEY,
+                refreshTokenResponse.accessToken,
+                expiresSeconds.toDuration(DurationUnit.SECONDS))
+            cacheAsserter.verifyPersistedCacheEntryUpsert(
+                NETATMO_REFRESH_TOKEN_CACHE_KEY,
+                refreshTokenResponse.refreshToken)
         }
     }
 
@@ -310,7 +380,7 @@ class NetatmoClientTest {
 
     @Test fun `getHomeStatus() Returns a failure when fails to fetch persisted token`() {
         val homeId = aRandomUniqueString()
-        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenMissingEntry(NETATMO_ACCESS_TOKEN_CACHE_KEY)
         cacheAsserter.givenPersistedCacheEntryFetchFailure()
         runBlocking {
             val result = sut.getHomeStatus(homeId)
@@ -337,16 +407,31 @@ class NetatmoClientTest {
         }
     }
 
+    @Test fun `setState() Returns a failure and remove cached value when access token is not valid`() {
+        val newStatus = aNetatmoHomeStatusChange()
+        runBlocking {
+            clientAsserter.givenSetStatusFailure(
+                errorMessage = "Invalid access token",
+                status = Forbidden)
+
+            val result = sut.setState(newStatus)
+
+            result.shouldBeLeft().shouldBeInstanceOf<NetatmoInvalidAccessToken>()
+            cacheAsserter.verifyCacheEntryRemoval(NETATMO_ACCESS_TOKEN_CACHE_KEY)
+        }
+    }
+
     @Test fun `setState() Refreshes token when missing in cache`() {
         val newStatus = aNetatmoHomeStatusChange()
         val expectedResponse = aJsonNode()
         val refreshTokenResponse = NetatmoRefreshTokenResponse(
             accessToken = aRandomUniqueString(),
-            refreshToken = aRandomUniqueString()
+            refreshToken = aRandomUniqueString(),
+            expiresIn = expiresSeconds
         )
         val refreshToken = aRandomUniqueString()
-        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
-        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, refreshToken)
+        cacheAsserter.givenMissingEntry(NETATMO_ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntry(NETATMO_REFRESH_TOKEN_CACHE_KEY, refreshToken)
         runBlocking {
             clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
             clientAsserter.givenSetStatusResponse(expectedResponse)
@@ -356,8 +441,13 @@ class NetatmoClientTest {
             result shouldBeRight NetatmoSetStatusSuccess
             clientAsserter.verifyTokenFetchRequest(refreshToken)
             clientAsserter.verifySetStatusRequest(refreshTokenResponse.accessToken, newStatus)
-            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
-            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+                        cacheAsserter.verifyCacheEntrySet(
+                NETATMO_ACCESS_TOKEN_CACHE_KEY,
+                refreshTokenResponse.accessToken,
+                expiresSeconds.toDuration(DurationUnit.SECONDS))
+            cacheAsserter.verifyPersistedCacheEntryUpsert(
+                NETATMO_REFRESH_TOKEN_CACHE_KEY,
+                refreshTokenResponse.refreshToken)
         }
     }
 
@@ -366,11 +456,12 @@ class NetatmoClientTest {
         val expectedResponse = aJsonNode()
         val refreshTokenResponse = NetatmoRefreshTokenResponse(
             accessToken = aRandomUniqueString(),
-            refreshToken = aRandomUniqueString()
+            refreshToken = aRandomUniqueString(),
+            expiresIn = expiresSeconds
         )
         val persistedRefreshToken = aRandomUniqueString()
         cacheAsserter.givenFailingCache()
-        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
+        cacheAsserter.givenPersistedCacheEntry(NETATMO_REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
         runBlocking {
             clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
             clientAsserter.givenSetStatusResponse(expectedResponse)
@@ -380,8 +471,13 @@ class NetatmoClientTest {
             result shouldBeRight NetatmoSetStatusSuccess
             clientAsserter.verifyTokenFetchRequest(persistedRefreshToken)
             clientAsserter.verifySetStatusRequest(refreshTokenResponse.accessToken, newStatus)
-            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
-            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+                        cacheAsserter.verifyCacheEntrySet(
+                NETATMO_ACCESS_TOKEN_CACHE_KEY,
+                refreshTokenResponse.accessToken,
+                expiresSeconds.toDuration(DurationUnit.SECONDS))
+            cacheAsserter.verifyPersistedCacheEntryUpsert(
+                NETATMO_REFRESH_TOKEN_CACHE_KEY,
+                refreshTokenResponse.refreshToken)
         }
     }
 
@@ -390,11 +486,12 @@ class NetatmoClientTest {
         val expectedResponse = aJsonNode()
         val refreshTokenResponse = NetatmoRefreshTokenResponse(
             accessToken = aRandomUniqueString(),
-            refreshToken = aRandomUniqueString()
+            refreshToken = aRandomUniqueString(),
+            expiresIn = expiresSeconds
         )
         val persistedRefreshToken = aRandomUniqueString()
-        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
-        cacheAsserter.givenPersistedCacheEntry(REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
+        cacheAsserter.givenMissingEntry(NETATMO_ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenPersistedCacheEntry(NETATMO_REFRESH_TOKEN_CACHE_KEY, persistedRefreshToken)
         cacheAsserter.givenPersistedCacheEntryUpsertFailure()
         runBlocking {
             clientAsserter.givenTokenFetchResponse(refreshTokenResponse)
@@ -405,8 +502,13 @@ class NetatmoClientTest {
             result shouldBeRight NetatmoSetStatusSuccess
             clientAsserter.verifyTokenFetchRequest(persistedRefreshToken)
             clientAsserter.verifySetStatusRequest(refreshTokenResponse.accessToken, newStatus)
-            cacheAsserter.verifyCacheEntrySet(ACCESS_TOKEN_CACHE_KEY, refreshTokenResponse.accessToken)
-            cacheAsserter.verifyPersistedCacheEntryUpsert(REFRESH_TOKEN_CACHE_KEY, refreshTokenResponse.refreshToken)
+                        cacheAsserter.verifyCacheEntrySet(
+                NETATMO_ACCESS_TOKEN_CACHE_KEY,
+                refreshTokenResponse.accessToken,
+                expiresSeconds.toDuration(DurationUnit.SECONDS))
+            cacheAsserter.verifyPersistedCacheEntryUpsert(
+                NETATMO_REFRESH_TOKEN_CACHE_KEY,
+                refreshTokenResponse.refreshToken)
         }
     }
 
@@ -424,7 +526,7 @@ class NetatmoClientTest {
 
     @Test fun `setState() Returns a failure when fails to fetch persisted token`() {
         val newStatus = aNetatmoHomeStatusChange()
-        cacheAsserter.givenMissingEntry(ACCESS_TOKEN_CACHE_KEY)
+        cacheAsserter.givenMissingEntry(NETATMO_ACCESS_TOKEN_CACHE_KEY)
         cacheAsserter.givenPersistedCacheEntryFetchFailure()
         runBlocking {
             val result = sut.setState(newStatus)

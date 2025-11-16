@@ -9,14 +9,18 @@ import io.kotest.matchers.maps.shouldContainAll
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.ktor.client.engine.mock.toByteArray
+import io.ktor.client.request.HttpRequest
+import io.ktor.client.request.HttpRequestData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpHeaders.Authorization
 import io.ktor.http.HttpMethod.Companion.Get
 import io.ktor.http.HttpMethod.Companion.Post
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.Parameters
 import io.ktor.http.headersOf
+import org.agrfesta.test.mothers.aRandomNonNegativeInt
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.anUrl
 import org.springframework.stereotype.Service
@@ -54,7 +58,7 @@ class NetatmoClientAsserter(
             matcher = { req -> req.method == Post && req.url.encodedPath == "/oauth2/token" },
             responses = arrayOf(
                 ResponseSpec(
-                    content = mapper.writeValueAsString(response),
+                    content = response,
                     status = BadRequest,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
@@ -86,21 +90,33 @@ class NetatmoClientAsserter(
             )
         )
     }
-    fun givenHomeDataFetchFailure() {
-        val expectedResponse = """
+    fun givenHomeDataFetchFailure(
+        accessToken: String? = null,
+        errorMessage: String = aRandomUniqueString(),
+        status: HttpStatusCode = BadRequest,
+        errorCode: Int = aRandomNonNegativeInt()
+    ) {
+        val json = """
             {
-              "error": {
-                "code": 3,
-                "message": "Bad request"
-              }
+                "error": {
+                    "code": $errorCode,
+                    "message": "$errorMessage"
+                }
             }
         """.trimIndent()
+        val matcher: (HttpRequestData) -> Boolean = accessToken?.let {
+            { req ->
+                req.method == Get
+                        && req.url.encodedPath == "/api/homesdata"
+                        && req.headers[Authorization] == "Bearer $accessToken"
+            }
+        } ?: { req -> req.method == Get && req.url.encodedPath == "/api/homesdata" }
         registry.given(
-            matcher = { req -> req.method == Get && req.url.encodedPath == "/api/homesdata" },
+            matcher = matcher,
             responses = arrayOf(
                 ResponseSpec(
-                    content = expectedResponse,
-                    status = BadRequest,
+                    content = json,
+                    status = status,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
             )
@@ -140,21 +156,25 @@ class NetatmoClientAsserter(
             )
         )
     }
-    fun givenHomeStatusFetchFailure() {
-        val expectedResponse = """
+    fun givenHomeStatusFetchFailure(
+        errorMessage: String = aRandomUniqueString(),
+        status: HttpStatusCode = BadRequest,
+        errorCode: Int = aRandomNonNegativeInt()
+    ) {
+        val json = """
             {
-              "error": {
-                "code": 3,
-                "message": "Bad request"
-              }
+                "error": {
+                    "code": $errorCode,
+                    "message": "$errorMessage"
+                }
             }
         """.trimIndent()
         registry.given(
             matcher = { req -> req.method == Get && req.url.encodedPath == "/api/homestatus" },
             responses = arrayOf(
                 ResponseSpec(
-                    content = expectedResponse,
-                    status = BadRequest,
+                    content = json,
+                    status = status,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
             )
@@ -183,21 +203,25 @@ class NetatmoClientAsserter(
             )
         )
     }
-    fun givenSetStatusFailure() {
-        val expectedResponse = """
+    fun givenSetStatusFailure(
+        errorMessage: String = aRandomUniqueString(),
+        status: HttpStatusCode = BadRequest,
+        errorCode: Int = aRandomNonNegativeInt()
+    ) {
+        val json = """
             {
-              "error": {
-                "code": 3,
-                "message": "Bad request"
-              }
+                "error": {
+                    "code": $errorCode,
+                    "message": "$errorMessage"
+                }
             }
         """.trimIndent()
         registry.given(
             matcher = { req -> req.method == Post && req.url.encodedPath == "/api/setstate" },
             responses = arrayOf(
                 ResponseSpec(
-                    content = expectedResponse,
-                    status = BadRequest,
+                    content = json,
+                    status = status,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
             )

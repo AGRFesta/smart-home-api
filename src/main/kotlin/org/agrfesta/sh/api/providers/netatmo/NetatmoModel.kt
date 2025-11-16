@@ -11,7 +11,8 @@ import org.agrfesta.sh.api.domain.failures.Failure
 
 data class NetatmoRefreshTokenResponse(
     @JsonProperty("access_token") val accessToken: String,
-    @JsonProperty("refresh_token") val refreshToken: String
+    @JsonProperty("refresh_token") val refreshToken: String,
+    @JsonProperty("expires_in") val expiresIn: Int
 )
 data class NetatmoAuthFailure(override val exception: Exception): ExceptionFailure
 
