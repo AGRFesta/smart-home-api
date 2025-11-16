@@ -7,10 +7,13 @@ import org.agrfesta.sh.api.domain.failures.ExceptionFailure
 import org.slf4j.Logger
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
+import kotlin.time.Duration
+import kotlin.time.toJavaDuration
 
 interface Cache {
-    fun set(key: String, value: String): CacheResponse
+    fun set(key: String, value: String, ttl: Duration? = null): CacheResponse
     fun get(key: String): Either<CacheFailure, String>
+    fun remove(key: String): Either<CacheFailure, Unit>
 }
 
 sealed interface CacheResponse
@@ -22,8 +25,12 @@ data class CachedValueNotFound(val key: String): CacheFailure
 @Service
 class RedisCache(private val template: RedisTemplate<String, String>): Cache {
 
-    override fun set(key: String, value: String): CacheResponse {
-        template.opsForValue().set(key, value)
+    override fun set(key: String, value: String, ttl: Duration?): CacheResponse {
+        if (ttl != null) {
+            template.opsForValue().set(key, value, ttl.toJavaDuration())
+        } else {
+            template.opsForValue().set(key, value)
+        }
         return CacheOkResponse
     }
 
@@ -31,6 +38,13 @@ class RedisCache(private val template: RedisTemplate<String, String>): Cache {
             ?.right()
             ?: CachedValueNotFound(key).left()
 
+    override fun remove(key: String): Either<CacheFailure, Unit> =
+        try {
+            template.delete(key)
+            Unit.right()
+        } catch (ex: Exception) {
+            CacheError(ex).left()
+        }
 }
 
 fun Either<CacheFailure, String>.onLeftLogOn(logger: Logger) = onLeft {
