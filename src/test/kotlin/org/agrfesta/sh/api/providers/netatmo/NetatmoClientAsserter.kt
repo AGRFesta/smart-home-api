@@ -2,14 +2,12 @@ package org.agrfesta.sh.api.providers.netatmo
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.maps.shouldContainAll
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.ktor.client.engine.mock.toByteArray
-import io.ktor.client.request.HttpRequest
 import io.ktor.client.request.HttpRequestData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpHeaders.Authorization
@@ -20,6 +18,7 @@ import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.Parameters
 import io.ktor.http.headersOf
+import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.test.mothers.aRandomNonNegativeInt
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.anUrl
@@ -35,7 +34,7 @@ class NetatmoClientAsserter(
         roomId = aRandomUniqueString()
     ),
     private val registry: BehaviorRegistry = BehaviorRegistry(),
-    private val mapper: ObjectMapper = jacksonObjectMapper()
+    private val mapper: ObjectMapper = SMART_HOME_OBJECT_MAPPER
 ) {
 
     fun clear() { registry.clear() }
