@@ -15,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.controllers.createMockEngine
 import org.agrfesta.sh.api.domain.commons.Temperature
+import org.agrfesta.sh.api.domain.devices.ActuatorStatus.*
 import org.agrfesta.sh.api.domain.devices.ThermoHygroDataValue
 import org.agrfesta.sh.api.domain.failures.KtorRequestFailure
 import org.agrfesta.sh.api.persistence.CacheDao
@@ -27,6 +28,9 @@ import org.agrfesta.sh.api.providers.netatmo.NetatmoHomeStatusChange
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.providers.netatmo.aNetatmoHomeStatus
 import org.agrfesta.sh.api.providers.netatmo.aNetatmoRoomStatus
+import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoSmarther.Companion.MAX_SET_POINT_TEMPERATURE
+import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoSmarther.Companion.MIN_SET_POINT_TEMPERATURE
+import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoSmarther.Companion.SET_POINT_MODE
 import org.agrfesta.sh.api.services.PersistedCacheService
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.CacheAsserter
@@ -187,6 +191,115 @@ class NetatmoSmartherTest {
             clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
         }
     }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ///// getActuatorStatus() //////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test
+    fun `getActuatorStatus() Returns ON when mode is 'manual' and target temperature is max`() {
+        runBlocking {
+            val homeStatus = aNetatmoHomeStatus(
+                rooms = listOf(
+                    aNetatmoRoomStatus(
+                        setpointMode = SET_POINT_MODE,
+                        setpointTemperature = MAX_SET_POINT_TEMPERATURE,
+                        setpointStartTime = now.minusSeconds(3600),
+                        setpointEndTime = now.plusSeconds(3600)
+                    )
+                )
+            )
+            clientAsserter.givenHomeStatusFetchResponse(homeStatus)
+
+            sut.getActuatorStatus().shouldBeRight() shouldBe ON
+
+            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
+        }
+    }
+
+    @Test
+    fun `getActuatorStatus() Returns OFF when mode is 'manual' and target temperature is min`() {
+        runBlocking {
+            val homeStatus = aNetatmoHomeStatus(
+                rooms = listOf(
+                    aNetatmoRoomStatus(
+                        setpointMode = SET_POINT_MODE,
+                        setpointTemperature = MIN_SET_POINT_TEMPERATURE,
+                        setpointStartTime = now.minusSeconds(3600),
+                        setpointEndTime = now.plusSeconds(3600)
+                    )
+                )
+            )
+            clientAsserter.givenHomeStatusFetchResponse(homeStatus)
+
+            sut.getActuatorStatus().shouldBeRight() shouldBe OFF
+
+            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
+        }
+    }
+
+    @Test
+    fun `getActuatorStatus() Returns UNDEFINED when temperature is not max nor min`() {
+        runBlocking {
+            val homeStatus = aNetatmoHomeStatus(
+                rooms = listOf(
+                    aNetatmoRoomStatus(
+                        setpointMode = SET_POINT_MODE,
+                        setpointTemperature = Temperature("18.0"),
+                        setpointStartTime = now.minusSeconds(3600),
+                        setpointEndTime = now.plusSeconds(3600)
+                    )
+                )
+            )
+            clientAsserter.givenHomeStatusFetchResponse(homeStatus)
+
+            sut.getActuatorStatus().shouldBeRight() shouldBe UNDEFINED
+
+            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
+        }
+    }
+
+    @Test
+    fun `getActuatorStatus() Returns UNDEFINED when mode is not 'manual'`() {
+        runBlocking {
+            val homeStatus = aNetatmoHomeStatus(
+                rooms = listOf(
+                    aNetatmoRoomStatus(
+                        setpointMode = aRandomUniqueString(),
+                        setpointTemperature = MIN_SET_POINT_TEMPERATURE,
+                        setpointStartTime = now.minusSeconds(3600),
+                        setpointEndTime = now.plusSeconds(3600)
+                    )
+                )
+            )
+            clientAsserter.givenHomeStatusFetchResponse(homeStatus)
+
+            sut.getActuatorStatus().shouldBeRight() shouldBe UNDEFINED
+
+            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
+        }
+    }
+
+    @Test
+    fun `getActuatorStatus() Returns UNDEFINED when is actually out of defined temporal range`() {
+        runBlocking {
+            val homeStatus = aNetatmoHomeStatus(
+                rooms = listOf(
+                    aNetatmoRoomStatus(
+                        setpointMode = SET_POINT_MODE,
+                        setpointTemperature = MAX_SET_POINT_TEMPERATURE,
+                        setpointStartTime = now.plusSeconds(3600),
+                        setpointEndTime = now.plusSeconds(7200)
+                    )
+                )
+            )
+            clientAsserter.givenHomeStatusFetchResponse(homeStatus)
+
+            sut.getActuatorStatus().shouldBeRight() shouldBe UNDEFINED
+
+            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
+        }
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     ///// on() /////////////////////////////////////////////////////////////////////////////////////////////////////////
