@@ -6,7 +6,7 @@ import org.agrfesta.sh.api.domain.failures.Failure
 interface Actuator: Device
 
 interface OnOffActuator: Actuator {
-    suspend fun status(): Either<Failure, ActuatorStatus>
+    suspend fun getActuatorStatus(): Either<Failure, ActuatorStatus>
     suspend fun on(): Either<Failure, Unit>
     suspend fun off(): Either<Failure, Unit>
 }
