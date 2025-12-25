@@ -4,15 +4,21 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
+import org.agrfesta.sh.api.domain.areas.AreasFactory
 import org.agrfesta.sh.api.persistence.jdbc.dao.AreasDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.dao.AreasWithDevicesDaoJdbcImpl
+import org.agrfesta.sh.api.persistence.jdbc.dao.TemperatureSettingsDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasWithDevicesJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureSettingRepository
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.sh.api.services.AreasService
+import org.agrfesta.sh.api.services.heating.HeatingAreasService
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.SmartCache
+import org.agrfesta.sh.api.utils.TimeServiceImpl
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -27,9 +33,13 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @ActiveProfiles("test")
 @Import(
     AreasService::class,
+    AreasFactory::class,
     AreasDaoJdbcImpl::class,
     AreasWithDevicesDaoJdbcImpl::class,
+    HeatingAreasService::class,
+    TemperatureSettingsDaoJdbcImpl::class,
     SmartCache::class,
+    TimeServiceImpl::class,
     SecurityConfig::class
 )
 class HomeStatusControllerUnitTest(
@@ -38,7 +48,9 @@ class HomeStatusControllerUnitTest(
     @Autowired @MockkBean private val areasWithDevicesJdbcRepo: AreasWithDevicesJdbcRepository,
     @Autowired @MockkBean private val areasJdbcRepository: AreasJdbcRepository,
     @Autowired @MockkBean private val cache: Cache,
-    @Autowired @MockkBean private val randomGenerator: RandomGenerator
+    @Autowired @MockkBean private val randomGenerator: RandomGenerator,
+    @Autowired @MockkBean private val temperatureSettingRepository: TemperatureSettingRepository,
+    @Autowired @MockkBean private val temperatureIntervalRepository: TemperatureIntervalRepository
 ) {
 
     @Test fun `getHomeStatus() return 401 when auth is missing`() {

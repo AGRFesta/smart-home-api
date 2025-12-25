@@ -1,15 +1,14 @@
 package org.agrfesta.sh.api.controllers
 
-import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
-import org.agrfesta.sh.api.domain.TemperatureInterval
+import org.agrfesta.sh.api.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.domain.aTemperatureInterval
-import org.agrfesta.sh.api.domain.anArea
+import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
@@ -38,7 +37,7 @@ class HeatingAreasControllerIntegrationTest(
     ///// createHeatingSchedule ////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `createHeatingSchedule() return 404 when area is not found`() {
-        val area = anArea()
+        val area = anAreaDto()
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -56,7 +55,7 @@ class HeatingAreasControllerIntegrationTest(
 
     @Test fun `createHeatingSchedule() return 201 when successfully creates area's heating schedule`() {
         val defaultTemperature = aRandomTemperature()
-        val area = anArea()
+        val area = anAreaDto()
         areasDao.save(area)
         val tempIntA = aTemperatureInterval(startTime = aDailyTime(hour = 0), endTime = aDailyTime(hour = 1))
         val tempIntB = aTemperatureInterval(startTime = aDailyTime(hour = 2), endTime = aDailyTime(hour = 3))
@@ -91,7 +90,7 @@ class HeatingAreasControllerIntegrationTest(
 
     @Test fun `createHeatingSchedule() return 400 when an interval overlaps with another`() {
         val defaultTemperature = aRandomTemperature()
-        val area = anArea()
+        val area = anAreaDto()
         areasDao.save(area)
         val tempIntA = aTemperatureInterval(startTime = aDailyTime(hour = 4), endTime = aDailyTime(hour = 7))
         val tempIntB = aTemperatureInterval(startTime = aDailyTime(hour = 5), endTime = aDailyTime(hour = 6))
@@ -121,7 +120,7 @@ class HeatingAreasControllerIntegrationTest(
 
     @Test fun `createHeatingSchedule() return 201 when replaces existing area's heating schedule`() {
         val defaultTemperature = aRandomTemperature()
-        val area = anArea()
+        val area = anAreaDto()
         areasDao.save(area)
         val existingSetting = anAreaTemperatureSetting(
             areaId = area.uuid,
@@ -163,7 +162,7 @@ class HeatingAreasControllerIntegrationTest(
     ///// deleteHeatingSchedule ////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `deleteHeatingSchedule() returns 200 when successfully deletes area's heating schedule`() {
-        val area = anArea()
+        val area = anAreaDto()
         areasDao.save(area)
         val existingSetting = anAreaTemperatureSetting(
             areaId = area.uuid,
@@ -186,7 +185,7 @@ class HeatingAreasControllerIntegrationTest(
     }
 
     @Test fun `deleteHeatingSchedule() returns 404 when area is not found`() {
-        val area = anArea()
+        val area = anAreaDto()
 
         val result = given()
             .authenticated()

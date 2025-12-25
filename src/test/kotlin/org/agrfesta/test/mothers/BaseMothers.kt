@@ -14,6 +14,7 @@ import org.agrfesta.sh.api.domain.commons.RelativeHumidity
 import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.domain.devices.Provider
+import org.agrfesta.sh.api.domain.devices.ThermoHygroDataValue
 import kotlin.random.Random
 
 fun aRandomBoolean(): Boolean = Random.nextBoolean()
@@ -46,6 +47,12 @@ fun aRandomThermoHygroData(
     temperature: Temperature = aRandomTemperature(),
     relativeHumidity: RelativeHumidity = aRandomHumidity()
 ) = ThermoHygroData(temperature, relativeHumidity)
+fun aThermoHygroDataValue(
+    temperature: Temperature = aRandomTemperature(),
+    relativeHumidity: RelativeHumidity = aRandomHumidity()
+) = object : ThermoHygroDataValue {
+    override val thermoHygroData: ThermoHygroData = aRandomThermoHygroData(temperature, relativeHumidity)
+}
 
 fun aRandomHour(): Int = Random.nextInt(24)
 fun aRandomMinute(): Int = Random.nextInt(60)

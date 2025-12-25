@@ -7,7 +7,7 @@ import io.restassured.RestAssured.given
 import io.restassured.common.mapper.TypeRef
 import java.math.BigDecimal
 import org.agrfesta.sh.api.domain.aSensorDataValue
-import org.agrfesta.sh.api.domain.anArea
+import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
@@ -64,11 +64,11 @@ class HomeStatusControllerIntegrationTest(
     }
 
     @Test fun `getHomeStatus() returns areas status`() {
-        val areaA = anArea()
+        val areaA = anAreaDto()
         areasDao.save(areaA)
-        val areaB = anArea()
+        val areaB = anAreaDto()
         areasDao.save(areaB)
-        val areaC = anArea()
+        val areaC = anAreaDto()
         areasDao.save(areaC)
 
         val areaStatuses: Collection<AreaStatusView> = given()
@@ -90,7 +90,7 @@ class HomeStatusControllerIntegrationTest(
 
     @Test fun `getHomeStatus() returns areas status with temperature average if exist`() {
         // Setup Area A
-        val areaA = anArea()
+        val areaA = anAreaDto()
         areasDao.save(areaA)
         val sensorA0Data = aSensorDataValue()
         val sensorA0Id = devicesService.createDevice(sensorA0Data).shouldBeRight()
@@ -105,10 +105,10 @@ class HomeStatusControllerIntegrationTest(
         cache.setThermoHygroOf(sensorA1Data, aRandomThermoHygroData(temperature = BigDecimal("22")))
         cache.setThermoHygroOf(sensorA2Data, aRandomThermoHygroData(temperature = BigDecimal("22")))
         // Setup Area B
-        val areaB = anArea()
+        val areaB = anAreaDto()
         areasDao.save(areaB)
         // Setup Area C
-        val areaC = anArea()
+        val areaC = anAreaDto()
         areasDao.save(areaC)
         val sensorC0Data = aSensorDataValue()
         val sensorC0Id = devicesService.createDevice(sensorC0Data).shouldBeRight()
@@ -134,7 +134,7 @@ class HomeStatusControllerIntegrationTest(
 
     @Test fun `getHomeStatus() ignores missing sensor temperature in cache`() {
         // Setup Area A
-        val areaA = anArea()
+        val areaA = anAreaDto()
         areasDao.save(areaA)
         val sensorA0Data = aSensorDataValue()
         val sensorA0Id = devicesService.createDevice(sensorA0Data).shouldBeRight()
@@ -148,10 +148,10 @@ class HomeStatusControllerIntegrationTest(
         cache.setThermoHygroOf(sensorA1Data, aRandomThermoHygroData(temperature = BigDecimal("20")))
         cache.setThermoHygroOf(sensorA2Data, aRandomThermoHygroData(temperature = BigDecimal("22")))
         // Setup Area B
-        val areaB = anArea()
+        val areaB = anAreaDto()
         areasDao.save(areaB)
         // Setup Area C
-        val areaC = anArea()
+        val areaC = anAreaDto()
         areasDao.save(areaC)
         val sensorC0Data = aSensorDataValue()
         val sensorC0Id = devicesService.createDevice(sensorC0Data).shouldBeRight()

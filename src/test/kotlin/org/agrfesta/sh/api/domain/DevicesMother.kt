@@ -28,6 +28,15 @@ fun aSensor(
     additionalFeatures: Set<DeviceFeature> = emptySet()
 ) = DeviceDto(uuid, status, providerId, provider, name, additionalFeatures + SENSOR)
 
+fun anActuator(
+    uuid: UUID = UUID.randomUUID(),
+    providerId: String = aRandomUniqueString(),
+    provider: Provider = Provider.SWITCHBOT,
+    status: DeviceStatus = DeviceStatus.PAIRED,
+    name: String = aRandomUniqueString(),
+    additionalFeatures: Set<DeviceFeature> = emptySet()
+) = DeviceDto(uuid, status, providerId, provider, name, additionalFeatures + ACTUATOR)
+
 fun aDevice(
     data: DeviceDataValue,
     uuid: UUID = UUID.randomUUID(),

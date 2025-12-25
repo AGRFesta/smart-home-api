@@ -4,7 +4,7 @@ import io.ktor.http.HttpStatusCode
 
 interface Failure
 
-interface MessageFailure: Failure { val message: String }
+data class MessageFailure(val message: String): Failure
 interface ExceptionFailure: Failure { val exception: Exception}
 
 data class KtorRequestFailure(

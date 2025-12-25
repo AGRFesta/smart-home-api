@@ -69,7 +69,8 @@ class NetatmoClient(
      * @param prevRefreshToken previous unused refresh token.
      */
     suspend fun refreshToken(prevRefreshToken: String): Either<NetatmoAuthFailure, NetatmoRefreshTokenResponse> = try {
-            val response = client.submitForm(
+        logger.info("Refreshing Netatmo token...")
+        val response = client.submitForm(
                 url = "${config.baseUrl}/oauth2/token",
                 formParameters = Parameters.build {
                     append("grant_type", "refresh_token")
@@ -97,16 +98,7 @@ class NetatmoClient(
                 }.bodyAsText()
                 mapper.readTree(content).right()
             } catch (e: ClientRequestException) {
-                val body = e.response.body<JsonNode>()
-                val status = e.response.status
-                val errorMessage: String? = body.at("/error/message").asText()
-                if (errorMessage != null && errorMessage == "Invalid access token") {
-                    logger.error("Netatmo access token is not valid!")
-                    cache.remove(NETATMO_ACCESS_TOKEN_CACHE_KEY)
-                    NetatmoInvalidAccessToken.left()
-                } else {
-                    KtorRequestFailure(failureStatusCode = status, body = body.toString()).left()
-                }
+                handleClientRequestException(e).left()
             }
         }
     }
@@ -129,17 +121,7 @@ class NetatmoClient(
                     NetatmoContractBreak("Unexpected home status response", content).left()
                 }
             } catch (e: ClientRequestException) {
-                val body = e.response.body<JsonNode>()
-                val status = e.response.status
-                val errorMessage: String? = body.at("/error/message").asText()
-                if (errorMessage != null && errorMessage == "Invalid access token") {
-                    logger.error("Netatmo access token is not valid!")
-                    cache.remove(NETATMO_ACCESS_TOKEN_CACHE_KEY)
-                    NetatmoInvalidAccessToken.left()
-                } else {
-                    logger.error("Netatmo get home status failure", e) //TODO should not be here
-                    KtorRequestFailure(failureStatusCode = status, body = body.toString()).left()
-                }
+                handleClientRequestException(e).left()
             }
         }
 
@@ -163,18 +145,21 @@ class NetatmoClient(
                 }
                 NetatmoSetStatusSuccess.right()
             } catch (e: ClientRequestException) {
-                val body = e.response.body<JsonNode>()
-                val status = e.response.status
-                val errorMessage: String? = body.at("/error/message").asText()
-                if (errorMessage != null && errorMessage == "Invalid access token") {
-                    logger.error("Netatmo access token is not valid!")
-                    cache.remove(NETATMO_ACCESS_TOKEN_CACHE_KEY)
-                    NetatmoInvalidAccessToken.left()
-                } else {
-                    logger.error("Netatmo set home status failure", e) //TODO should not be here
-                    KtorRequestFailure(failureStatusCode = status, body = body.toString()).left()
-                }
+                handleClientRequestException(e).left()
             }
+        }
+    }
+
+    private suspend fun handleClientRequestException(e: ClientRequestException): Failure {
+        val body = e.response.body<JsonNode>()
+        val status = e.response.status
+        val errorMessage: String? = body.at("/error/message").asText()
+        return if (errorMessage != null && errorMessage == "Invalid access token") {
+            logger.error("Netatmo access token is not valid!")
+            cache.remove(NETATMO_ACCESS_TOKEN_CACHE_KEY)
+            NetatmoInvalidAccessToken
+        } else {
+            KtorRequestFailure(failureStatusCode = status, body = body.toString())
         }
     }
 
