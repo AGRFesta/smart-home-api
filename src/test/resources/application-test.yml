@@ -11,3 +11,4 @@ providers:
     base-url: https://switch-bot.fake
     token: fake-token
     secret: fake-secret
+

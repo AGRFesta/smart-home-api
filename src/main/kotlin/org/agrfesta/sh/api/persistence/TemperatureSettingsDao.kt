@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.persistence
 
 import java.util.*
-import org.agrfesta.sh.api.domain.AreaTemperatureSetting
+import org.agrfesta.sh.api.domain.areas.AreaTemperatureSetting
 
 interface TemperatureSettingsDao {
 

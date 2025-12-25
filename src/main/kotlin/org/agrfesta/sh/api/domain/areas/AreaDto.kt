@@ -1,17 +1,18 @@
-package org.agrfesta.sh.api.domain
+package org.agrfesta.sh.api.domain.areas
 
 import org.agrfesta.sh.api.domain.devices.DeviceDto
 import java.util.UUID
 
-data class Area(
+data class AreaDto(
     val uuid: UUID,
     val name: String,
     val isIndoor: Boolean
 )
 
-data class AreaWithDevices(
+data class AreaDtoWithDevices(
     val uuid: UUID,
     val name: String,
-    val devices: Collection<DeviceDto> = emptyList(),
+    val sensors: Collection<DeviceDto> = emptyList(),
+    val actuators: Collection<DeviceDto> = emptyList(),
     val isIndoor: Boolean
 )

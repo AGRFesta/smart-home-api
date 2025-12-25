@@ -6,17 +6,16 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.verify
 import java.util.*
-import org.agrfesta.sh.api.domain.TemperatureInterval
 import org.agrfesta.sh.api.domain.aTemperatureInterval
-import org.agrfesta.sh.api.domain.anArea
+import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
+import org.agrfesta.sh.api.domain.areas.TemperatureInterval
+import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.persistence.jdbc.dao.TemperatureSettingsDaoJdbcImpl
-import org.agrfesta.sh.api.persistence.jdbc.entities.anAreaEntity
-import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureSettingRepository
 import org.agrfesta.sh.api.security.SecurityConfig
-import org.agrfesta.sh.api.services.HeatingAreasService
+import org.agrfesta.sh.api.services.heating.HeatingAreasService
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.test.mothers.aDailyTime
 import org.agrfesta.test.mothers.aRandomTemperature
@@ -41,19 +40,14 @@ class HeatingAreasControllerUnitTest(
     @Autowired private val objectMapper: ObjectMapper,
     @Autowired @MockkBean private val tempSettingsRepo: TemperatureSettingRepository,
     @Autowired @MockkBean private val tempIntervalsRepo: TemperatureIntervalRepository,
-    @Autowired @MockkBean private val areasJdbcRepository: AreasJdbcRepository,
+    @Autowired @MockkBean private val areaDao: AreaDao,
     @Autowired @MockkBean private val randomGenerator: RandomGenerator
 ) {
-    private val area = anArea()
-    private val areaEntity = anAreaEntity(
-        uuid = area.uuid,
-        name = area.name,
-        isIndoor = area.isIndoor,
-    )
+    private val area = anAreaDto()
     private val uuid = UUID.randomUUID()
 
     init {
-        every { areasJdbcRepository.findAreaById(area.uuid) } returns areaEntity
+        every { areaDao.getAreaById(area.uuid) } returns area
         every { tempSettingsRepo.existsSettingByAreaId(area.uuid) } returns false
         every { tempIntervalsRepo.save(any()) } returns Unit
         every { randomGenerator.uuid() } returns uuid
@@ -319,7 +313,7 @@ class HeatingAreasControllerUnitTest(
 
     @Test fun `deleteHeatingSchedule() returns 500 when is unable to fetch area on db`() {
         val failure = Exception("area fetch failure")
-        every { areasJdbcRepository.findAreaById(area.uuid) } throws failure
+        every { areaDao.getAreaById(area.uuid) } throws failure
 
         val resultContent: String = mockMvc.perform(
             delete("/heating/areas/${area.uuid}")

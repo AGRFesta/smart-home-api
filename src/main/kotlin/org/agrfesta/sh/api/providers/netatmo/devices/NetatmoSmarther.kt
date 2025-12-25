@@ -34,9 +34,9 @@ class NetatmoSmarther(
     override val provider = Provider.NETATMO
 
     companion object {
-        val MIN_SET_POINT_TEMPERATURE = Temperature("7.0")
-        val MAX_SET_POINT_TEMPERATURE = Temperature("40.0")
-        const val SET_POINT_MODE = "manual"
+        internal val MIN_SET_POINT_TEMPERATURE = Temperature("7.0")
+        internal val MAX_SET_POINT_TEMPERATURE = Temperature("40.0")
+        internal const val SET_POINT_MODE = "manual"
     }
 
     override suspend fun fetchReadings(): Either<Failure, SensorReadings> {

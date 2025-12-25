@@ -1,11 +1,8 @@
 package org.agrfesta.sh.api.persistence.jdbc.dao
 
-import arrow.core.Either
-import arrow.core.right
 import java.util.*
-import org.agrfesta.sh.api.domain.AreaTemperatureSetting
-import org.agrfesta.sh.api.domain.TemperatureInterval
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.domain.areas.AreaTemperatureSetting
+import org.agrfesta.sh.api.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureIntervalEntity
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity
