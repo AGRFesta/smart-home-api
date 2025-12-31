@@ -1,5 +1,6 @@
 package org.agrfesta.sh.api.controllers
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -9,6 +10,7 @@ import io.mockk.verify
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.agrfesta.sh.api.domain.commons.CacheEntry
+import org.agrfesta.sh.api.persistence.CacheEntryDto
 import org.agrfesta.sh.api.persistence.jdbc.repositories.CacheJdbcRepository
 import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aRandomTtl
@@ -16,13 +18,15 @@ import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.nowNoMills
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
+import org.springframework.test.context.TestConstructor
 import org.testcontainers.junit.jupiter.Container
 
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class CacheControllerIntegrationTest(
-    @Autowired private val cacheRepository: CacheJdbcRepository,
-    @Autowired @MockkBean private val timeService: TimeService
+    private val cacheRepository: CacheJdbcRepository,
+    private val objectMapper: ObjectMapper,
+    @MockkBean private val timeService: TimeService
 ): AbstractIntegrationTest() {
     private val now = nowNoMills()
 
@@ -41,6 +45,8 @@ class CacheControllerIntegrationTest(
         every { timeService.now() } returns now
     }
 
+    ///// putCacheEntry ////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Test fun `putCacheEntry() insert new entry when key is missing`() {
         val key = aRandomUniqueString()
         val ttl = aRandomTtl()
@@ -58,7 +64,7 @@ class CacheControllerIntegrationTest(
             .extract()
             .`as`(MessageResponse::class.java)
 
-        result.message shouldBe "Inserted key '$key' with value '$value'"
+        result.message shouldBe "Entry for key '$key' upserted successfully"
         val cacheEntry = cacheRepository.findEntry(key).shouldNotBeNull()
         cacheEntry.value shouldBe value
         cacheEntry.expiresAt shouldBe now.plusSeconds(ttl)
@@ -80,7 +86,7 @@ class CacheControllerIntegrationTest(
             .extract()
             .`as`(MessageResponse::class.java)
 
-        result.message shouldBe "Inserted key '$key' with value '$value'"
+        result.message shouldBe "Entry for key '$key' upserted successfully"
         val cacheEntry = cacheRepository.findEntry(key).shouldNotBeNull()
         cacheEntry.value shouldBe value
         cacheEntry.expiresAt.shouldBeNull()
@@ -104,13 +110,15 @@ class CacheControllerIntegrationTest(
             .extract()
             .`as`(MessageResponse::class.java)
 
-        result.message shouldBe "Inserted key '$key' with value '$value'"
+        result.message shouldBe "Entry for key '$key' upserted successfully"
         val cacheEntry = cacheRepository.findEntry(key).shouldNotBeNull()
         cacheEntry.value shouldBe value
         cacheEntry.expiresAt shouldBe now.plusSeconds(ttl)
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ///// getCacheEntry ////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `getCacheEntry() return 404 when key is missing`() {
         val key = aRandomUniqueString()
@@ -171,4 +179,51 @@ class CacheControllerIntegrationTest(
         cacheEntry shouldBe result
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ///// postCacheBatch ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test fun `postCacheBatch() returns 200 when successfully upserts all entries`() {
+        val key1 = aRandomUniqueString()
+        val value1 = aRandomUniqueString()
+        val ttl1 = aRandomTtl()
+        val key2 = aRandomUniqueString()
+        val value2 = aRandomUniqueString()
+        val ttl2 = aRandomTtl()
+        val key3 = aRandomUniqueString()
+        val value3 = aRandomUniqueString()
+        val batchEntries = listOf(
+            CacheEntryDto(key1, value1, ttl1),
+            CacheEntryDto(key2, value2, ttl2),
+            CacheEntryDto(key3, value3)
+        )
+        cacheRepository.findEntry(key1).shouldBeNull()
+        cacheRepository.upsert(key2, aRandomUniqueString(), aRandomTtl()) // key2 is already in cache
+        cacheRepository.findEntry(key2).shouldNotBeNull()
+        cacheRepository.findEntry(key3).shouldBeNull()
+
+        val result = given()
+            .contentType(ContentType.JSON)
+            .authenticated()
+            .body(objectMapper.writeValueAsString(batchEntries))
+            .`when`()
+            .post("/cache/batch")
+            .then()
+            .statusCode(200)
+            .extract()
+            .`as`(MessageResponse::class.java)
+
+        result.message shouldBe "Successfully persisted ${batchEntries.size} entries"
+        val entry1 = cacheRepository.findEntry(key1).shouldNotBeNull()
+        entry1.value shouldBe value1
+        entry1.expiresAt shouldBe now.plusSeconds(ttl1)
+        val entry2 = cacheRepository.findEntry(key2).shouldNotBeNull()
+        entry2.value shouldBe value2 // verify updated value
+        entry2.expiresAt shouldBe now.plusSeconds(ttl2) // verify updated ttl
+        val entry3 = cacheRepository.findEntry(key3).shouldNotBeNull()
+        entry3.value shouldBe value3
+        entry3.expiresAt.shouldBeNull()
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
