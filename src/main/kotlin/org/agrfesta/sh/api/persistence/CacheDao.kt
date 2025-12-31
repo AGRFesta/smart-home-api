@@ -5,6 +5,8 @@ import org.agrfesta.sh.api.domain.commons.CacheEntry
 interface CacheDao {
     fun upsert(key: String, value: String, ttl: Long? = null)
 
+    fun upsertBatch(entries: List<CacheEntryDto>)
+
     fun findEntry(key: String): CacheEntry?
 
     /**

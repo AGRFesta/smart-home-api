@@ -8,6 +8,7 @@ import org.agrfesta.sh.api.domain.failures.GetPersistedCacheEntryFailure
 import org.agrfesta.sh.api.domain.failures.PersistedCacheEntryNotFound
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.CacheDao
+import org.agrfesta.sh.api.persistence.CacheEntryDto
 import org.agrfesta.sh.api.persistence.PersistedCacheEntryNotFoundException
 import org.springframework.stereotype.Service
 
@@ -18,6 +19,12 @@ class PersistedCacheService(
 
     fun upsert(key: String, value: String, ttl: Long? = null): Either<PersistenceFailure, Unit> = try {
         cacheDao.upsert(key, value, ttl).right()
+    } catch (e: Exception) {
+        PersistenceFailure(e).left()
+    }
+
+    fun upsertBatch(batch: List<CacheEntryDto>): Either<PersistenceFailure, Unit> = try {
+        cacheDao.upsertBatch(batch).right()
     } catch (e: Exception) {
         PersistenceFailure(e).left()
     }
