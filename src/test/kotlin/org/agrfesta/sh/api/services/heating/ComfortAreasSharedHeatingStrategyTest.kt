@@ -30,7 +30,7 @@ class ComfortAreasSharedHeatingStrategyTest {
     }
     private val areas = listOf(areaB, areaC, areaA)
 
-    private val sut = ComfortAreasSharedHeatingStrategy()
+    private val sut = ComfortAreasSharedHeatingStrategyService()
 
 
     @Test

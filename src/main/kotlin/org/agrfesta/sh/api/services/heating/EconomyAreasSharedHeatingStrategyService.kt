@@ -9,11 +9,10 @@ import org.agrfesta.sh.api.domain.devices.Heater
 import org.agrfesta.sh.api.schedulers.HeatingControlScheduler.Companion.HYSTERESIS
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
 /**
- * Implementation of [AbstractSharedHeatingAreasStrategy] that optimizes heating for economy.
+ * Implementation of [AbstractSharedHeatingAreasStrategyService] that optimizes heating for economy.
  *
  * This strategy controls a shared heater based on the aggregate demand of multiple areas.
  * The heater is turned ON only if the percentage of areas requiring heating meets or exceeds
@@ -22,16 +21,16 @@ import org.springframework.stereotype.Service
  * Additionally, to prevent overheating, the heater is forced OFF if any single area exceeds
  * its target temperature by the defined hysteresis margin.
  *
- * Activated when `heating.strategy` is set to `ECONOMY`.
+ * It corresponds to the [SharedHeatingAreasStrategy.ECONOMY] strategy.
  *
  * @property percentage The minimum percentage of areas that must require heating to turn the shared heater on.
  */
 @Service
-@ConditionalOnProperty(name = ["heating.strategy"], havingValue = "ECONOMY")
-class EconomyAreasSharedHeatingStrategy(
-    @param:Value("\${heating.params.economy-areas-percentage}") private val percentage: Percentage
-): AbstractSharedHeatingAreasStrategy() {
+class EconomyAreasSharedHeatingStrategyService(
+    @param:Value("\${heating.params.economy-areas-percentage:0.5}") private val percentage: Percentage
+): NamedSharedHeatingAreasStrategyService, AbstractSharedHeatingAreasStrategyService() {
     private val logger by LoggerDelegate()
+    override val strategy: SharedHeatingAreasStrategy = SharedHeatingAreasStrategy.ECONOMY
 
     override suspend fun internalHandleHeatingFor(
         sharedHeater: Heater,
