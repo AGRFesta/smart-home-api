@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import org.agrfesta.sh.api.domain.commons.CacheEntry
+import org.agrfesta.sh.api.domain.failures.FindPersistedCacheEntryFailure
 import org.agrfesta.sh.api.domain.failures.GetPersistedCacheEntryFailure
 import org.agrfesta.sh.api.domain.failures.PersistedCacheEntryNotFound
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
@@ -33,6 +34,14 @@ class PersistedCacheService(
         cacheDao.getEntry(key).right()
     } catch (e: PersistedCacheEntryNotFoundException) {
         PersistedCacheEntryNotFound.left()
+    } catch (e: Exception) {
+        PersistenceFailure(e).left()
+    }
+
+    fun findEntry(key: String): Either<FindPersistedCacheEntryFailure, CacheEntry?> = try {
+        cacheDao.getEntry(key).right()
+    } catch (e: PersistedCacheEntryNotFoundException) {
+        null.right()
     } catch (e: Exception) {
         PersistenceFailure(e).left()
     }

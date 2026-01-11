@@ -34,7 +34,7 @@ class EconomyAreasSharedHeatingStrategyTest {
     }
     private val areas = listOf(areaB, areaC, areaA)
 
-    private val sut = EconomyAreasSharedHeatingStrategy(percentage)
+    private val sut = EconomyAreasSharedHeatingStrategyService(percentage)
 
     @Test
     fun `handleHeatingFor() Do nothing when there are no areas`() {

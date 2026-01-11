@@ -15,7 +15,9 @@ import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.controllers.createMockEngine
 import org.agrfesta.sh.api.domain.commons.Temperature
-import org.agrfesta.sh.api.domain.devices.ActuatorStatus.*
+import org.agrfesta.sh.api.domain.devices.ActuatorStatus.OFF
+import org.agrfesta.sh.api.domain.devices.ActuatorStatus.ON
+import org.agrfesta.sh.api.domain.devices.ActuatorStatus.UNDEFINED
 import org.agrfesta.sh.api.domain.devices.ThermoHygroDataValue
 import org.agrfesta.sh.api.domain.failures.KtorRequestFailure
 import org.agrfesta.sh.api.persistence.CacheDao
