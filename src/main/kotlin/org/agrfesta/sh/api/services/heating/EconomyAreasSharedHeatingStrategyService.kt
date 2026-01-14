@@ -54,8 +54,12 @@ class EconomyAreasSharedHeatingStrategyService(
         val neededHeatingPerc = Percentage(BigDecimal(areasToHeat.size)
             .divide(BigDecimal(areas.size), 2, RoundingMode.HALF_UP))
         if (neededHeatingPerc.value >= percentage.value) {
+            logger.info("${neededHeatingPerc.toHundreds()} of the heatable areas require heating. " +
+                    "(above ${percentage.toHundreds()}) -> heater ON")
             sharedHeater.on()
         } else {
+            logger.info("${neededHeatingPerc.toHundreds()} of the heatable areas require heating. " +
+                    "(below ${percentage.toHundreds()}) -> heater OFF")
             sharedHeater.off()
         }
     }
