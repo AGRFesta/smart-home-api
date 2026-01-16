@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
+import org.agrfesta.sh.api.configuration.TimeConfiguration
 import org.agrfesta.sh.api.domain.areas.AreasFactory
 import org.agrfesta.sh.api.persistence.jdbc.dao.AreasDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.dao.AreasWithDevicesDaoJdbcImpl
@@ -40,6 +41,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
     TemperatureSettingsDaoJdbcImpl::class,
     SmartCache::class,
     TimeServiceImpl::class,
+    TimeConfiguration::class,
     SecurityConfig::class
 )
 class HomeStatusControllerUnitTest(

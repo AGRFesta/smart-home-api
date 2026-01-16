@@ -35,7 +35,7 @@ class NetatmoSmarther(
 
     companion object {
         internal val MIN_SET_POINT_TEMPERATURE = Temperature("7.0")
-        internal val MAX_SET_POINT_TEMPERATURE = Temperature("40.0")
+        internal val MAX_SET_POINT_TEMPERATURE = Temperature("30.0")
         internal const val SET_POINT_MODE = "manual"
     }
 

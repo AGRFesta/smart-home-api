@@ -10,6 +10,8 @@ import io.ktor.http.HttpHeaders.Authorization
 import io.ktor.http.HttpMethod.Companion.Post
 import io.mockk.every
 import io.mockk.mockk
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
@@ -37,7 +39,6 @@ import org.agrfesta.sh.api.services.PersistedCacheService
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.CacheAsserter
 import org.agrfesta.sh.api.utils.TimeService
-import org.agrfesta.sh.api.utils.generateNoNanosInstant
 import org.agrfesta.test.mothers.aJsonNode
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -384,5 +385,5 @@ class NetatmoSmartherTest {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+    private fun generateNoNanosInstant(): Instant = Instant.now().truncatedTo(ChronoUnit.MILLIS)
 }
