@@ -14,3 +14,5 @@ fun Collection<Temperature>.average(): Temperature? {
         .stripTrailingZeros().toPlainString()
     return BigDecimal(average)
 }
+
+fun temperatureOf(value: String) = Temperature(value)

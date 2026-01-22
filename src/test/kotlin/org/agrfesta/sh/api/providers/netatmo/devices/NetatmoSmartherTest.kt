@@ -10,6 +10,8 @@ import io.ktor.http.HttpHeaders.Authorization
 import io.ktor.http.HttpMethod.Companion.Post
 import io.mockk.every
 import io.mockk.mockk
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
@@ -37,7 +39,6 @@ import org.agrfesta.sh.api.services.PersistedCacheService
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.CacheAsserter
 import org.agrfesta.sh.api.utils.TimeService
-import org.agrfesta.sh.api.utils.generateNoNanosInstant
 import org.agrfesta.test.mothers.aJsonNode
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -307,7 +308,7 @@ class NetatmoSmartherTest {
     ///// on() /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
-    fun `on() Sets setpoint with temperature of 40 degree for one hour`() {
+    fun `on() Sets setpoint with temperature of 30 degree for one hour`() {
         runBlocking {
             val expectedEndTime = now.plusSeconds(3600)
             clientAsserter.givenSetStatusResponse(aJsonNode())
@@ -325,7 +326,7 @@ class NetatmoSmartherTest {
                 requestedStatus.id shouldBe config.homeId
                 requestedStatus.rooms.shouldHaveSize(1).first().apply {
                     id shouldBe config.roomId
-                    setPointTemperature shouldBe Temperature("40.0")
+                    setPointTemperature shouldBe Temperature("30")
                     setPointEndTime shouldBe expectedEndTime
                     setPointMode shouldBe "manual"
                 }
@@ -365,7 +366,7 @@ class NetatmoSmartherTest {
                 requestedStatus.id shouldBe config.homeId
                 requestedStatus.rooms.shouldHaveSize(1).first().apply {
                     id shouldBe config.roomId
-                    setPointTemperature shouldBe Temperature("7.0")
+                    setPointTemperature shouldBe Temperature("7")
                     setPointEndTime shouldBe expectedEndTime
                     setPointMode shouldBe "manual"
                 }
@@ -384,5 +385,5 @@ class NetatmoSmartherTest {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+    private fun generateNoNanosInstant(): Instant = Instant.now().truncatedTo(ChronoUnit.MILLIS)
 }

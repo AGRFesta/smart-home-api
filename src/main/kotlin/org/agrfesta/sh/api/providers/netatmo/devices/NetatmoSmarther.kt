@@ -21,6 +21,7 @@ import org.agrfesta.sh.api.providers.netatmo.NetatmoClient
 import org.agrfesta.sh.api.providers.netatmo.NetatmoContractBreak
 import org.agrfesta.sh.api.providers.netatmo.NetatmoHomeStatusChange
 import org.agrfesta.sh.api.providers.netatmo.NetatmoRoomStatusChange
+import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.utils.TimeService
 
 class NetatmoSmarther(
@@ -31,11 +32,12 @@ class NetatmoSmarther(
     private val client: NetatmoClient,
     private val timeService: TimeService
 ): Sensor, Heater {
+    private val logger by LoggerDelegate()
     override val provider = Provider.NETATMO
 
     companion object {
-        internal val MIN_SET_POINT_TEMPERATURE = Temperature("7.0")
-        internal val MAX_SET_POINT_TEMPERATURE = Temperature("40.0")
+        internal val MIN_SET_POINT_TEMPERATURE = Temperature("7")
+        internal val MAX_SET_POINT_TEMPERATURE = Temperature("30")
         internal const val SET_POINT_MODE = "manual"
     }
 
@@ -63,6 +65,11 @@ class NetatmoSmarther(
                 else -> UNDEFINED
             }
         } else UNDEFINED
+    }.also {
+        it.fold(
+            ifLeft = { logger.error("NetatmoSmarther '$uuid' status fetch FAILED") },
+            ifRight = { status -> logger.info("NetatmoSmarther '$uuid' is in status $status") }
+        )
     }
 
     private fun Instant.greaterEqualThan(other: Instant?) = other?.let { this >= it } ?: true

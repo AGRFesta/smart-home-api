@@ -2,13 +2,17 @@ package org.agrfesta.sh.api.providers.netatmo
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode.Companion.Forbidden
 import io.mockk.mockk
+import java.math.BigDecimal
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.controllers.createMockEngine
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.failures.KtorRequestFailure
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.CacheDao

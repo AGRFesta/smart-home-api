@@ -123,7 +123,7 @@ class HeatableAreaImpl(
             ifLeft = {null},
             ifRight = {
                 it?.temperatureSchedule
-                    ?.firstNotNullOfOrNull { i -> i.temperatureAt(timeService.now()) }
+                    ?.firstNotNullOfOrNull { i -> i.temperatureAt(timeService.currentLocalTime()) }
                     ?: it?.defaultTemperature
             }
         )
