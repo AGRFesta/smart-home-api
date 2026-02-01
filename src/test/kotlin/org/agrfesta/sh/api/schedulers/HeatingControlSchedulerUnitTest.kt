@@ -15,10 +15,9 @@ import org.agrfesta.sh.api.domain.anActuator
 import org.agrfesta.sh.api.domain.anAreaDtoWithDevices
 import org.agrfesta.sh.api.domain.areas.AreaDtoWithDevices
 import org.agrfesta.sh.api.domain.areas.AreasFactory
-import org.agrfesta.sh.api.domain.areas.HeatableArea
 import org.agrfesta.sh.api.domain.commons.CacheEntry
+import org.agrfesta.sh.api.domain.commons.SharedHeaterContext
 import org.agrfesta.sh.api.domain.devices.DeviceDto
-import org.agrfesta.sh.api.domain.devices.Heater
 import org.agrfesta.sh.api.domain.devices.Sensor
 import org.agrfesta.sh.api.domain.devices.SharedHeater
 import org.agrfesta.sh.api.domain.failures.PersistedCacheEntryNotFound
@@ -333,16 +332,17 @@ class HeatingControlSchedulerUnitTest {
     private fun Pair<AreaDtoWithDevices, SharedHeater>.verifyHandledBy(
         strategy: NamedSharedHeatingAreasStrategyService
     ) {
-        val heaterSlot = slot<Heater>()
-        val areasSlot = slot<Collection<HeatableArea>>()
-        coVerify(exactly = 1) { strategy.handleHeatingFor(capture(heaterSlot), capture(areasSlot)) }
-        heaterSlot.captured shouldBe second
-        areasSlot.captured.map { it.uuid }.shouldContainExactlyInAnyOrder(first.uuid)
+        val contextSlot = slot<SharedHeaterContext>()
+
+        coVerify(exactly = 1) { strategy.handleHeatingFor(capture(contextSlot)) }
+        val capturedContext = contextSlot.captured
+        capturedContext.heater shouldBe second
+        capturedContext.areas.map { it.uuid }.shouldContainExactlyInAnyOrder(first.uuid)
     }
 
     private fun verifyStrategiesNoInteractions() {
-        coVerify(exactly = 0) { economyStrategy.handleHeatingFor(any(), any()) }
-        coVerify(exactly = 0) { comfortStrategy.handleHeatingFor(any(), any()) }
+        coVerify(exactly = 0) { economyStrategy.handleHeatingFor(any()) }
+        coVerify(exactly = 0) { comfortStrategy.handleHeatingFor(any()) }
     }
 
     private fun DeviceDto.toSensorMockk(): Sensor {

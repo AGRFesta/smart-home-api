@@ -8,10 +8,14 @@ import java.math.BigDecimal
 import org.agrfesta.sh.api.domain.areas.HeatableArea
 import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.failures.MessageFailure
-import org.agrfesta.sh.api.schedulers.HeatingControlScheduler.Companion.HYSTERESIS
 import org.agrfesta.test.mothers.aRandomTemperature
 
-fun HeatableArea.hasTempAsTarget(): Temperature {
+data class HeatingAreaContext(
+    val hysteresis: BigDecimal,
+    val area: HeatableArea
+)
+
+fun HeatingAreaContext.hasTempAsTarget(): Temperature {
     val temperature = aRandomTemperature()
     defineTempStatus(temperature, temperature)
     return temperature
@@ -27,35 +31,35 @@ fun HeatableArea.hasNoTargetTemp() {
     every { getCurrentTargetTemperature() } returns null
 }
 
-fun HeatableArea.hasTempAboveTargetRange(): Pair<Temperature, Temperature> {
+fun HeatingAreaContext.hasTempAboveTargetRange(): Pair<Temperature, Temperature> {
     val temperature = aRandomTemperature()
-    val targetTemperature = temperature.minus(HYSTERESIS.multiply(BigDecimal.TWO))
+    val targetTemperature = temperature.minus(hysteresis.multiply(BigDecimal.TWO))
     defineTempStatus(temperature, targetTemperature)
     return temperature to targetTemperature
 }
 
-fun HeatableArea.hasTempBelowTargetRange(): Pair<Temperature, Temperature> {
+fun HeatingAreaContext.hasTempBelowTargetRange(): Pair<Temperature, Temperature> {
     val temperature = aRandomTemperature()
-    val targetTemperature = temperature.plus(HYSTERESIS.multiply(BigDecimal.TWO))
+    val targetTemperature = temperature.plus(hysteresis.multiply(BigDecimal.TWO))
     defineTempStatus(temperature, targetTemperature)
     return temperature to targetTemperature
 }
 
-fun HeatableArea.hasTempInTargetRangeAboveTarget(): Pair<Temperature, Temperature> {
+fun HeatingAreaContext.hasTempInTargetRangeAboveTarget(): Pair<Temperature, Temperature> {
     val temperature = aRandomTemperature()
-    val targetTemperature = temperature.minus(HYSTERESIS.divide(BigDecimal.TWO))
+    val targetTemperature = temperature.minus(hysteresis.divide(BigDecimal.TWO))
     defineTempStatus(temperature, targetTemperature)
     return temperature to targetTemperature
 }
 
-fun HeatableArea.hasTempInTargetRangeBelowTarget(): Pair<Temperature, Temperature> {
+fun HeatingAreaContext.hasTempInTargetRangeBelowTarget(): Pair<Temperature, Temperature> {
     val temperature = aRandomTemperature()
-    val targetTemperature = temperature.plus(HYSTERESIS.divide(BigDecimal.TWO))
+    val targetTemperature = temperature.plus(hysteresis.divide(BigDecimal.TWO))
     defineTempStatus(temperature, targetTemperature)
     return temperature to targetTemperature
 }
 
-private fun HeatableArea.defineTempStatus(currentTemp: Temperature, targetTemp: Temperature) {
-    coEvery { getCurrentTemperature() } returns currentTemp.right()
-    every { getCurrentTargetTemperature() } returns targetTemp
+private fun HeatingAreaContext.defineTempStatus(currentTemp: Temperature, targetTemp: Temperature) {
+    coEvery { area.getCurrentTemperature() } returns currentTemp.right()
+    every { area.getCurrentTargetTemperature() } returns targetTemp
 }

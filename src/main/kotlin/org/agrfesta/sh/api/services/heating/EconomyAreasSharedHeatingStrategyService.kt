@@ -4,9 +4,8 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import org.agrfesta.sh.api.domain.areas.HeatableArea
 import org.agrfesta.sh.api.domain.commons.Percentage
+import org.agrfesta.sh.api.domain.commons.SharedHeaterContext
 import org.agrfesta.sh.api.domain.commons.Temperature
-import org.agrfesta.sh.api.domain.devices.Heater
-import org.agrfesta.sh.api.schedulers.HeatingControlScheduler.Companion.HYSTERESIS
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -27,40 +26,39 @@ import org.springframework.stereotype.Service
  */
 @Service
 class EconomyAreasSharedHeatingStrategyService(
+    private val heatingConfiguration: HeatingConfiguration,
+    private val heatingService: HeatingService,
     @param:Value("\${heating.params.economy-areas-percentage:0.5}") private val percentage: Percentage
-): NamedSharedHeatingAreasStrategyService, AbstractSharedHeatingAreasStrategyService() {
+): NamedSharedHeatingAreasStrategyService {
     private val logger by LoggerDelegate()
     override val strategy: SharedHeatingAreasStrategy = SharedHeatingAreasStrategy.ECONOMY
 
-    override suspend fun internalHandleHeatingFor(
-        sharedHeater: Heater,
-        areas: Collection<HeatableArea>
-    ) {
-        val enoughHeatingArea = areas.firstOrNull { a ->
+    override suspend fun handleHeatingFor(context: SharedHeaterContext) {
+        val enoughHeatingArea = context.areas.firstOrNull { a ->
             a.getCurrentTargetTemperature()?.let { target ->
                 a.tempAboveTargetRange(target)
             } ?: false
         }
         if (enoughHeatingArea != null) {
             logger.info("Area ${enoughHeatingArea.uuid} temp is above target range, turning heater OFF")
-            sharedHeater.off()
+            context.heater.off()
             return
         }
-        val areasToHeat = areas.filter { a ->
+        val areasToHeat = context.areas.filter { a ->
             a.getCurrentTargetTemperature()
-                ?.let { a.requiresHeatingFor(it) }
+                ?.let { heatingService.requiresHeatingFor(a, it) }
                 ?: false
         }
         val neededHeatingPerc = Percentage(BigDecimal(areasToHeat.size)
-            .divide(BigDecimal(areas.size), 2, RoundingMode.HALF_UP))
+            .divide(BigDecimal(context.areas.size), 2, RoundingMode.HALF_UP))
         if (neededHeatingPerc.value >= percentage.value) {
             logger.info("${neededHeatingPerc.toHundreds()} of the heatable areas require heating. " +
                     "(above ${percentage.toHundreds()}) -> heater ON")
-            sharedHeater.on()
+            context.heater.on()
         } else {
             logger.info("${neededHeatingPerc.toHundreds()} of the heatable areas require heating. " +
                     "(below ${percentage.toHundreds()}) -> heater OFF")
-            sharedHeater.off()
+            context.heater.off()
         }
     }
 
@@ -70,6 +68,6 @@ class EconomyAreasSharedHeatingStrategyService(
                 logger.error("Unable to fetch current temperature for Area '$uuid'.")
                 false
             },
-            ifRight = { temp -> temp > targetTemp.plus(HYSTERESIS) }
+            ifRight = { temp -> temp > targetTemp.plus(heatingConfiguration.hysteresis) }
         )
 }

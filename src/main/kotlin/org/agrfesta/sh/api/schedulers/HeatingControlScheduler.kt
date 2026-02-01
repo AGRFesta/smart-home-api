@@ -1,8 +1,10 @@
 package org.agrfesta.sh.api.schedulers
 
-import java.math.BigDecimal
+import arrow.core.Either.Companion.catch
+import arrow.core.toNonEmptySetOrNone
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.domain.areas.HeatableArea
+import org.agrfesta.sh.api.domain.commons.SharedHeaterContext
 import org.agrfesta.sh.api.domain.devices.Heater
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.services.AreasService
@@ -32,10 +34,6 @@ class HeatingControlScheduler(
     private val logger by LoggerDelegate()
 
     companion object {
-        /**
-         * The global temperature hysteresis (1.0 degree) used to prevent rapid toggling of heaters.
-         */
-        val HYSTERESIS: BigDecimal = BigDecimal.ONE
         const val HEATING_ENABLED_KEY = "heating.enabled"
     }
 
@@ -61,8 +59,10 @@ class HeatingControlScheduler(
                 areasService.getAllAreas(devicesRegistry).filterIsInstance<HeatableArea>()
                     .also { areas -> logger.info("Found ${areas.size} HeatableArea") }
                     .groupBy { a -> a.heater }
-                    .forEach { (heater, areas) -> runBlocking {
-                        strategy.handleHeatingFor(heater, areas) }
+                    .entries
+                    .mapNotNull { (heater, areas) -> buildSharedHeaterContext(heater, areas.toSet()) }
+                    .forEach {
+                        context -> runBlocking { strategy.handleHeatingFor(context) }
                     }
             }
             .onLeft {
@@ -70,6 +70,39 @@ class HeatingControlScheduler(
             }
         logger.info("[SCHEDULED TASK] end heating control")
     }
+
+    private fun List<HeatableArea>.toSet(): Set<HeatableArea> =
+        sortedBy { it.uuid }.fold(mutableSetOf()) { acc, area ->
+            if (acc.none { it.uuid == area.uuid }) {
+                acc.add(area)
+            }
+            acc
+        }
+
+    private fun buildSharedHeaterContext(sharedHeater: Heater, areas: Set<HeatableArea>): SharedHeaterContext? {
+        return areas.toNonEmptySetOrNone().fold(
+                ifEmpty = {
+                    logger.warn("There are no areas! Skipping heating control task.")
+                    null
+                },
+                ifSome = {
+
+                    catch {
+                        SharedHeaterContext(
+                            heater = sharedHeater,
+                            areas = it
+                        )
+                    }.fold(
+                        ifLeft = { failure ->
+                            logger.error(failure.message, failure)
+                            null
+                        },
+                        ifRight = { context -> context }
+                    )
+
+                }
+            )
+        }
 
     private fun isEnabled(): Boolean = persistedCacheService.findEntry(HEATING_ENABLED_KEY).fold(
             ifLeft = {

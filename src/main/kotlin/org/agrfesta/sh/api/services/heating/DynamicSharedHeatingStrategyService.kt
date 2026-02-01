@@ -1,10 +1,10 @@
 package org.agrfesta.sh.api.services.heating
 
-import org.agrfesta.sh.api.domain.areas.HeatableArea
-import org.agrfesta.sh.api.domain.devices.Heater
+import org.agrfesta.sh.api.domain.commons.SharedHeaterContext
 import org.agrfesta.sh.api.domain.failures.PersistedCacheEntryNotFound
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.services.PersistedCacheService
+import org.agrfesta.sh.api.services.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -34,10 +34,7 @@ class DynamicSharedHeatingStrategyService(
         const val HEATING_STRATEGY_KEY = "heating.strategy"
     }
 
-    override suspend fun handleHeatingFor(
-        sharedHeater: Heater,
-        areas: Collection<HeatableArea>
-    ) {
+    override suspend fun handleHeatingFor(context: SharedHeaterContext) {
         val strategy = getStrategy()
         val service = when {
             servicesByStrategy.containsKey(strategy) -> servicesByStrategy[strategy]
@@ -48,11 +45,11 @@ class DynamicSharedHeatingStrategyService(
             }
             else -> {
                 logger.error("Default strategy '${defaultStrategy.name}' is also missing. " +
-                        "Skipping heating control for heater ${sharedHeater.uuid}")
+                        "Skipping heating control for heater ${context.heater.uuid}")
                 null
             }
         }
-        service?.handleHeatingFor(sharedHeater, areas)
+        service?.handleHeatingFor(context)
     }
 
     private fun getStrategy(): SharedHeatingAreasStrategy = persistedCacheService.getEntry(HEATING_STRATEGY_KEY).fold(

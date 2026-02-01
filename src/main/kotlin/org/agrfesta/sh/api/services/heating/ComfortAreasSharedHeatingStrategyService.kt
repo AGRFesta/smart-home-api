@@ -1,7 +1,6 @@
 package org.agrfesta.sh.api.services.heating
 
-import org.agrfesta.sh.api.domain.areas.HeatableArea
-import org.agrfesta.sh.api.domain.devices.Heater
+import org.agrfesta.sh.api.domain.commons.SharedHeaterContext
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.stereotype.Service
 
@@ -14,26 +13,24 @@ import org.springframework.stereotype.Service
  * It corresponds to the [SharedHeatingAreasStrategy.COMFORT] strategy.
  */
 @Service
-class ComfortAreasSharedHeatingStrategyService: NamedSharedHeatingAreasStrategyService,
-    AbstractSharedHeatingAreasStrategyService() {
+class ComfortAreasSharedHeatingStrategyService(
+    private val heatingService: HeatingService
+): NamedSharedHeatingAreasStrategyService {
     private val logger by LoggerDelegate()
     override val strategy: SharedHeatingAreasStrategy = SharedHeatingAreasStrategy.COMFORT
 
-    override suspend fun internalHandleHeatingFor(
-        sharedHeater: Heater,
-        areas: Collection<HeatableArea>
-    ) {
-        val areasToHeat = areas.filter { a ->
+    override suspend fun handleHeatingFor(context: SharedHeaterContext) {
+        val areasToHeat = context.areas.filter { a ->
             a.getCurrentTargetTemperature()
-                ?.let { a.requiresHeatingFor(it) }
+                ?.let { heatingService.requiresHeatingFor(a, it) }
                 ?: false
         }
         if (areasToHeat.isNotEmpty()) {
             logger.info("At least one area requires heating ${areasToHeat.map { a -> a.uuid }}. Turning heater ON")
-            sharedHeater.on()
+            context.heater.on()
         } else {
             logger.info("No area requires heating. Turning heater OFF")
-            sharedHeater.off()
+            context.heater.off()
         }
     }
 
