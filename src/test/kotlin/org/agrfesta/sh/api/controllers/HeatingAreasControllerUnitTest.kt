@@ -331,17 +331,13 @@ class HeatingAreasControllerUnitTest(
         response.message shouldBe "Area with id '$nonExistentAreaId' is missing!"
     }
 
-    @Test fun `getHeatingSchedule() returns 404 when no setting exists for the area`() {
+    @Test fun `getHeatingSchedule() returns 204 when no setting exists for the area`() {
         every { tempSettingsRepo.findSettingByAreaId(area.uuid) } returns null
 
-        val resultContent: String = mockMvc.perform(
+        mockMvc.perform(
             get("/heating/areas/${area.uuid}")
                 .authenticated())
-            .andExpect(status().isNotFound)
-            .andReturn().response.contentAsString
-
-        val response: MessageResponse = objectMapper.readValue(resultContent, MessageResponse::class.java)
-        response.message shouldBe "No heating schedule found for area '${area.uuid}'!"
+            .andExpect(status().isNoContent)
     }
 
     @Test fun `getHeatingSchedule() returns 500 on persistence failure`() {

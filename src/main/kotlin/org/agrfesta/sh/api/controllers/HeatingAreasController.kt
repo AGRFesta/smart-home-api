@@ -80,8 +80,7 @@ class HeatingAreasController(
             { areaSetting ->
                 areaSetting?.let {
                     status(OK).body(it.toDto())
-                } ?: status(NO_CONTENT)
-                    .body(MessageResponse("No heating schedule found for area '$areaId'!"))
+                } ?: status(NO_CONTENT).build()
             }
         )
     }

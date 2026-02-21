@@ -161,20 +161,16 @@ class HeatingAreasControllerIntegrationTest(
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///// getHeatingSchedule ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Test fun `getHeatingSchedule() returns 404 when no setting exists`() {
+    @Test fun `getHeatingSchedule() returns 204 when no setting exists`() {
         val area = anAreaDto()
         areasDao.save(area)
 
-        val result = given()
+        given()
             .authenticated()
             .`when`()
             .get("/heating/areas/${area.uuid}")
             .then()
-            .statusCode(404)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "No heating schedule found for area '${area.uuid}'!"
+            .statusCode(204)
     }
 
     @Test fun `getHeatingSchedule() returns 200 with complete TemperatureSettings when setting exists`() {
