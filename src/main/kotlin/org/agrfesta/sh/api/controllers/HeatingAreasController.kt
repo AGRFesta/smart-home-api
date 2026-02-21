@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.CREATED
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
+import org.springframework.http.HttpStatus.NO_CONTENT
 import org.springframework.http.HttpStatus.OK
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.status
@@ -79,7 +80,7 @@ class HeatingAreasController(
             { areaSetting ->
                 areaSetting?.let {
                     status(OK).body(it.toDto())
-                } ?: status(NOT_FOUND)
+                } ?: status(NO_CONTENT)
                     .body(MessageResponse("No heating schedule found for area '$areaId'!"))
             }
         )
