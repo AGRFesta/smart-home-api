@@ -63,23 +63,28 @@ class HeatingAreasController(
     }
 
     @GetMapping("/{areaId}")
-    fun getHeatingSchedule(@PathVariable areaId: UUID): ResponseEntity<Any> =
-        heatingAreasService.findAreaSetting(areaId).fold(
-            ifLeft = {
-                logger.error("heating settings retrieval failure", it.exception)
-                status(INTERNAL_SERVER_ERROR)
-                    .body(MessageResponse("Unable to retrieve setting for area '$areaId'!"))
-            },
-            ifRight = { areaSetting ->
-                areaSetting?.let {
-                    status(OK).body(TemperatureSettings(
-                        defaultTemperature = it.defaultTemperature,
-                        temperatureSchedule = it.temperatureSchedule
-                    ))
-                } ?: status(NOT_FOUND)
-                    .body(MessageResponse("No heating schedule found for area '$areaId'!"))
+    fun getHeatingSchedule(@PathVariable areaId: UUID): ResponseEntity<Any> {
+        heatingAreasService.findAreaSetting(areaId).onLeft {
+            return when(it) {
+                is PersistenceFailure -> {
+                    logger.error("heating settings retrieval failure", it.exception)
+                    status(INTERNAL_SERVER_ERROR)
+                        .body(MessageResponse("Unable to retrieve setting for area '$areaId'!"))
+                }
+                AreaNotFound -> status(NOT_FOUND)
+                    .body(MessageResponse("Area with id '$areaId' is missing!"))
             }
-        )
+        }.onRight { areaSetting ->
+            return areaSetting?.let {
+                status(OK).body(TemperatureSettings(
+                    defaultTemperature = it.defaultTemperature,
+                    temperatureSchedule = it.temperatureSchedule
+                ))
+            } ?: status(NOT_FOUND)
+                .body(MessageResponse("No heating schedule found for area '$areaId'!"))
+        }
+        error("Unreachable")
+    }
 
     @DeleteMapping("/{areaId}")
     fun deleteHeatingSchedule(@PathVariable areaId: UUID): ResponseEntity<Any> {

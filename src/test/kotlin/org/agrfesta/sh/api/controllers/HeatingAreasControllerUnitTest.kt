@@ -12,6 +12,7 @@ import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.persistence.AreaDao
+import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.dao.TemperatureSettingsDaoJdbcImpl
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureIntervalEntity
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity
@@ -313,6 +314,20 @@ class HeatingAreasControllerUnitTest(
 
         val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
         response.message shouldBe "Invalid token"
+    }
+
+    @Test fun `getHeatingSchedule() returns 404 when area does not exist`() {
+        val nonExistentAreaId = UUID.randomUUID()
+        every { areaDao.getAreaById(nonExistentAreaId) } throws AreaNotFoundException()
+
+        val resultContent: String = mockMvc.perform(
+            get("/heating/areas/$nonExistentAreaId")
+                .authenticated())
+            .andExpect(status().isNotFound)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(resultContent, MessageResponse::class.java)
+        response.message shouldBe "Area with id '$nonExistentAreaId' is missing!"
     }
 
     @Test fun `getHeatingSchedule() returns 404 when no setting exists for the area`() {
