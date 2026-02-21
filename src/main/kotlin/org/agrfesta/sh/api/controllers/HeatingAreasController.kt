@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus.OK
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.status
 import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -59,6 +60,23 @@ class HeatingAreasController(
         }
         return status(CREATED)
             .body(MessageResponse("Successfully created heating schedule for area with id '$areaId'!"))
+    }
+
+    @GetMapping("/{areaId}")
+    fun getHeatingSchedule(@PathVariable areaId: UUID): ResponseEntity<Any> {
+        val areaSetting = heatingAreasService.findAreaSetting(areaId).onLeft {
+            logger.error("heating settings retrieval failure", it.exception)
+            return status(INTERNAL_SERVER_ERROR)
+                .body(MessageResponse("Unable to retrieve setting for area '$areaId'!"))
+        }.getOrNull()
+
+        return areaSetting?.let {
+            status(OK).body(TemperatureSettings(
+                defaultTemperature = it.defaultTemperature,
+                temperatureSchedule = it.temperatureSchedule
+            ))
+        } ?: status(NOT_FOUND)
+            .body(MessageResponse("No heating schedule found for area '$areaId'!"))
     }
 
     @DeleteMapping("/{areaId}")
