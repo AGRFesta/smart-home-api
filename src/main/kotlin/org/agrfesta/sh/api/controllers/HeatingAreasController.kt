@@ -105,8 +105,8 @@ class HeatingAreasController(
 }
 
 private fun AreaTemperatureSetting.toDto() = TemperatureSettings(
-    defaultTemperature = this.defaultTemperature,
-    temperatureSchedule = this.temperatureSchedule
+    defaultTemperature = defaultTemperature,
+    temperatureSchedule = temperatureSchedule
 )
 
 data class TemperatureSettings(
