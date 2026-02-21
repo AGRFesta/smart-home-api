@@ -159,6 +159,46 @@ class HeatingAreasControllerIntegrationTest(
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///// getHeatingSchedule ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test fun `getHeatingSchedule() returns 204 when no setting exists`() {
+        val area = anAreaDto()
+        areasDao.save(area)
+
+        given()
+            .authenticated()
+            .`when`()
+            .get("/heating/areas/${area.uuid}")
+            .then()
+            .statusCode(204)
+    }
+
+    @Test fun `getHeatingSchedule() returns 200 with complete TemperatureSettings when setting exists`() {
+        val area = anAreaDto()
+        areasDao.save(area)
+        val tempIntA = aTemperatureInterval(startTime = aDailyTime(hour = 22), endTime = aDailyTime(hour = 6))
+        val tempIntB = aTemperatureInterval(startTime = aDailyTime(hour = 6), endTime = aDailyTime(hour = 8))
+        val tempIntC = aTemperatureInterval(startTime = aDailyTime(hour = 14), endTime = aDailyTime(hour = 17))
+        val setting = anAreaTemperatureSetting(
+            areaId = area.uuid,
+            temperatureSchedule = setOf(tempIntA, tempIntB, tempIntC)
+        )
+        tempSettingsDao.createSetting(setting)
+
+        val result = given()
+            .authenticated()
+            .`when`()
+            .get("/heating/areas/${area.uuid}")
+            .then()
+            .statusCode(200)
+            .extract()
+            .`as`(TemperatureSettings::class.java)
+
+        result.defaultTemperature shouldBe setting.defaultTemperature
+        result.temperatureSchedule.shouldContainExactlyInAnyOrder(tempIntA, tempIntB, tempIntC)
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///// deleteHeatingSchedule ////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `deleteHeatingSchedule() returns 200 when successfully deletes area's heating schedule`() {

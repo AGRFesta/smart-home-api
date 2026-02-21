@@ -9,9 +9,11 @@ import org.agrfesta.sh.api.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.domain.failures.TemperatureSettingCreationFailure
 import org.agrfesta.sh.api.domain.failures.TemperatureSettingDeletionFailure
+import org.agrfesta.sh.api.domain.failures.TemperatureSettingRetrievalFailure
 import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
+import org.springframework.dao.DataAccessException
 import org.springframework.stereotype.Service
 
 /**
@@ -37,7 +39,7 @@ class HeatingAreasService(
         temperatureSettingsDao.createSetting(setting).right()
     } catch (e: AreaNotFoundException) {
         AreaNotFound.left()
-    } catch (e: Exception) {
+    } catch (e: DataAccessException) {
         PersistenceFailure(e).left()
     }
 
@@ -55,20 +57,25 @@ class HeatingAreasService(
         temperatureSettingsDao.deleteAreaSetting(areaId).right()
     } catch (e: AreaNotFoundException) {
         AreaNotFound.left()
-    } catch (e: Exception) {
+    } catch (e: DataAccessException) {
         PersistenceFailure(e).left()
     }
 
     /**
      * Retrieves the temperature setting for a specific area.
      *
+     * It first verifies that the area exists before attempting retrieval.
+     *
      * @param areaId The unique identifier of the area.
      * @return [Either.Right] containing the [AreaTemperatureSetting] if found (or null),
-     * or [Either.Left] with a [PersistenceFailure] in case of errors.
+     * or [Either.Left] with a [TemperatureSettingRetrievalFailure] in case of errors.
      */
-    fun findAreaSetting(areaId: UUID): Either<PersistenceFailure, AreaTemperatureSetting?> = try {
+    fun findAreaSetting(areaId: UUID): Either<TemperatureSettingRetrievalFailure, AreaTemperatureSetting?> = try {
+        areasDao.getAreaById(areaId)
         temperatureSettingsDao.findAreaSetting(areaId).right()
-    } catch (e: Exception) {
+    } catch (e: AreaNotFoundException) {
+        AreaNotFound.left()
+    } catch (e: DataAccessException) {
         PersistenceFailure(e).left()
     }
 

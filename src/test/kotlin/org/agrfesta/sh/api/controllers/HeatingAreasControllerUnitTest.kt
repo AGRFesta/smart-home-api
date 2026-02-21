@@ -2,6 +2,7 @@ package org.agrfesta.sh.api.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.verify
@@ -11,7 +12,10 @@ import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.persistence.AreaDao
+import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.dao.TemperatureSettingsDaoJdbcImpl
+import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureIntervalEntity
+import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureSettingRepository
 import org.agrfesta.sh.api.security.SecurityConfig
@@ -26,9 +30,11 @@ import org.junit.jupiter.api.TestFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
@@ -94,7 +100,7 @@ class HeatingAreasControllerUnitTest(
     }
 
     @Test fun `createHeatingSchedule() returns 500 when is unable to persist setting on db`() {
-        val failure = Exception("setting creation failure")
+        val failure = DataIntegrityViolationException("setting creation failure")
         every { tempSettingsRepo.save(any()) } throws failure
 
         val resultContent: String = mockMvc.perform(
@@ -218,7 +224,7 @@ class HeatingAreasControllerUnitTest(
         }
 
     @Test fun `createHeatingSchedule() ignores failures checking area's setting existence`() {
-        val failure = Exception("setting existence check failure")
+        val failure = DataIntegrityViolationException("setting existence check failure")
         every { tempSettingsRepo.existsSettingByAreaId(area.uuid) } throws failure
         every { tempSettingsRepo.save(any()) } returns uuid
 
@@ -231,7 +237,7 @@ class HeatingAreasControllerUnitTest(
     }
 
     @Test fun `createHeatingSchedule() returns 500 when fails to delete previous setting`() {
-        val failure = Exception("setting deletion failure")
+        val failure = DataIntegrityViolationException("setting deletion failure")
         every { tempSettingsRepo.existsSettingByAreaId(area.uuid) } returns true
         every { tempSettingsRepo.deleteByByAreaId(area.uuid) } throws failure
 
@@ -257,7 +263,7 @@ class HeatingAreasControllerUnitTest(
             )
         )
         val requestBody = objectMapper.writeValueAsString(setting)
-        val failure = Exception("interval creation failure")
+        val failure = DataIntegrityViolationException("interval creation failure")
         every { tempSettingsRepo.save(any()) } returns uuid
         every { tempIntervalsRepo.save(any()) } returns Unit andThenThrows failure
 
@@ -272,6 +278,114 @@ class HeatingAreasControllerUnitTest(
         val response: MessageResponse = objectMapper.readValue(resultContent, MessageResponse::class.java)
         response.message shouldBe "Unable to persist setting for area '${area.uuid}'!"
         verify(exactly = 2) { tempIntervalsRepo.save(any()) }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///// getHeatingSchedule ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test fun `getHeatingSchedule() return 401 when auth is missing`() {
+        val responseBody: String = mockMvc.perform(
+            get("/heating/areas/${area.uuid}"))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Missing Authorization header"
+    }
+
+    @Test fun `getHeatingSchedule() return 401 when token is empty`() {
+        val responseBody: String = mockMvc.perform(
+            get("/heating/areas/${area.uuid}")
+                .header("Authorization", "Bearer "))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Empty token"
+    }
+
+    @Test fun `getHeatingSchedule() return 401 when token is invalid`() {
+        val responseBody: String = mockMvc.perform(
+            get("/heating/areas/${area.uuid}")
+                .header("Authorization", "Bearer ${aRandomUniqueString()}"))
+            .andExpect(status().isUnauthorized)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Invalid token"
+    }
+
+    @Test fun `getHeatingSchedule() returns 404 when area does not exist`() {
+        val nonExistentAreaId = UUID.randomUUID()
+        every { areaDao.getAreaById(nonExistentAreaId) } throws AreaNotFoundException()
+
+        val resultContent: String = mockMvc.perform(
+            get("/heating/areas/$nonExistentAreaId")
+                .authenticated())
+            .andExpect(status().isNotFound)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(resultContent, MessageResponse::class.java)
+        response.message shouldBe "Area with id '$nonExistentAreaId' is missing!"
+    }
+
+    @Test fun `getHeatingSchedule() returns 204 when no setting exists for the area`() {
+        every { tempSettingsRepo.findSettingByAreaId(area.uuid) } returns null
+
+        mockMvc.perform(
+            get("/heating/areas/${area.uuid}")
+                .authenticated())
+            .andExpect(status().isNoContent)
+    }
+
+    @Test fun `getHeatingSchedule() returns 500 on persistence failure`() {
+        val failure = DataIntegrityViolationException("setting fetch failure")
+        every { tempSettingsRepo.findSettingByAreaId(area.uuid) } throws failure
+
+        val resultContent: String = mockMvc.perform(
+            get("/heating/areas/${area.uuid}")
+                .authenticated())
+            .andExpect(status().isInternalServerError)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(resultContent, MessageResponse::class.java)
+        response.message shouldBe "Unable to retrieve setting for area '${area.uuid}'!"
+    }
+
+    @Test fun `getHeatingSchedule() returns 200 with correct DTO when setting exists`() {
+        val setting = anAreaTemperatureSetting(
+            areaId = area.uuid,
+            temperatureSchedule = setOf(
+                aTemperatureInterval(startTime = aDailyTime(hour = 22), endTime = aDailyTime(hour = 6)),
+                aTemperatureInterval(startTime = aDailyTime(hour = 6), endTime = aDailyTime(hour = 8))
+            )
+        )
+        every { tempSettingsRepo.findSettingByAreaId(area.uuid) } returns TemperatureSettingEntity(
+            uuid = uuid,
+            areaUuid = area.uuid,
+            defaultTemperature = setting.defaultTemperature
+        )
+        every { tempIntervalsRepo.findAllBySetting(uuid) } returns setting.temperatureSchedule.map {
+            TemperatureIntervalEntity(
+                uuid = UUID.randomUUID(),
+                settingUuid = uuid,
+                startTime = it.startTime,
+                endTime = it.endTime,
+                temperature = it.temperature
+            )
+        }
+
+        val resultContent: String = mockMvc.perform(
+            get("/heating/areas/${area.uuid}")
+                .authenticated())
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        val response: TemperatureSettings = objectMapper.readValue(resultContent, TemperatureSettings::class.java)
+        response.defaultTemperature shouldBe setting.defaultTemperature
+        response.temperatureSchedule shouldContainExactlyInAnyOrder setting.temperatureSchedule
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -312,7 +426,7 @@ class HeatingAreasControllerUnitTest(
     }
 
     @Test fun `deleteHeatingSchedule() returns 500 when is unable to fetch area on db`() {
-        val failure = Exception("area fetch failure")
+        val failure = DataIntegrityViolationException("area fetch failure")
         every { areaDao.getAreaById(area.uuid) } throws failure
 
         val resultContent: String = mockMvc.perform(
@@ -326,7 +440,7 @@ class HeatingAreasControllerUnitTest(
     }
 
     @Test fun `deleteHeatingSchedule() returns 500 when is unable to delete setting on db`() {
-        val failure = Exception("setting delete failure")
+        val failure = DataIntegrityViolationException("setting delete failure")
         every { tempSettingsRepo.deleteByByAreaId(area.uuid) } throws failure
 
         val resultContent: String = mockMvc.perform(

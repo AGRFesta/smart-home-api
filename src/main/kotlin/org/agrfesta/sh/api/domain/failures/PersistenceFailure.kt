@@ -7,4 +7,5 @@ data class PersistenceFailure(override val exception: Exception): ExceptionFailu
     GetPersistedCacheEntryFailure,
     FindPersistedCacheEntryFailure,
     TemperatureSettingCreationFailure,
-    TemperatureSettingDeletionFailure
+    TemperatureSettingDeletionFailure,
+    TemperatureSettingRetrievalFailure
