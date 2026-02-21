@@ -78,10 +78,7 @@ class HeatingAreasController(
             },
             { areaSetting ->
                 areaSetting?.let {
-                    status(OK).body(TemperatureSettings(
-                        defaultTemperature = it.defaultTemperature,
-                        temperatureSchedule = it.temperatureSchedule
-                    ))
+                    status(OK).body(it.toDto())
                 } ?: status(NOT_FOUND)
                     .body(MessageResponse("No heating schedule found for area '$areaId'!"))
             }
@@ -106,6 +103,11 @@ class HeatingAreasController(
     }
 
 }
+
+private fun AreaTemperatureSetting.toDto() = TemperatureSettings(
+    defaultTemperature = this.defaultTemperature,
+    temperatureSchedule = this.temperatureSchedule
+)
 
 data class TemperatureSettings(
     val defaultTemperature: Temperature,
