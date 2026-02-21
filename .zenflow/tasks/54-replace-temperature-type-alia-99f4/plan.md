@@ -20,7 +20,8 @@ If you are blocked and need user clarification, mark the current step with `[!]`
 
 ## Workflow Steps
 
-### [ ] Step: Technical Specification
+### [x] Step: Technical Specification
+<!-- chat-id: b9a1b14f-35df-4bdc-9a95-e462713ba783 -->
 
 Assess the task's difficulty, as underestimating it leads to poor outcomes.
 - easy: Straightforward implementation, trivial bug fix or feature
@@ -54,16 +55,93 @@ Save to `{@artifacts_path}/plan.md`. If the feature is trivial and doesn't warra
 
 ---
 
-### [ ] Step: Implementation
+### [ ] Step: Implement Temperature Value Class and Core Extensions
 
-Implement the task according to the technical specification and general engineering best practices.
+Implement the core Temperature value class in `DataTypes.kt` with scale normalization, arithmetic operators, and update the `average()` extension function.
 
-1. Break the task into steps where possible.
-2. Implement the required changes in the codebase
-3. If relevant, write unit tests alongside each change.
-4. Run relevant tests and linters in the end of each step.
-5. Perform basic manual verification if applicable.
-6. After completion, write a report to `{@artifacts_path}/report.md` describing:
-   - What was implemented
-   - How the solution was tested
-   - The biggest issues or challenges encountered
+**Changes**:
+- Replace `typealias Temperature = BigDecimal` with `@JvmInline value class Temperature`
+- Add constructors: String, Double, Int (with stripTrailingZeros normalization)
+- Implement `Comparable<Temperature>` interface
+- Add arithmetic operators: `plus`, `minus`, `times`, `div`, `unaryMinus`
+- Update `Collection<Temperature>.average()` to access `.value` and wrap result
+
+**Unit Tests**:
+- Add tests for scale-independent equality (e.g., `Temperature("1.0") == Temperature("1")`)
+- Add tests for arithmetic operations
+- Add tests for comparison operations
+- Verify existing average calculation tests still pass
+
+**Verification**:
+- Run: `./gradlew test --tests "TemperatureTest"`
+- Confirm no compilation errors in DataTypes.kt
+
+---
+
+### [ ] Step: Update Test Factory and Domain Calculations
+
+Update the test factory function and domain classes that perform BigDecimal operations on Temperature.
+
+**Changes**:
+- `src/test/kotlin/org/agrfesta/test/mothers/BaseMothers.kt`: Update `aRandomTemperature()` to wrap result in Temperature constructor
+- `src/main/kotlin/org/agrfesta/sh/api/domain/commons/AbsoluteHumidity.kt`: Update BigDecimal operations to access `temperature.value`
+
+**Verification**:
+- Run: `./gradlew test --tests "AbsoluteHumidityTest"`
+- Verify test factories compile and work correctly
+
+---
+
+### [ ] Step: Update JDBC Repository Mappings
+
+Update JDBC repositories to wrap database reads and unwrap writes for the Temperature value class.
+
+**Changes**:
+- `src/main/kotlin/org/agrfesta/sh/api/persistence/jdbc/repositories/TemperatureSettingRepository.kt`:
+  - Wrap `rs.getBigDecimal()` reads with `Temperature()` constructor
+  - Unwrap writes by accessing `.value` property
+- `src/main/kotlin/org/agrfesta/sh/api/persistence/jdbc/repositories/TemperatureIntervalRepository.kt`:
+  - Same wrapping/unwrapping pattern
+
+**Verification**:
+- Run persistence-related tests
+- Confirm repositories compile correctly
+
+---
+
+### [ ] Step: Integration Testing and Jackson Verification
+
+Verify database round-trips, JSON serialization/deserialization, and full integration test suite.
+
+**Integration Tests**:
+- Add database round-trip test to verify Temperature equality persists through save/retrieve cycle
+- Add JSON serialization test to verify different scales deserialize to equal values
+- If Jackson fails to serialize value class automatically, implement custom TemperatureSerializer/TemperatureDeserializer
+
+**Full Test Suite**:
+- Run: `./gradlew test`
+- Verify all existing tests pass without modification
+- Verify new integration tests pass
+
+**Success Criteria**:
+- All tests pass
+- Database round-trip: `Temperature("20.0")` saved and retrieved equals `Temperature("20")`
+- JSON deserialization: `{"defaultTemperature": 20.0}` equals `Temperature("20")`
+
+---
+
+### [ ] Step: Final Verification and Report
+
+Run complete test suite, verify build succeeds, and document the implementation.
+
+**Final Verification**:
+- Run: `./gradlew clean build`
+- Verify no compilation errors
+- Verify no test failures
+- Verify no runtime overhead (value class inlining confirmed by successful build)
+
+**Report**: Write to `{@artifacts_path}/report.md`:
+- Summary of changes made
+- Test results (all tests passing)
+- Any issues encountered and how they were resolved
+- Confirmation of success criteria met
