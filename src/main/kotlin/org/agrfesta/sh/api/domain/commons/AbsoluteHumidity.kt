@@ -18,10 +18,10 @@ class AbsoluteHumidity(temperature: Temperature, relativeHumidity: RelativeHumid
     }
 
     init {
-        val temperatureKelvin = temperature.add(shiftForKelvin)
+        val temperatureKelvin = temperature.value.add(shiftForKelvin)
 
         // Calculate the exponent in the saturation vapor pressure formula
-        val exponent = b.multiply(temperature).divide(temperature.add(c), mc)
+        val exponent = b.multiply(temperature.value).divide(temperature.value.add(c), mc)
 
         val expResult = expBigDecimal(exponent)
         // Calculate saturation vapor pressure

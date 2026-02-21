@@ -1,5 +1,6 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import java.sql.Time
@@ -18,7 +19,7 @@ class TemperatureIntervalRepository(private val jdbcTemplate: NamedParameterJdbc
                 settingUuid = UUID.fromString(rs.getString("setting_uuid")),
                 startTime = rs.getTime("start_time").toLocalTime(),
                 endTime = rs.getTime("end_time").toLocalTime(),
-                temperature = rs.getBigDecimal("temperature")
+                temperature = Temperature(rs.getBigDecimal("temperature"))
             )
         }
     }
@@ -33,7 +34,7 @@ class TemperatureIntervalRepository(private val jdbcTemplate: NamedParameterJdbc
             "settingUuid" to interval.settingUuid,
             "startTime" to Time.valueOf(interval.startTime),
             "endTime" to Time.valueOf(interval.endTime),
-            "temperature" to interval.temperature
+            "temperature" to interval.temperature.value
         )
         jdbcTemplate.update(sql, params)
     }

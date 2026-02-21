@@ -56,6 +56,7 @@ Save to `{@artifacts_path}/plan.md`. If the feature is trivial and doesn't warra
 ---
 
 ### [ ] Step: Implement Temperature Value Class and Core Extensions
+<!-- chat-id: 6cb0b2e0-d6a7-4c37-ace0-8730517298bd -->
 
 Implement the core Temperature value class in `DataTypes.kt` with scale normalization, arithmetic operators, and update the `average()` extension function.
 

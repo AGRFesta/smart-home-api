@@ -1,6 +1,7 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
 import java.util.*
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity
 import org.springframework.dao.DataIntegrityViolationException
@@ -23,7 +24,7 @@ class TemperatureSettingRepository(private val jdbcTemplate: NamedParameterJdbcT
             TemperatureSettingEntity(
                 uuid = UUID.fromString(rs.getString("uuid")),
                 areaUuid = UUID.fromString(rs.getString("area_uuid")),
-                defaultTemperature = rs.getBigDecimal("default_temperature")
+                defaultTemperature = Temperature(rs.getBigDecimal("default_temperature"))
             )
         }.firstOrNull()
     }
@@ -43,7 +44,7 @@ class TemperatureSettingRepository(private val jdbcTemplate: NamedParameterJdbcT
         val params = mapOf(
             "uuid" to setting.uuid,
             "areaUuid" to setting.areaUuid,
-            "defaultTemperature" to setting.defaultTemperature
+            "defaultTemperature" to setting.defaultTemperature.value
         )
         return try {
             jdbcTemplate.update(sql, params)

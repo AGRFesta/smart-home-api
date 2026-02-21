@@ -25,7 +25,7 @@ data class SwitchBotSensorReadings(
 
     fun toSensorReadings(): SensorReadings = object : ThermoHygroDataValue, BatteryValue {
         override val thermoHygroData = ThermoHygroData(
-            temperature = temperature,
+            temperature = org.agrfesta.sh.api.domain.commons.Temperature(temperature),
             relativeHumidity = PercentageHundreds(humidityInt).toPercentage()
         )
         override val battery: Int = batteryLevel
