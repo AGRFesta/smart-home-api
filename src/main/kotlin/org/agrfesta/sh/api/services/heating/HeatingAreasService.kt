@@ -13,6 +13,7 @@ import org.agrfesta.sh.api.domain.failures.TemperatureSettingRetrievalFailure
 import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
+import org.springframework.dao.DataAccessException
 import org.springframework.stereotype.Service
 
 /**
@@ -38,7 +39,7 @@ class HeatingAreasService(
         temperatureSettingsDao.createSetting(setting).right()
     } catch (e: AreaNotFoundException) {
         AreaNotFound.left()
-    } catch (e: Exception) {
+    } catch (e: DataAccessException) {
         PersistenceFailure(e).left()
     }
 
@@ -56,7 +57,7 @@ class HeatingAreasService(
         temperatureSettingsDao.deleteAreaSetting(areaId).right()
     } catch (e: AreaNotFoundException) {
         AreaNotFound.left()
-    } catch (e: Exception) {
+    } catch (e: DataAccessException) {
         PersistenceFailure(e).left()
     }
 
@@ -74,7 +75,7 @@ class HeatingAreasService(
         temperatureSettingsDao.findAreaSetting(areaId).right()
     } catch (e: AreaNotFoundException) {
         AreaNotFound.left()
-    } catch (e: Exception) {
+    } catch (e: DataAccessException) {
         PersistenceFailure(e).left()
     }
 

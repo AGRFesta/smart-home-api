@@ -30,6 +30,7 @@ import org.junit.jupiter.api.TestFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
@@ -99,7 +100,7 @@ class HeatingAreasControllerUnitTest(
     }
 
     @Test fun `createHeatingSchedule() returns 500 when is unable to persist setting on db`() {
-        val failure = Exception("setting creation failure")
+        val failure = DataIntegrityViolationException("setting creation failure")
         every { tempSettingsRepo.save(any()) } throws failure
 
         val resultContent: String = mockMvc.perform(
@@ -223,7 +224,7 @@ class HeatingAreasControllerUnitTest(
         }
 
     @Test fun `createHeatingSchedule() ignores failures checking area's setting existence`() {
-        val failure = Exception("setting existence check failure")
+        val failure = DataIntegrityViolationException("setting existence check failure")
         every { tempSettingsRepo.existsSettingByAreaId(area.uuid) } throws failure
         every { tempSettingsRepo.save(any()) } returns uuid
 
@@ -236,7 +237,7 @@ class HeatingAreasControllerUnitTest(
     }
 
     @Test fun `createHeatingSchedule() returns 500 when fails to delete previous setting`() {
-        val failure = Exception("setting deletion failure")
+        val failure = DataIntegrityViolationException("setting deletion failure")
         every { tempSettingsRepo.existsSettingByAreaId(area.uuid) } returns true
         every { tempSettingsRepo.deleteByByAreaId(area.uuid) } throws failure
 
@@ -262,7 +263,7 @@ class HeatingAreasControllerUnitTest(
             )
         )
         val requestBody = objectMapper.writeValueAsString(setting)
-        val failure = Exception("interval creation failure")
+        val failure = DataIntegrityViolationException("interval creation failure")
         every { tempSettingsRepo.save(any()) } returns uuid
         every { tempIntervalsRepo.save(any()) } returns Unit andThenThrows failure
 
@@ -344,7 +345,7 @@ class HeatingAreasControllerUnitTest(
     }
 
     @Test fun `getHeatingSchedule() returns 500 on persistence failure`() {
-        val failure = Exception("setting fetch failure")
+        val failure = DataIntegrityViolationException("setting fetch failure")
         every { tempSettingsRepo.findSettingByAreaId(area.uuid) } throws failure
 
         val resultContent: String = mockMvc.perform(
@@ -429,7 +430,7 @@ class HeatingAreasControllerUnitTest(
     }
 
     @Test fun `deleteHeatingSchedule() returns 500 when is unable to fetch area on db`() {
-        val failure = Exception("area fetch failure")
+        val failure = DataIntegrityViolationException("area fetch failure")
         every { areaDao.getAreaById(area.uuid) } throws failure
 
         val resultContent: String = mockMvc.perform(
@@ -443,7 +444,7 @@ class HeatingAreasControllerUnitTest(
     }
 
     @Test fun `deleteHeatingSchedule() returns 500 when is unable to delete setting on db`() {
-        val failure = Exception("setting delete failure")
+        val failure = DataIntegrityViolationException("setting delete failure")
         every { tempSettingsRepo.deleteByByAreaId(area.uuid) } throws failure
 
         val resultContent: String = mockMvc.perform(
