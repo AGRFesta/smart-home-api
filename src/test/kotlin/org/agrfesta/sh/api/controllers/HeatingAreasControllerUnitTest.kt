@@ -2,6 +2,7 @@ package org.agrfesta.sh.api.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.verify
@@ -372,7 +373,7 @@ class HeatingAreasControllerUnitTest(
 
         val response: TemperatureSettings = objectMapper.readValue(resultContent, TemperatureSettings::class.java)
         response.defaultTemperature shouldBe setting.defaultTemperature
-        response.temperatureSchedule.size shouldBe setting.temperatureSchedule.size
+        response.temperatureSchedule shouldContainExactlyInAnyOrder setting.temperatureSchedule
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

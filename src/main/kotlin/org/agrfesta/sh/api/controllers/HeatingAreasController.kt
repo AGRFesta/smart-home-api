@@ -63,21 +63,23 @@ class HeatingAreasController(
     }
 
     @GetMapping("/{areaId}")
-    fun getHeatingSchedule(@PathVariable areaId: UUID): ResponseEntity<Any> {
-        val areaSetting = heatingAreasService.findAreaSetting(areaId).onLeft {
-            logger.error("heating settings retrieval failure", it.exception)
-            return status(INTERNAL_SERVER_ERROR)
-                .body(MessageResponse("Unable to retrieve setting for area '$areaId'!"))
-        }.getOrNull()
-
-        return areaSetting?.let {
-            status(OK).body(TemperatureSettings(
-                defaultTemperature = it.defaultTemperature,
-                temperatureSchedule = it.temperatureSchedule
-            ))
-        } ?: status(NOT_FOUND)
-            .body(MessageResponse("No heating schedule found for area '$areaId'!"))
-    }
+    fun getHeatingSchedule(@PathVariable areaId: UUID): ResponseEntity<Any> =
+        heatingAreasService.findAreaSetting(areaId).fold(
+            ifLeft = {
+                logger.error("heating settings retrieval failure", it.exception)
+                status(INTERNAL_SERVER_ERROR)
+                    .body(MessageResponse("Unable to retrieve setting for area '$areaId'!"))
+            },
+            ifRight = { areaSetting ->
+                areaSetting?.let {
+                    status(OK).body(TemperatureSettings(
+                        defaultTemperature = it.defaultTemperature,
+                        temperatureSchedule = it.temperatureSchedule
+                    ))
+                } ?: status(NOT_FOUND)
+                    .body(MessageResponse("No heating schedule found for area '$areaId'!"))
+            }
+        )
 
     @DeleteMapping("/{areaId}")
     fun deleteHeatingSchedule(@PathVariable areaId: UUID): ResponseEntity<Any> {
