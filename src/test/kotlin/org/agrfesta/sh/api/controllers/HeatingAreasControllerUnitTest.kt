@@ -12,6 +12,8 @@ import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.persistence.jdbc.dao.TemperatureSettingsDaoJdbcImpl
+import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureIntervalEntity
+import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureSettingRepository
 import org.agrfesta.sh.api.security.SecurityConfig
@@ -347,13 +349,13 @@ class HeatingAreasControllerUnitTest(
                 aTemperatureInterval(startTime = aDailyTime(hour = 6), endTime = aDailyTime(hour = 8))
             )
         )
-        every { tempSettingsRepo.findSettingByAreaId(area.uuid) } returns org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity(
+        every { tempSettingsRepo.findSettingByAreaId(area.uuid) } returns TemperatureSettingEntity(
             uuid = uuid,
             areaUuid = area.uuid,
             defaultTemperature = setting.defaultTemperature
         )
         every { tempIntervalsRepo.findAllBySetting(uuid) } returns setting.temperatureSchedule.map {
-            org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureIntervalEntity(
+            TemperatureIntervalEntity(
                 uuid = UUID.randomUUID(),
                 settingUuid = uuid,
                 startTime = it.startTime,
