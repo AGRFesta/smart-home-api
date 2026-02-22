@@ -74,7 +74,7 @@ fun aSensorHistoryDataEntity(
     time: Instant = Instant.now(),
     type: SensorDataType = SensorDataType.entries.toTypedArray().random(),
     value: BigDecimal = when (type) {
-        SensorDataType.TEMPERATURE -> aRandomTemperature()
+        SensorDataType.TEMPERATURE -> aRandomTemperature().value
         SensorDataType.HUMIDITY -> aRandomHumidity().value
     }
 ) = SensorHistoryDataEntity(sensor.uuid, time, type, value)

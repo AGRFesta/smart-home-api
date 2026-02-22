@@ -18,7 +18,7 @@ value class Temperature(val value: BigDecimal) : Comparable<Temperature> {
         BigDecimal(temperature).stripTrailingZeros()
     )
     
-    override fun compareTo(other: Temperature): Int = 
+    override operator fun compareTo(other: Temperature): Int = 
         this.value.compareTo(other.value)
     
     operator fun plus(other: Temperature): Temperature = 

@@ -92,10 +92,10 @@ class TemperatureTest {
 
     @Test
     fun comparisonWithEqualValues() {
-        Temperature("10") >= Temperature("10") shouldBe true
-        Temperature("10") <= Temperature("10") shouldBe true
-        Temperature("10") >= Temperature("5") shouldBe true
-        Temperature("5") <= Temperature("10") shouldBe true
+        (Temperature("10") >= Temperature("10")) shouldBe true
+        (Temperature("10") <= Temperature("10")) shouldBe true
+        (Temperature("10") >= Temperature("5")) shouldBe true
+        (Temperature("5") <= Temperature("10")) shouldBe true
     }
 
 }

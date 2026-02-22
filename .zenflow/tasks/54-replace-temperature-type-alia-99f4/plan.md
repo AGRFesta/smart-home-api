@@ -79,7 +79,7 @@ Implement the core Temperature value class in `DataTypes.kt` with scale normaliz
 
 ---
 
-### [ ] Step: Update Test Factory and Domain Calculations
+### [x] Step: Update Test Factory and Domain Calculations
 <!-- chat-id: e607f9e0-8e23-4f44-b815-6ce1f44a2238 -->
 
 Update the test factory function and domain classes that perform BigDecimal operations on Temperature.

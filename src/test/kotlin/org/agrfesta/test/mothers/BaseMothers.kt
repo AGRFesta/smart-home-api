@@ -35,9 +35,11 @@ fun aJsonNode(): JsonNode {
 
 fun aProvider() = Provider.entries.random()
 
-fun aRandomTemperature(scale: Int = 10): Temperature = BigDecimal(Random.nextDouble(from = -100.0, until = 100.0))
-    .setScale(scale, RoundingMode.CEILING)
-    .stripTrailingZeros()
+fun aRandomTemperature(scale: Int = 10): Temperature = Temperature(
+    BigDecimal(Random.nextDouble(from = -100.0, until = 100.0))
+        .setScale(scale, RoundingMode.CEILING)
+        .stripTrailingZeros()
+)
 fun aRandomHumidity(): Percentage = aRandomPercentage()
 fun aRandomIntHumidity(): Int = aRandomIntPercentage()
 fun aRandomThermoHygroData(

@@ -6,6 +6,7 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.restassured.RestAssured.given
 import io.restassured.common.mapper.TypeRef
 import java.math.BigDecimal
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.aSensorDataValue
 import org.agrfesta.sh.api.domain.anArea
 import org.agrfesta.sh.api.persistence.AreaDao
@@ -101,9 +102,9 @@ class HomeStatusControllerIntegrationTest(
         assignmentsService.assignSensorToArea(areaA.uuid, sensorA0Id).shouldBeRight()
         assignmentsService.assignSensorToArea(areaA.uuid, sensorA1Id).shouldBeRight()
         assignmentsService.assignSensorToArea(areaA.uuid, sensorA2Id).shouldBeRight()
-        cache.setThermoHygroOf(sensorA0Data, aRandomThermoHygroData(temperature = BigDecimal("20.5")))
-        cache.setThermoHygroOf(sensorA1Data, aRandomThermoHygroData(temperature = BigDecimal("22")))
-        cache.setThermoHygroOf(sensorA2Data, aRandomThermoHygroData(temperature = BigDecimal("22")))
+        cache.setThermoHygroOf(sensorA0Data, aRandomThermoHygroData(temperature = Temperature("20.5")))
+        cache.setThermoHygroOf(sensorA1Data, aRandomThermoHygroData(temperature = Temperature("22")))
+        cache.setThermoHygroOf(sensorA2Data, aRandomThermoHygroData(temperature = Temperature("22")))
         // Setup Area B
         val areaB = anArea()
         areasDao.save(areaB)
@@ -113,7 +114,7 @@ class HomeStatusControllerIntegrationTest(
         val sensorC0Data = aSensorDataValue()
         val sensorC0Id = devicesService.createDevice(sensorC0Data).shouldBeRight()
         assignmentsService.assignSensorToArea(areaC.uuid, sensorC0Id).shouldBeRight()
-        cache.setThermoHygroOf(sensorC0Data, aRandomThermoHygroData(temperature = BigDecimal("30")))
+        cache.setThermoHygroOf(sensorC0Data, aRandomThermoHygroData(temperature = Temperature("30")))
 
         val areaStatuses: Collection<AreaStatusView> = given()
             .authenticated()
@@ -145,8 +146,8 @@ class HomeStatusControllerIntegrationTest(
         assignmentsService.assignSensorToArea(areaA.uuid, sensorA0Id).shouldBeRight()
         assignmentsService.assignSensorToArea(areaA.uuid, sensorA1Id).shouldBeRight()
         assignmentsService.assignSensorToArea(areaA.uuid, sensorA2Id).shouldBeRight()
-        cache.setThermoHygroOf(sensorA1Data, aRandomThermoHygroData(temperature = BigDecimal("20")))
-        cache.setThermoHygroOf(sensorA2Data, aRandomThermoHygroData(temperature = BigDecimal("22")))
+        cache.setThermoHygroOf(sensorA1Data, aRandomThermoHygroData(temperature = Temperature("20")))
+        cache.setThermoHygroOf(sensorA2Data, aRandomThermoHygroData(temperature = Temperature("22")))
         // Setup Area B
         val areaB = anArea()
         areasDao.save(areaB)
