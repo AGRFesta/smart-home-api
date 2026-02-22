@@ -18,26 +18,30 @@ value class Temperature(val value: BigDecimal) : Comparable<Temperature> {
         BigDecimal(temperature).stripTrailingZeros()
     )
     
+    companion object {
+        private const val DIVISION_SCALE = 10
+    }
+    
     override operator fun compareTo(other: Temperature): Int = 
         this.value.compareTo(other.value)
     
     operator fun plus(other: Temperature): Temperature = 
-        Temperature(this.value + other.value)
+        Temperature((this.value + other.value).stripTrailingZeros())
     
     operator fun minus(other: Temperature): Temperature = 
-        Temperature(this.value - other.value)
+        Temperature((this.value - other.value).stripTrailingZeros())
     
     operator fun times(other: Temperature): Temperature = 
-        Temperature(this.value * other.value)
+        Temperature((this.value * other.value).stripTrailingZeros())
     
     operator fun times(multiplier: BigDecimal): Temperature = 
-        Temperature(this.value * multiplier)
+        Temperature((this.value * multiplier).stripTrailingZeros())
     
     operator fun div(other: Temperature): Temperature = 
-        Temperature(this.value / other.value)
+        Temperature(this.value.divide(other.value, DIVISION_SCALE, RoundingMode.HALF_UP).stripTrailingZeros())
     
     operator fun div(divisor: BigDecimal): Temperature = 
-        Temperature(this.value / divisor)
+        Temperature(this.value.divide(divisor, DIVISION_SCALE, RoundingMode.HALF_UP).stripTrailingZeros())
     
     operator fun unaryMinus(): Temperature = 
         Temperature(-this.value)

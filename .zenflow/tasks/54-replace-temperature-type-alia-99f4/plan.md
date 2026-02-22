@@ -55,7 +55,7 @@ Save to `{@artifacts_path}/plan.md`. If the feature is trivial and doesn't warra
 
 ---
 
-### [ ] Step: Implement Temperature Value Class and Core Extensions
+### [x] Step: Implement Temperature Value Class and Core Extensions
 <!-- chat-id: 6cb0b2e0-d6a7-4c37-ace0-8730517298bd -->
 
 Implement the core Temperature value class in `DataTypes.kt` with scale normalization, arithmetic operators, and update the `average()` extension function.
@@ -94,7 +94,8 @@ Update the test factory function and domain classes that perform BigDecimal oper
 
 ---
 
-### [ ] Step: Update JDBC Repository Mappings
+### [x] Step: Update JDBC Repository Mappings
+<!-- chat-id: 6cb0b2e0-d6a7-4c37-ace0-8730517298bd -->
 
 Update JDBC repositories to wrap database reads and unwrap writes for the Temperature value class.
 
