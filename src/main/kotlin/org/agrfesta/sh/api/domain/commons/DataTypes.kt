@@ -20,6 +20,9 @@ value class Temperature(val value: BigDecimal) : Comparable<Temperature> {
     
     companion object {
         private const val DIVISION_SCALE = 10
+        
+        operator fun invoke(temperature: BigDecimal): Temperature = 
+            Temperature(temperature.stripTrailingZeros())
     }
     
     override operator fun compareTo(other: Temperature): Int = 
@@ -45,6 +48,8 @@ value class Temperature(val value: BigDecimal) : Comparable<Temperature> {
     
     operator fun unaryMinus(): Temperature = 
         Temperature(-this.value)
+    
+    override fun toString(): String = value.toPlainString()
 }
 
 typealias RelativeHumidity = Percentage

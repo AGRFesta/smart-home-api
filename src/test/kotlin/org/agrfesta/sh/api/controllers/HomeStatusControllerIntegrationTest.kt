@@ -128,8 +128,8 @@ class HomeStatusControllerIntegrationTest(
 
         areaStatuses.map { listOf(it.id, it.name, it.temperature) }.shouldContainExactlyInAnyOrder(
             listOf(areaB.uuid, areaB.name, null),
-            listOf(areaC.uuid, areaC.name, BigDecimal("30")),
-            listOf(areaA.uuid, areaA.name, BigDecimal("21.5"))
+            listOf(areaC.uuid, areaC.name, Temperature("30")),
+            listOf(areaA.uuid, areaA.name, Temperature("21.5"))
         )
     }
 
@@ -171,7 +171,7 @@ class HomeStatusControllerIntegrationTest(
         areaStatuses.map { listOf(it.id, it.name, it.temperature) }.shouldContainExactlyInAnyOrder(
             listOf(areaB.uuid, areaB.name, null),
             listOf(areaC.uuid, areaC.name, null),
-            listOf(areaA.uuid, areaA.name, BigDecimal("21"))
+            listOf(areaA.uuid, areaA.name, Temperature("21"))
         )
     }
 
