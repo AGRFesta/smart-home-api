@@ -33,16 +33,16 @@ value class Temperature(val value: BigDecimal) : Comparable<Temperature> {
         this.value.compareTo(other.value)
     
     operator fun plus(other: Temperature): Temperature = 
-        Temperature((this.value + other.value).stripTrailingZeros())
+        Temperature(this.value + other.value)
     
     operator fun minus(other: Temperature): Temperature = 
-        Temperature((this.value - other.value).stripTrailingZeros())
+        Temperature(this.value - other.value)
     
     operator fun times(other: Temperature): Temperature = 
-        Temperature((this.value * other.value).stripTrailingZeros())
+        Temperature(this.value * other.value)
     
     operator fun times(multiplier: BigDecimal): Temperature = 
-        Temperature((this.value * multiplier).stripTrailingZeros())
+        Temperature(this.value * multiplier)
     
     operator fun div(other: Temperature): Temperature = 
         Temperature(this.value.divide(other.value, DIVISION_SCALE, RoundingMode.HALF_UP).stripTrailingZeros())
