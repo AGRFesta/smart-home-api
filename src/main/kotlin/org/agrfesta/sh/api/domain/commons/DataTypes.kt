@@ -63,6 +63,5 @@ fun Collection<Temperature>.average(): Temperature? {
     if (isEmpty()) return null
     val average = fold(BigDecimal.ZERO) { acc, num -> acc + num.value }
         .divide(BigDecimal(size), 2, RoundingMode.HALF_UP)
-        .stripTrailingZeros()
-    return Temperature(average)
+    return Temperature.invoke(average)
 }

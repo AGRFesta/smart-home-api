@@ -18,7 +18,6 @@ class TemperatureSerializer : JsonSerializer<Temperature>() {
 
 class TemperatureDeserializer : JsonDeserializer<Temperature>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Temperature {
-        val decimal = p.decimalValue
-        return Temperature(decimal.stripTrailingZeros())
+        return Temperature.invoke(p.decimalValue)
     }
 }
