@@ -45,7 +45,15 @@ Successfully replaced the `Temperature` type alias with a Kotlin value class wra
 - `src/main/kotlin/org/agrfesta/sh/api/persistence/jdbc/repositories/TemperatureSettingRepository.kt`
 - `src/main/kotlin/org/agrfesta/sh/api/persistence/jdbc/repositories/TemperatureIntervalRepository.kt`
 
-### 5. Test Enhancements (`TemperatureTest.kt`)
+### 5. Jackson Serialization Support (`TemperatureSerializer.kt`)
+**Implementation**:
+- Created custom `TemperatureSerializer` to write Temperature values to JSON
+- Created custom `TemperatureDeserializer` to read and normalize BigDecimal values from JSON
+- Applied `@JsonSerialize` and `@JsonDeserialize` annotations to Temperature value class
+
+**Files Created**: `src/main/kotlin/org/agrfesta/sh/api/domain/commons/TemperatureSerializer.kt`
+
+### 6. Test Enhancements (`TemperatureTest.kt`)
 **New Tests Added**:
 - Scale-independent equality verification (`Temperature("1.0") == Temperature("1")`)
 - Arithmetic operations (addition, subtraction, multiplication, division, negation)
@@ -55,13 +63,13 @@ Successfully replaced the `Temperature` type alias with a Kotlin value class wra
 
 **Files Modified**: `src/test/kotlin/org/agrfesta/sh/api/domain/commons/TemperatureTest.kt`
 
-### 6. Integration Tests (`TemperatureSettingIntegrationTest.kt`)
+### 7. JSON Serialization Tests (`TemperatureJsonSerializationTest.kt`)
 **New Tests Added**:
-- Database round-trip equality verification
-- JSON serialization/deserialization with different scales
-- Cross-scale equality in integration scenarios
+- JSON deserialization with different scales produces equal Temperature objects
+- Round-trip serialization/deserialization preserves equality
+- Complex JSON structures with multiple Temperature fields
 
-**Files Modified**: `src/test/kotlin/org/agrfesta/sh/api/integration/TemperatureSettingIntegrationTest.kt`
+**Files Created**: `src/test/kotlin/org/agrfesta/sh/api/domain/commons/TemperatureJsonSerializationTest.kt`
 
 ## Test Results
 
@@ -69,12 +77,14 @@ Successfully replaced the `Temperature` type alias with a Kotlin value class wra
 ```
 Command: gradlew.bat clean build
 Exit Code: 0 (SUCCESS)
-Execution Time: 2m 38s
+Execution Time: 2m 42s
+Tests: 211 completed, 0 failed
 ```
 
 ### Test Summary
+- ✅ **211 tests passed** (including 3 new JSON serialization tests)
 - ✅ All existing tests passed without modification to assertions
-- ✅ All new Temperature unit tests passed
+- ✅ All new Temperature unit tests passed (equality, arithmetic, comparison)
 - ✅ All integration tests passed (database round-trip, JSON serialization)
 - ✅ No compilation errors
 - ✅ No test failures
@@ -133,18 +143,31 @@ val saturationPressure = 6.112 * exp((17.67 * temperature.value.toDouble()) / ..
 - Zero overhead due to inline value class
 
 ### Issue 3: JSON Serialization
-**Problem**: Jackson serializer needed to handle value class correctly.
+**Problem**: Jackson was deserializing JSON BigDecimal values without going through Temperature constructors, bypassing scale normalization.
 
-**Resolution**: Jackson automatically serializes value classes transparently - no custom serializer required. Integration tests confirmed proper serialization/deserialization with scale normalization.
+**Solution**: Implemented custom Jackson serializer/deserializer:
+- `TemperatureSerializer`: Serializes to JSON by writing the underlying BigDecimal value
+- `TemperatureDeserializer`: Deserializes from JSON and applies `stripTrailingZeros()` normalization
+- Added `@JsonSerialize` and `@JsonDeserialize` annotations to Temperature value class
+
+**Files Added**:
+- `src/main/kotlin/org/agrfesta/sh/api/domain/commons/TemperatureSerializer.kt`
+
+**Test Coverage**:
+- Created `TemperatureJsonSerializationTest` with lightweight Spring-free ObjectMapper tests
+- Verified different JSON scales (`20.0`, `20`, `20.00`) deserialize to equal Temperature objects
+- Verified round-trip serialization/deserialization preserves equality
 
 ## Migration Impact Assessment
 
 ### Code Changes Required (Completed)
 - ✅ `DataTypes.kt`: Replaced typealias with value class
+- ✅ `TemperatureSerializer.kt`: Added custom Jackson serializer/deserializer
 - ✅ Test factories: Updated `aRandomTemperature()`
 - ✅ Extension functions: Updated `Collection<Temperature>.average()`
 - ✅ Domain models: Updated `AbsoluteHumidity` calculations
 - ✅ JDBC repositories: Added wrapping/unwrapping
+- ✅ Test suite: Added JSON serialization tests
 
 ### Code Unchanged (Automatic Compatibility)
 - ✅ Domain models using `Temperature` type

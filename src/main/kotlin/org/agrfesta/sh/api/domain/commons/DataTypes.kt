@@ -1,9 +1,13 @@
 package org.agrfesta.sh.api.domain.commons
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import java.math.BigDecimal
 import java.math.RoundingMode
 
 @JvmInline
+@JsonSerialize(using = TemperatureSerializer::class)
+@JsonDeserialize(using = TemperatureDeserializer::class)
 value class Temperature(val value: BigDecimal) : Comparable<Temperature> {
     
     constructor(temperature: String) : this(
