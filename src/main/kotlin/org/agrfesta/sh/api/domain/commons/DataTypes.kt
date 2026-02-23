@@ -8,7 +8,7 @@ import java.math.RoundingMode
 @JvmInline
 @JsonSerialize(using = TemperatureSerializer::class)
 @JsonDeserialize(using = TemperatureDeserializer::class)
-value class Temperature(val value: BigDecimal) : Comparable<Temperature> {
+value class Temperature private constructor(val value: BigDecimal) : Comparable<Temperature> {
     
     constructor(temperature: String) : this(
         BigDecimal(temperature).stripTrailingZeros()
