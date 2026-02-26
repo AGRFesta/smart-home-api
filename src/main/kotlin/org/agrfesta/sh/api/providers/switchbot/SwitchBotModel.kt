@@ -8,7 +8,7 @@ import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.domain.devices.SensorReadings
 import org.agrfesta.sh.api.domain.devices.ThermoHygroDataValue
-import java.math.BigDecimal
+import org.agrfesta.sh.api.domain.commons.Temperature
 
 enum class SwitchBotDeviceType(val features: Set<DeviceFeature>) {
     @JsonProperty("MeterPlus") METER_PLUS(setOf(SENSOR)),
@@ -18,7 +18,7 @@ enum class SwitchBotDeviceType(val features: Set<DeviceFeature>) {
 }
 
 data class SwitchBotSensorReadings(
-    val temperature: BigDecimal,
+    val temperature: Temperature,
     val humidityInt: Int,
     val batteryLevel: Int
 ) {

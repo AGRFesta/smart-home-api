@@ -3,8 +3,8 @@ package org.agrfesta.sh.api.providers.switchbot.devices
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import java.math.BigDecimal
 import java.util.*
+import org.agrfesta.sh.api.domain.commons.temperatureOf
 import org.agrfesta.sh.api.domain.devices.FailureByException
 import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.domain.devices.Sensor
@@ -24,7 +24,7 @@ class SwitchBotMeter (
         try{
             val jsonNode = client.getDeviceStatus(deviceProviderId)
             SwitchBotSensorReadings(
-                temperature = jsonNode.at("/body/temperature").asText().let { BigDecimal(it) },
+                temperature = jsonNode.at("/body/temperature").asText().let { temperatureOf(it) },
                 humidityInt = jsonNode.at("/body/humidity").intValue(),
                 batteryLevel = jsonNode.at("/body/battery").intValue())
                 .toSensorReadings()
