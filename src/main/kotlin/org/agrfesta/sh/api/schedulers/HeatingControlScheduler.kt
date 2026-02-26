@@ -2,6 +2,7 @@ package org.agrfesta.sh.api.schedulers
 
 import java.math.BigDecimal
 import kotlinx.coroutines.runBlocking
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.areas.HeatableArea
 import org.agrfesta.sh.api.domain.devices.Heater
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
@@ -35,7 +36,7 @@ class HeatingControlScheduler(
         /**
          * The global temperature hysteresis (1.0 degree) used to prevent rapid toggling of heaters.
          */
-        val HYSTERESIS: BigDecimal = BigDecimal.ONE
+        val HYSTERESIS: Temperature = BigDecimal.ONE
         const val HEATING_ENABLED_KEY = "heating.enabled"
     }
 
