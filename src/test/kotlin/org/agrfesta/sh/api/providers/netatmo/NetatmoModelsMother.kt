@@ -1,8 +1,8 @@
 package org.agrfesta.sh.api.providers.netatmo
 
+import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
-import org.agrfesta.sh.api.domain.commons.RelativeHumidityHundreds
 import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.test.mothers.aRandomBoolean
 import org.agrfesta.test.mothers.aRandomHumidity
@@ -18,7 +18,7 @@ fun aNetatmoModule(
 
 fun aNetatmoRoomStatus(
     id: String = aRandomUniqueString(),
-    humidity: RelativeHumidityHundreds = aRandomHumidity().toHundreds(),
+    humidity: BigDecimal = aRandomHumidity().value.movePointRight(2).stripTrailingZeros(),
     openWindow: Boolean = aRandomBoolean(),
     measuredTemperature: Temperature = aRandomTemperature(),
     setpointTemperature: Temperature = aRandomTemperature(),

@@ -27,8 +27,9 @@ import org.springframework.stereotype.Service
  */
 @Service
 class EconomyAreasSharedHeatingStrategyService(
-    @param:Value("\${heating.params.economy-areas-percentage:0.5}") private val percentage: Percentage
+    @Value("\${heating.params.economy-areas-percentage:0.5}") percentageValue: BigDecimal
 ): NamedSharedHeatingAreasStrategyService, AbstractSharedHeatingAreasStrategyService() {
+    private val percentage = Percentage(percentageValue)
     private val logger by LoggerDelegate()
     override val strategy: SharedHeatingAreasStrategy = SharedHeatingAreasStrategy.ECONOMY
 
@@ -54,12 +55,12 @@ class EconomyAreasSharedHeatingStrategyService(
         val neededHeatingPerc = Percentage(BigDecimal(areasToHeat.size)
             .divide(BigDecimal(areas.size), 2, RoundingMode.HALF_UP))
         if (neededHeatingPerc.value >= percentage.value) {
-            logger.info("${neededHeatingPerc.toHundreds()} of the heatable areas require heating. " +
-                    "(above ${percentage.toHundreds()}) -> heater ON")
+            logger.info("$neededHeatingPerc of the heatable areas require heating. " +
+                    "(above $percentage) -> heater ON")
             sharedHeater.on()
         } else {
-            logger.info("${neededHeatingPerc.toHundreds()} of the heatable areas require heating. " +
-                    "(below ${percentage.toHundreds()}) -> heater OFF")
+            logger.info("$neededHeatingPerc of the heatable areas require heating. " +
+                    "(below $percentage) -> heater OFF")
             sharedHeater.off()
         }
     }

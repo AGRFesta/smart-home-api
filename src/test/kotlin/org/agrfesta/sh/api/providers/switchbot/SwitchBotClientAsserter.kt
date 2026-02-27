@@ -14,7 +14,7 @@ class SwitchBotClientAsserter(
     fun givenSensorData(sensorProviderId: String, data: ThermoHygroData) {
         coEvery { switchBotDevicesClient.getDeviceStatus(sensorProviderId) } returns
                 mapper.aSwitchBotDeviceStatusResponse(
-                    humidity = data.relativeHumidity.toHundreds().value.toInt(),
+                    humidity = data.relativeHumidity.value.movePointRight(2).toInt(),
                     temperature = data.temperature
                 )
     }

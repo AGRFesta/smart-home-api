@@ -8,7 +8,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import org.agrfesta.sh.api.controllers.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aDeviceDataValue
-import org.agrfesta.sh.api.domain.commons.PercentageHundreds
+import org.agrfesta.sh.api.domain.commons.Percentage
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
@@ -56,7 +56,7 @@ class DevicesDataFetchSchedulerIntegrationTest(
         val noSensoDevice = aDeviceDataValue(features = emptySet()).apply { devicesRepository.persist(this) }
 
         val swbSensorData = aRandomThermoHygroData(
-            relativeHumidity = PercentageHundreds(aRandomIntHumidity()).toPercentage())
+            relativeHumidity = Percentage.ofHundreds(aRandomIntHumidity()))
         val swbSensor = aDeviceDataValue(provider = Provider.SWITCHBOT, features = setOf(SENSOR))
             .apply { devicesRepository.persist(this) }
         switchBotClientAsserter.givenSensorData(swbSensor.deviceProviderId, swbSensorData)
@@ -66,7 +66,7 @@ class DevicesDataFetchSchedulerIntegrationTest(
         switchBotClientAsserter.givenSensorDataFailure(swbFaultySensor.deviceProviderId)
 
         val nttSensorData = aRandomThermoHygroData(
-            relativeHumidity = PercentageHundreds(aRandomIntHumidity()).toPercentage())
+            relativeHumidity = Percentage.ofHundreds(aRandomIntHumidity()))
         val nttSensor = aDeviceDataValue(provider = Provider.NETATMO, features = setOf(SENSOR))
             .apply { devicesRepository.persist(this) }
         netatmoIntegrationAsserter.givenDevice(nttSensor, nttSensorData)

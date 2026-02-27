@@ -5,7 +5,6 @@ import java.math.RoundingMode
 
 typealias Temperature = BigDecimal
 typealias RelativeHumidity = Percentage
-typealias RelativeHumidityHundreds = PercentageHundreds
 
 fun Collection<Temperature>.average(): Temperature? {
     if (isEmpty()) return null

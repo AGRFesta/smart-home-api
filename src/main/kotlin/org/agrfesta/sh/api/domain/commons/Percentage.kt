@@ -4,38 +4,24 @@ import java.math.BigDecimal
 import java.math.BigDecimal.ONE
 import java.math.BigDecimal.ZERO
 
-data class Percentage(val value: BigDecimal) {
-    constructor(percentage: String): this(BigDecimal(percentage))
-
+@JvmInline
+value class Percentage(val value: BigDecimal) {
     init {
         require(value >= ZERO && value <= ONE) { "Percentage must be between 0 and 1, is $value." }
     }
 
     fun asText(): String = value.toString()
-    fun toHundreds(): PercentageHundreds {
+
+    override fun toString(): String {
         var hundreds = value.movePointRight(2)
-        if (hundreds.scale() > 0) {
-            hundreds = hundreds.stripTrailingZeros()
-        }
-        return PercentageHundreds(hundreds)
+        if (hundreds.scale() > 0) hundreds = hundreds.stripTrailingZeros()
+        return "$hundreds%"
     }
-
-    override fun toString(): String = toHundreds().toString()
-}
-
-data class PercentageHundreds(val value: BigDecimal) {
-    constructor(hundredPercentage: String): this(BigDecimal(hundredPercentage))
-    constructor(hundredPercentage: Int): this(BigDecimal(hundredPercentage))
 
     companion object {
-        private val HUNDRED = BigDecimal(100)
+        fun of(percentage: String) = Percentage(BigDecimal(percentage))
+        fun ofHundreds(value: BigDecimal) = Percentage(value.movePointLeft(2).stripTrailingZeros())
+        fun ofHundreds(value: Int) = ofHundreds(BigDecimal(value))
+        fun ofHundreds(value: String) = ofHundreds(BigDecimal(value))
     }
-
-    init {
-        require(value >= ZERO && value <= HUNDRED) { "Percentage hundreds must be between 0 and 100, is $value." }
-    }
-
-    fun toPercentage() = Percentage(value.movePointLeft(2).stripTrailingZeros())
-
-    override fun toString(): String = "$value%"
 }

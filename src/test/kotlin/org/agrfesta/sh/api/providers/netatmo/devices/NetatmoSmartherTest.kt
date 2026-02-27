@@ -93,7 +93,7 @@ class NetatmoSmartherTest {
             val expectedData = aRandomThermoHygroData()
             val homeStatus = aNetatmoHomeStatus(
                 rooms = listOf(aNetatmoRoomStatus(
-                    humidity = expectedData.relativeHumidity.toHundreds(),
+                    humidity = expectedData.relativeHumidity.value.movePointRight(2).stripTrailingZeros(),
                     measuredTemperature = expectedData.temperature
                 ))
             )

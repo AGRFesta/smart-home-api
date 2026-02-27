@@ -5,6 +5,7 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.agrfesta.sh.api.domain.commons.Percentage
 import org.agrfesta.sh.api.domain.commons.RelativeHumidity
 import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.commons.ThermoHygroData
@@ -57,7 +58,7 @@ class SmartCache(
 
     private fun ThermoHygroCacheEntry.toThermoHygroData() = ThermoHygroData(
         temperature = Temperature(t),
-        relativeHumidity = RelativeHumidity(h)
+        relativeHumidity = Percentage.of(h)
     )
 }
 
