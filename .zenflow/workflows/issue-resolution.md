@@ -17,17 +17,14 @@ Implement the changes based on the generated plan.
 2. Run relevant tests and linters in the sandbox.
 3. If tests fail, fix the errors and re-test until they pass.
 
-### [ ] Step: PR Preparation
-Prepare the repository for a Pull Request.
-1. Commit the changes and push to the working branch.
-2. Generate a comprehensive PR description (Title, Body, "Fixes #ISSUE_NUMBER") and save it to `{@artifacts_path}/pr_description.md`.
-3. Stop and wait for the user to manually open the PR on GitHub using the generated description.
-
 ### [ ] Step: PR Review Loop
 Handle user-provided PR comments from GitHub.
 1. Wait for the user to manually provide a PR review comment in the chat.
 2. Read the comment and evaluate it carefully against the original GitHub Issue and `{@artifacts_path}/plan.md`.
-3. If the comment is correct and improves the code: implement the fix, run tests, commit, push, and instruct the user to reply "Change implemented as requested".
-4. If the comment introduces regressions or violates the plan: generate a technical response and save it to `{@artifacts_path}/pr_response.md` so the user can copy-paste it into GitHub. Do not make code changes.
-5. CIRCUIT BREAKER: If the same discussion loops more than 3 times, pause and ask the user to resolve it offline.
-6. CONTINUOUS LOOP: After processing the comment, if the PR is not merged yet, recreate this `### [ ] Step: PR Review Loop` to remain ready for the next comment.
+3. IN-SCOPE & CORRECT: If the comment is correct, improves the code, and is strictly related to the original issue: implement the fix, run tests, commit, push, and instruct the user to reply "Change implemented as requested".
+4. OUT-OF-SCOPE BUT CORRECT: If the comment is technically valid but falls outside the scope of the current issue: DO NOT make code changes.
+    - Generate a comprehensive title and description for a new GitHub Issue (including context and the suggested improvement) and save it to `{@artifacts_path}/new_issue_proposal.md`.
+    - Generate a polite PR response explaining that the suggestion is valuable but out of scope, and mention that a separate issue is being created to track it.
+5. INCORRECT OR REGRESSION: If the comment introduces regressions, violates architectural patterns, or breaks the plan: DO NOT make code changes. Generate a technical response and save it to `{@artifacts_path}/pr_response.md` so the user can copy-paste it into GitHub.
+6. CIRCUIT BREAKER: If the same discussion loops more than 3 times, pause and ask the user to resolve it offline.
+7. CONTINUOUS LOOP: After processing the comment, if the PR is not merged yet, recreate this `### [ ] Step: PR Review Loop` to remain ready for the next comment.
