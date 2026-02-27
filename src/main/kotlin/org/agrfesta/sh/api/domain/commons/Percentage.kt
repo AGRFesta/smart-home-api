@@ -10,8 +10,6 @@ value class Percentage(val value: BigDecimal) {
         require(value >= ZERO && value <= ONE) { "Percentage must be between 0 and 1, is $value." }
     }
 
-    fun asText(): String = value.toString()
-
     override fun toString(): String {
         var hundreds = value.movePointRight(2)
         if (hundreds.scale() > 0) hundreds = hundreds.stripTrailingZeros()
