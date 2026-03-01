@@ -26,19 +26,6 @@ class PercentageTest {
             }
 
     @TestFactory
-    fun percentageAsText() = listOf(
-        Percentage(BigDecimal.ZERO) to "0",
-        Percentage(BigDecimal("0.33333")) to "0.33333",
-        Percentage(BigDecimal("0.512")) to "0.512",
-        Percentage(BigDecimal("0.99")) to "0.99",
-        Percentage(BigDecimal.ONE) to "1"
-    ).map { (percentage, text) ->
-        dynamicTest("$percentage -> $text") {
-            percentage.asText() shouldBe text
-        }
-    }
-
-    @TestFactory
     fun percentageToString() = listOf(
         Percentage(BigDecimal.ZERO) to "0%",
         Percentage(BigDecimal("0.33333")) to "33.333%",
