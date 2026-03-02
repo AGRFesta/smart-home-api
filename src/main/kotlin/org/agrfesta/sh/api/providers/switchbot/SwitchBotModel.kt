@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.providers.switchbot
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import org.agrfesta.sh.api.domain.commons.PercentageHundreds
+import org.agrfesta.sh.api.domain.commons.Percentage
 import org.agrfesta.sh.api.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.domain.devices.BatteryValue
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
@@ -26,7 +26,7 @@ data class SwitchBotSensorReadings(
     fun toSensorReadings(): SensorReadings = object : ThermoHygroDataValue, BatteryValue {
         override val thermoHygroData = ThermoHygroData(
             temperature = temperature,
-            relativeHumidity = PercentageHundreds(humidityInt).toPercentage()
+            relativeHumidity = Percentage.ofHundreds(humidityInt)
         )
         override val battery: Int = batteryLevel
     }

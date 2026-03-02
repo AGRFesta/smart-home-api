@@ -7,7 +7,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import org.agrfesta.sh.api.controllers.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aDeviceDataValue
-import org.agrfesta.sh.api.domain.commons.PercentageHundreds
+import org.agrfesta.sh.api.domain.commons.Percentage
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.domain.devices.SensorDataType.HUMIDITY
 import org.agrfesta.sh.api.domain.devices.SensorDataType.TEMPERATURE
@@ -50,7 +50,7 @@ class DevicesDataHistorySchedulerIntegrationTest(
 
     @Test fun `historyDevicesData() saves all cached device values`() {
         val sensorData = aRandomThermoHygroData(
-            relativeHumidity = PercentageHundreds(aRandomIntHumidity()).toPercentage())
+            relativeHumidity = Percentage.ofHundreds(aRandomIntHumidity()))
 //        val sensorTemperature = aRandomTemperature()
 //        val sensorHumidity = aRandomIntHumidity()
         val sensor = aDeviceDataValue(features = setOf(SENSOR))

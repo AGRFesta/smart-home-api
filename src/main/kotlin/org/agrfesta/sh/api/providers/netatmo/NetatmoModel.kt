@@ -1,8 +1,9 @@
 package org.agrfesta.sh.api.providers.netatmo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import java.math.BigDecimal
 import java.time.Instant
-import org.agrfesta.sh.api.domain.commons.RelativeHumidityHundreds
+import org.agrfesta.sh.api.domain.commons.Percentage
 import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.domain.devices.ThermoHygroDataValue
@@ -36,7 +37,7 @@ data class NetatmoStatusChangeRequest(
 
 data class NetatmoRoomStatus(
     val id: String,
-    val humidity: RelativeHumidityHundreds,
+    val humidity: BigDecimal,
     @JsonProperty("open_window") val openWindow: Boolean,
     @JsonProperty("therm_measured_temperature") val measuredTemperature: Temperature,
     @JsonProperty("therm_setpoint_temperature") val setPointTemperature: Temperature,
@@ -46,7 +47,7 @@ data class NetatmoRoomStatus(
 ): ThermoHygroDataValue {
     override val thermoHygroData = ThermoHygroData(
         temperature = measuredTemperature,
-        relativeHumidity = humidity.toPercentage()
+        relativeHumidity = Percentage.ofHundreds(humidity)
     )
 }
 

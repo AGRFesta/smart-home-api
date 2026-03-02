@@ -4,7 +4,7 @@ import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
 
-class AbsoluteHumidity(temperature: Temperature, relativeHumidity: RelativeHumidityHundreds) {
+class AbsoluteHumidity(temperature: Temperature, relativeHumidity: Percentage) {
     val value: BigDecimal
 
     companion object {
@@ -29,7 +29,7 @@ class AbsoluteHumidity(temperature: Temperature, relativeHumidity: RelativeHumid
 
         // Calculate absolute humidity (AH)
         val absoluteHumidity = saturationVaporPressure
-            .multiply(relativeHumidity.value)
+            .multiply(relativeHumidity.value.movePointRight(2))
             .multiply(conversionFactor)
             .divide(temperatureKelvin, mc)
 

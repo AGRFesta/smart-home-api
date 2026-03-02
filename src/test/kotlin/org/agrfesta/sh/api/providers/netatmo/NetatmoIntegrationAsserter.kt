@@ -30,7 +30,7 @@ class NetatmoIntegrationAsserter(
         status?.apply {
             val homeStatus = aNetatmoHomeStatus(
                 rooms = listOf(aNetatmoRoomStatus(
-                    humidity = relativeHumidity.toHundreds(),
+                    humidity = relativeHumidity.value.movePointRight(2).stripTrailingZeros(),
                     measuredTemperature = temperature
                 ))
             )
