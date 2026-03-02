@@ -7,7 +7,7 @@ import java.math.BigDecimal.ZERO
 @JvmInline
 value class Percentage(val value: BigDecimal) {
     init {
-        require(value >= ZERO && value <= ONE) { "Percentage must be between 0 and 1, is $value." }
+        require(value in ZERO..ONE) { "Percentage must be between 0 and 1, is $value." }
     }
 
     override fun toString(): String {
@@ -20,7 +20,7 @@ value class Percentage(val value: BigDecimal) {
         private val HUNDRED = BigDecimal(100)
         fun of(percentage: String) = Percentage(BigDecimal(percentage))
         fun ofHundreds(value: BigDecimal): Percentage {
-            require(value >= ZERO && value <= HUNDRED) { "Percentage hundreds must be between 0 and 100, is $value." }
+            require(value in ZERO..HUNDRED) { "Percentage hundreds must be between 0 and 100, is $value." }
             return Percentage(value.movePointLeft(2).stripTrailingZeros())
         }
         fun ofHundreds(value: Int) = ofHundreds(BigDecimal(value))
