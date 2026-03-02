@@ -17,8 +17,12 @@ value class Percentage(val value: BigDecimal) {
     }
 
     companion object {
+        private val HUNDRED = BigDecimal(100)
         fun of(percentage: String) = Percentage(BigDecimal(percentage))
-        fun ofHundreds(value: BigDecimal) = Percentage(value.movePointLeft(2).stripTrailingZeros())
+        fun ofHundreds(value: BigDecimal): Percentage {
+            require(value >= ZERO && value <= HUNDRED) { "Percentage hundreds must be between 0 and 100, is $value." }
+            return Percentage(value.movePointLeft(2).stripTrailingZeros())
+        }
         fun ofHundreds(value: Int) = ofHundreds(BigDecimal(value))
         fun ofHundreds(value: String) = ofHundreds(BigDecimal(value))
     }

@@ -39,6 +39,16 @@ class PercentageTest {
     }
 
     @TestFactory
+    fun invalidOfHundredsValues() =
+        listOf(BigDecimal("-0.001"), BigDecimal("100.001"), BigDecimal("101"), BigDecimal("-1"))
+            .map {
+                dynamicTest("$it is an invalid hundreds value") {
+                    shouldThrow<IllegalArgumentException> { Percentage.ofHundreds(it) }
+                        .apply { message shouldBe "Percentage hundreds must be between 0 and 100, is $it." }
+                }
+            }
+
+    @TestFactory
     fun ofHundredsFromBigDecimal() = listOf(
         BigDecimal.ZERO to Percentage(BigDecimal.ZERO),
         BigDecimal("0.333") to Percentage(BigDecimal("0.00333")),
