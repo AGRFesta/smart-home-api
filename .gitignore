@@ -42,3 +42,6 @@ out/
 ### Zenflow ###
 .zenflow/*
 !.zenflow/workflows/
+
+### Cline ###
+.cline_artifacts/*
