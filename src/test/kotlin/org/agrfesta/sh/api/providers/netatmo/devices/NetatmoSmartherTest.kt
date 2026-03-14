@@ -2,6 +2,7 @@ package org.agrfesta.sh.api.providers.netatmo.devices
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -321,7 +322,9 @@ class NetatmoSmartherTest {
                 val rootNode = mapper.readTree(requestBody)
                 val homeNode = rootNode.at("/home")
                 val endTime = homeNode.at("/rooms/0/therm_setpoint_end_time").longValue()
-                endTime shouldBe expectedEndTime.epochSecond
+                withClue("the end time is not the expected one") {
+                    endTime shouldBe expectedEndTime.epochSecond
+                }
                 val requestedStatus = mapper.treeToValue(homeNode, NetatmoHomeStatusChange::class.java)
                 requestedStatus.id shouldBe config.homeId
                 requestedStatus.rooms.shouldHaveSize(1).first().apply {
@@ -361,7 +364,9 @@ class NetatmoSmartherTest {
                 val rootNode = mapper.readTree(requestBody)
                 val homeNode = rootNode.at("/home")
                 val endTime = homeNode.at("/rooms/0/therm_setpoint_end_time").longValue()
-                endTime shouldBe expectedEndTime.epochSecond
+                withClue("the end time is not the expected one") {
+                    endTime shouldBe expectedEndTime.epochSecond
+                }
                 val requestedStatus = mapper.treeToValue(homeNode, NetatmoHomeStatusChange::class.java)
                 requestedStatus.id shouldBe config.homeId
                 requestedStatus.rooms.shouldHaveSize(1).first().apply {

@@ -5,8 +5,6 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.agrfesta.sh.api.domain.commons.Percentage
-import org.agrfesta.sh.api.domain.commons.Temperature.Companion.of
 import org.agrfesta.sh.api.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.domain.devices.DeviceProviderIdentity
 import org.slf4j.Logger
@@ -39,26 +37,17 @@ class SmartCache(
     }
 
     fun setThermoHygroOf(device: DeviceProviderIdentity, thermoHygro: ThermoHygroData) =
-        cache.set(device.getThermoHygroKey(), objectMapper.writeValueAsString(thermoHygro.toThermoHygroCacheEntry()))
+        cache.set(device.getThermoHygroKey(), objectMapper.writeValueAsString(thermoHygro))
 
     private fun parseThermoHygroData(json: String): Either<CacheFailure, ThermoHygroData> {
         return try {
-            val data = objectMapper.readValue(json, ThermoHygroCacheEntry::class.java).toThermoHygroData()
+            val data = objectMapper.readValue(json, ThermoHygroData::class.java)
             data.right()
         } catch (e: Exception) {
             CacheError(e).left()
         }
     }
 
-    private fun ThermoHygroData.toThermoHygroCacheEntry() = ThermoHygroCacheEntry(
-        t = temperature.toString(),
-        h = relativeHumidity.value.toString()
-    )
-
-    private fun ThermoHygroCacheEntry.toThermoHygroData() = ThermoHygroData(
-        temperature = of(t),
-        relativeHumidity = Percentage.of(h)
-    )
 }
 
 fun DeviceProviderIdentity.getThermoHygroKey() =
@@ -70,5 +59,3 @@ fun Either<CacheFailure, ThermoHygroData>.onLeftLogOn(logger: Logger) = onLeft {
         is CachedValueNotFound -> logger.error("missing cache key: ${it.key}")
     }
 }
-
-private data class ThermoHygroCacheEntry(val t: String, val h: String)

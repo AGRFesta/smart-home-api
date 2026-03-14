@@ -15,8 +15,8 @@ class CacheIntegrationAsserter(
 
     fun verifyContainsThermoHygroDataFrom(sensor: DeviceDataValue, data: ThermoHygroData) {
         cache.get(sensor.getThermoHygroKey()).shouldBeRight() shouldEqualJson """{
-            "h":"${data.relativeHumidity.value}",
-            "t":"${data.temperature}"}
+            "relativeHumidity":${data.relativeHumidity.value},
+            "temperature":${data.temperature.value}}
         """.trimIndent()
     }
     fun verifyContainsNoThermoHygroDataFrom(sensor: DeviceDataValue) {
