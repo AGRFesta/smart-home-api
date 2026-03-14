@@ -30,7 +30,7 @@ class HomeStatusController(
                 .body(MessageResponse("Unable to fetch areas!"))
         }
         val view = areas.map { area ->
-                val tempAverage = area.sensors
+                val tempAverage: Temperature? = area.sensors
                     .mapNotNull {
                         when(val result = cache.getThermoHygroOf(it)) {
                             is Either.Left -> null

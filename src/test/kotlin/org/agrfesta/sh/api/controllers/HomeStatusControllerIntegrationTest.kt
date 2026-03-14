@@ -5,7 +5,6 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.restassured.RestAssured.given
 import io.restassured.common.mapper.TypeRef
-import java.math.BigDecimal
 import org.agrfesta.sh.api.domain.aSensorDataValue
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.commons.Temperature
@@ -126,10 +125,10 @@ class HomeStatusControllerIntegrationTest(
             .body()
             .`as`(object : TypeRef<Collection<AreaStatusView>>() {})
 
-        areaStatuses.map { listOf(it.id, it.name, it.temperature) }.shouldContainExactlyInAnyOrder(
+        areaStatuses.map { listOf(it.id, it.name, it.temperature?.value) }.shouldContainExactlyInAnyOrder(
             listOf(areaB.uuid, areaB.name, null),
-            listOf(areaC.uuid, areaC.name, BigDecimal("30")),
-            listOf(areaA.uuid, areaA.name, BigDecimal("21.5"))
+            listOf(areaC.uuid, areaC.name, Temperature.of("30").value),
+            listOf(areaA.uuid, areaA.name, Temperature.of("21.5").value)
         )
     }
 
@@ -168,10 +167,10 @@ class HomeStatusControllerIntegrationTest(
             .body()
             .`as`(object : TypeRef<Collection<AreaStatusView>>() {})
 
-        areaStatuses.map { listOf(it.id, it.name, it.temperature) }.shouldContainExactlyInAnyOrder(
+        areaStatuses.map { listOf(it.id, it.name, it.temperature?.value) }.shouldContainExactlyInAnyOrder(
             listOf(areaB.uuid, areaB.name, null),
             listOf(areaC.uuid, areaC.name, null),
-            listOf(areaA.uuid, areaA.name, BigDecimal("21"))
+            listOf(areaA.uuid, areaA.name, Temperature.of("21").value)
         )
     }
 
