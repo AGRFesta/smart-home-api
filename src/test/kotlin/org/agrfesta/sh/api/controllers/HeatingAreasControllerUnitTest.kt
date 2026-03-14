@@ -365,7 +365,7 @@ class HeatingAreasControllerUnitTest(
         every { tempSettingsRepo.findSettingByAreaId(area.uuid) } returns TemperatureSettingEntity(
             uuid = uuid,
             areaUuid = area.uuid,
-            defaultTemperature = setting.defaultTemperature
+            defaultTemperature = setting.defaultTemperature.value
         )
         every { tempIntervalsRepo.findAllBySetting(uuid) } returns setting.temperatureSchedule.map {
             TemperatureIntervalEntity(
@@ -373,7 +373,7 @@ class HeatingAreasControllerUnitTest(
                 settingUuid = uuid,
                 startTime = it.startTime,
                 endTime = it.endTime,
-                temperature = it.temperature
+                temperature = it.temperature.value
             )
         }
 

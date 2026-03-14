@@ -9,13 +9,13 @@ class ThermoHygroDataTest {
 
     @TestFactory
     fun absoluteHumidityCalculations() = listOf(
-        Triple(Temperature("7.33"), Percentage.of("0.2333"), BigDecimal("1.84668")),
-        Triple(Temperature("40.0"), Percentage.of("1.0"), BigDecimal("51.18221")),
-        Triple(Temperature("34.9"), Percentage.of("0.759"), BigDecimal("29.90525")),
-        Triple(Temperature("10.0"), Percentage.of("0.5"), BigDecimal("4.69675")),
-        Triple(Temperature("30.5"), Percentage.of("0.001"), BigDecimal("0.03119")),
-        Triple(Temperature("18.1"), Percentage.of("0.99"), BigDecimal("15.29155")),
-        Triple(Temperature("0.0"), Percentage.of("1.0"), BigDecimal("4.84977"))
+        Triple(Temperature.of("7.33"), Percentage.of("0.2333"), BigDecimal("1.84668")),
+        Triple(Temperature.of("40.0"), Percentage.of("1.0"), BigDecimal("51.18221")),
+        Triple(Temperature.of("34.9"), Percentage.of("0.759"), BigDecimal("29.90525")),
+        Triple(Temperature.of("10.0"), Percentage.of("0.5"), BigDecimal("4.69675")),
+        Triple(Temperature.of("30.5"), Percentage.of("0.001"), BigDecimal("0.03119")),
+        Triple(Temperature.of("18.1"), Percentage.of("0.99"), BigDecimal("15.29155")),
+        Triple(Temperature.of("0.0"), Percentage.of("1.0"), BigDecimal("4.84977"))
     ).map {
         dynamicTest("Temp ${it.first}°C, ${it.second} -> ${it.third}g/m³") {
             ThermoHygroData(temperature = it.first, relativeHumidity = it.second)

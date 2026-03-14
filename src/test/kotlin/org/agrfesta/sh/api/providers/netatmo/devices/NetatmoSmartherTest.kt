@@ -247,7 +247,7 @@ class NetatmoSmartherTest {
                 rooms = listOf(
                     aNetatmoRoomStatus(
                         setpointMode = SET_POINT_MODE,
-                        setpointTemperature = Temperature("18.0"),
+                        setpointTemperature = Temperature.of("18.0"),
                         setpointStartTime = now.minusSeconds(3600),
                         setpointEndTime = now.plusSeconds(3600)
                     )
@@ -326,7 +326,7 @@ class NetatmoSmartherTest {
                 requestedStatus.id shouldBe config.homeId
                 requestedStatus.rooms.shouldHaveSize(1).first().apply {
                     id shouldBe config.roomId
-                    setPointTemperature shouldBe Temperature("30")
+                    setPointTemperature shouldBe Temperature.of("30")
                     setPointEndTime shouldBe expectedEndTime
                     setPointMode shouldBe "manual"
                 }
@@ -366,7 +366,7 @@ class NetatmoSmartherTest {
                 requestedStatus.id shouldBe config.homeId
                 requestedStatus.rooms.shouldHaveSize(1).first().apply {
                     id shouldBe config.roomId
-                    setPointTemperature shouldBe Temperature("7")
+                    setPointTemperature shouldBe Temperature.of("7")
                     setPointEndTime shouldBe expectedEndTime
                     setPointMode shouldBe "manual"
                 }

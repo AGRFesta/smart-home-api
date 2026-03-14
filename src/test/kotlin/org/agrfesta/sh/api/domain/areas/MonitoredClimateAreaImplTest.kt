@@ -12,9 +12,9 @@ import io.ktor.http.HttpStatusCode
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import java.math.BigDecimal
 import java.util.*
 import kotlinx.coroutines.runBlocking
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.devices.Sensor
 import org.agrfesta.sh.api.domain.failures.KtorRequestFailure
 import org.agrfesta.sh.api.domain.failures.MessageFailure
@@ -70,7 +70,7 @@ class MonitoredClimateAreaImplTest {
                     val mockedSensors = case.temperatures.map { temp ->
                         mockk<Sensor> {
                             coEvery { fetchReadings() } returns aThermoHygroDataValue(
-                                temperature = BigDecimal(temp)
+                                temperature = Temperature.of(temp)
                             ).right()
                         }
                     }
@@ -81,7 +81,7 @@ class MonitoredClimateAreaImplTest {
 
                     val result = sut.getCurrentTemperature()
 
-                    result.shouldBeRight().toPlainString() shouldBe case.expectedAverage
+                    result.shouldBeRight().value.toPlainString() shouldBe case.expectedAverage
                 }
             }
         }
@@ -90,10 +90,10 @@ class MonitoredClimateAreaImplTest {
     @Test
     fun `getCurrentTemperature() returns average temperature among all sensors ignoring failing fetches`() {
         val sensorSuccess1 = mockk<Sensor> {
-            coEvery { fetchReadings() } returns aThermoHygroDataValue(temperature = BigDecimal("10")).right()
+            coEvery { fetchReadings() } returns aThermoHygroDataValue(temperature = Temperature.of("10")).right()
         }
         val sensorSuccess2 = mockk<Sensor> {
-            coEvery { fetchReadings() } returns aThermoHygroDataValue(temperature = BigDecimal("20")).right()
+            coEvery { fetchReadings() } returns aThermoHygroDataValue(temperature = Temperature.of("20")).right()
         }
         // Setup Failure Sensor (KtorRequestFailure)
         val sensorFailure = mockk<Sensor> {
@@ -110,7 +110,7 @@ class MonitoredClimateAreaImplTest {
 
         val result = runBlocking { sut.getCurrentTemperature() }
 
-        result.shouldBeRight().toPlainString() shouldBe "15"
+        result.shouldBeRight().value.toPlainString() shouldBe "15"
     }
 
     @Test

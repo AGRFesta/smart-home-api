@@ -29,28 +29,28 @@ fun HeatableArea.hasNoTargetTemp() {
 
 fun HeatableArea.hasTempAboveTargetRange(): Pair<Temperature, Temperature> {
     val temperature = aRandomTemperature()
-    val targetTemperature = temperature.minus(HYSTERESIS.multiply(BigDecimal.TWO))
+    val targetTemperature = temperature - HYSTERESIS.times(BigDecimal.TWO)
     defineTempStatus(temperature, targetTemperature)
     return temperature to targetTemperature
 }
 
 fun HeatableArea.hasTempBelowTargetRange(): Pair<Temperature, Temperature> {
     val temperature = aRandomTemperature()
-    val targetTemperature = temperature.plus(HYSTERESIS.multiply(BigDecimal.TWO))
+    val targetTemperature = temperature + HYSTERESIS.times(BigDecimal.TWO)
     defineTempStatus(temperature, targetTemperature)
     return temperature to targetTemperature
 }
 
 fun HeatableArea.hasTempInTargetRangeAboveTarget(): Pair<Temperature, Temperature> {
     val temperature = aRandomTemperature()
-    val targetTemperature = temperature.minus(HYSTERESIS.divide(BigDecimal.TWO))
+    val targetTemperature = temperature - HYSTERESIS.div(BigDecimal.TWO)
     defineTempStatus(temperature, targetTemperature)
     return temperature to targetTemperature
 }
 
 fun HeatableArea.hasTempInTargetRangeBelowTarget(): Pair<Temperature, Temperature> {
     val temperature = aRandomTemperature()
-    val targetTemperature = temperature.plus(HYSTERESIS.divide(BigDecimal.TWO))
+    val targetTemperature = temperature + HYSTERESIS.div(BigDecimal.TWO)
     defineTempStatus(temperature, targetTemperature)
     return temperature to targetTemperature
 }

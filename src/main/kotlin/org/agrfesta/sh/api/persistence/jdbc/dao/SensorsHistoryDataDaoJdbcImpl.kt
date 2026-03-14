@@ -19,7 +19,7 @@ class SensorsHistoryDataDaoJdbcImpl(
         sensorUuid: UUID,
         time: Instant,
         temperature: Temperature
-    ) = historyDataRepository.persist(sensorUuid, time, TEMPERATURE, temperature)
+    ) = historyDataRepository.persist(sensorUuid, time, TEMPERATURE, temperature.value)
 
     override fun persistHumidity(
         sensorUuid: UUID,
