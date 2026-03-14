@@ -11,9 +11,9 @@ import org.agrfesta.sh.api.domain.failures.ExceptionFailure
 import org.agrfesta.sh.api.domain.failures.Failure
 
 data class NetatmoRefreshTokenResponse(
-    @JsonProperty("access_token") val accessToken: String,
-    @JsonProperty("refresh_token") val refreshToken: String,
-    @JsonProperty("expires_in") val expiresIn: Int
+    @field:JsonProperty("access_token") val accessToken: String,
+    @field:JsonProperty("refresh_token") val refreshToken: String,
+    @field:JsonProperty("expires_in") val expiresIn: Int
 )
 data class NetatmoAuthFailure(override val exception: Exception): ExceptionFailure
 
@@ -22,28 +22,28 @@ object NetatmoSetStatusSuccess
 data class NetatmoContractBreak(val message: String, val response: String? = null): Failure
 
 data class NetatmoHomeStatus(
-    val id: String,
-    val rooms: Collection<NetatmoRoomStatus>
+    @field:JsonProperty("id") val id: String,
+    @field:JsonProperty("rooms") val rooms: Collection<NetatmoRoomStatus>
 )
 
 data class NetatmoHomeStatusChange(
-    val id: String,
-    val rooms: Collection<NetatmoRoomStatusChange>
+    @field:JsonProperty("id") val id: String,
+    @field:JsonProperty("rooms") val rooms: Collection<NetatmoRoomStatusChange>
 )
 
 data class NetatmoStatusChangeRequest(
-    val home: NetatmoHomeStatusChange
+    @field:JsonProperty("home") val home: NetatmoHomeStatusChange
 )
 
 data class NetatmoRoomStatus(
-    val id: String,
-    val humidity: BigDecimal,
-    @JsonProperty("open_window") val openWindow: Boolean,
-    @JsonProperty("therm_measured_temperature") val measuredTemperature: Temperature,
-    @JsonProperty("therm_setpoint_temperature") val setPointTemperature: Temperature,
-    @JsonProperty("therm_setpoint_mode") val setPointMode: String,
-    @JsonProperty("therm_setpoint_start_time") val setPointStartTime: Instant? = null,
-    @JsonProperty("therm_setpoint_end_time") val setPointEndTime: Instant? = null
+    @field:JsonProperty("id") val id: String,
+    @field:JsonProperty("humidity") val humidity: BigDecimal,
+    @field:JsonProperty("open_window") val openWindow: Boolean,
+    @field:JsonProperty("therm_measured_temperature") val measuredTemperature: Temperature,
+    @field:JsonProperty("therm_setpoint_temperature") val setPointTemperature: Temperature,
+    @field:JsonProperty("therm_setpoint_mode") val setPointMode: String,
+    @field:JsonProperty("therm_setpoint_start_time") val setPointStartTime: Instant? = null,
+    @field:JsonProperty("therm_setpoint_end_time") val setPointEndTime: Instant? = null
 ): ThermoHygroDataValue {
     override val thermoHygroData = ThermoHygroData(
         temperature = measuredTemperature,
@@ -52,15 +52,15 @@ data class NetatmoRoomStatus(
 }
 
 data class NetatmoRoomStatusChange(
-    val id: String,
-    @JsonProperty("therm_setpoint_temperature") val setPointTemperature: Temperature,
-    @JsonProperty("therm_setpoint_mode") val setPointMode: String,
-    @JsonProperty("therm_setpoint_end_time") val setPointEndTime: Instant
+    @field:JsonProperty("id") val id: String,
+    @field:JsonProperty("therm_setpoint_temperature") val setPointTemperature: Temperature,
+    @field:JsonProperty("therm_setpoint_mode") val setPointMode: String,
+    @field:JsonProperty("therm_setpoint_end_time") val setPointEndTime: Instant
 )
 
 data class NetatmoModuleData(
-    val id: String,
-    val type: String,
-    val name: String,
-    @JsonProperty("room_id") val roomId: String
+    @field:JsonProperty("id") val id: String,
+    @field:JsonProperty("type") val type: String,
+    @field:JsonProperty("name") val name: String,
+    @field:JsonProperty("room_id") val roomId: String
 )

@@ -42,7 +42,7 @@ class HeatingAreasControllerIntegrationTest(
         val result = given()
             .contentType(ContentType.JSON)
             .authenticated()
-            .body("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}""")
+            .body("""{"defaultTemperature": ${aRandomTemperature().value}, "temperatureSchedule": []}""")
             .`when`()
             .post("/heating/areas/${area.uuid}")
             .then()
@@ -62,7 +62,7 @@ class HeatingAreasControllerIntegrationTest(
         val tempIntC = aTemperatureInterval(startTime = aDailyTime(hour = 4), endTime = aDailyTime(hour = 5))
         val body = """
             {
-                "defaultTemperature": $defaultTemperature,
+                "defaultTemperature": ${defaultTemperature.value},
                 "temperatureSchedule": [
                     ${tempIntA.toJson()},
                     ${tempIntB.toJson()},
@@ -96,7 +96,7 @@ class HeatingAreasControllerIntegrationTest(
         val tempIntB = aTemperatureInterval(startTime = aDailyTime(hour = 5), endTime = aDailyTime(hour = 6))
         val body = """
             {
-                "defaultTemperature": $defaultTemperature,
+                "defaultTemperature": ${defaultTemperature.value},
                 "temperatureSchedule": [
                     ${tempIntA.toJson()},
                     ${tempIntB.toJson()}
@@ -132,7 +132,7 @@ class HeatingAreasControllerIntegrationTest(
         val tempIntC = aTemperatureInterval(startTime = aDailyTime(hour = 4), endTime = aDailyTime(hour = 5))
         val body = """
             {
-                "defaultTemperature": $defaultTemperature,
+                "defaultTemperature": ${defaultTemperature.value},
                 "temperatureSchedule": [
                     ${tempIntA.toJson()},
                     ${tempIntB.toJson()},
@@ -243,7 +243,7 @@ class HeatingAreasControllerIntegrationTest(
 
     private fun TemperatureInterval.toJson() = """
             {
-                "temperature": $temperature,
+                "temperature": ${temperature.value},
                 "startTime": "$startTime",
                 "endTime": "$endTime"
             }

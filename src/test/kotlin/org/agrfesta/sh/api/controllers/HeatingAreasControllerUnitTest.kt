@@ -65,7 +65,7 @@ class HeatingAreasControllerUnitTest(
         val responseBody: String = mockMvc.perform(
             post("/heating/areas/${area.uuid}")
                 .contentType("application/json")
-                .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
+                .content("""{"defaultTemperature": ${aRandomTemperature().value}, "temperatureSchedule": []}"""))
             .andExpect(status().isUnauthorized)
             .andReturn().response.contentAsString
 
@@ -78,7 +78,7 @@ class HeatingAreasControllerUnitTest(
             post("/heating/areas/${area.uuid}")
                 .header("Authorization", "Bearer ")
                 .contentType("application/json")
-                .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
+                .content("""{"defaultTemperature": ${aRandomTemperature().value}, "temperatureSchedule": []}"""))
             .andExpect(status().isUnauthorized)
             .andReturn().response.contentAsString
 
@@ -91,7 +91,7 @@ class HeatingAreasControllerUnitTest(
             post("/heating/areas/${area.uuid}")
                 .header("Authorization", "Bearer ${aRandomUniqueString()}")
                 .contentType("application/json")
-                .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
+                .content("""{"defaultTemperature": ${aRandomTemperature().value}, "temperatureSchedule": []}"""))
             .andExpect(status().isUnauthorized)
             .andReturn().response.contentAsString
 
@@ -107,7 +107,7 @@ class HeatingAreasControllerUnitTest(
             post("/heating/areas/${area.uuid}")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
+                .content("""{"defaultTemperature": ${aRandomTemperature().value}, "temperatureSchedule": []}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -148,7 +148,7 @@ class HeatingAreasControllerUnitTest(
                 every { tempSettingsRepo.save(any()) } returns UUID.randomUUID()
                 val body = """
                     {
-                        "defaultTemperature": ${aRandomTemperature()},
+                        "defaultTemperature": ${aRandomTemperature().value},
                         "temperatureSchedule": [${intervals.joinToString(separator = ",") { it.toJson() }}]
                     }
                 """.trimIndent()
@@ -205,7 +205,7 @@ class HeatingAreasControllerUnitTest(
             dynamicTest("$intervals") {
                 val body = """
                     {
-                        "defaultTemperature": ${aRandomTemperature()},
+                        "defaultTemperature": ${aRandomTemperature().value},
                         "temperatureSchedule": [${intervals.joinToString(separator = ",") { it.toJson() }}]
                     }
                 """.trimIndent()
@@ -232,7 +232,7 @@ class HeatingAreasControllerUnitTest(
             post("/heating/areas/${area.uuid}")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
+                .content("""{"defaultTemperature": ${aRandomTemperature().value}, "temperatureSchedule": []}"""))
             .andExpect(status().isCreated)
     }
 
@@ -245,7 +245,7 @@ class HeatingAreasControllerUnitTest(
             post("/heating/areas/${area.uuid}")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"defaultTemperature": ${aRandomTemperature()}, "temperatureSchedule": []}"""))
+                .content("""{"defaultTemperature": ${aRandomTemperature().value}, "temperatureSchedule": []}"""))
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -365,7 +365,7 @@ class HeatingAreasControllerUnitTest(
         every { tempSettingsRepo.findSettingByAreaId(area.uuid) } returns TemperatureSettingEntity(
             uuid = uuid,
             areaUuid = area.uuid,
-            defaultTemperature = setting.defaultTemperature
+            defaultTemperature = setting.defaultTemperature.value
         )
         every { tempIntervalsRepo.findAllBySetting(uuid) } returns setting.temperatureSchedule.map {
             TemperatureIntervalEntity(
@@ -373,7 +373,7 @@ class HeatingAreasControllerUnitTest(
                 settingUuid = uuid,
                 startTime = it.startTime,
                 endTime = it.endTime,
-                temperature = it.temperature
+                temperature = it.temperature.value
             )
         }
 
@@ -457,7 +457,7 @@ class HeatingAreasControllerUnitTest(
 
     private fun TemperatureInterval.toJson() = """
             {
-                "temperature": $temperature,
+                "temperature": ${temperature.value},
                 "startTime": "$startTime",
                 "endTime": "$endTime"
             }

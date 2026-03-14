@@ -55,8 +55,8 @@ abstract class AbstractSharedHeatingAreasStrategyService: SharedHeatingAreasStra
             },
             ifRight = { temp ->
                 when {
-                    temp > targetTemp.plus(HYSTERESIS) -> false
-                    temp < targetTemp.minus(HYSTERESIS) -> true
+                    temp > targetTemp + HYSTERESIS -> false
+                    temp < targetTemp - HYSTERESIS -> true
                     else -> requiresHeatingInHysteresisRange(temp, targetTemp)
                 }
             }
