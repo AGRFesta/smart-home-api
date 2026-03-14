@@ -5,9 +5,9 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.restassured.RestAssured.given
 import io.restassured.common.mapper.TypeRef
-import java.math.BigDecimal
 import org.agrfesta.sh.api.domain.aSensorDataValue
 import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.testcontainers.junit.jupiter.Container
+import java.math.BigDecimal
 
 class HomeStatusControllerIntegrationTest(
     @Autowired private val cache: SmartCache,
@@ -101,9 +102,9 @@ class HomeStatusControllerIntegrationTest(
         assignmentsService.assignSensorToArea(areaA.uuid, sensorA0Id).shouldBeRight()
         assignmentsService.assignSensorToArea(areaA.uuid, sensorA1Id).shouldBeRight()
         assignmentsService.assignSensorToArea(areaA.uuid, sensorA2Id).shouldBeRight()
-        cache.setThermoHygroOf(sensorA0Data, aRandomThermoHygroData(temperature = BigDecimal("20.5")))
-        cache.setThermoHygroOf(sensorA1Data, aRandomThermoHygroData(temperature = BigDecimal("22")))
-        cache.setThermoHygroOf(sensorA2Data, aRandomThermoHygroData(temperature = BigDecimal("22")))
+        cache.setThermoHygroOf(sensorA0Data, aRandomThermoHygroData(temperature = Temperature.of("20.5")))
+        cache.setThermoHygroOf(sensorA1Data, aRandomThermoHygroData(temperature = Temperature.of("22")))
+        cache.setThermoHygroOf(sensorA2Data, aRandomThermoHygroData(temperature = Temperature.of("22")))
         // Setup Area B
         val areaB = anAreaDto()
         areasDao.save(areaB)
@@ -113,7 +114,7 @@ class HomeStatusControllerIntegrationTest(
         val sensorC0Data = aSensorDataValue()
         val sensorC0Id = devicesService.createDevice(sensorC0Data).shouldBeRight()
         assignmentsService.assignSensorToArea(areaC.uuid, sensorC0Id).shouldBeRight()
-        cache.setThermoHygroOf(sensorC0Data, aRandomThermoHygroData(temperature = BigDecimal("30")))
+        cache.setThermoHygroOf(sensorC0Data, aRandomThermoHygroData(temperature = Temperature.of("30")))
 
         val areaStatuses: Collection<AreaStatusView> = given()
             .authenticated()
@@ -125,7 +126,7 @@ class HomeStatusControllerIntegrationTest(
             .body()
             .`as`(object : TypeRef<Collection<AreaStatusView>>() {})
 
-        areaStatuses.map { listOf(it.id, it.name, it.temperature) }.shouldContainExactlyInAnyOrder(
+        areaStatuses.map { listOf(it.id, it.name, it.temperature?.value) }.shouldContainExactlyInAnyOrder(
             listOf(areaB.uuid, areaB.name, null),
             listOf(areaC.uuid, areaC.name, BigDecimal("30")),
             listOf(areaA.uuid, areaA.name, BigDecimal("21.5"))
@@ -145,8 +146,8 @@ class HomeStatusControllerIntegrationTest(
         assignmentsService.assignSensorToArea(areaA.uuid, sensorA0Id).shouldBeRight()
         assignmentsService.assignSensorToArea(areaA.uuid, sensorA1Id).shouldBeRight()
         assignmentsService.assignSensorToArea(areaA.uuid, sensorA2Id).shouldBeRight()
-        cache.setThermoHygroOf(sensorA1Data, aRandomThermoHygroData(temperature = BigDecimal("20")))
-        cache.setThermoHygroOf(sensorA2Data, aRandomThermoHygroData(temperature = BigDecimal("22")))
+        cache.setThermoHygroOf(sensorA1Data, aRandomThermoHygroData(temperature = Temperature.of("20")))
+        cache.setThermoHygroOf(sensorA2Data, aRandomThermoHygroData(temperature = Temperature.of("22")))
         // Setup Area B
         val areaB = anAreaDto()
         areasDao.save(areaB)
@@ -167,10 +168,10 @@ class HomeStatusControllerIntegrationTest(
             .body()
             .`as`(object : TypeRef<Collection<AreaStatusView>>() {})
 
-        areaStatuses.map { listOf(it.id, it.name, it.temperature) }.shouldContainExactlyInAnyOrder(
+        areaStatuses.map { listOf(it.id, it.name, it.temperature?.value) }.shouldContainExactlyInAnyOrder(
             listOf(areaB.uuid, areaB.name, null),
             listOf(areaC.uuid, areaC.name, null),
-            listOf(areaA.uuid, areaA.name, BigDecimal("21"))
+            listOf(areaA.uuid, areaA.name, Temperature.of("21").value)
         )
     }
 

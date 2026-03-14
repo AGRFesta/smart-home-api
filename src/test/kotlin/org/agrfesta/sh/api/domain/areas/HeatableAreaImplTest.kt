@@ -11,7 +11,7 @@ import java.time.LocalTime
 import java.util.*
 import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
-import org.agrfesta.sh.api.domain.commons.temperatureOf
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.devices.Heater
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.services.heating.HeatingAreasService
@@ -56,15 +56,15 @@ class HeatableAreaImplTest {
     fun `getCurrentTargetTemperature() return correct target temperature based on current time`(): List<DynamicTest> {
         val settings = anAreaTemperatureSetting(
             areaId = areaId,
-            defaultTemperature = temperatureOf("17.0"),
+            defaultTemperature = Temperature.of("17.0"),
             temperatureSchedule = setOf(
                 aTemperatureInterval(
-                    temperatureOf("19.0"),
+                    Temperature.of("19.0"),
                     LocalTime.of(6, 0),
                     LocalTime.of(9, 0)
                 ),
                 aTemperatureInterval(
-                    temperatureOf("20.0"),
+                    Temperature.of("20.0"),
                     LocalTime.of(21, 0),
                     LocalTime.of(23, 0)
                 )
@@ -72,14 +72,14 @@ class HeatableAreaImplTest {
         )
         every { heatingAreasService.findAreaSetting(areaId) } returns settings.right()
         return listOf(
-            LocalTime.of(1, 30) to temperatureOf("17.0"), // Default
-            LocalTime.of(6, 0) to temperatureOf("19.0"),  // Start of first interval
-            LocalTime.of(7, 30) to temperatureOf("19.0"), // Inside first interval
-            LocalTime.of(9, 0) to temperatureOf("17.0"),  // End of first interval (exclusive)
-            LocalTime.of(15, 0) to temperatureOf("17.0"), // Default between intervals
-            LocalTime.of(21, 0) to temperatureOf("20.0"), // Start of second interval
-            LocalTime.of(22, 0) to temperatureOf("20.0"), // Inside second interval
-            LocalTime.of(23, 0) to temperatureOf("17.0")  // End of second interval (exclusive)
+            LocalTime.of(1, 30) to Temperature.of("17.0"), // Default
+            LocalTime.of(6, 0) to Temperature.of("19.0"),  // Start of first interval
+            LocalTime.of(7, 30) to Temperature.of("19.0"), // Inside first interval
+            LocalTime.of(9, 0) to Temperature.of("17.0"),  // End of first interval (exclusive)
+            LocalTime.of(15, 0) to Temperature.of("17.0"), // Default between intervals
+            LocalTime.of(21, 0) to Temperature.of("20.0"), // Start of second interval
+            LocalTime.of(22, 0) to Temperature.of("20.0"), // Inside second interval
+            LocalTime.of(23, 0) to Temperature.of("17.0")  // End of second interval (exclusive)
         ).map { (time, expectedTemp) ->
             dynamicTest("at $time target should be $expectedTemp") {
                 every { timeService.currentLocalTime() } returns time

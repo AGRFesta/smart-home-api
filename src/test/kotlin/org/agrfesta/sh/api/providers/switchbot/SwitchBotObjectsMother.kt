@@ -21,7 +21,7 @@ fun ObjectMapper.aSwitchBotDeviceStatusResponse(
                 "deviceId": "F4E269B8A0E0",
                 "deviceType": "${valueToTree<JsonNode>(deviceType).asText()}",
                 "humidity": $humidity,
-                "temperature": ${temperatureText ?: temperature},
+                "temperature": ${temperatureText ?: temperature.value},
                 "version": "V0.5",
                 "battery": $battery
             },

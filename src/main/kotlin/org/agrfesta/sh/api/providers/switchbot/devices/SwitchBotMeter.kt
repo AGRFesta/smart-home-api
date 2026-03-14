@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import java.util.*
-import org.agrfesta.sh.api.domain.commons.temperatureOf
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.devices.FailureByException
 import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.domain.devices.Sensor
@@ -24,7 +24,7 @@ class SwitchBotMeter (
         try{
             val jsonNode = client.getDeviceStatus(deviceProviderId)
             SwitchBotSensorReadings(
-                temperature = jsonNode.at("/body/temperature").asText().let { temperatureOf(it) },
+                temperature = jsonNode.at("/body/temperature").asText().let { Temperature.of(it) },
                 humidityInt = jsonNode.at("/body/humidity").intValue(),
                 batteryLevel = jsonNode.at("/body/battery").intValue())
                 .toSensorReadings()

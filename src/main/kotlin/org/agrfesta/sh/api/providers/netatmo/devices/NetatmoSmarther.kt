@@ -7,7 +7,7 @@ import arrow.core.right
 import java.time.Duration
 import java.time.Instant
 import java.util.*
-import org.agrfesta.sh.api.domain.commons.Temperature
+import org.agrfesta.sh.api.domain.commons.Temperature.Companion.of
 import org.agrfesta.sh.api.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.domain.devices.ActuatorStatus.OFF
 import org.agrfesta.sh.api.domain.devices.ActuatorStatus.ON
@@ -36,8 +36,8 @@ class NetatmoSmarther(
     override val provider = Provider.NETATMO
 
     companion object {
-        internal val MIN_SET_POINT_TEMPERATURE = Temperature("7")
-        internal val MAX_SET_POINT_TEMPERATURE = Temperature("30")
+        internal val MIN_SET_POINT_TEMPERATURE = of("7")
+        internal val MAX_SET_POINT_TEMPERATURE = of("30")
         internal const val SET_POINT_MODE = "manual"
     }
 

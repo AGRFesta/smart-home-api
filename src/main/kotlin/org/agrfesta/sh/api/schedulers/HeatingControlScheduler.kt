@@ -36,7 +36,7 @@ class HeatingControlScheduler(
         /**
          * The global temperature hysteresis (1.0 degree) used to prevent rapid toggling of heaters.
          */
-        val HYSTERESIS: Temperature = BigDecimal.ONE
+        val HYSTERESIS: Temperature = Temperature.of(BigDecimal.ONE)
         const val HEATING_ENABLED_KEY = "heating.enabled"
     }
 

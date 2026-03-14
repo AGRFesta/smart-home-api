@@ -62,7 +62,7 @@ class DevicesDataHistorySchedulerIntegrationTest(
 
         historyDao.findBySensor(uuid).apply {
             map { listOf(it.time.truncatedTo(ChronoUnit.SECONDS), it.type, it.value) }.shouldContainExactlyInAnyOrder(
-                listOf(now.truncatedTo(ChronoUnit.SECONDS), TEMPERATURE, sensorData.temperature),
+                listOf(now.truncatedTo(ChronoUnit.SECONDS), TEMPERATURE, sensorData.temperature.value),
                 listOf(now.truncatedTo(ChronoUnit.SECONDS), HUMIDITY, sensorData.relativeHumidity.value)
             )
         }

@@ -3,6 +3,7 @@ package org.agrfesta.sh.api.persistence.jdbc.dao
 import java.util.*
 import org.agrfesta.sh.api.domain.areas.AreaTemperatureSetting
 import org.agrfesta.sh.api.domain.areas.TemperatureInterval
+import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureIntervalEntity
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity
@@ -30,7 +31,7 @@ class TemperatureSettingsDaoJdbcImpl(
         val uuid = tempSettingsRepository.save(TemperatureSettingEntity(
             uuid = settingsId,
             areaUuid = setting.areaId,
-            defaultTemperature = setting.defaultTemperature
+            defaultTemperature = setting.defaultTemperature.value
         ))
         setting.temperatureSchedule.map {
             TemperatureIntervalEntity(
@@ -38,7 +39,7 @@ class TemperatureSettingsDaoJdbcImpl(
                 settingUuid = settingsId,
                 startTime = it.startTime,
                 endTime = it.endTime,
-                temperature = it.temperature
+                temperature = it.temperature.value
             )
         }.forEach { tempIntervalsRepo.save(it) }
         return uuid
@@ -49,10 +50,10 @@ class TemperatureSettingsDaoJdbcImpl(
             val intervals = tempIntervalsRepo.findAllBySetting(setting.uuid)
             AreaTemperatureSetting(
                 areaId = setting.areaUuid,
-                defaultTemperature = setting.defaultTemperature,
+                defaultTemperature = Temperature.of(setting.defaultTemperature),
                 temperatureSchedule = intervals.map {
                     TemperatureInterval(
-                        temperature = it.temperature,
+                        temperature = Temperature.of(it.temperature),
                         startTime = it.startTime,
                         endTime = it.endTime
                     )

@@ -71,6 +71,6 @@ class EconomyAreasSharedHeatingStrategyService(
                 logger.error("Unable to fetch current temperature for Area '$uuid'.")
                 false
             },
-            ifRight = { temp -> temp > targetTemp.plus(HYSTERESIS) }
+            ifRight = { temp -> temp > (targetTemp + HYSTERESIS) }
         )
 }

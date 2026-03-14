@@ -10,18 +10,18 @@ class AbsoluteHumidity(temperature: Temperature, relativeHumidity: Percentage) {
     companion object {
         private val a = BigDecimal("6.112") // Constant factor
         private val b = BigDecimal("17.67") // Factor for the exponent
-        private val c = BigDecimal("243.5") // Temperature adjustment constant
+        private val c = Temperature.of("243.5") // Temperature adjustment constant
         private val conversionFactor = BigDecimal("2.1674") // Simplified conversion factor
-        private val shiftForKelvin = BigDecimal("273.15")
+        private val shiftForKelvin = Temperature.of("273.15")
         private val mc = MathContext.DECIMAL128
         private const val SCALE = 5
     }
 
     init {
-        val temperatureKelvin = temperature.add(shiftForKelvin)
+        val temperatureKelvin = temperature + shiftForKelvin
 
         // Calculate the exponent in the saturation vapor pressure formula
-        val exponent = b.multiply(temperature).divide(temperature.add(c), mc)
+        val exponent = b.multiply(temperature.value).divide((temperature + c).value, mc)
 
         val expResult = expBigDecimal(exponent)
         // Calculate saturation vapor pressure
@@ -31,7 +31,7 @@ class AbsoluteHumidity(temperature: Temperature, relativeHumidity: Percentage) {
         val absoluteHumidity = saturationVaporPressure
             .multiply(relativeHumidity.value.movePointRight(2))
             .multiply(conversionFactor)
-            .divide(temperatureKelvin, mc)
+            .divide(temperatureKelvin.value, mc)
 
         value = absoluteHumidity.setScale(SCALE, RoundingMode.HALF_UP)
     }
