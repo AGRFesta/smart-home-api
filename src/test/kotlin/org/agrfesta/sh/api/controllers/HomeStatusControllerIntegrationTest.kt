@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.testcontainers.junit.jupiter.Container
+import java.math.BigDecimal
 
 class HomeStatusControllerIntegrationTest(
     @Autowired private val cache: SmartCache,
@@ -127,8 +128,8 @@ class HomeStatusControllerIntegrationTest(
 
         areaStatuses.map { listOf(it.id, it.name, it.temperature?.value) }.shouldContainExactlyInAnyOrder(
             listOf(areaB.uuid, areaB.name, null),
-            listOf(areaC.uuid, areaC.name, Temperature.of("30").value),
-            listOf(areaA.uuid, areaA.name, Temperature.of("21.5").value)
+            listOf(areaC.uuid, areaC.name, BigDecimal("30")),
+            listOf(areaA.uuid, areaA.name, BigDecimal("21.5"))
         )
     }
 
