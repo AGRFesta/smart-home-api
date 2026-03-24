@@ -2,6 +2,12 @@ package org.agrfesta.sh.api.providers.netatmo.devices
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.json.CompareMode
+import io.kotest.assertions.json.FieldComparison
+import io.kotest.assertions.json.PropertyOrder
+import io.kotest.assertions.json.compareJsonOptions
+import io.kotest.assertions.json.shouldEqualJson
+import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -319,20 +325,22 @@ class NetatmoSmartherTest {
             registry.verifyRequest(Post, "/api/setstate") { request ->
                 request.headers[Authorization] shouldBe "Bearer $accessToken"
                 val requestBody = request.body.toByteArray().decodeToString()
-                val rootNode = mapper.readTree(requestBody)
-                val homeNode = rootNode.at("/home")
-                val endTime = homeNode.at("/rooms/0/therm_setpoint_end_time").longValue()
-                withClue("the end time is not the expected one") {
-                    endTime shouldBe expectedEndTime.epochSecond
-                }
-                val requestedStatus = mapper.treeToValue(homeNode, NetatmoHomeStatusChange::class.java)
-                requestedStatus.id shouldBe config.homeId
-                requestedStatus.rooms.shouldHaveSize(1).first().apply {
-                    id shouldBe config.roomId
-                    setPointTemperature shouldBe Temperature.of("30")
-                    setPointEndTime shouldBe expectedEndTime
-                    setPointMode shouldBe "manual"
-                }
+                val expectedJson = """
+                    {
+                      "home": {
+                        "id": "${config.homeId}",
+                        "rooms": [
+                          {
+                            "id": "${config.roomId}",
+                            "therm_setpoint_temperature": 30, 
+                            "therm_setpoint_end_time": ${expectedEndTime.epochSecond},
+                            "therm_setpoint_mode": "manual"
+                          }
+                        ]
+                      }
+                    }
+                """
+                requestBody shouldEqualSpecifiedJson expectedJson
             }
         }
     }
@@ -361,20 +369,22 @@ class NetatmoSmartherTest {
             registry.verifyRequest(Post, "/api/setstate") { request ->
                 request.headers[Authorization] shouldBe "Bearer $accessToken"
                 val requestBody = request.body.toByteArray().decodeToString()
-                val rootNode = mapper.readTree(requestBody)
-                val homeNode = rootNode.at("/home")
-                val endTime = homeNode.at("/rooms/0/therm_setpoint_end_time").longValue()
-                withClue("the end time is not the expected one") {
-                    endTime shouldBe expectedEndTime.epochSecond
-                }
-                val requestedStatus = mapper.treeToValue(homeNode, NetatmoHomeStatusChange::class.java)
-                requestedStatus.id shouldBe config.homeId
-                requestedStatus.rooms.shouldHaveSize(1).first().apply {
-                    id shouldBe config.roomId
-                    setPointTemperature shouldBe Temperature.of("7")
-                    setPointEndTime shouldBe expectedEndTime
-                    setPointMode shouldBe "manual"
-                }
+                val expectedJson = """
+                    {
+                      "home": {
+                        "id": "${config.homeId}",
+                        "rooms": [
+                          {
+                            "id": "${config.roomId}",
+                            "therm_setpoint_temperature": 7, 
+                            "therm_setpoint_end_time": ${expectedEndTime.epochSecond},
+                            "therm_setpoint_mode": "manual"
+                          }
+                        ]
+                      }
+                    }
+                """.trimIndent()
+                requestBody shouldEqualSpecifiedJson expectedJson
             }
         }
     }
