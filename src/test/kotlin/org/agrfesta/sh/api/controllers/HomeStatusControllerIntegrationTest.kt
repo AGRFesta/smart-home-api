@@ -6,6 +6,7 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.restassured.RestAssured.given
 import io.restassured.common.mapper.TypeRef
 import java.math.BigDecimal
+import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aSensorDataValue
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.commons.Temperature
@@ -19,8 +20,6 @@ import org.agrfesta.sh.api.utils.SmartCache
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.testcontainers.junit.jupiter.Container
 
 class HomeStatusControllerIntegrationTest(
     private val cache: SmartCache,
@@ -31,16 +30,6 @@ class HomeStatusControllerIntegrationTest(
     private val assignmentsService: AssignmentsService,
     private val sensorsAssignmentsJdbcRepository: SensorsAssignmentsJdbcRepository
 ): AbstractIntegrationTest() {
-
-    companion object {
-        @Container
-        @ServiceConnection
-        val postgres = createPostgresContainer()
-
-        @Container
-        @ServiceConnection
-        val redis = createRedisContainer()
-    }
 
     @BeforeEach
     fun init() {

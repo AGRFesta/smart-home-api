@@ -5,6 +5,7 @@ import io.mockk.every
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import java.util.*
+import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aSensorDataValue
 import org.agrfesta.sh.api.domain.anActuatorDataValue
 import org.agrfesta.sh.api.domain.anAreaDto
@@ -14,8 +15,6 @@ import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.testcontainers.junit.jupiter.Container
 
 class AssignmentsControllerIntegrationTest(
     private val areasDao: AreaDao,
@@ -24,16 +23,6 @@ class AssignmentsControllerIntegrationTest(
     private val actuatorsAssignmentsDao: ActuatorsAssignmentsDao
 ): AbstractIntegrationTest() {
     private val uuid: UUID = UUID.randomUUID()
-
-    companion object {
-        @Container
-        @ServiceConnection
-        val postgres = createPostgresContainer()
-
-        @Container
-        @ServiceConnection
-        val redis = createRedisContainer()
-    }
 
     @BeforeEach
     fun init() {

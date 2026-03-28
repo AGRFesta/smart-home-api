@@ -4,7 +4,7 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.mockk.every
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import org.agrfesta.sh.api.controllers.AbstractIntegrationTest
+import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.domain.commons.Percentage
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
@@ -17,28 +17,15 @@ import org.agrfesta.test.mothers.aRandomIntHumidity
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.testcontainers.junit.jupiter.Container
 
 class DevicesDataHistorySchedulerIntegrationTest(
-    @Autowired private val devicesDataFetchScheduler: DevicesDataFetchScheduler,
-    @Autowired private val sut: DevicesDataHistoryScheduler,
-    @Autowired private val devicesDao: DevicesDao,
-    @Autowired private val historyDao: SensorsHistoryDataDao,
-    @Autowired private val switchBotClientAsserter: SwitchBotClientAsserter
+    private val devicesDataFetchScheduler: DevicesDataFetchScheduler,
+    private val sut: DevicesDataHistoryScheduler,
+    private val devicesDao: DevicesDao,
+    private val historyDao: SensorsHistoryDataDao,
+    private val switchBotClientAsserter: SwitchBotClientAsserter
 ): AbstractIntegrationTest() {
     private val now = Instant.now()
-
-    companion object {
-        @Container
-        @ServiceConnection
-        val postgres = createPostgresContainer()
-
-        @Container
-        @ServiceConnection
-        val redis = createRedisContainer()
-    }
 
     @BeforeEach
     fun init() {

@@ -16,6 +16,7 @@ import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
@@ -39,8 +40,6 @@ import org.agrfesta.sh.api.services.DevicesRefreshResult
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.testcontainers.junit.jupiter.Container
 
 class DevicesControllerIntegrationTest(
     private val devicesDao: DevicesDao,
@@ -49,16 +48,6 @@ class DevicesControllerIntegrationTest(
     private val netatmoIntegrationAsserter: NetatmoIntegrationAsserter
 ): AbstractIntegrationTest() {
     private val now = Instant.now()
-
-    companion object {
-        @Container
-        @ServiceConnection
-        val postgres = createPostgresContainer()
-
-        @Container
-        @ServiceConnection
-        val redis = createRedisContainer()
-    }
 
     @BeforeEach
     fun init() {

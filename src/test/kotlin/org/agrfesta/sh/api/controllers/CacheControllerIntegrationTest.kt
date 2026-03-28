@@ -8,6 +8,7 @@ import io.mockk.every
 import io.mockk.verify
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
+import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.commons.CacheEntry
 import org.agrfesta.sh.api.persistence.CacheEntryDto
 import org.agrfesta.sh.api.persistence.jdbc.repositories.CacheJdbcRepository
@@ -16,24 +17,12 @@ import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.nowNoMills
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.testcontainers.junit.jupiter.Container
 
 class CacheControllerIntegrationTest(
     private val cacheRepository: CacheJdbcRepository,
     private val objectMapper: ObjectMapper
 ): AbstractIntegrationTest() {
     private val now = nowNoMills()
-
-    companion object {
-        @Container
-        @ServiceConnection
-        val postgres = createPostgresContainer()
-
-        @Container
-        @ServiceConnection
-        val redis = createRedisContainer()
-    }
 
     @BeforeEach
     fun init() {

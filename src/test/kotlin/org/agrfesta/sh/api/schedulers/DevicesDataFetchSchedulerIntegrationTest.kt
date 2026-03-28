@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import org.agrfesta.sh.api.controllers.AbstractIntegrationTest
+import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.domain.commons.Percentage
 import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
@@ -23,29 +23,16 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.testcontainers.junit.jupiter.Container
 
 class DevicesDataFetchSchedulerIntegrationTest(
-    @Autowired private val sut: DevicesDataFetchScheduler,
-    @Autowired private val devicesRepository: DevicesJdbcRepository,
-    @Autowired private val cache: Cache,
-    @Autowired private val switchBotClientAsserter: SwitchBotClientAsserter,
-    @Autowired private val netatmoIntegrationAsserter: NetatmoIntegrationAsserter,
-    @Autowired private val cacheIntegrationAsserter: CacheIntegrationAsserter,
-    @Autowired private val objectMapper: ObjectMapper
+    private val sut: DevicesDataFetchScheduler,
+    private val devicesRepository: DevicesJdbcRepository,
+    private val cache: Cache,
+    private val switchBotClientAsserter: SwitchBotClientAsserter,
+    private val netatmoIntegrationAsserter: NetatmoIntegrationAsserter,
+    private val cacheIntegrationAsserter: CacheIntegrationAsserter,
+    private val objectMapper: ObjectMapper
 ): AbstractIntegrationTest() {
-
-    companion object {
-        @Container
-        @ServiceConnection
-        val postgres = createPostgresContainer()
-
-        @Container
-        @ServiceConnection
-        val redis = createRedisContainer()
-    }
 
     @Test fun `fetchDevicesData() caches sensors device values only and ignores failures`() {
         //TODO this is a no features device that proves it will be not considered, once features will be deprecated
