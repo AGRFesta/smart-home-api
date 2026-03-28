@@ -1,6 +1,5 @@
 package org.agrfesta.sh.api.schedulers
 
-import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.mockk.every
 import java.time.Instant
@@ -14,18 +13,15 @@ import org.agrfesta.sh.api.domain.devices.SensorDataType.TEMPERATURE
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.SensorsHistoryDataDao
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotClientAsserter
-import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
-import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aRandomIntHumidity
 import org.agrfesta.test.mothers.aRandomThermoHygroData
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.testcontainers.junit.jupiter.Container
 
 class DevicesDataHistorySchedulerIntegrationTest(
-    @Autowired @MockkBean private val timeService: TimeService,
-    @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient,
     @Autowired private val devicesDataFetchScheduler: DevicesDataFetchScheduler,
     @Autowired private val sut: DevicesDataHistoryScheduler,
     @Autowired private val devicesDao: DevicesDao,
@@ -44,7 +40,8 @@ class DevicesDataHistorySchedulerIntegrationTest(
         val redis = createRedisContainer()
     }
 
-    init {
+    @BeforeEach
+    fun init() {
         every { timeService.now() } returns now
     }
 

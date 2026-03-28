@@ -1,7 +1,6 @@
 package org.agrfesta.sh.api.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -12,21 +11,17 @@ import io.restassured.http.ContentType
 import org.agrfesta.sh.api.domain.commons.CacheEntry
 import org.agrfesta.sh.api.persistence.CacheEntryDto
 import org.agrfesta.sh.api.persistence.jdbc.repositories.CacheJdbcRepository
-import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aRandomTtl
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.nowNoMills
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.springframework.test.context.TestConstructor
 import org.testcontainers.junit.jupiter.Container
 
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class CacheControllerIntegrationTest(
     private val cacheRepository: CacheJdbcRepository,
-    private val objectMapper: ObjectMapper,
-    @MockkBean private val timeService: TimeService
+    private val objectMapper: ObjectMapper
 ): AbstractIntegrationTest() {
     private val now = nowNoMills()
 

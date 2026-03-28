@@ -2,7 +2,6 @@ package org.agrfesta.sh.api.schedulers
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.ninjasquad.springmockk.MockkBean
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -14,7 +13,6 @@ import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.providers.netatmo.NetatmoIntegrationAsserter
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotClientAsserter
-import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDeviceStatusResponse
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.CacheIntegrationAsserter
@@ -36,8 +34,7 @@ class DevicesDataFetchSchedulerIntegrationTest(
     @Autowired private val switchBotClientAsserter: SwitchBotClientAsserter,
     @Autowired private val netatmoIntegrationAsserter: NetatmoIntegrationAsserter,
     @Autowired private val cacheIntegrationAsserter: CacheIntegrationAsserter,
-    @Autowired private val objectMapper: ObjectMapper,
-    @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient //TODO move it in a dedicated test configuration, should be configured trough asserter only
+    @Autowired private val objectMapper: ObjectMapper
 ): AbstractIntegrationTest() {
 
     companion object {

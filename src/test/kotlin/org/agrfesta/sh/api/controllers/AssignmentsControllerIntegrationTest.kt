@@ -1,6 +1,5 @@
 package org.agrfesta.sh.api.controllers
 
-import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.restassured.RestAssured.given
@@ -13,19 +12,16 @@ import org.agrfesta.sh.api.persistence.ActuatorsAssignmentsDao
 import org.agrfesta.sh.api.persistence.AreaDao
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
-import org.agrfesta.sh.api.utils.RandomGenerator
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.testcontainers.junit.jupiter.Container
 
 class AssignmentsControllerIntegrationTest(
-    @Autowired @MockkBean private val randomGenerator: RandomGenerator,
-    @Autowired private val areasDao: AreaDao,
-    @Autowired private val devicesDao: DevicesDao,
-    @Autowired private val sensorsAssignmentsDao: SensorsAssignmentsDao,
-    @Autowired private val actuatorsAssignmentsDao: ActuatorsAssignmentsDao
+    private val areasDao: AreaDao,
+    private val devicesDao: DevicesDao,
+    private val sensorsAssignmentsDao: SensorsAssignmentsDao,
+    private val actuatorsAssignmentsDao: ActuatorsAssignmentsDao
 ): AbstractIntegrationTest() {
     private val uuid: UUID = UUID.randomUUID()
 

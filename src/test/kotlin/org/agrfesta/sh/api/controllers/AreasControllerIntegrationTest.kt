@@ -1,25 +1,21 @@
 package org.agrfesta.sh.api.controllers
 
-import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import java.util.*
-import org.agrfesta.sh.api.domain.areas.AreaDto
 import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.areas.AreaDto
 import org.agrfesta.sh.api.persistence.AreaDao
-import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.testcontainers.junit.jupiter.Container
 
 class AreasControllerIntegrationTest(
-    @Autowired @MockkBean private val randomGenerator: RandomGenerator,
-    @Autowired private val areasDao: AreaDao
+    private val areasDao: AreaDao
 ): AbstractIntegrationTest() {
     private val uuid: UUID = UUID.randomUUID()
 

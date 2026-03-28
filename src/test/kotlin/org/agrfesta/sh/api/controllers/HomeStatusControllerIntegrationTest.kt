@@ -5,6 +5,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.restassured.RestAssured.given
 import io.restassured.common.mapper.TypeRef
+import java.math.BigDecimal
 import org.agrfesta.sh.api.domain.aSensorDataValue
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.commons.Temperature
@@ -18,19 +19,17 @@ import org.agrfesta.sh.api.utils.SmartCache
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.testcontainers.junit.jupiter.Container
-import java.math.BigDecimal
 
 class HomeStatusControllerIntegrationTest(
-    @Autowired private val cache: SmartCache,
-    @Autowired private val areasDao: AreaDao,
-    @Autowired private val areasJdbcRepo: AreasJdbcRepository,
-    @Autowired private val devicesService: DevicesService,
-    @Autowired private val devicesJdbcRepository: DevicesJdbcRepository,
-    @Autowired private val assignmentsService: AssignmentsService,
-    @Autowired private val sensorsAssignmentsJdbcRepository: SensorsAssignmentsJdbcRepository
+    private val cache: SmartCache,
+    private val areasDao: AreaDao,
+    private val areasJdbcRepo: AreasJdbcRepository,
+    private val devicesService: DevicesService,
+    private val devicesJdbcRepository: DevicesJdbcRepository,
+    private val assignmentsService: AssignmentsService,
+    private val sensorsAssignmentsJdbcRepository: SensorsAssignmentsJdbcRepository
 ): AbstractIntegrationTest() {
 
     companion object {

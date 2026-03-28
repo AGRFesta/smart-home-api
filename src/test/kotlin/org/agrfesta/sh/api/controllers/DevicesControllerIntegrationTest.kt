@@ -2,7 +2,6 @@ package org.agrfesta.sh.api.controllers
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.ninjasquad.springmockk.MockkBean
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -33,26 +32,21 @@ import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType.HUB_MINI
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType.METER
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType.METER_PLUS
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType.WO_IO_SENSOR
-import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDevice
 import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDevicesListSuccessResponse
 import org.agrfesta.sh.api.providers.switchbot.toASwitchBotDeviceType
 import org.agrfesta.sh.api.services.DevicesRefreshResult
-import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.testcontainers.junit.jupiter.Container
 
 class DevicesControllerIntegrationTest(
-    @Autowired private val devicesDao: DevicesDao,
-    @Autowired private val devicesRepository: DevicesJdbcRepository,
-    @Autowired private val objectMapper: ObjectMapper,
-    @Autowired private val netatmoIntegrationAsserter: NetatmoIntegrationAsserter,
-    @Autowired @MockkBean private val switchBotDevicesClient: SwitchBotDevicesClient,
-    @Autowired @MockkBean private val timeService: TimeService
+    private val devicesDao: DevicesDao,
+    private val devicesRepository: DevicesJdbcRepository,
+    private val objectMapper: ObjectMapper,
+    private val netatmoIntegrationAsserter: NetatmoIntegrationAsserter
 ): AbstractIntegrationTest() {
     private val now = Instant.now()
 
