@@ -1,0 +1,62 @@
+package org.agrfesta.sh.api.persistence.jdbc.dao
+
+import com.ninjasquad.springmockk.MockkBean
+import com.ninjasquad.springmockk.SpykBean
+import org.agrfesta.sh.api.CleanSmartHomeDatabase
+import org.agrfesta.sh.api.TestContainersConfig
+import org.agrfesta.sh.api.persistence.jdbc.repositories.ActuatorsAssignmentsJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasWithDevicesJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.CacheJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsHistoryDataJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureSettingRepository
+import org.agrfesta.sh.api.utils.RandomGeneratorImpl
+import org.agrfesta.sh.api.utils.TimeService
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest
+import org.springframework.context.annotation.Import
+
+@JdbcTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Import(
+    TestContainersConfig::class,
+    // DAO implementations
+    AreasDaoJdbcImpl::class,
+    DevicesDaoJdbcImpl::class,
+    SensorsAssignmentsDaoJdbcImpl::class,
+    ActuatorsAssignmentsDaoJdbcImpl::class,
+    TemperatureSettingsDaoJdbcImpl::class,
+    AreasWithDevicesDaoJdbcImpl::class,
+    CacheDaoJdbcImpl::class,
+    SensorsHistoryDataDaoJdbcImpl::class,
+    // Repositories
+    AreasJdbcRepository::class,
+    DevicesJdbcRepository::class,
+    SensorsAssignmentsJdbcRepository::class,
+    ActuatorsAssignmentsJdbcRepository::class,
+    TemperatureSettingRepository::class,
+    TemperatureIntervalRepository::class,
+    AreasWithDevicesJdbcRepository::class,
+    CacheJdbcRepository::class,
+    SensorsHistoryDataJdbcRepository::class,
+    RandomGeneratorImpl::class
+)
+@CleanSmartHomeDatabase
+abstract class AbstractDaoJdbcImplTest {
+
+    @SpykBean protected lateinit var areasRepo: AreasJdbcRepository
+    @SpykBean protected lateinit var devicesRepo: DevicesJdbcRepository
+    @SpykBean protected lateinit var sensorsAssignmentsRepo: SensorsAssignmentsJdbcRepository
+    @SpykBean protected lateinit var actuatorsAssignmentsRepo: ActuatorsAssignmentsJdbcRepository
+    @SpykBean protected lateinit var tempSettingsRepo: TemperatureSettingRepository
+    @SpykBean protected lateinit var tempIntervalsRepo: TemperatureIntervalRepository
+    @SpykBean protected lateinit var areasWithDevicesRepo: AreasWithDevicesJdbcRepository
+    @SpykBean protected lateinit var cacheRepo: CacheJdbcRepository
+    @SpykBean protected lateinit var historyDataRepository: SensorsHistoryDataJdbcRepository
+
+    @MockkBean protected lateinit var timeService: TimeService
+
+}

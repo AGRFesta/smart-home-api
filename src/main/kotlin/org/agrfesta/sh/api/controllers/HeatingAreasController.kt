@@ -1,11 +1,11 @@
 package org.agrfesta.sh.api.controllers
 
-import java.time.LocalTime
 import java.util.*
 import org.agrfesta.sh.api.domain.areas.AreaTemperatureSetting
 import org.agrfesta.sh.api.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.domain.failures.OverlappingIntervals
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.services.heating.HeatingAreasService
 import org.agrfesta.sh.api.utils.LoggerDelegate
@@ -37,27 +37,24 @@ class HeatingAreasController(
         @PathVariable areaId: UUID,
         @RequestBody settings: TemperatureSettings
     ): ResponseEntity<Any> {
-        if (settings.temperatureSchedule.hasOverlap()) {
-            return status(BAD_REQUEST)
-                .body(MessageResponse("A couple of intervals overlaps, this is not allowed!"))
-        }
         heatingAreasService.createSetting(
             AreaTemperatureSetting(
-            areaId = areaId,
-            defaultTemperature = settings.defaultTemperature,
-            temperatureSchedule = settings.temperatureSchedule.toSet()
-        )
+                areaId = areaId,
+                defaultTemperature = settings.defaultTemperature,
+                temperatureSchedule = settings.temperatureSchedule.toSet()
+            )
         ).onLeft {
-            return when(it) {
+            return when (it) {
+                OverlappingIntervals -> status(BAD_REQUEST)
+                    .body(MessageResponse("A couple of intervals overlaps, this is not allowed!"))
+                is AreaNotFound -> status(NOT_FOUND)
+                    .body(MessageResponse("Area with id '$areaId' is missing!"))
                 is PersistenceFailure -> {
                     logger.error("heating settings creation failure", it.exception)
                     status(INTERNAL_SERVER_ERROR)
                         .body(MessageResponse("Unable to persist setting for area '$areaId'!"))
                 }
-                AreaNotFound -> status(NOT_FOUND)
-                    .body(MessageResponse("Area with id '$areaId' is missing!"))
             }
-
         }
         return status(CREATED)
             .body(MessageResponse("Successfully created heating schedule for area with id '$areaId'!"))
@@ -73,7 +70,7 @@ class HeatingAreasController(
                         status(INTERNAL_SERVER_ERROR)
                             .body(MessageResponse("Unable to retrieve setting for area '$areaId'!"))
                     }
-                    AreaNotFound -> status(NOT_FOUND)
+                    is AreaNotFound -> status(NOT_FOUND)
                         .body(MessageResponse("Area with id '$areaId' is missing!"))
                 }
             },
@@ -94,7 +91,7 @@ class HeatingAreasController(
                     status(INTERNAL_SERVER_ERROR)
                         .body(MessageResponse("Unable to delete setting for area '$areaId'!"))
                 }
-                AreaNotFound -> status(NOT_FOUND)
+                is AreaNotFound -> status(NOT_FOUND)
                     .body(MessageResponse("Area with id '$areaId' is missing!"))
             }
         }
@@ -113,24 +110,3 @@ data class TemperatureSettings(
     val defaultTemperature: Temperature,
     val temperatureSchedule: Collection<TemperatureInterval>
 )
-
-fun Collection<TemperatureInterval>.hasOverlap(): Boolean {
-    val sortedIntervals = flatMap { interval ->
-        if (interval.endTime < interval.startTime && interval.endTime != LocalTime.MIN) {
-            listOf(
-                TemperatureInterval(interval.temperature, interval.startTime, LocalTime.MAX),
-                TemperatureInterval(interval.temperature, LocalTime.MIN, interval.endTime)
-            )
-        } else {
-            listOf(interval)
-        }
-    }.sortedBy { it.startTime }
-    for (i in 1 until sortedIntervals.size) {
-        if (sortedIntervals[i].startTime < sortedIntervals[i - 1].endTime) {
-            return true
-        }
-    }
-    return false
-}
-
-

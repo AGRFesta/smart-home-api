@@ -1,7 +1,15 @@
 package org.agrfesta.sh.api.domain.failures
 
-sealed interface GetAreaFailure: SensorAssignmentFailure, ActuatorAssignmentFailure
-sealed interface AreaCreationFailure
+import java.util.UUID
 
-data object AreaNotFound: GetAreaFailure, TemperatureSettingCreationFailure, TemperatureSettingDeletionFailure, TemperatureSettingRetrievalFailure
+sealed interface AreaCreationFailure
+sealed interface AreaDeletionFailure
+
 data object AreaNameConflict: AreaCreationFailure
+
+sealed interface AreaFetchFailure: SensorAssignmentFailure, ActuatorAssignmentFailure,
+    TemperatureSettingCreationFailure, TemperatureSettingDeletionFailure, TemperatureSettingRetrievalFailure
+
+data class AreaNotFound(
+    val missingAreaId: UUID
+): AreaFetchFailure, AreaDeletionFailure, TemperatureSettingCreationFailure

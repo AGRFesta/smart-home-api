@@ -1,9 +1,16 @@
 package org.agrfesta.sh.api.persistence.jdbc.dao
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import java.util.*
 import org.agrfesta.sh.api.domain.areas.AreaTemperatureSetting
 import org.agrfesta.sh.api.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.domain.commons.Temperature
+import org.agrfesta.sh.api.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.domain.failures.TemperatureSettingCreationFailure
+import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureIntervalEntity
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity
@@ -11,8 +18,10 @@ import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepo
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureSettingRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.utils.RandomGenerator
+import org.springframework.dao.DataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionSynchronizationManager
 
 @Service
 class TemperatureSettingsDaoJdbcImpl(
@@ -22,32 +31,70 @@ class TemperatureSettingsDaoJdbcImpl(
 ): TemperatureSettingsDao {
     private val logger by LoggerDelegate()
 
+    override fun existsByAreaId(areaId: UUID): Either<PersistenceFailure, Boolean> = try {
+        tempSettingsRepository.existsSettingByAreaId(areaId).right()
+    } catch (e: DataAccessException) {
+        PersistenceFailure(e).left()
+    }
+
+    override fun persistAreaTemperatureSetting(setting: AreaTemperatureSetting):
+            Either<TemperatureSettingCreationFailure, Unit> {
+        // Programmatic transactional guard: this method must be called within an active transaction
+        if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+            return PersistenceFailure(
+                IllegalStateException(
+                    "persistAreaTemperatureSetting must be called within an active transaction")).left()
+        }
+        return try {
+            tempSettingsRepository.save(TemperatureSettingEntity(
+                areaUuid = setting.areaId,
+                defaultTemperature = setting.defaultTemperature.value
+            ))
+            setting.temperatureSchedule.map {
+                TemperatureIntervalEntity(
+                    uuid = randomGenerator.uuid(),
+                    areaUuid = setting.areaId,
+                    startTime = it.startTime,
+                    endTime = it.endTime,
+                    temperature = it.temperature.value
+                )
+            }.forEach { tempIntervalsRepo.save(it) }
+            Unit.right()
+        } catch (e: AreaNotFoundException) {
+            AreaNotFound(setting.areaId).left()
+        } catch (e: DataAccessException) {
+            PersistenceFailure(e).left()
+        }
+    }
+
     @Transactional
-    override fun createSetting(setting: AreaTemperatureSetting): UUID {
+    override fun createSetting(setting: AreaTemperatureSetting): Either<TemperatureSettingCreationFailure, Unit> = try {
         if (areaTempSettingAlreadyExist(setting.areaId)) {
             tempSettingsRepository.deleteByByAreaId(setting.areaId)
         }
-        val settingsId = randomGenerator.uuid()
-        val uuid = tempSettingsRepository.save(TemperatureSettingEntity(
-            uuid = settingsId,
+        tempSettingsRepository.save(TemperatureSettingEntity(
             areaUuid = setting.areaId,
             defaultTemperature = setting.defaultTemperature.value
         ))
         setting.temperatureSchedule.map {
             TemperatureIntervalEntity(
                 uuid = randomGenerator.uuid(),
-                settingUuid = settingsId,
+                areaUuid = setting.areaId,
                 startTime = it.startTime,
                 endTime = it.endTime,
                 temperature = it.temperature.value
             )
         }.forEach { tempIntervalsRepo.save(it) }
-        return uuid
+        Unit.right()
+    } catch (e: AreaNotFoundException) {
+        AreaNotFound(setting.areaId).left()
+    } catch (e: DataAccessException) {
+        PersistenceFailure(e).left()
     }
 
-    override fun findAreaSetting(areaId: UUID): AreaTemperatureSetting? =
+    override fun findAreaSetting(areaId: UUID): Either<PersistenceFailure, AreaTemperatureSetting?> = try {
         tempSettingsRepository.findSettingByAreaId(areaId)?.let { setting ->
-            val intervals = tempIntervalsRepo.findAllBySetting(setting.uuid)
+            val intervals = tempIntervalsRepo.findAllByArea(setting.areaUuid)
             AreaTemperatureSetting(
                 areaId = setting.areaUuid,
                 defaultTemperature = Temperature.of(setting.defaultTemperature),
@@ -59,10 +106,15 @@ class TemperatureSettingsDaoJdbcImpl(
                     )
                 }.toSet()
             )
-        }
+        }.right()
+    } catch (e: DataAccessException) {
+        PersistenceFailure(e).left()
+    }
 
-    override fun deleteAreaSetting(areaId: UUID) {
-        tempSettingsRepository.deleteByByAreaId(areaId)
+    override fun deleteAreaSetting(areaId: UUID): Either<PersistenceFailure, Unit> = try {
+        tempSettingsRepository.deleteByByAreaId(areaId).right()
+    } catch (e: DataAccessException) {
+        PersistenceFailure(e).left()
     }
 
     private fun areaTempSettingAlreadyExist(areaId: UUID): Boolean = try {

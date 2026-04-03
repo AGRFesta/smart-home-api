@@ -2,23 +2,18 @@ package org.agrfesta.sh.api.providers.netatmo
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
-import io.kotest.matchers.collections.shouldNotBeEmpty
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode.Companion.Forbidden
 import io.mockk.mockk
-import java.math.BigDecimal
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.controllers.createMockEngine
-import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.failures.KtorRequestFailure
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.CacheDao
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_REFRESH_TOKEN_CACHE_KEY
-import org.agrfesta.sh.api.services.PersistedCacheService
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.CacheAsserter
 import org.agrfesta.test.mothers.aJsonNode
@@ -49,8 +44,7 @@ class NetatmoClientTest {
     private val cacheAsserter = CacheAsserter(cache, cacheDao)
     private val clientAsserter = NetatmoClientAsserter(config, registry, mapper)
 
-    private val cacheService = PersistedCacheService(cacheDao)
-    private val sut = NetatmoClient(config, cache, cacheService, mapper, engine)
+    private val sut = NetatmoClient(config, cache, cacheDao, mapper, engine)
 
     init {
         // Default behaviour

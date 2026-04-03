@@ -21,7 +21,7 @@ class ActuatorsAssignmentsJdbcRepository(
 
     companion object {
         private val violateAreaFkRegex = Regex(".*violates foreign key constraint.*fk_actuator_area.*", RegexOption.IGNORE_CASE)
-        private val violateDeviceFkRegex = Regex(".*violates foreign key constraint.*fk_device.*", RegexOption.IGNORE_CASE)
+        private val violateDeviceFkRegex = Regex(".*violates foreign key constraint.*fk_actuator_device.*", RegexOption.IGNORE_CASE)
     }
 
     fun persistAssignment(areaId: UUID, deviceId: UUID) {

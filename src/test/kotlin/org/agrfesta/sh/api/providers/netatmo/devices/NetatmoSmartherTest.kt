@@ -2,14 +2,7 @@ package org.agrfesta.sh.api.providers.netatmo.devices
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
-import io.kotest.assertions.json.CompareMode
-import io.kotest.assertions.json.FieldComparison
-import io.kotest.assertions.json.PropertyOrder
-import io.kotest.assertions.json.compareJsonOptions
-import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
-import io.kotest.assertions.withClue
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.ktor.client.engine.mock.toByteArray
@@ -35,14 +28,12 @@ import org.agrfesta.sh.api.providers.netatmo.NetatmoClient
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClientAsserter
 import org.agrfesta.sh.api.providers.netatmo.NetatmoConfiguration
 import org.agrfesta.sh.api.providers.netatmo.NetatmoContractBreak
-import org.agrfesta.sh.api.providers.netatmo.NetatmoHomeStatusChange
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.providers.netatmo.aNetatmoHomeStatus
 import org.agrfesta.sh.api.providers.netatmo.aNetatmoRoomStatus
 import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoSmarther.Companion.MAX_SET_POINT_TEMPERATURE
 import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoSmarther.Companion.MIN_SET_POINT_TEMPERATURE
 import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoSmarther.Companion.SET_POINT_MODE
-import org.agrfesta.sh.api.services.PersistedCacheService
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.CacheAsserter
 import org.agrfesta.sh.api.utils.TimeService
@@ -75,8 +66,7 @@ class NetatmoSmartherTest {
     private val cacheAsserter = CacheAsserter(cache, cacheDao)
     private val clientAsserter = NetatmoClientAsserter(config = config, registry = registry)
 
-    private val cacheService = PersistedCacheService(cacheDao)
-    private val client = NetatmoClient(config, cache, cacheService, mapper, engine)
+    private val client = NetatmoClient(config, cache, cacheDao, mapper, engine)
     private val sut = NetatmoSmarther(
         uuid = uuid,
         deviceProviderId = deviceProviderId,

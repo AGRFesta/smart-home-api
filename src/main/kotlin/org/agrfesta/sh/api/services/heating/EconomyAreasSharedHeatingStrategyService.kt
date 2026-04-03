@@ -6,7 +6,7 @@ import org.agrfesta.sh.api.domain.areas.HeatableArea
 import org.agrfesta.sh.api.domain.commons.Percentage
 import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.devices.Heater
-import org.agrfesta.sh.api.schedulers.HeatingControlScheduler.Companion.HYSTERESIS
+import org.agrfesta.sh.api.services.heating.HeatingOrchestrationService.Companion.HYSTERESIS
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service

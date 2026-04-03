@@ -1,19 +1,19 @@
 package org.agrfesta.sh.api.services.heating
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import java.util.UUID
 import org.agrfesta.sh.api.domain.areas.AreaTemperatureSetting
-import org.agrfesta.sh.api.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.domain.areas.hasOverlap
+import org.agrfesta.sh.api.domain.failures.OverlappingIntervals
 import org.agrfesta.sh.api.domain.failures.TemperatureSettingCreationFailure
 import org.agrfesta.sh.api.domain.failures.TemperatureSettingDeletionFailure
 import org.agrfesta.sh.api.domain.failures.TemperatureSettingRetrievalFailure
-import org.agrfesta.sh.api.persistence.AreaDao
-import org.agrfesta.sh.api.persistence.AreaNotFoundException
+import org.agrfesta.sh.api.persistence.AreasDao
 import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
-import org.springframework.dao.DataAccessException
+import org.agrfesta.sh.api.persistence.utils.TransactionRunner
 import org.springframework.stereotype.Service
 
 /**
@@ -24,8 +24,9 @@ import org.springframework.stereotype.Service
  */
 @Service
 class HeatingAreasService(
-    private val areasDao: AreaDao,
-    private val temperatureSettingsDao: TemperatureSettingsDao
+    private val areasDao: AreasDao,
+    private val temperatureSettingsDao: TemperatureSettingsDao,
+    private val transactionRunner: TransactionRunner
 ) {
 
     /**
@@ -35,12 +36,18 @@ class HeatingAreasService(
      * @return [Either.Right] with the UUID of the created setting, or [Either.Left] containing
      * a [TemperatureSettingCreationFailure] (e.g., [AreaNotFound] if the area doesn't exist).
      */
-    fun createSetting(setting: AreaTemperatureSetting): Either<TemperatureSettingCreationFailure, UUID> = try {
-        temperatureSettingsDao.createSetting(setting).right()
-    } catch (e: AreaNotFoundException) {
-        AreaNotFound.left()
-    } catch (e: DataAccessException) {
-        PersistenceFailure(e).left()
+    fun createSetting(setting: AreaTemperatureSetting): Either<TemperatureSettingCreationFailure, Unit> {
+        if (setting.temperatureSchedule.hasOverlap()) return OverlappingIntervals.left()
+        return transactionRunner.executeInTransaction {
+            temperatureSettingsDao.existsByAreaId(setting.areaId)
+                .flatMap { exists ->
+                    if (exists) temperatureSettingsDao.deleteAreaSetting(setting.areaId)
+                    else Unit.right()
+                }
+                .flatMap {
+                    temperatureSettingsDao.persistAreaTemperatureSetting(setting)
+                }
+        }
     }
 
     /**
@@ -52,14 +59,10 @@ class HeatingAreasService(
      * @return [Either.Right] if deletion is successful, or [Either.Left] containing
      * a [TemperatureSettingDeletionFailure] (e.g., [AreaNotFound]).
      */
-    fun deleteSetting(areaId: UUID): Either<TemperatureSettingDeletionFailure, Unit> = try {
-        areasDao.getAreaById(areaId)
-        temperatureSettingsDao.deleteAreaSetting(areaId).right()
-    } catch (e: AreaNotFoundException) {
-        AreaNotFound.left()
-    } catch (e: DataAccessException) {
-        PersistenceFailure(e).left()
-    }
+    fun deleteSetting(areaId: UUID): Either<TemperatureSettingDeletionFailure, Unit> =
+        areasDao.getAreaById(areaId).flatMap {
+            temperatureSettingsDao.deleteAreaSetting(areaId)
+        }
 
     /**
      * Retrieves the temperature setting for a specific area.
@@ -70,13 +73,9 @@ class HeatingAreasService(
      * @return [Either.Right] containing the [AreaTemperatureSetting] if found (or null),
      * or [Either.Left] with a [TemperatureSettingRetrievalFailure] in case of errors.
      */
-    fun findAreaSetting(areaId: UUID): Either<TemperatureSettingRetrievalFailure, AreaTemperatureSetting?> = try {
-        areasDao.getAreaById(areaId)
-        temperatureSettingsDao.findAreaSetting(areaId).right()
-    } catch (e: AreaNotFoundException) {
-        AreaNotFound.left()
-    } catch (e: DataAccessException) {
-        PersistenceFailure(e).left()
-    }
+    fun findAreaSetting(areaId: UUID): Either<TemperatureSettingRetrievalFailure, AreaTemperatureSetting?> =
+        areasDao.getAreaById(areaId).flatMap {
+            temperatureSettingsDao.findAreaSetting(areaId)
+        }
 
 }

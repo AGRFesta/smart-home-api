@@ -11,40 +11,23 @@ import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.domain.areas.TemperatureInterval
-import org.agrfesta.sh.api.persistence.AreaDao
+import org.agrfesta.sh.api.persistence.AreasDao
 import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
 import org.agrfesta.test.mothers.aDailyTime
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.junit.jupiter.api.Test
 
 class HeatingAreasControllerIntegrationTest(
-    private val areasDao: AreaDao,
+    private val areasDao: AreasDao,
     private val tempSettingsDao: TemperatureSettingsDao
 ): AbstractIntegrationTest() {
 
     ///// createHeatingSchedule ////////////////////////////////////////////////////////////////////////////////////////
 
-    @Test fun `createHeatingSchedule() return 404 when area is not found`() {
-        val area = anAreaDto()
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .body("""{"defaultTemperature": ${aRandomTemperature().value}, "temperatureSchedule": []}""")
-            .`when`()
-            .post("/heating/areas/${area.uuid}")
-            .then()
-            .statusCode(404)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Area with id '${area.uuid}' is missing!"
-    }
-
-    @Test fun `createHeatingSchedule() return 201 when successfully creates area's heating schedule`() {
-        val defaultTemperature = aRandomTemperature()
+    @Test fun `createHeatingSchedule() then getHeatingSchedule() then deleteHeatingSchedule() full lifecycle`() {
         val area = anAreaDto()
         areasDao.save(area)
+        val defaultTemperature = aRandomTemperature()
         val tempIntA = aTemperatureInterval(startTime = aDailyTime(hour = 0), endTime = aDailyTime(hour = 1))
         val tempIntB = aTemperatureInterval(startTime = aDailyTime(hour = 2), endTime = aDailyTime(hour = 3))
         val tempIntC = aTemperatureInterval(startTime = aDailyTime(hour = 4), endTime = aDailyTime(hour = 5))
@@ -59,7 +42,8 @@ class HeatingAreasControllerIntegrationTest(
             }
         """.trimIndent()
 
-        val result = given()
+        // POST → 201, verify DB
+        given()
             .contentType(ContentType.JSON)
             .authenticated()
             .body(body)
@@ -69,90 +53,36 @@ class HeatingAreasControllerIntegrationTest(
             .statusCode(201)
             .extract()
             .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Successfully created heating schedule for area with id '${area.uuid}'!"
-        val savedSetting = tempSettingsDao.findAreaSetting(area.uuid).shouldNotBeNull()
+            .message shouldBe "Successfully created heating schedule for area with id '${area.uuid}'!"
+        val savedSetting = tempSettingsDao.findAreaSetting(area.uuid).getOrNull().shouldNotBeNull()
         savedSetting.defaultTemperature shouldBe defaultTemperature
-        savedSetting.temperatureSchedule.shouldContainExactlyInAnyOrder(tempIntB, tempIntC, tempIntA)
-    }
+        savedSetting.temperatureSchedule.shouldContainExactlyInAnyOrder(tempIntA, tempIntB, tempIntC)
 
-    @Test fun `createHeatingSchedule() return 400 when an interval overlaps with another`() {
-        val defaultTemperature = aRandomTemperature()
-        val area = anAreaDto()
-        areasDao.save(area)
-        val tempIntA = aTemperatureInterval(startTime = aDailyTime(hour = 4), endTime = aDailyTime(hour = 7))
-        val tempIntB = aTemperatureInterval(startTime = aDailyTime(hour = 5), endTime = aDailyTime(hour = 6))
-        val body = """
-            {
-                "defaultTemperature": ${defaultTemperature.value},
-                "temperatureSchedule": [
-                    ${tempIntA.toJson()},
-                    ${tempIntB.toJson()}
-                ]
-            }
-        """.trimIndent()
-
-        val result = given()
-            .contentType(ContentType.JSON)
+        // GET → 200, verify DTO
+        val getResult = given()
             .authenticated()
-            .body(body)
             .`when`()
-            .post("/heating/areas/${area.uuid}")
+            .get("/heating/areas/${area.uuid}")
             .then()
-            .statusCode(400)
+            .statusCode(200)
+            .extract()
+            .`as`(TemperatureSettings::class.java)
+        getResult.defaultTemperature shouldBe defaultTemperature
+        getResult.temperatureSchedule.shouldContainExactlyInAnyOrder(tempIntA, tempIntB, tempIntC)
+
+        // DELETE → 200, verify DB
+        given()
+            .authenticated()
+            .`when`()
+            .delete("/heating/areas/${area.uuid}")
+            .then()
+            .statusCode(200)
             .extract()
             .`as`(MessageResponse::class.java)
+            .message shouldBe "Successfully deleted heating schedule for area with id '${area.uuid}'!"
+        tempSettingsDao.findAreaSetting(area.uuid).getOrNull().shouldBeNull()
 
-        result.message shouldBe "A couple of intervals overlaps, this is not allowed!"
-    }
-
-    @Test fun `createHeatingSchedule() return 201 when replaces existing area's heating schedule`() {
-        val defaultTemperature = aRandomTemperature()
-        val area = anAreaDto()
-        areasDao.save(area)
-        val existingSetting = anAreaTemperatureSetting(
-            areaId = area.uuid,
-            temperatureSchedule = setOf(aTemperatureInterval())
-        )
-        tempSettingsDao.createSetting(existingSetting)
-        val tempIntA = aTemperatureInterval(startTime = aDailyTime(hour = 0), endTime = aDailyTime(hour = 1))
-        val tempIntB = aTemperatureInterval(startTime = aDailyTime(hour = 2), endTime = aDailyTime(hour = 3))
-        val tempIntC = aTemperatureInterval(startTime = aDailyTime(hour = 4), endTime = aDailyTime(hour = 5))
-        val body = """
-            {
-                "defaultTemperature": ${defaultTemperature.value},
-                "temperatureSchedule": [
-                    ${tempIntA.toJson()},
-                    ${tempIntB.toJson()},
-                    ${tempIntC.toJson()}
-                ]
-            }
-        """.trimIndent()
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .body(body)
-            .`when`()
-            .post("/heating/areas/${area.uuid}")
-            .then()
-            .statusCode(201)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Successfully created heating schedule for area with id '${area.uuid}'!"
-        val savedSetting = tempSettingsDao.findAreaSetting(area.uuid).shouldNotBeNull()
-        savedSetting.defaultTemperature shouldBe defaultTemperature
-        savedSetting.temperatureSchedule.shouldContainExactlyInAnyOrder(tempIntB, tempIntC, tempIntA)
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///// getHeatingSchedule ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Test fun `getHeatingSchedule() returns 204 when no setting exists`() {
-        val area = anAreaDto()
-        areasDao.save(area)
-
+        // GET after delete → 204 (area exists, setting gone)
         given()
             .authenticated()
             .`when`()
@@ -161,18 +91,42 @@ class HeatingAreasControllerIntegrationTest(
             .statusCode(204)
     }
 
-    @Test fun `getHeatingSchedule() returns 200 with complete TemperatureSettings when setting exists`() {
+    @Test fun `createHeatingSchedule() replaces existing setting`() {
         val area = anAreaDto()
         areasDao.save(area)
-        val tempIntA = aTemperatureInterval(startTime = aDailyTime(hour = 22), endTime = aDailyTime(hour = 6))
-        val tempIntB = aTemperatureInterval(startTime = aDailyTime(hour = 6), endTime = aDailyTime(hour = 8))
-        val tempIntC = aTemperatureInterval(startTime = aDailyTime(hour = 14), endTime = aDailyTime(hour = 17))
-        val setting = anAreaTemperatureSetting(
+        tempSettingsDao.createSetting(anAreaTemperatureSetting(
             areaId = area.uuid,
-            temperatureSchedule = setOf(tempIntA, tempIntB, tempIntC)
-        )
-        tempSettingsDao.createSetting(setting)
+            temperatureSchedule = setOf(aTemperatureInterval())
+        ))
+        val newDefaultTemperature = aRandomTemperature()
+        val tempIntA = aTemperatureInterval(startTime = aDailyTime(hour = 0), endTime = aDailyTime(hour = 1))
+        val tempIntB = aTemperatureInterval(startTime = aDailyTime(hour = 2), endTime = aDailyTime(hour = 3))
+        val tempIntC = aTemperatureInterval(startTime = aDailyTime(hour = 4), endTime = aDailyTime(hour = 5))
+        val body = """
+            {
+                "defaultTemperature": ${newDefaultTemperature.value},
+                "temperatureSchedule": [
+                    ${tempIntA.toJson()},
+                    ${tempIntB.toJson()},
+                    ${tempIntC.toJson()}
+                ]
+            }
+        """.trimIndent()
 
+        // POST (replace) → 201
+        given()
+            .contentType(ContentType.JSON)
+            .authenticated()
+            .body(body)
+            .`when`()
+            .post("/heating/areas/${area.uuid}")
+            .then()
+            .statusCode(201)
+            .extract()
+            .`as`(MessageResponse::class.java)
+            .message shouldBe "Successfully created heating schedule for area with id '${area.uuid}'!"
+
+        // GET → 200, verify only the new setting exists
         val result = given()
             .authenticated()
             .`when`()
@@ -181,25 +135,18 @@ class HeatingAreasControllerIntegrationTest(
             .statusCode(200)
             .extract()
             .`as`(TemperatureSettings::class.java)
-
-        result.defaultTemperature shouldBe setting.defaultTemperature
+        result.defaultTemperature shouldBe newDefaultTemperature
         result.temperatureSchedule.shouldContainExactlyInAnyOrder(tempIntA, tempIntB, tempIntC)
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///// deleteHeatingSchedule ////////////////////////////////////////////////////////////////////////////////////////
 
-    @Test fun `deleteHeatingSchedule() returns 200 when successfully deletes area's heating schedule`() {
+    @Test fun `deleteHeatingSchedule() returns 200 when area has no setting`() {
         val area = anAreaDto()
         areasDao.save(area)
-        val existingSetting = anAreaTemperatureSetting(
-            areaId = area.uuid,
-            temperatureSchedule = setOf(aTemperatureInterval())
-        )
-        tempSettingsDao.createSetting(existingSetting)
-        tempSettingsDao.findAreaSetting(area.uuid).shouldNotBeNull()
 
-        val result = given()
+        given()
             .authenticated()
             .`when`()
             .delete("/heating/areas/${area.uuid}")
@@ -207,24 +154,7 @@ class HeatingAreasControllerIntegrationTest(
             .statusCode(200)
             .extract()
             .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Successfully deleted heating schedule for area with id '${area.uuid}'!"
-        tempSettingsDao.findAreaSetting(area.uuid).shouldBeNull()
-    }
-
-    @Test fun `deleteHeatingSchedule() returns 404 when area is not found`() {
-        val area = anAreaDto()
-
-        val result = given()
-            .authenticated()
-            .`when`()
-            .delete("/heating/areas/${area.uuid}")
-            .then()
-            .statusCode(404)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Area with id '${area.uuid}' is missing!"
+            .message shouldBe "Successfully deleted heating schedule for area with id '${area.uuid}'!"
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

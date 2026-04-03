@@ -4,7 +4,7 @@ import org.agrfesta.sh.api.domain.areas.HeatableArea
 import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.domain.devices.Heater
-import org.agrfesta.sh.api.schedulers.HeatingControlScheduler.Companion.HYSTERESIS
+import org.agrfesta.sh.api.services.heating.HeatingOrchestrationService.Companion.HYSTERESIS
 import org.agrfesta.sh.api.utils.LoggerDelegate
 
 /**

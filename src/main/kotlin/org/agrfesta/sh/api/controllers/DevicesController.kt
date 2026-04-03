@@ -6,6 +6,7 @@ import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DevicesProvider
 import org.agrfesta.sh.api.domain.failures.ExceptionFailure
 import org.agrfesta.sh.api.domain.failures.MessageFailure
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.http.HttpHeaders
@@ -64,8 +65,10 @@ class DevicesController(
         return ok(DevicesRefreshResponse(
             newDevices = result.newDevices.mapNotNull {
                 devicesService.createDevice(it).fold(
-                    {
-                        failure -> logger.error("Unable to persist device ${failure.exception}")
+                    { failure ->
+                        when (failure) {
+                            is PersistenceFailure -> logger.error("Unable to persist device", failure.exception)
+                        }
                         null
                     },
                     { uuid -> DeviceDto(uuid = uuid, dataValue = it) }

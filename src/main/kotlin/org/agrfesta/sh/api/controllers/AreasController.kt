@@ -29,9 +29,9 @@ class AreasController(
                     message = "Area '${request.name}' successfully created!",
                     resourceId = result.value.uuid.toString() ))
             is Left -> when (result.value) {
+                AreaNameConflict -> badRequest().body(MessageResponse("An Area '${request.name}' already exists!"))
                 is PersistenceFailure -> internalServerError()
                     .body(MessageResponse("Unable to create Area '${request.name}'!"))
-                AreaNameConflict -> badRequest().body(MessageResponse("An Area '${request.name}' already exists!"))
             }
         }
 

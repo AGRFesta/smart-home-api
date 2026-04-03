@@ -74,12 +74,12 @@ class AreasJdbcRepository(
 
     fun getAll(): Collection<AreaEntity> = jdbcTemplate.query("""SELECT * FROM smart_home.area""", AreaRowMapper)
 
-    fun deleteAreaById(uuid: UUID) {
+    fun deleteAreaById(uuid: UUID): Int {
         val sql = """
             DELETE FROM smart_home.area
             WHERE uuid = :uuid;
         """
-        jdbcTemplate.update(sql, mapOf("uuid" to uuid))
+        return jdbcTemplate.update(sql, mapOf("uuid" to uuid))
     }
 
     fun deleteAll(): Int = jdbcTemplate.update("DELETE FROM smart_home.area", emptyMap<String, Any>())

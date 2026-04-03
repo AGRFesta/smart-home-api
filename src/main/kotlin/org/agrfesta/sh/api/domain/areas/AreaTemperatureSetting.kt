@@ -6,6 +6,25 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import org.agrfesta.sh.api.domain.commons.Temperature
 
+fun Collection<TemperatureInterval>.hasOverlap(): Boolean {
+    val sortedIntervals = flatMap { interval ->
+        if (interval.endTime < interval.startTime && interval.endTime != LocalTime.MIN) {
+            listOf(
+                TemperatureInterval(interval.temperature, interval.startTime, LocalTime.MAX),
+                TemperatureInterval(interval.temperature, LocalTime.MIN, interval.endTime)
+            )
+        } else {
+            listOf(interval)
+        }
+    }.sortedBy { it.startTime }
+    for (i in 1 until sortedIntervals.size) {
+        if (sortedIntervals[i].startTime < sortedIntervals[i - 1].endTime) {
+            return true
+        }
+    }
+    return false
+}
+
 /**
  * Represents the temperature settings for a specific area.
  *

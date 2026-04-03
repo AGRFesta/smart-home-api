@@ -1,5 +1,6 @@
 package org.agrfesta.sh.api.domain.failures
 
+import java.util.UUID
 import org.agrfesta.sh.api.domain.devices.DeviceDto
 
 /**
@@ -7,4 +8,10 @@ import org.agrfesta.sh.api.domain.devices.DeviceDto
  */
 sealed interface GetDeviceFailure: SensorAssignmentFailure, ActuatorAssignmentFailure
 
-data object DeviceNotFound: GetDeviceFailure
+sealed interface DeviceFetchFailure: SensorAssignmentFailure, ActuatorAssignmentFailure
+sealed interface DeviceCreationFailure
+sealed interface DeviceUpdateFailure
+
+data class DeviceNotFound(
+    val missingDeviceId: UUID
+): DeviceFetchFailure, DeviceUpdateFailure

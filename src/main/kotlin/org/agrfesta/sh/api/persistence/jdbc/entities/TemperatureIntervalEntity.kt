@@ -6,7 +6,7 @@ import java.util.*
 
 class TemperatureIntervalEntity (
     val uuid: UUID,
-    val settingUuid: UUID,
+    val areaUuid: UUID,
     val startTime: LocalTime,
     val endTime: LocalTime,
     val temperature: BigDecimal
