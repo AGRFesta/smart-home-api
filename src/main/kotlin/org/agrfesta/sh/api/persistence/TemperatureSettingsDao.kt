@@ -1,28 +1,60 @@
 package org.agrfesta.sh.api.persistence
 
+import arrow.core.Either
 import java.util.*
 import org.agrfesta.sh.api.domain.areas.AreaTemperatureSetting
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.domain.failures.TemperatureSettingCreationFailure
 
 interface TemperatureSettingsDao {
 
     /**
-     * Creates a new temperature setting for a specified area.
-     * This method generates a unique UUID for the new temperature setting and checks whether a setting already exists
-     * for the given area.
-     * If a setting exists, it is deleted before saving the new one.
-     * After saving the temperature setting, it also creates and saves corresponding temperature intervals associated
-     * with the setting.
-     * Ensures that either all operations complete successfully or none do.
+     * Checks whether a temperature setting exists for the given area.
      *
-     * @param setting The [AreaTemperatureSetting] object containing the area ID, default temperature, and intervals to
-     * be saved.
-     * @return The [UUID] of the newly created temperature setting.
-     * @throws AreaNotFoundException if the specified area does not exist.
+     * @param areaId the unique identifier of the area.
+     * @return [Either.Right] with `true` if a setting exists, `false` otherwise,
+     * or [Either.Left] with [PersistenceFailure] if a database error occurs.
      */
-    fun createSetting(setting: AreaTemperatureSetting): UUID
+    fun existsByAreaId(areaId: UUID): Either<PersistenceFailure, Boolean>
 
-    fun findAreaSetting(areaId: UUID): AreaTemperatureSetting?
+    /**
+     * Persists the temperature setting (root entry and intervals) for an area within an already active transaction.
+     *
+     * **Requires an active transaction.** Calling this method outside a transaction boundary returns
+     * [Either.Left] with [PersistenceFailure] immediately, without touching the database.
+     *
+     * @param setting The [AreaTemperatureSetting] containing the area ID, default temperature, and intervals.
+     * @return [Either.Right] with [Unit] on success, or [Either.Left] with [TemperatureSettingCreationFailure]
+     * if the area does not exist or a persistence error occurs.
+     */
+    fun persistAreaTemperatureSetting(setting: AreaTemperatureSetting): Either<TemperatureSettingCreationFailure, Unit>
 
-    fun deleteAreaSetting(areaId: UUID)
+    /**
+     * Creates a new temperature setting for a specified area.
+     * If a setting already exists for the area, it is replaced.
+     *
+     * @param setting The [AreaTemperatureSetting] object containing the area ID, default temperature, and intervals.
+     * @return [Either.Right] with [Unit] on success, or [Either.Left] with [TemperatureSettingCreationFailure]
+     * if the area does not exist or a persistence error occurs.
+     */
+    fun createSetting(setting: AreaTemperatureSetting): Either<TemperatureSettingCreationFailure, Unit>
+
+    /**
+     * Retrieves the temperature setting for a specific area.
+     *
+     * @param areaId the unique identifier of the area.
+     * @return [Either.Right] with the [AreaTemperatureSetting] if found, or `null` if no setting exists,
+     * or [Either.Left] with [PersistenceFailure] if a database error occurs.
+     */
+    fun findAreaSetting(areaId: UUID): Either<PersistenceFailure, AreaTemperatureSetting?>
+
+    /**
+     * Deletes the temperature setting for a specific area.
+     *
+     * @param areaId the unique identifier of the area.
+     * @return [Either.Right] with [Unit] on success,
+     * or [Either.Left] with [PersistenceFailure] if a database error occurs.
+     */
+    fun deleteAreaSetting(areaId: UUID): Either<PersistenceFailure, Unit>
 
 }

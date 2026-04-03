@@ -1,6 +1,6 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
-import java.util.*
+import java.util.UUID
 import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity
 import org.springframework.dao.DataIntegrityViolationException
@@ -21,7 +21,6 @@ class TemperatureSettingRepository(private val jdbcTemplate: NamedParameterJdbcT
         val params = mapOf("areaId" to areaId)
         return jdbcTemplate.query(sql, params) { rs, _ ->
             TemperatureSettingEntity(
-                uuid = UUID.fromString(rs.getString("uuid")),
                 areaUuid = UUID.fromString(rs.getString("area_uuid")),
                 defaultTemperature = rs.getBigDecimal("default_temperature")
             )
@@ -35,19 +34,17 @@ class TemperatureSettingRepository(private val jdbcTemplate: NamedParameterJdbcT
         return jdbcTemplate.queryForObject(sql, params, Boolean::class.java) ?: false
     }
 
-    fun save(setting: TemperatureSettingEntity): UUID {
+    fun save(setting: TemperatureSettingEntity) {
         val sql = """
-            INSERT INTO smart_home.temperature_setting (uuid, area_uuid, default_temperature)
-            VALUES (:uuid, :areaUuid, :defaultTemperature)
+            INSERT INTO smart_home.temperature_setting (area_uuid, default_temperature)
+            VALUES (:areaUuid, :defaultTemperature)
         """.trimIndent()
         val params = mapOf(
-            "uuid" to setting.uuid,
             "areaUuid" to setting.areaUuid,
             "defaultTemperature" to setting.defaultTemperature
         )
-        return try {
+        try {
             jdbcTemplate.update(sql, params)
-            setting.uuid
         } catch (e: DataIntegrityViolationException) {
             val message = e.cause?.message
             if (message!=null) {

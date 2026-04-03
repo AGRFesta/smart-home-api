@@ -20,7 +20,9 @@ import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.SmartCache
 import org.agrfesta.sh.api.utils.TimeServiceImpl
+import org.agrfesta.sh.api.persistence.utils.TransactionRunner
 import org.agrfesta.test.mothers.aRandomUniqueString
+import org.springframework.dao.DataIntegrityViolationException
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -52,7 +54,8 @@ class HomeStatusControllerUnitTest(
     @Autowired @MockkBean private val cache: Cache,
     @Autowired @MockkBean private val randomGenerator: RandomGenerator,
     @Autowired @MockkBean private val temperatureSettingRepository: TemperatureSettingRepository,
-    @Autowired @MockkBean private val temperatureIntervalRepository: TemperatureIntervalRepository
+    @Autowired @MockkBean private val temperatureIntervalRepository: TemperatureIntervalRepository,
+    @Autowired @MockkBean private val transactionRunner: TransactionRunner
 ) {
 
     @Test fun `getHomeStatus() return 401 when auth is missing`() {
@@ -88,7 +91,7 @@ class HomeStatusControllerUnitTest(
     }
 
     @Test fun `getHomeStatus() returns 500 when is unable to fetch areas from db`() {
-        val failure = Exception("area fetching failure")
+        val failure = DataIntegrityViolationException("area fetching failure")
         every { areasWithDevicesJdbcRepo.getAll() } throws failure
 
         val resultContent: String = mockMvc.perform(

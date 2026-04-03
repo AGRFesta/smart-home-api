@@ -12,7 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.context.annotation.Import
 import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestConstructor
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -22,6 +21,7 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @Testcontainers
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @ActiveProfiles("test")
+@CleanSmartHomeDatabase
 abstract class AbstractIntegrationTest {
     @SpykBean
     protected lateinit var randomGenerator: RandomGenerator
@@ -30,8 +30,6 @@ abstract class AbstractIntegrationTest {
     @MockkBean
     protected lateinit var switchBotDevicesClient: SwitchBotDevicesClient
 
-    @Autowired
-    protected lateinit var jdbcTemplate: JdbcTemplate
     @Autowired
     protected lateinit var redisTemplate: RedisTemplate<String, Any>
 
@@ -42,18 +40,6 @@ abstract class AbstractIntegrationTest {
     fun setUp() {
         RestAssured.baseURI = "http://localhost:$port"
 
-        // Postgres cleanup (ignores the Flyway/Liquibase history table)
-        jdbcTemplate.execute("""
-            DO $$ DECLARE
-                r RECORD;
-            BEGIN
-                FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema() AND tablename != 'flyway_schema_history') LOOP
-                    EXECUTE 'TRUNCATE TABLE ' || quote_ident(r.tablename) || ' CASCADE';
-                END LOOP;
-            END $$;
-        """)
-
-        // Redis cleanup
         redisTemplate.connectionFactory?.connection?.serverCommands()?.flushDb()
     }
 

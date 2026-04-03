@@ -9,13 +9,13 @@ import org.springframework.stereotype.Repository
 @Repository
 class TemperatureIntervalRepository(private val jdbcTemplate: NamedParameterJdbcTemplate) {
 
-    fun findAllBySetting(settingUuid: UUID): List<TemperatureIntervalEntity> {
-        val sql = "SELECT * FROM smart_home.temperature_interval WHERE setting_uuid = :settingUuid"
-        val params = mapOf("settingUuid" to settingUuid)
+    fun findAllByArea(areaId: UUID): List<TemperatureIntervalEntity> {
+        val sql = "SELECT * FROM smart_home.temperature_interval WHERE area_uuid = :areaId"
+        val params = mapOf("areaId" to areaId)
         return jdbcTemplate.query(sql, params) { rs, _ ->
             TemperatureIntervalEntity(
                 uuid = UUID.fromString(rs.getString("uuid")),
-                settingUuid = UUID.fromString(rs.getString("setting_uuid")),
+                areaUuid = UUID.fromString(rs.getString("area_uuid")),
                 startTime = rs.getTime("start_time").toLocalTime(),
                 endTime = rs.getTime("end_time").toLocalTime(),
                 temperature = rs.getBigDecimal("temperature")
@@ -25,12 +25,12 @@ class TemperatureIntervalRepository(private val jdbcTemplate: NamedParameterJdbc
 
     fun save(interval: TemperatureIntervalEntity) {
         val sql = """
-            INSERT INTO smart_home.temperature_interval (uuid, setting_uuid, start_time, end_time, temperature)
-            VALUES (:uuid, :settingUuid, :startTime, :endTime, :temperature)
+            INSERT INTO smart_home.temperature_interval (uuid, area_uuid, start_time, end_time, temperature)
+            VALUES (:uuid, :areaUuid, :startTime, :endTime, :temperature)
         """.trimIndent()
         val params = mapOf(
             "uuid" to interval.uuid,
-            "settingUuid" to interval.settingUuid,
+            "areaUuid" to interval.areaUuid,
             "startTime" to Time.valueOf(interval.startTime),
             "endTime" to Time.valueOf(interval.endTime),
             "temperature" to interval.temperature

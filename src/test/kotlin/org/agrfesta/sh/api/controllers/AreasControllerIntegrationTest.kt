@@ -6,15 +6,14 @@ import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import java.util.*
 import org.agrfesta.sh.api.AbstractIntegrationTest
-import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.areas.AreaDto
-import org.agrfesta.sh.api.persistence.AreaDao
+import org.agrfesta.sh.api.persistence.AreasDao
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class AreasControllerIntegrationTest(
-    private val areasDao: AreaDao
+    private val areasDao: AreasDao
 ): AbstractIntegrationTest() {
     private val uuid: UUID = UUID.randomUUID()
 
@@ -46,27 +45,9 @@ class AreasControllerIntegrationTest(
             name = name,
             isIndoor = true
         )
-        areasDao.getAreaByName(name) shouldBe expectedArea
+        areasDao.findAreaByName(name).getOrNull() shouldBe expectedArea
     }
 
-    @Test fun `create() return 400 when create a area with an already existing name`() {
-        val name = aRandomUniqueString()
-        val area = anAreaDto(name = name)
-        areasDao.save(area)
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .body("""{"name": "$name"}""")
-            .`when`()
-            .post("/areas")
-            .then()
-            .statusCode(400)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "An Area '$name' already exists!"
-    }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 

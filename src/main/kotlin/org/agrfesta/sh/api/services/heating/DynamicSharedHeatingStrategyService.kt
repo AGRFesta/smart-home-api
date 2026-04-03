@@ -4,7 +4,7 @@ import org.agrfesta.sh.api.domain.areas.HeatableArea
 import org.agrfesta.sh.api.domain.devices.Heater
 import org.agrfesta.sh.api.domain.failures.PersistedCacheEntryNotFound
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.services.PersistedCacheService
+import org.agrfesta.sh.api.persistence.CacheDao
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service
 class DynamicSharedHeatingStrategyService(
     @param:Value("\${heating.default-strategy:ECONOMY}") private val defaultStrategy: SharedHeatingAreasStrategy,
     strategyServices: Collection<NamedSharedHeatingAreasStrategyService>,
-    private val persistedCacheService: PersistedCacheService
+    private val cacheDao: CacheDao
 ): SharedHeatingAreasStrategyService {
     private val logger by LoggerDelegate()
     private val servicesByStrategy: Map<SharedHeatingAreasStrategy, NamedSharedHeatingAreasStrategyService> =
@@ -55,7 +55,7 @@ class DynamicSharedHeatingStrategyService(
         service?.handleHeatingFor(sharedHeater, areas)
     }
 
-    private fun getStrategy(): SharedHeatingAreasStrategy = persistedCacheService.getEntry(HEATING_STRATEGY_KEY).fold(
+    private fun getStrategy(): SharedHeatingAreasStrategy = cacheDao.getEntry(HEATING_STRATEGY_KEY).fold(
         ifLeft = {
             when(it) {
                 is PersistedCacheEntryNotFound ->

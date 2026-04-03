@@ -22,26 +22,24 @@ class HomeStatusController(
 ) {
 
     @GetMapping
-    fun getHomeStatus(): ResponseEntity<Any> {
-        val areas = try {
-            areasService.getAllAreasWithDevices()
-        } catch (e: Exception) {
-            return status(INTERNAL_SERVER_ERROR)
-                .body(MessageResponse("Unable to fetch areas!"))
-        }
-        val view = areas.map { area ->
-                val tempAverage: Temperature? = area.sensors
-                    .mapNotNull {
-                        when(val result = cache.getThermoHygroOf(it)) {
-                            is Either.Left -> null
-                            is Either.Right -> result.value.temperature
+    fun getHomeStatus(): ResponseEntity<Any> =
+        areasService.getAllAreasWithDevices().fold(
+            { status(INTERNAL_SERVER_ERROR).body(MessageResponse("Unable to fetch areas!")) },
+            { areas ->
+                val view = areas.map { area ->
+                    val tempAverage: Temperature? = area.sensors
+                        .mapNotNull {
+                            when (val result = cache.getThermoHygroOf(it)) {
+                                is Either.Left -> null
+                                is Either.Right -> result.value.temperature
+                            }
                         }
-                    }
-                    .average()
-                AreaStatusView(area.uuid, area.name, tempAverage)
+                        .average()
+                    AreaStatusView(area.uuid, area.name, tempAverage)
+                }
+                ok(view)
             }
-        return ok(view)
-    }
+        )
 
 }
 

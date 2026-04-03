@@ -5,13 +5,12 @@ import arrow.core.right
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.util.*
-import org.agrfesta.sh.api.domain.devices.DeviceDto
 import org.agrfesta.sh.api.domain.devices.DeviceDataValue
+import org.agrfesta.sh.api.domain.devices.DeviceDto
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.domain.failures.GetDeviceFailure
-import org.agrfesta.sh.api.persistence.DeviceNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.entities.DeviceEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
@@ -23,9 +22,9 @@ import org.agrfesta.sh.api.utils.TimeService
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Repository
 
-@Service
+@Repository
 class DevicesJdbcRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
     private val randomGenerator: RandomGenerator,
@@ -42,8 +41,6 @@ class DevicesJdbcRepository(
         } catch (e: EmptyResultDataAccessException) {
             null
         }
-
-    fun getDeviceById(uuid: UUID): DeviceEntity = findDeviceById(uuid) ?: throw DeviceNotFoundException()
 
     fun findByProviderAndProviderId(provider: Provider, providerId: String): Either<GetDeviceFailure, DeviceEntity?> =
         try {

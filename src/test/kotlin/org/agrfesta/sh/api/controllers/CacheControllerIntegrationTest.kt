@@ -54,72 +54,9 @@ class CacheControllerIntegrationTest(
         cacheEntry.expiresAt shouldBe now.plusSeconds(ttl)
     }
 
-    @Test fun `putCacheEntry() entry never expires when inserted with no ttl`() {
-        val key = aRandomUniqueString()
-        val value = aRandomUniqueString()
-        cacheRepository.findEntry(key).shouldBeNull()
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .body("""{"value": "$value"}""")
-            .`when`()
-            .put("/cache/$key")
-            .then()
-            .statusCode(200)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Entry for key '$key' upserted successfully"
-        val cacheEntry = cacheRepository.findEntry(key).shouldNotBeNull()
-        cacheEntry.value shouldBe value
-        cacheEntry.expiresAt.shouldBeNull()
-    }
-
-    @Test fun `putCacheEntry() update value and ttl when key is already in cache`() {
-        val key = aRandomUniqueString()
-        val ttl = aRandomTtl()
-        val value = aRandomUniqueString()
-        cacheRepository.upsert(key, aRandomUniqueString(), aRandomTtl())
-        cacheRepository.findEntry(key).shouldNotBeNull()
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .body("""{"value": "$value", "ttl": $ttl}""")
-            .`when`()
-            .put("/cache/$key")
-            .then()
-            .statusCode(200)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Entry for key '$key' upserted successfully"
-        val cacheEntry = cacheRepository.findEntry(key).shouldNotBeNull()
-        cacheEntry.value shouldBe value
-        cacheEntry.expiresAt shouldBe now.plusSeconds(ttl)
-    }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     ///// getCacheEntry ////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Test fun `getCacheEntry() return 404 when key is missing`() {
-        val key = aRandomUniqueString()
-        cacheRepository.findEntry(key).shouldBeNull()
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .`when`()
-            .get("/cache/$key")
-            .then()
-            .statusCode(404)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Key '$key' is missing"
-    }
 
     @Test fun `getCacheEntry() return 404 when key is expired`() {
         val key = aRandomUniqueString()

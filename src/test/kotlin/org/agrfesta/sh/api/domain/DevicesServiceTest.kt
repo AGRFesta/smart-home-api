@@ -1,15 +1,26 @@
 package org.agrfesta.sh.api.domain
 
+import arrow.core.left
+import arrow.core.right
+import io.kotest.assertions.arrow.core.shouldBeLeft
+import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import java.util.UUID
+import org.agrfesta.sh.api.domain.devices.Device
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.domain.devices.ProviderDevicesFactory
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.services.DevicesService
 import org.junit.jupiter.api.Test
 
-//TODO consider to "merge" these tests in refresh controller test
 class DevicesServiceTest {
     private val devicesFactories: Collection<ProviderDevicesFactory> = listOf()
 
@@ -89,6 +100,25 @@ class DevicesServiceTest {
     }
 
     @Test
+    fun `refresh() correctly distributes devices across new, updated, and detached sets`() {
+        val providerDeviceA = aDeviceDataValue()
+        val providerDeviceB = aDeviceDataValue()
+        val deviceA = aDevice(providerId = providerDeviceA.deviceProviderId, provider = providerDeviceA.provider)
+        val deviceC = aDevice()
+
+        val result = sut.refresh(
+            providersDevices = listOf(providerDeviceA, providerDeviceB),
+            devices = listOf(deviceA, deviceC)
+        )
+
+        result.newDevices.shouldContainExactlyInAnyOrder(providerDeviceB)
+        result.updatedDevices.map { it.deviceProviderId }
+            .shouldContainExactlyInAnyOrder(deviceA.deviceProviderId)
+        result.detachedDevices.map { it.deviceProviderId }
+            .shouldContainExactlyInAnyOrder(deviceC.deviceProviderId)
+    }
+
+    @Test
     fun `refresh() returns updated detached devices as paired when provider returns them`() {
         val providerDeviceA = aDeviceDataValue()
         val providerDeviceB = aDeviceDataValue()
@@ -119,6 +149,59 @@ class DevicesServiceTest {
                 listOf(deviceC.deviceProviderId, deviceC.provider, providerDeviceC.name, DeviceStatus.PAIRED)
             )
         result.detachedDevices.shouldBeEmpty()
+    }
+
+    // createDevice()
+
+    @Test
+    fun `createDevice() returns UUID on success`() {
+        val device = aDeviceDataValue()
+        val uuid = UUID.randomUUID()
+        every { devicesDao.create(device, any()) } returns uuid.right()
+
+        sut.createDevice(device).shouldBeRight() shouldBe uuid
+    }
+
+    @Test
+    fun `createDevice() returns failure when dao fails`() {
+        val device = aDeviceDataValue()
+        every { devicesDao.create(device, any()) } returns PersistenceFailure(Exception("db error")).left()
+
+        sut.createDevice(device).shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
+    }
+
+    @Test
+    fun `createDevice() uses PAIRED as default initial status`() {
+        val device = aDeviceDataValue()
+        every { devicesDao.create(device, any()) } returns UUID.randomUUID().right()
+
+        sut.createDevice(device)
+
+        verify { devicesDao.create(device, DeviceStatus.PAIRED) }
+    }
+
+    // getAllDevices()
+
+    @Test
+    fun `getAllDevices() returns domain devices built by the provider factory`() {
+        val dto = aDevice(provider = Provider.SWITCHBOT)
+        val domainDevice: Device = mockk()
+        val factory: ProviderDevicesFactory = mockk()
+        every { factory.provider } returns Provider.SWITCHBOT
+        every { factory.createDevice(dto) } returns domainDevice
+        every { devicesDao.getAll() } returns listOf(dto).right()
+        val sut = DevicesService(devicesDao, listOf(factory))
+
+        val result = sut.getAllDevices().shouldBeRight()
+
+        result.shouldContainExactlyInAnyOrder(domainDevice)
+    }
+
+    @Test
+    fun `getAllDevices() propagates PersistenceFailure when dao fails`() {
+        every { devicesDao.getAll() } returns PersistenceFailure(Exception("db error")).left()
+
+        sut.getAllDevices().shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
     }
 
 }

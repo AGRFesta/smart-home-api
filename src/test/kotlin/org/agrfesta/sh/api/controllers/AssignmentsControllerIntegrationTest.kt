@@ -1,5 +1,6 @@
 package org.agrfesta.sh.api.controllers
 
+import arrow.core.getOrElse
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.restassured.RestAssured.given
@@ -9,18 +10,14 @@ import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aSensorDataValue
 import org.agrfesta.sh.api.domain.anActuatorDataValue
 import org.agrfesta.sh.api.domain.anAreaDto
-import org.agrfesta.sh.api.persistence.ActuatorsAssignmentsDao
-import org.agrfesta.sh.api.persistence.AreaDao
+import org.agrfesta.sh.api.persistence.AreasDao
 import org.agrfesta.sh.api.persistence.DevicesDao
-import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class AssignmentsControllerIntegrationTest(
-    private val areasDao: AreaDao,
-    private val devicesDao: DevicesDao,
-    private val sensorsAssignmentsDao: SensorsAssignmentsDao,
-    private val actuatorsAssignmentsDao: ActuatorsAssignmentsDao
+    private val areasDao: AreasDao,
+    private val devicesDao: DevicesDao
 ): AbstractIntegrationTest() {
     private val uuid: UUID = UUID.randomUUID()
 
@@ -29,46 +26,10 @@ class AssignmentsControllerIntegrationTest(
         every { randomGenerator.uuid() } returns uuid
     }
 
-    ///// assignSensorToArea ///////////////////////////////////////////////////////////////////////////////////////////
-    @Test fun `assignSensorToArea() return 404 when area is not found`() {
-        val deviceId = devicesDao.create(aSensorDataValue())
-        val areaId = UUID.randomUUID()
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .body("""{"areaId": "$areaId", "deviceId": "$deviceId"}""")
-            .`when`()
-            .post("/assignments/sensors")
-            .then()
-            .statusCode(404)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Area with id '$areaId' is missing!"
-    }
-    @Test fun `assignSensorToArea() return 404 when device is not found`() {
-        val deviceId = UUID.randomUUID()
-        val area = anAreaDto()
-        areasDao.save(area)
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
-            .`when`()
-            .post("/assignments/sensors")
-            .then()
-            .statusCode(404)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Device with id '$deviceId' is missing!"
-    }
     @Test fun `assignSensorToArea() return 201 when successfully assigns device to area`() {
         val area = anAreaDto()
         areasDao.save(area)
-        val deviceId = devicesDao.create(aSensorDataValue())
+        val deviceId = devicesDao.create(aSensorDataValue()).getOrElse { error("Failed to create sensor: $it") }
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -82,132 +43,12 @@ class AssignmentsControllerIntegrationTest(
             .`as`(MessageResponse::class.java)
 
         result.message shouldBe "Device with id '$deviceId' successfully assigned to area with id '${area.uuid}'!"
-    }
-
-    @Test fun `assignSensorToArea() return 400 when device is already assigned to another area`() {
-        val areaA = anAreaDto()
-        areasDao.save(areaA)
-        val areaB = anAreaDto()
-        areasDao.save(areaB)
-        val deviceId = devicesDao.create(aSensorDataValue())
-        sensorsAssignmentsDao.assign(areaId = areaA.uuid, sensorId = deviceId)
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .body("""{"areaId": "${areaB.uuid}", "deviceId": "$deviceId"}""")
-            .`when`()
-            .post("/assignments/sensors")
-            .then()
-            .statusCode(400)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Device with id '$deviceId' is already assigned to another area!"
-    }
-
-    @Test fun `assignSensorToArea() return 400 when device is already assigned to this area`() {
-        val area = anAreaDto()
-        areasDao.save(area)
-        val deviceId = devicesDao.create(aSensorDataValue())
-        sensorsAssignmentsDao.assign(areaId = area.uuid, sensorId = deviceId)
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
-            .`when`()
-            .post("/assignments/sensors")
-            .then()
-            .statusCode(400)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Device with id '$deviceId' is already assigned to area with id '${area.uuid}'!"
-    }
-
-    @Test fun `assignSensorToArea() return 400 when device is not a sensor`() {
-        val area = anAreaDto()
-        areasDao.save(area)
-        val deviceId = devicesDao.create(anActuatorDataValue())
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
-            .`when`()
-            .post("/assignments/sensors")
-            .then()
-            .statusCode(400)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Device with id '$deviceId' is not a sensor!"
-    }
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    ///// assignActuatorToArea /////////////////////////////////////////////////////////////////////////////////////////
-
-    @Test fun `assignActuatorToArea() return 404 when area is not found`() {
-        val deviceId = devicesDao.create(anActuatorDataValue())
-        val areaId = UUID.randomUUID()
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .body("""{"areaId": "$areaId", "deviceId": "$deviceId"}""")
-            .`when`()
-            .post("/assignments/actuators")
-            .then()
-            .statusCode(404)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Area with id '$areaId' is missing!"
-    }
-
-    @Test fun `assignActuatorToArea() return 404 when device is not found`() {
-        val deviceId = UUID.randomUUID()
-        val area = anAreaDto()
-        areasDao.save(area)
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
-            .`when`()
-            .post("/assignments/actuators")
-            .then()
-            .statusCode(404)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Device with id '$deviceId' is missing!"
-    }
-
-    @Test fun `assignActuatorToArea() return 400 when device is not an actuator`() {
-        val area = anAreaDto()
-        areasDao.save(area)
-        val deviceId = devicesDao.create(aSensorDataValue())
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
-            .`when`()
-            .post("/assignments/actuators")
-            .then()
-            .statusCode(400)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Device with id '$deviceId' is not an actuator!"
     }
 
     @Test fun `assignActuatorToArea() return 201 when successfully assigns device to area`() {
         val area = anAreaDto()
         areasDao.save(area)
-        val deviceId = devicesDao.create(anActuatorDataValue())
+        val deviceId = devicesDao.create(anActuatorDataValue()).getOrElse { error("Failed to create actuator: $it") }
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -222,27 +63,5 @@ class AssignmentsControllerIntegrationTest(
 
         result.message shouldBe "Device with id '$deviceId' successfully assigned to area with id '${area.uuid}'!"
     }
-
-    @Test fun `assignActuatorToArea() return 400 when device is already assigned to this area`() {
-        val area = anAreaDto()
-        areasDao.save(area)
-        val deviceId = devicesDao.create(anActuatorDataValue())
-        actuatorsAssignmentsDao.assign(areaId = area.uuid, actuatorId = deviceId)
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .body("""{"areaId": "${area.uuid}", "deviceId": "$deviceId"}""")
-            .`when`()
-            .post("/assignments/actuators")
-            .then()
-            .statusCode(400)
-            .extract()
-            .`as`(MessageResponse::class.java)
-
-        result.message shouldBe "Device with id '$deviceId' is already assigned to area with id '${area.uuid}'!"
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }

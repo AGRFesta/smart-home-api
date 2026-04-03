@@ -8,7 +8,7 @@ import java.math.BigDecimal
 import org.agrfesta.sh.api.domain.areas.HeatableArea
 import org.agrfesta.sh.api.domain.commons.Temperature
 import org.agrfesta.sh.api.domain.failures.MessageFailure
-import org.agrfesta.sh.api.schedulers.HeatingControlScheduler.Companion.HYSTERESIS
+import org.agrfesta.sh.api.services.heating.HeatingOrchestrationService.Companion.HYSTERESIS
 import org.agrfesta.test.mothers.aRandomTemperature
 
 fun HeatableArea.hasTempAsTarget(): Temperature {

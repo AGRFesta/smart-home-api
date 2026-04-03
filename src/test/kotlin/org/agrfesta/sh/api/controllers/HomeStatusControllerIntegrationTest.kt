@@ -10,7 +10,7 @@ import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aSensorDataValue
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.commons.Temperature
-import org.agrfesta.sh.api.persistence.AreaDao
+import org.agrfesta.sh.api.persistence.AreasDao
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcRepository
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test
 
 class HomeStatusControllerIntegrationTest(
     private val cache: SmartCache,
-    private val areasDao: AreaDao,
+    private val areasDao: AreasDao,
     private val areasJdbcRepo: AreasJdbcRepository,
     private val devicesService: DevicesService,
     private val devicesJdbcRepository: DevicesJdbcRepository,

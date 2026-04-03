@@ -6,6 +6,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.agrfesta.sh.api.domain.commons.CacheEntry
+import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.CacheDao
 import org.springframework.stereotype.Service
 import kotlin.time.Duration
@@ -35,13 +36,13 @@ class CacheAsserter(
     }
 
     fun givenPersistedCacheEntry(key: String, value: String) {
-        every { cacheDao.getEntry(key) } returns CacheEntry(value)
+        every { cacheDao.getEntry(key) } returns CacheEntry(value).right()
     }
     fun givenPersistedCacheEntryFetchFailure() {
-        every { cacheDao.getEntry(any()) } throws Exception("persisted cache fetch failure")
+        every { cacheDao.getEntry(any()) } returns PersistenceFailure(Exception("persisted cache fetch failure")).left()
     }
     fun givenPersistedCacheEntryUpsertFailure() {
-        every { cacheDao.upsert(any(), any()) } throws Exception("persisted cache set failure")
+        every { cacheDao.upsert(any(), any()) } returns PersistenceFailure(Exception("persisted cache set failure")).left()
     }
 
     fun verifyPersistedCacheEntryUpsert(key: String, value: String) {

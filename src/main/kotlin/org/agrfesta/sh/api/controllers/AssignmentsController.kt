@@ -46,32 +46,32 @@ class AssignmentsController(
 
     private fun SensorAssignmentFailure.mapErrorByRequest(request: CreateAssignmentRequest): ResponseEntity<Any> =
         when(this) {
-            DeviceNotFound -> status(NOT_FOUND)
-                .body(MessageResponse("Device with id '${request.deviceId}' is missing!"))
-            is PersistenceFailure -> status(INTERNAL_SERVER_ERROR)
-                .body(unableToAssignDeviceMessage(request.deviceId, request.areaId, exception.message))
-            AreaNotFound -> status(NOT_FOUND)
-                .body(MessageResponse("Area with id '${request.areaId}' is missing!"))
-            NotASensor -> badRequest()
-                .body(MessageResponse("Device with id '${request.deviceId}' is not a sensor!"))
             SameAreaAssignment -> badRequest()
                 .body(alreadyAssignedMessage(request.deviceId, request.areaId))
             SensorAlreadyAssigned -> badRequest()
                 .body(MessageResponse("Device with id '${request.deviceId}' is already assigned to another area!"))
+            is AreaNotFound -> status(NOT_FOUND)
+                .body(MessageResponse("Area with id '${request.areaId}' is missing!"))
+            is DeviceNotFound -> status(NOT_FOUND)
+                .body(MessageResponse("Device with id '${request.deviceId}' is missing!"))
+            is PersistenceFailure -> status(INTERNAL_SERVER_ERROR)
+                .body(unableToAssignDeviceMessage(request.deviceId, request.areaId, exception.message))
+            is NotASensor -> badRequest()
+                .body(MessageResponse("Device with id '${request.deviceId}' is not a sensor!"))
         }
 
     private fun ActuatorAssignmentFailure.mapErrorByRequest(request: CreateAssignmentRequest): ResponseEntity<Any> =
         when(this) {
-            DeviceNotFound -> status(NOT_FOUND)
-                .body(MessageResponse("Device with id '${request.deviceId}' is missing!"))
-            is PersistenceFailure -> status(INTERNAL_SERVER_ERROR)
-                .body(unableToAssignDeviceMessage(request.deviceId, request.areaId, exception.message))
-            AreaNotFound -> status(NOT_FOUND)
-                .body(MessageResponse("Area with id '${request.areaId}' is missing!"))
-            NotAnActuator -> badRequest()
+            is NotAnActuator -> badRequest()
                 .body(MessageResponse("Device with id '${request.deviceId}' is not an actuator!"))
             SameAreaAssignment -> badRequest()
                 .body(alreadyAssignedMessage(request.deviceId, request.areaId))
+            is AreaNotFound -> status(NOT_FOUND)
+                .body(MessageResponse("Area with id '${request.areaId}' is missing!"))
+            is DeviceNotFound -> status(NOT_FOUND)
+                .body(MessageResponse("Device with id '${request.deviceId}' is missing!"))
+            is PersistenceFailure -> status(INTERNAL_SERVER_ERROR)
+                .body(unableToAssignDeviceMessage(request.deviceId, request.areaId, exception.message))
         }
 
     private fun successfulAssignmentMessage(deviceId: UUID, areaId: UUID) =

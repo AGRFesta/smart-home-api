@@ -10,7 +10,6 @@ import org.agrfesta.sh.api.domain.devices.DevicesProvider
 import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.domain.devices.Provider.NETATMO
 import org.agrfesta.sh.api.domain.failures.Failure
-import org.agrfesta.sh.api.services.PersistedCacheService
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.stereotype.Service
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service
 @Service
 class NetatmoService(
     private val cache: Cache,
-    private val cacheService: PersistedCacheService,
     private val netatmoClient: NetatmoClient,
     private val objectMapper: ObjectMapper
 ): DevicesProvider {

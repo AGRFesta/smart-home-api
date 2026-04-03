@@ -1,10 +1,6 @@
-package org.agrfesta.sh.api.schedulers
+package org.agrfesta.sh.api.services
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.kotest.assertions.arrow.core.shouldBeRight
-import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
 import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.domain.commons.Percentage
@@ -13,31 +9,25 @@ import org.agrfesta.sh.api.domain.devices.Provider
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.providers.netatmo.NetatmoIntegrationAsserter
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotClientAsserter
-import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDeviceStatusResponse
-import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.CacheIntegrationAsserter
-import org.agrfesta.sh.api.utils.getThermoHygroKey
 import org.agrfesta.test.mothers.aRandomIntHumidity
 import org.agrfesta.test.mothers.aRandomThermoHygroData
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestFactory
+import kotlinx.coroutines.runBlocking
 
-class DevicesDataFetchSchedulerIntegrationTest(
-    private val sut: DevicesDataFetchScheduler,
+class SensorReadingsSyncServiceIntegrationTest(
+    private val sut: SensorReadingsSyncService,
     private val devicesRepository: DevicesJdbcRepository,
-    private val cache: Cache,
     private val switchBotClientAsserter: SwitchBotClientAsserter,
     private val netatmoIntegrationAsserter: NetatmoIntegrationAsserter,
     private val cacheIntegrationAsserter: CacheIntegrationAsserter,
     private val objectMapper: ObjectMapper
 ): AbstractIntegrationTest() {
 
-    @Test fun `fetchDevicesData() caches sensors device values only and ignores failures`() {
+    @Test fun `fetchAndCacheSensorData() caches sensors device values only and ignores failures`() {
         //TODO this is a no features device that proves it will be not considered, once features will be deprecated
         // have no sense anymore, replace it with a no sensor device (at moment do not exist)
-        val noSensoDevice = aDeviceDataValue(features = emptySet()).apply { devicesRepository.persist(this) }
+        val noSensorDevice = aDeviceDataValue(features = emptySet()).apply { devicesRepository.persist(this) }
 
         val swbSensorData = aRandomThermoHygroData(
             relativeHumidity = Percentage.ofHundreds(aRandomIntHumidity()))
@@ -55,31 +45,12 @@ class DevicesDataFetchSchedulerIntegrationTest(
             .apply { devicesRepository.persist(this) }
         netatmoIntegrationAsserter.givenDevice(nttSensor, nttSensorData)
 
-        sut.fetchDevicesData()
+        runBlocking { sut.fetchAndCacheSensorData() }
 
-        cacheIntegrationAsserter.verifyContainsNoThermoHygroDataFrom(noSensoDevice)
+        cacheIntegrationAsserter.verifyContainsNoThermoHygroDataFrom(noSensorDevice)
         cacheIntegrationAsserter.verifyContainsThermoHygroDataFrom(swbSensor, swbSensorData)
         cacheIntegrationAsserter.verifyContainsNoThermoHygroDataFrom(swbFaultySensor)
         cacheIntegrationAsserter.verifyContainsThermoHygroDataFrom(nttSensor, nttSensorData)
-    }
-
-    @Disabled("I think we don't need it")
-    @TestFactory
-    fun correctlyCacheSwitchBotTemperatureTextValues() = listOf(
-        "0", "33.3333", "-41", "100", "-15.22"
-    ).map {
-        dynamicTest(it) {
-            val response = objectMapper.aSwitchBotDeviceStatusResponse(temperatureText = it)
-            val sensor = aDeviceDataValue(provider = Provider.SWITCHBOT, features = setOf(SENSOR))
-            devicesRepository.persist(sensor)
-            coEvery { switchBotDevicesClient.getDeviceStatus(sensor.deviceProviderId) } returns response
-
-            sut.fetchDevicesData()
-
-            val json = cache.get(sensor.getThermoHygroKey()).shouldBeRight()
-            val res: JsonNode = objectMapper.readTree(json)
-            res.at("/t").asText() shouldBe it
-        }
     }
 
 }
