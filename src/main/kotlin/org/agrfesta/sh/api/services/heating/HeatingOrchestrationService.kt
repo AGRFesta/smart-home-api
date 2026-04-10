@@ -32,11 +32,13 @@ class HeatingOrchestrationService(
                 val devicesRegistry = devices.associateBy { it.uuid }
                 areasService.getAllAreas(devicesRegistry)
                     .onRight { areas ->
-                        areas.filterIsInstance<HeatableArea>()
-                            .groupBy { it.heater }
-                            .forEach { (heater, areaList) ->
-                                runBlocking { strategy.handleHeatingFor(heater, areaList) }
-                            }
+                        runBlocking {
+                            areas.filterIsInstance<HeatableArea>()
+                                .groupBy { it.heater }
+                                .forEach { (heater, areaList) ->
+                                    strategy.handleHeatingFor(heater, areaList)
+                                }
+                        }
                     }
                     .onLeft { failure ->
                         logger.error("Area fetch failed, skipping heating evaluation.", failure.exception)
