@@ -204,4 +204,26 @@ class DevicesServiceTest {
         sut.getAllDevices().shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
     }
 
+    @Test
+    fun `getAllDevices() skips device when no factory is registered for its provider`() {
+        val dto = aDevice(provider = Provider.SWITCHBOT)
+        every { devicesDao.getAll() } returns listOf(dto).right()
+
+        sut.getAllDevices().shouldBeRight().shouldBeEmpty()
+    }
+
+    @Test
+    fun `getAllDevices() skips only devices with unregistered provider`() {
+        val dtoWithFactory = aDevice(provider = Provider.SWITCHBOT)
+        val dtoWithoutFactory = aDevice(provider = Provider.NETATMO)
+        val domainDevice: Device = mockk()
+        val factory: ProviderDevicesFactory = mockk()
+        every { factory.provider } returns Provider.SWITCHBOT
+        every { factory.createDevice(dtoWithFactory) } returns domainDevice
+        every { devicesDao.getAll() } returns listOf(dtoWithFactory, dtoWithoutFactory).right()
+        val sut = DevicesService(devicesDao, listOf(factory))
+
+        sut.getAllDevices().shouldBeRight().shouldContainExactlyInAnyOrder(domainDevice)
+    }
+
 }

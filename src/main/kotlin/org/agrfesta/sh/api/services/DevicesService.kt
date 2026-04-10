@@ -11,6 +11,7 @@ import org.agrfesta.sh.api.domain.failures.DeviceCreationFailure
 import org.agrfesta.sh.api.domain.failures.DeviceUpdateFailure
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.DevicesDao
+import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.stereotype.Service
 
 /**
@@ -28,6 +29,7 @@ class DevicesService(
     private val devicesDao: DevicesDao,
     providerDevicesFactories: Collection<ProviderDevicesFactory>
 ) {
+    private val logger by LoggerDelegate()
     private val mappedDevicesFactories = providerDevicesFactories.associateBy { it.provider }
 
     /**
@@ -96,9 +98,14 @@ class DevicesService(
      */
     fun getAllDevices(): Either<PersistenceFailure, Collection<Device>> =
         devicesDao.getAll().map { dtos ->
-            dtos.map { dto ->
-                val factory = mappedDevicesFactories[dto.provider]!!
-                factory.createDevice(dto)
+            dtos.mapNotNull { dto ->
+                val factory = mappedDevicesFactories[dto.provider]
+                if (factory == null) {
+                    logger.error("No ProviderDevicesFactory registered for provider '${dto.provider}', skipping device '${dto.uuid}'")
+                    null
+                } else {
+                    factory.createDevice(dto)
+                }
             }
         }
 
