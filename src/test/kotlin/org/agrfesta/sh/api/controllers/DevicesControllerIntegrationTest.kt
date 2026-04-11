@@ -13,6 +13,7 @@ import io.mockk.every
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import java.time.Instant
+import java.util.UUID
 import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aDeviceDataValue
@@ -54,9 +55,11 @@ class DevicesControllerIntegrationTest(
         val existingSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
         val existingDetachedSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
         val newSBDeviceData = aDeviceDataValue(provider = SWITCHBOT)
-        val uuid = devicesDao.create(existingSBDeviceData).getOrElse { error("Failed to create device: $it") }
+        val uuid = UUID.randomUUID()
+        devicesDao.create(uuid, existingSBDeviceData).getOrElse { error("Failed to create device: $it") }
         val expectedUpdatedSBDevice: DeviceDto = aDevice(existingSBDeviceData, uuid)
-        val detachedUuid = devicesDao.create(existingDetachedSBDeviceData, DeviceStatus.DETACHED)
+        val detachedUuid = UUID.randomUUID()
+        devicesDao.create(detachedUuid, existingDetachedSBDeviceData, DeviceStatus.DETACHED)
             .getOrElse { error("Failed to create device: $it") }
         val expectedPairedDevice = aDevice(existingDetachedSBDeviceData, detachedUuid, DeviceStatus.PAIRED)
         coEvery {
@@ -90,12 +93,14 @@ class DevicesControllerIntegrationTest(
     @Test
     fun `refresh() updates existing devices to 'DETACHED' when fails to fetch them from provider`() {
         val deviceData = aDeviceDataValue(provider = SWITCHBOT)
-        val uuid = devicesDao.create(deviceData).getOrElse { error("Failed to create device: $it") }
+        val uuid = UUID.randomUUID()
+        devicesDao.create(uuid, deviceData).getOrElse { error("Failed to create device: $it") }
         val expectedUpdatedSBDevice = aDevice(deviceData, uuid, DeviceStatus.DETACHED)
         coEvery { switchBotDevicesClient.getDevices() } throws Exception("switchbot fetch failure")
 
         val existingNetatmoDeviceData = aDeviceDataValue(provider = NETATMO, features = setOf(SENSOR, ACTUATOR))
-        val uuid1 = devicesDao.create(existingNetatmoDeviceData).getOrElse { error("Failed to create device: $it") }
+        val uuid1 = UUID.randomUUID()
+        devicesDao.create(uuid1, existingNetatmoDeviceData).getOrElse { error("Failed to create device: $it") }
         val expectedUpdatedNetatmoDevice = aDevice(existingNetatmoDeviceData, uuid1, DeviceStatus.DETACHED)
         netatmoIntegrationAsserter.givenHomeDataFetchFailure()
 

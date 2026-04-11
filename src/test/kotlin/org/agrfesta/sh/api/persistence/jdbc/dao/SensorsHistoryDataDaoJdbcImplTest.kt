@@ -29,7 +29,8 @@ class SensorsHistoryDataDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
     @Test
     fun `persistTemperature() Persists temperature reading for sensor`() {
         every { timeService.now() } returns Instant.now()
-        val sensorUuid = devicesRepo.persist(aSensorDataValue())
+        val sensorUuid = UUID.randomUUID()
+        devicesRepo.persist(sensorUuid, aSensorDataValue())
         val time = nowNoMills()
         val temperature = aRandomTemperature()
 
@@ -60,7 +61,8 @@ class SensorsHistoryDataDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
     @Test
     fun `persistHumidity() Persists humidity reading for sensor`() {
         every { timeService.now() } returns Instant.now()
-        val sensorUuid = devicesRepo.persist(aSensorDataValue())
+        val sensorUuid = UUID.randomUUID()
+        devicesRepo.persist(sensorUuid, aSensorDataValue())
         val time = nowNoMills()
         val humidity = aRandomHumidity()
 
@@ -91,7 +93,8 @@ class SensorsHistoryDataDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
     @Test
     fun `findBySensor() Returns empty collection when no history exists for sensor`() {
         every { timeService.now() } returns Instant.now()
-        val sensorUuid = devicesRepo.persist(aSensorDataValue())
+        val sensorUuid = UUID.randomUUID()
+        devicesRepo.persist(sensorUuid, aSensorDataValue())
 
         sut.findBySensor(sensorUuid)
             .shouldBeRight()
@@ -101,7 +104,8 @@ class SensorsHistoryDataDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
     @Test
     fun `findBySensor() Returns all history data for sensor`() {
         every { timeService.now() } returns Instant.now()
-        val sensorUuid = devicesRepo.persist(aSensorDataValue())
+        val sensorUuid = UUID.randomUUID()
+        devicesRepo.persist(sensorUuid, aSensorDataValue())
         val time = nowNoMills()
         sut.persistTemperature(sensorUuid, time, aRandomTemperature()).shouldBeRight()
         sut.persistHumidity(sensorUuid, time, aRandomHumidity()).shouldBeRight()

@@ -39,17 +39,19 @@ interface DevicesDao {
     fun getAll(): Either<PersistenceFailure, Collection<DeviceDto>>
 
     /**
-     * Persists a new device.
+     * Persists a new device with the given [id].
      *
+     * @param id the [UUID] to assign to the new device.
      * @param device the device data to persist.
      * @param initialStatus the initial [DeviceStatus] to assign; defaults to [DeviceStatus.PAIRED].
-     * @return [Either.Right] with the [UUID] of the newly created device,
+     * @return [Either.Right] with [Unit] on success,
      * or [Either.Left] with [DeviceCreationFailure] if the device could not be created.
      */
     fun create(
+        id: UUID,
         device: DeviceDataValue,
         initialStatus: DeviceStatus = DeviceStatus.PAIRED
-    ): Either<DeviceCreationFailure, UUID>
+    ): Either<DeviceCreationFailure, Unit>
 
     /**
      * Updates an existing [DeviceDto] with new data.

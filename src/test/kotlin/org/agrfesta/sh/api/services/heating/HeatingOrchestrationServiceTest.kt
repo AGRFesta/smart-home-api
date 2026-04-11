@@ -63,7 +63,7 @@ class HeatingOrchestrationServiceTest {
         every { strategy } returns COMFORT
     }
 
-    private val devicesService = DevicesService(devicesDao, listOf(factory))
+    private val devicesService = DevicesService(devicesDao, randomGenerator, listOf(factory))
     private val heatingAreasService = HeatingAreasService(areasDao, temperatureSettingsDao, transactionRunner)
     private val areasFactory = AreasFactory(heatingAreasService, timeService)
     private val areasService = AreasService(areasDao, areasWithDevicesDao, randomGenerator, areasFactory)

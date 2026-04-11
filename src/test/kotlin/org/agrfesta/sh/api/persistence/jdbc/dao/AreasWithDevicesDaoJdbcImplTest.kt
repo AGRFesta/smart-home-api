@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import java.time.Instant
+import java.util.UUID
 import org.agrfesta.sh.api.domain.anActuatorDataValue
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.aSensorDataValue
@@ -46,7 +47,8 @@ class AreasWithDevicesDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
     fun `getAllAreasWithDevices() Returns area with assigned sensor`() {
         every { timeService.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
-        val sensorId = devicesRepo.persist(aSensorDataValue())
+        val sensorId = UUID.randomUUID()
+        devicesRepo.persist(sensorId, aSensorDataValue())
         sensorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = sensorId)
 
         val result = sut.getAllAreasWithDevices().shouldBeRight()
@@ -64,7 +66,8 @@ class AreasWithDevicesDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
     fun `getAllAreasWithDevices() Returns area with assigned actuator`() {
         every { timeService.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
-        val actuatorId = devicesRepo.persist(anActuatorDataValue())
+        val actuatorId = UUID.randomUUID()
+        devicesRepo.persist(actuatorId, anActuatorDataValue())
         actuatorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = actuatorId)
 
         val result = sut.getAllAreasWithDevices().shouldBeRight()

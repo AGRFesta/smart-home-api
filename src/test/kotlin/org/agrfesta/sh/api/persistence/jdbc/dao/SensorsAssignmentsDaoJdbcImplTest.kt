@@ -37,7 +37,8 @@ class SensorsAssignmentsDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
             name = aRandomUniqueString(),
             features = emptySet() // TODO various features
         )
-        val deviceId = devicesRepo.persist(device)
+        val deviceId = UUID.randomUUID()
+        devicesRepo.persist(deviceId, device)
         val missingAreaId = UUID.randomUUID()
 
         sut.assign(missingAreaId, deviceId)
@@ -65,7 +66,8 @@ class SensorsAssignmentsDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
     fun `assign() Returns SameAreaAssignment when sensor is already assigned to that area`() {
         every { timeService.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
-        val sensorId = devicesRepo.persist(aSensorDataValue())
+        val sensorId = UUID.randomUUID()
+        devicesRepo.persist(sensorId, aSensorDataValue())
         sensorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = sensorId)
 
         sut.assign(area.uuid, sensorId)
@@ -78,7 +80,8 @@ class SensorsAssignmentsDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
         every { timeService.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val anotherArea = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
-        val sensorId = devicesRepo.persist(aSensorDataValue())
+        val sensorId = UUID.randomUUID()
+        devicesRepo.persist(sensorId, aSensorDataValue())
         sensorsAssignmentsRepo.persistAssignment(areaId = anotherArea.uuid, deviceId = sensorId)
 
         sut.assign(area.uuid, sensorId)
@@ -102,7 +105,8 @@ class SensorsAssignmentsDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
         val now = Instant.now().truncatedTo(ChronoUnit.MICROS)
         every { timeService.now() } returns now
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
-        val sensorId = devicesRepo.persist(aSensorDataValue())
+        val sensorId = UUID.randomUUID()
+        devicesRepo.persist(sensorId, aSensorDataValue())
 
         sut.assign(area.uuid, sensorId).shouldBeRight()
 

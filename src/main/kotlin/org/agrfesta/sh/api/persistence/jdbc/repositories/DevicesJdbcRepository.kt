@@ -13,7 +13,6 @@ import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getProvider
 import org.agrfesta.sh.api.persistence.jdbc.utils.getStatus
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
-import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Repository
 @Repository
 class DevicesJdbcRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
-    private val randomGenerator: RandomGenerator,
     private val timeService: TimeService
 ) {
 
@@ -36,15 +34,14 @@ class DevicesJdbcRepository(
     fun getAll(): Collection<DeviceEntity> = jdbcTemplate
         .query("""SELECT * FROM smart_home.device;""", DeviceRowMapper)
 
-    fun persist(device: DeviceDataValue, deviceStatus: DeviceStatus = DeviceStatus.PAIRED): UUID {
-        val uuid = randomGenerator.uuid()
+    fun persist(id: UUID, device: DeviceDataValue, deviceStatus: DeviceStatus = DeviceStatus.PAIRED) {
         val sql = """
-            INSERT INTO smart_home.device 
+            INSERT INTO smart_home.device
             (uuid, name, provider, status, provider_id, features, created_on, updated_on)
             VALUES (:uuid, :name, :provider, :status, :providerId, :features, :createdOn, :updatedOn)
         """
         val params = mapOf(
-            "uuid" to uuid,
+            "uuid" to id,
             "name" to device.name,
             "provider" to device.provider.name,
             "status" to deviceStatus.name,
@@ -54,7 +51,6 @@ class DevicesJdbcRepository(
             "updatedOn" to null
         )
         jdbcTemplate.update(sql, params)
-        return uuid
     }
 
     fun update(device: DeviceDto) {

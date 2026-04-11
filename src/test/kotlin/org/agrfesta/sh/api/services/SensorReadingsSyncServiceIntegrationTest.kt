@@ -12,6 +12,7 @@ import org.agrfesta.sh.api.providers.switchbot.SwitchBotClientAsserter
 import org.agrfesta.sh.api.utils.CacheIntegrationAsserter
 import org.agrfesta.test.mothers.aRandomIntHumidity
 import org.agrfesta.test.mothers.aRandomThermoHygroData
+import java.util.UUID
 import org.junit.jupiter.api.Test
 import kotlinx.coroutines.runBlocking
 
@@ -27,22 +28,22 @@ class SensorReadingsSyncServiceIntegrationTest(
     @Test fun `fetchAndCacheSensorData() caches sensors device values only and ignores failures`() {
         //TODO this is a no features device that proves it will be not considered, once features will be deprecated
         // have no sense anymore, replace it with a no sensor device (at moment do not exist)
-        val noSensorDevice = aDeviceDataValue(features = emptySet()).apply { devicesRepository.persist(this) }
+        val noSensorDevice = aDeviceDataValue(features = emptySet()).apply { devicesRepository.persist(UUID.randomUUID(), this) }
 
         val swbSensorData = aRandomThermoHygroData(
             relativeHumidity = Percentage.ofHundreds(aRandomIntHumidity()))
         val swbSensor = aDeviceDataValue(provider = Provider.SWITCHBOT, features = setOf(SENSOR))
-            .apply { devicesRepository.persist(this) }
+            .apply { devicesRepository.persist(UUID.randomUUID(), this) }
         switchBotClientAsserter.givenSensorData(swbSensor.deviceProviderId, swbSensorData)
 
         val swbFaultySensor = aDeviceDataValue(provider = Provider.SWITCHBOT, features = setOf(SENSOR))
-            .apply { devicesRepository.persist(this) }
+            .apply { devicesRepository.persist(UUID.randomUUID(), this) }
         switchBotClientAsserter.givenSensorDataFailure(swbFaultySensor.deviceProviderId)
 
         val nttSensorData = aRandomThermoHygroData(
             relativeHumidity = Percentage.ofHundreds(aRandomIntHumidity()))
         val nttSensor = aDeviceDataValue(provider = Provider.NETATMO, features = setOf(SENSOR))
-            .apply { devicesRepository.persist(this) }
+            .apply { devicesRepository.persist(UUID.randomUUID(), this) }
         netatmoIntegrationAsserter.givenDevice(nttSensor, nttSensorData)
 
         runBlocking { sut.fetchAndCacheSensorData() }

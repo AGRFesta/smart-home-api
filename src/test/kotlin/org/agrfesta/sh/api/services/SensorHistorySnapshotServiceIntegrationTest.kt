@@ -19,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 
 class SensorHistorySnapshotServiceIntegrationTest(
     private val sut: SensorHistorySnapshotService,
@@ -38,7 +39,8 @@ class SensorHistorySnapshotServiceIntegrationTest(
         val sensorData = aRandomThermoHygroData(
             relativeHumidity = Percentage.ofHundreds(aRandomIntHumidity()))
         val sensor = aDeviceDataValue(features = setOf(SENSOR))
-        val uuid = devicesRepository.persist(sensor)
+        val uuid = UUID.randomUUID()
+        devicesRepository.persist(uuid, sensor)
         switchBotClientAsserter.givenSensorData(sensor.deviceProviderId, sensorData)
         runBlocking { syncService.fetchAndCacheSensorData() }
 

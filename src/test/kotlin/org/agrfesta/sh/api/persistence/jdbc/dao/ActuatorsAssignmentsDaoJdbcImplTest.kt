@@ -26,7 +26,8 @@ class ActuatorsAssignmentsDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
     @Test
     fun `assign() Returns AreaNotFound when area is missing`() {
         every { timeService.now() } returns Instant.now()
-        val actuatorId = devicesRepo.persist(anActuatorDataValue())
+        val actuatorId = UUID.randomUUID()
+        devicesRepo.persist(actuatorId, anActuatorDataValue())
         val missingAreaId = UUID.randomUUID()
 
         sut.assign(missingAreaId, actuatorId)
@@ -51,7 +52,8 @@ class ActuatorsAssignmentsDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
     fun `assign() Returns SameAreaAssignment when actuator is already assigned to that area`() {
         every { timeService.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
-        val actuatorId = devicesRepo.persist(anActuatorDataValue())
+        val actuatorId = UUID.randomUUID()
+        devicesRepo.persist(actuatorId, anActuatorDataValue())
         actuatorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = actuatorId)
 
         sut.assign(area.uuid, actuatorId)
@@ -74,7 +76,8 @@ class ActuatorsAssignmentsDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
     fun `assign() Assigns actuator to area`() {
         every { timeService.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
-        val actuatorId = devicesRepo.persist(anActuatorDataValue())
+        val actuatorId = UUID.randomUUID()
+        devicesRepo.persist(actuatorId, anActuatorDataValue())
 
         sut.assign(area.uuid, actuatorId).shouldBeRight()
 

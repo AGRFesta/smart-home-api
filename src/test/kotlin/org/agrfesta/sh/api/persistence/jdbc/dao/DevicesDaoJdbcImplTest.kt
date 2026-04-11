@@ -42,7 +42,8 @@ class DevicesDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
             name = aRandomUniqueString(),
             features = emptySet() // TODO various features
         )
-        val deviceId = devicesRepo.persist(device)
+        val deviceId = UUID.randomUUID()
+        devicesRepo.persist(deviceId, device)
 
         sut.getDeviceById(deviceId)
             .shouldBeRight().also {
@@ -79,8 +80,8 @@ class DevicesDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
     @Test
     fun `getAll() Returns all persisted devices`() {
         every { timeService.now() } returns Instant.now()
-        devicesRepo.persist(aDeviceDataValue())
-        devicesRepo.persist(aDeviceDataValue())
+        devicesRepo.persist(UUID.randomUUID(), aDeviceDataValue())
+        devicesRepo.persist(UUID.randomUUID(), aDeviceDataValue())
 
         sut.getAll()
             .shouldBeRight()
@@ -101,11 +102,12 @@ class DevicesDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
     // create()
 
     @Test
-    fun `create() Persists a device and returns its UUID`() {
+    fun `create() Persists a device retrievable by the given UUID`() {
         every { timeService.now() } returns Instant.now()
         val device = aDeviceDataValue()
+        val deviceId = UUID.randomUUID()
 
-        val deviceId = sut.create(device).shouldBeRight()
+        sut.create(deviceId, device).shouldBeRight()
 
         sut.getDeviceById(deviceId)
             .shouldBeRight().also {
@@ -121,9 +123,9 @@ class DevicesDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
         every { timeService.now() } returns Instant.now()
         val device = aDeviceDataValue()
         val failure = DataAccessResourceFailureException("device creation failure")
-        every { devicesRepo.persist(any(), any()) } throws failure
+        every { devicesRepo.persist(any(), any(), any()) } throws failure
 
-        sut.create(device)
+        sut.create(UUID.randomUUID(), device)
             .shouldBeLeft()
             .shouldBeInstanceOf<PersistenceFailure>()
     }
@@ -134,7 +136,8 @@ class DevicesDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
     fun `update() Updates device data`() {
         every { timeService.now() } returns Instant.now()
         val data = aDeviceDataValue()
-        val deviceId = devicesRepo.persist(data)
+        val deviceId = UUID.randomUUID()
+        devicesRepo.persist(deviceId, data)
         val updatedDevice = aDevice(data = data, uuid = deviceId)
 
         sut.update(updatedDevice).shouldBeRight()
@@ -161,7 +164,8 @@ class DevicesDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
     fun `update() Returns PersistenceFailure when fails to update device`() {
         every { timeService.now() } returns Instant.now()
         val data = aDeviceDataValue()
-        val deviceId = devicesRepo.persist(data)
+        val deviceId = UUID.randomUUID()
+        devicesRepo.persist(deviceId, data)
         val device = aDevice(data = data, uuid = deviceId)
         val failure = DataAccessResourceFailureException("device update failure")
         every { devicesRepo.update(any()) } throws failure

@@ -29,7 +29,8 @@ class AssignmentsControllerIntegrationTest(
     @Test fun `assignSensorToArea() return 201 when successfully assigns device to area`() {
         val area = anAreaDto()
         areasDao.save(area)
-        val deviceId = devicesDao.create(aSensorDataValue()).getOrElse { error("Failed to create sensor: $it") }
+        val deviceId = uuid
+        devicesDao.create(deviceId, aSensorDataValue()).getOrElse { error("Failed to create sensor: $it") }
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -48,7 +49,8 @@ class AssignmentsControllerIntegrationTest(
     @Test fun `assignActuatorToArea() return 201 when successfully assigns device to area`() {
         val area = anAreaDto()
         areasDao.save(area)
-        val deviceId = devicesDao.create(anActuatorDataValue()).getOrElse { error("Failed to create actuator: $it") }
+        val deviceId = uuid
+        devicesDao.create(deviceId, anActuatorDataValue()).getOrElse { error("Failed to create actuator: $it") }
 
         val result = given()
             .contentType(ContentType.JSON)

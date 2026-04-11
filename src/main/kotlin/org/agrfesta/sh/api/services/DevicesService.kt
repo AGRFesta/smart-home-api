@@ -12,6 +12,7 @@ import org.agrfesta.sh.api.domain.failures.DeviceUpdateFailure
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.utils.LoggerDelegate
+import org.agrfesta.sh.api.utils.RandomGenerator
 import org.springframework.stereotype.Service
 
 /**
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service
 @Service
 class DevicesService(
     private val devicesDao: DevicesDao,
+    private val randomGenerator: RandomGenerator,
     providerDevicesFactories: Collection<ProviderDevicesFactory>
 ) {
     private val logger by LoggerDelegate()
@@ -43,7 +45,10 @@ class DevicesService(
     fun createDevice(
         device: DeviceDataValue,
         initialStatus: DeviceStatus = DeviceStatus.PAIRED
-    ): Either<DeviceCreationFailure, UUID> = devicesDao.create(device, initialStatus)
+    ): Either<DeviceCreationFailure, UUID> {
+        val uuid = randomGenerator.uuid()
+        return devicesDao.create(uuid, device, initialStatus).map { uuid }
+    }
 
     /**
      * Updates the persisted representation of an existing device.

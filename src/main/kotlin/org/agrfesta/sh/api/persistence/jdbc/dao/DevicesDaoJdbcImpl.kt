@@ -35,9 +35,9 @@ class DevicesDaoJdbcImpl(
         PersistenceFailure(e).left()
     }
 
-    override fun create(device: DeviceDataValue, initialStatus: DeviceStatus): Either<DeviceCreationFailure, UUID> =
+    override fun create(id: UUID, device: DeviceDataValue, initialStatus: DeviceStatus): Either<DeviceCreationFailure, Unit> =
         try {
-            devicesRepo.persist(device, initialStatus).right()
+            devicesRepo.persist(id, device, initialStatus).right()
         } catch (e: DataAccessException) {
             PersistenceFailure(e).left()
         }
