@@ -32,9 +32,9 @@ class SensorsAssignmentsDaoJdbcImpl(
         } else {
             sensorsAssignmentsJdbcRepository.persistAssignment(areaId, sensorId).right()
         }
-    } catch (e: DeviceNotFoundException) {
+    } catch (_: DeviceNotFoundException) {
         DeviceNotFound(sensorId).left()
-    } catch (e: AreaNotFoundException) {
+    } catch (_: AreaNotFoundException) {
         AreaNotFound(areaId).left()
     } catch (e: DataAccessException) {
         PersistenceFailure(e).left()

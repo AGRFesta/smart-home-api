@@ -60,7 +60,7 @@ class TemperatureSettingsDaoJdbcImpl(
                 )
             }.forEach { tempIntervalsRepo.save(it) }
             Unit.right()
-        } catch (e: AreaNotFoundException) {
+        } catch (_: AreaNotFoundException) {
             AreaNotFound(setting.areaId).left()
         } catch (e: DataAccessException) {
             PersistenceFailure(e).left()
@@ -86,7 +86,7 @@ class TemperatureSettingsDaoJdbcImpl(
             )
         }.forEach { tempIntervalsRepo.save(it) }
         Unit.right()
-    } catch (e: AreaNotFoundException) {
+    } catch (_: AreaNotFoundException) {
         AreaNotFound(setting.areaId).left()
     } catch (e: DataAccessException) {
         PersistenceFailure(e).left()

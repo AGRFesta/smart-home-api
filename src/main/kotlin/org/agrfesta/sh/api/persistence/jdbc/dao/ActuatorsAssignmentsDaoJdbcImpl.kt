@@ -26,9 +26,9 @@ class ActuatorsAssignmentsDaoJdbcImpl(
             .map { it.areaUuid }.contains(areaId)
         if (alreadyAssigned) SameAreaAssignment.left()
         else actuatorsAssignmentsJdbcRepository.persistAssignment(areaId, actuatorId).right()
-    } catch (e: DeviceNotFoundException) {
+    } catch (_: DeviceNotFoundException) {
         DeviceNotFound(actuatorId).left()
-    } catch (e: AreaNotFoundException) {
+    } catch (_: AreaNotFoundException) {
         AreaNotFound(areaId).left()
     } catch (e: DataAccessException) {
         PersistenceFailure(e).left()

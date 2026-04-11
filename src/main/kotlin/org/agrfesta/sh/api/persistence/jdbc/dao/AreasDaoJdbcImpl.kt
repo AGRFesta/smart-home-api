@@ -37,7 +37,7 @@ class AreasDaoJdbcImpl(
 
     override fun save(area: AreaDto): Either<AreaCreationFailure, Unit> = try {
         areasRepo.persist(area).right()
-    } catch (e: SameNameAreaException) {
+    } catch (_: SameNameAreaException) {
         AreaNameConflict.left()
     } catch (e: DataAccessException) {
         PersistenceFailure(e).left()
