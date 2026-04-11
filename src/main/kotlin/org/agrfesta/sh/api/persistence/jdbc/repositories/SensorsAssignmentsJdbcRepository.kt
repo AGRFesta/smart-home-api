@@ -11,6 +11,7 @@ import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
+import org.postgresql.util.PSQLException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
@@ -23,11 +24,6 @@ class SensorsAssignmentsJdbcRepository(
     private val randomGenerator: RandomGenerator,
     private val timeService: TimeService
 ) {
-
-    companion object {
-        private val violateAreaFkRegex = Regex(".*violates foreign key constraint.*fk_area.*", RegexOption.IGNORE_CASE)
-        private val violateDeviceFkRegex = Regex(".*violates foreign key constraint.*fk_device.*", RegexOption.IGNORE_CASE)
-    }
 
     fun persistAssignment(areaId: UUID, deviceId: UUID) {
         val sql = """
@@ -43,24 +39,14 @@ class SensorsAssignmentsJdbcRepository(
         try {
             jdbcTemplate.update(sql, params)
         } catch (e: DataIntegrityViolationException) {
-            val message = e.cause?.message
-            if (message!=null) {
-                when {
-                    violateAreaFkRegex.containsMatchIn(message) -> throw AreaNotFoundException()
-                    violateDeviceFkRegex.containsMatchIn(message) -> throw DeviceNotFoundException()
-                    else -> throw e
-                }
+            val cause = e.cause as? PSQLException
+            val constraintName = cause?.serverErrorMessage?.constraint
+            throw when (constraintName) {
+                "fk_area" -> AreaNotFoundException()
+                "fk_device" -> DeviceNotFoundException()
+                else -> e
             }
-            throw e
         }
-    }
-
-    fun deleteByDevice(deviceId: UUID) {
-        val sql = """
-            DELETE FROM smart_home.sensor_assignment
-            WHERE device_uuid = :deviceUuid;
-        """
-        jdbcTemplate.update(sql, mapOf("deviceUuid" to deviceId))
     }
 
     fun deleteAll(): Int = jdbcTemplate.update("DELETE FROM smart_home.sensor_assignment", emptyMap<String, Any>())

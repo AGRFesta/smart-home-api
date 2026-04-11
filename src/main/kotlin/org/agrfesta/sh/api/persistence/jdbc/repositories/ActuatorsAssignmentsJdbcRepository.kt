@@ -7,6 +7,7 @@ import org.agrfesta.sh.api.persistence.DeviceNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.entities.ActuatorAssignmentEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
 import org.agrfesta.sh.api.utils.RandomGenerator
+import org.postgresql.util.PSQLException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
@@ -18,11 +19,6 @@ class ActuatorsAssignmentsJdbcRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
     private val randomGenerator: RandomGenerator
 ) {
-
-    companion object {
-        private val violateAreaFkRegex = Regex(".*violates foreign key constraint.*fk_actuator_area.*", RegexOption.IGNORE_CASE)
-        private val violateDeviceFkRegex = Regex(".*violates foreign key constraint.*fk_actuator_device.*", RegexOption.IGNORE_CASE)
-    }
 
     fun persistAssignment(areaId: UUID, deviceId: UUID) {
         val sql = """
@@ -37,12 +33,13 @@ class ActuatorsAssignmentsJdbcRepository(
         try {
             jdbcTemplate.update(sql, params)
         } catch (e: DataIntegrityViolationException) {
-            val message = e.cause?.message
-            if (message != null) {
-                when {
-                    violateAreaFkRegex.containsMatchIn(message) -> throw AreaNotFoundException()
-                    violateDeviceFkRegex.containsMatchIn(message) -> throw DeviceNotFoundException()
-                    else -> throw e
+            val cause = e.cause
+            if (cause is PSQLException) {
+                val constraintName = cause.serverErrorMessage?.constraint
+                throw when (constraintName) {
+                    "fk_actuator_area" -> AreaNotFoundException()
+                    "fk_actuator_device" -> DeviceNotFoundException()
+                    else -> e // something else
                 }
             }
             throw e

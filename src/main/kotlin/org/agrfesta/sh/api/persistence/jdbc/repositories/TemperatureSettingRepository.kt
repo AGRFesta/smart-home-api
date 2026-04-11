@@ -3,18 +3,13 @@ package org.agrfesta.sh.api.persistence.jdbc.repositories
 import java.util.UUID
 import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity
+import org.postgresql.util.PSQLException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 
 @Repository
 class TemperatureSettingRepository(private val jdbcTemplate: NamedParameterJdbcTemplate) {
-
-    companion object {
-        private val violateAreaFkRegex = Regex(
-            ".*violates foreign key constraint.*fk_temperature_area.*",
-            RegexOption.IGNORE_CASE)
-    }
 
     fun findSettingByAreaId(areaId: UUID): TemperatureSettingEntity? {
         val sql = "SELECT * FROM smart_home.temperature_setting WHERE area_uuid = :areaId"
@@ -46,12 +41,9 @@ class TemperatureSettingRepository(private val jdbcTemplate: NamedParameterJdbcT
         try {
             jdbcTemplate.update(sql, params)
         } catch (e: DataIntegrityViolationException) {
-            val message = e.cause?.message
-            if (message!=null) {
-                when {
-                    violateAreaFkRegex.containsMatchIn(message) -> throw AreaNotFoundException()
-                    else -> throw e
-                }
+            val cause = e.cause as? PSQLException
+            if (cause?.serverErrorMessage?.constraint == "fk_temperature_area") {
+                throw AreaNotFoundException()
             }
             throw e
         }

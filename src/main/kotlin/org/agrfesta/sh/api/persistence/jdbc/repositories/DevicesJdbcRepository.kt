@@ -1,7 +1,5 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
-import arrow.core.Either
-import arrow.core.right
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.util.*
@@ -9,8 +7,6 @@ import org.agrfesta.sh.api.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.domain.devices.DeviceDto
 import org.agrfesta.sh.api.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.domain.devices.DeviceStatus
-import org.agrfesta.sh.api.domain.devices.Provider
-import org.agrfesta.sh.api.domain.failures.GetDeviceFailure
 import org.agrfesta.sh.api.persistence.jdbc.entities.DeviceEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
@@ -19,7 +15,6 @@ import org.agrfesta.sh.api.persistence.jdbc.utils.getStatus
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
@@ -32,26 +27,11 @@ class DevicesJdbcRepository(
 ) {
 
     fun findDeviceById(uuid: UUID): DeviceEntity? =
-        try {
-            jdbcTemplate.queryForObject(
-                """SELECT * FROM smart_home.device WHERE uuid = :uuid;""",
-                mapOf("uuid" to uuid),
-                DeviceRowMapper
-            )
-        } catch (e: EmptyResultDataAccessException) {
-            null
-        }
-
-    fun findByProviderAndProviderId(provider: Provider, providerId: String): Either<GetDeviceFailure, DeviceEntity?> =
-        try {
-            jdbcTemplate.queryForObject(
-                """SELECT * FROM smart_home.device WHERE provider = :provider AND provider_id = :providerId;""",
-                mapOf("provider" to provider.name, "providerId" to providerId),
-                DeviceRowMapper
-            )
-        } catch (e: EmptyResultDataAccessException) {
-            null
-        }.right()
+        jdbcTemplate.query(
+            """SELECT * FROM smart_home.device WHERE uuid = :uuid;""",
+            mapOf("uuid" to uuid),
+            DeviceRowMapper
+        ).singleOrNull()
 
     fun getAll(): Collection<DeviceEntity> = jdbcTemplate
         .query("""SELECT * FROM smart_home.device;""", DeviceRowMapper)
