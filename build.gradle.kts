@@ -1,5 +1,5 @@
 plugins {
-	alias(libs.plugins.jvm) // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
+	alias(libs.plugins.jvm)
 	alias(libs.plugins.springboot)
 	alias(libs.plugins.springbootManagement)
 	alias(libs.plugins.kotlin.spring)
@@ -7,19 +7,12 @@ plugins {
 }
 
 group = "org.agrfesta.sh"
-version = "0.5.8"
-
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
-}
+version = "0.5.10"
 
 kotlin {
 	jvmToolchain(21)
 	compilerOptions {
 		freeCompilerArgs.addAll("-Xjsr305=strict")
-		jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
 	}
 }
 
@@ -33,7 +26,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-jdbc")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("org.springframework.boot:spring-boot-starter-security")
-implementation("org.postgresql:postgresql")
+	implementation("org.postgresql:postgresql")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 	implementation(libs.ktor.core)
@@ -42,7 +35,7 @@ implementation("org.postgresql:postgresql")
 	implementation(libs.ktor.jackson)
 	implementation(libs.flyway.core)
 	implementation(libs.arrow.core)
-	runtimeOnly(libs.flyway.postgress)
+	runtimeOnly(libs.flyway.postgres)
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(module = "junit")
@@ -56,10 +49,10 @@ implementation("org.postgresql:postgresql")
 	testImplementation(libs.kotest.assertions.json)
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:postgresql")
-	testImplementation("com.redis:testcontainers-redis:2.2.2")
+	testImplementation(libs.testcontainers.redis)
 	testImplementation("io.rest-assured:rest-assured")
-	testImplementation("io.mockk:mockk:1.13.10")
-	testImplementation("com.ninja-squad:springmockk:4.0.2")
+	testImplementation(libs.mockk)
+	testImplementation(libs.springmockk)
 	testImplementation(libs.ktor.client.mock)
 }
 

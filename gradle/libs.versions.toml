@@ -3,11 +3,16 @@
 [versions]
 kotlin = "1.9.24"
 springboot = "3.5.13"
+springboot-dependency-management = "1.1.5"
 flyway = "10.15.0"
 ktor = "2.3.13"
-junit-jupiter-engine = "5.10.2"
 kotest = "5.9.0"
+kotest-arrow = "1.4.0"
 arrow = "1.2.4"
+mockk = "1.13.10"
+springmockk = "4.0.2"
+testcontainers-redis = "2.2.2"
+palantir = "0.35.0"
 
 [libraries]
 ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
@@ -16,16 +21,18 @@ ktor-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation",
 ktor-jackson = { module = "io.ktor:ktor-serialization-jackson", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
-flyway-postgress = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
-junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter-engine" }
+flyway-postgres = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core-jvm", version.ref = "kotest" }
-kotest-assertions-arrow = { module = "io.kotest.extensions:kotest-assertions-arrow", version = "1.4.0" }
+kotest-assertions-arrow = { module = "io.kotest.extensions:kotest-assertions-arrow", version.ref = "kotest-arrow" }
 kotest-assertions-json = { module = "io.kotest:kotest-assertions-json", version.ref = "kotest" }
 arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+springmockk = { module = "com.ninja-squad:springmockk", version.ref = "springmockk" }
+testcontainers-redis = { module = "com.redis:testcontainers-redis", version.ref = "testcontainers-redis" }
 
 [plugins]
 jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
-springboot = { id = "org.springframework.boot", version.ref = "springboot"}
-springbootManagement = { id = "io.spring.dependency-management", version = "1.1.5"}
-palantir = { id = "com.palantir.docker", version = "0.35.0" }
+springboot = { id = "org.springframework.boot", version.ref = "springboot" }
+springbootManagement = { id = "io.spring.dependency-management", version.ref = "springboot-dependency-management" }
+palantir = { id = "com.palantir.docker", version.ref = "palantir" }
