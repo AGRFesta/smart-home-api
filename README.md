@@ -22,6 +22,10 @@ For a complete description of the architecture, layer rules, the Unit of Work pa
 
 Every new feature and every refactoring must comply with the principles defined in that document. In particular: services must never use `@Transactional`, all failable operations must return `Either<DomainError, T>`, and exceptions must never escape the DAO layer.
 
+For the authentication model, filter flow, configuration, and test helpers, refer to:
+
+**[docs/SECURITY.md](docs/SECURITY.md)**
+
 ---
 
 A Kotlin-based Spring Boot application for managing and controlling smart home devices, focusing on climate monitoring and heating control. It integrates with providers like SwitchBot and Netatmo.
