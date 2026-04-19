@@ -1,5 +1,17 @@
 # Smart Home API
 
+[![Version](https://img.shields.io/badge/version-0.5.10-blue.svg)](https://semver.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-1.9.24-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.13-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Arrow](https://img.shields.io/badge/Arrow-1.2.4-E91E63)](https://arrow-kt.io)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-lightblue?logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![Redis](https://img.shields.io/badge/Redis-red?logo=redis&logoColor=white)](https://redis.io)
+[![Ktor](https://img.shields.io/badge/Ktor-2.3.13-087CFA?logo=ktor&logoColor=white)](https://ktor.io)
+[![Docker](https://img.shields.io/badge/Docker-blue?logo=docker&logoColor=white)](https://www.docker.com)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+---
+
 ## Architecture and Guidelines
 
 This project follows a **Pragmatic Hexagonal Architecture** (Ports and Adapters). The core business logic is fully isolated from infrastructure concerns such as Spring, JDBC, and Ktor.
