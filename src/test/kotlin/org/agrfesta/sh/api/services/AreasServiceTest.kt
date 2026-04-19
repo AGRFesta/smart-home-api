@@ -22,13 +22,13 @@ import org.agrfesta.sh.api.domain.devices.Sensor
 import org.agrfesta.sh.api.domain.devices.SharedHeater
 import org.agrfesta.sh.api.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.domain.UnitOfWork
 import org.agrfesta.sh.api.persistence.AreasDao
 import org.agrfesta.sh.api.persistence.AreasWithDevicesDao
 import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
 import org.agrfesta.sh.api.services.heating.HeatingAreasService
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
-import org.agrfesta.sh.api.persistence.utils.TransactionRunner
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 
@@ -38,8 +38,8 @@ class AreasServiceTest {
     private val randomGenerator: RandomGenerator = mockk()
     private val timeService: TimeService = mockk()
     private val temperatureSettingsDao: TemperatureSettingsDao = mockk()
-    private val transactionRunner: TransactionRunner = mockk()
-    private val heatingAreasService = HeatingAreasService(areasDao, temperatureSettingsDao, transactionRunner)
+    private val unitOfWork: UnitOfWork = mockk()
+    private val heatingAreasService = HeatingAreasService(areasDao, temperatureSettingsDao, unitOfWork)
     private val areasFactory = AreasFactory(heatingAreasService, timeService)
 
     private val sut = AreasService(areasDao, areasWithDevicesDao, randomGenerator, areasFactory)

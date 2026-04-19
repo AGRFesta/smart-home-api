@@ -11,9 +11,9 @@ import org.agrfesta.sh.api.domain.failures.OverlappingIntervals
 import org.agrfesta.sh.api.domain.failures.TemperatureSettingCreationFailure
 import org.agrfesta.sh.api.domain.failures.TemperatureSettingDeletionFailure
 import org.agrfesta.sh.api.domain.failures.TemperatureSettingRetrievalFailure
+import org.agrfesta.sh.api.domain.UnitOfWork
 import org.agrfesta.sh.api.persistence.AreasDao
 import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
-import org.agrfesta.sh.api.persistence.utils.TransactionRunner
 import org.springframework.stereotype.Service
 
 /**
@@ -26,7 +26,7 @@ import org.springframework.stereotype.Service
 class HeatingAreasService(
     private val areasDao: AreasDao,
     private val temperatureSettingsDao: TemperatureSettingsDao,
-    private val transactionRunner: TransactionRunner
+    private val unitOfWork: UnitOfWork
 ) {
 
     /**
@@ -38,7 +38,7 @@ class HeatingAreasService(
      */
     fun createSetting(setting: AreaTemperatureSetting): Either<TemperatureSettingCreationFailure, Unit> {
         if (setting.temperatureSchedule.hasOverlap()) return OverlappingIntervals.left()
-        return transactionRunner.executeInTransaction {
+        return unitOfWork.execute {
             temperatureSettingsDao.existsByAreaId(setting.areaId)
                 .flatMap { exists ->
                     if (exists) temperatureSettingsDao.deleteAreaSetting(setting.areaId)

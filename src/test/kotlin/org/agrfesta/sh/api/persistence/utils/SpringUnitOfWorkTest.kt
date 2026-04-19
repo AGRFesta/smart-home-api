@@ -29,25 +29,25 @@ import org.springframework.transaction.annotation.Transactional
 @Import(
     TestContainersConfig::class,
     AreasJdbcRepository::class,
-    TransactionRunner::class
+    SpringUnitOfWork::class
 )
 @CleanSmartHomeDatabase
-class TransactionRunnerTest {
+class SpringUnitOfWorkTest {
     @Autowired
     private lateinit var areasRepo: AreasJdbcRepository
     @Autowired
-    private lateinit var sut: TransactionRunner
+    private lateinit var sut: SpringUnitOfWork
 
     @MockkBean
     private lateinit var timeService: TimeService
 
     @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    fun `executeInTransaction() Commits transaction and returns Right when block succeeds`() {
+    fun `execute() Commits transaction and returns Right when block succeeds`() {
         every { timeService.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString())
 
-        val result = sut.executeInTransaction {
+        val result = sut.execute {
             areasRepo.persist(area)
             area.right()
         }
@@ -58,12 +58,12 @@ class TransactionRunnerTest {
 
     @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    fun `executeInTransaction() Rolls back transaction and returns Left when block fails`() {
+    fun `execute() Rolls back transaction and returns Left when block fails`() {
         every { timeService.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString())
         val failure = "persistence-failure"
 
-        val result = sut.executeInTransaction {
+        val result = sut.execute {
             areasRepo.persist(area)
             failure.left()
         }

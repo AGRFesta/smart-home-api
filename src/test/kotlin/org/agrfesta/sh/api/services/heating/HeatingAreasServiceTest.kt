@@ -17,9 +17,9 @@ import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.domain.failures.OverlappingIntervals
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.domain.UnitOfWork
 import org.agrfesta.sh.api.persistence.AreasDao
 import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
-import org.agrfesta.sh.api.persistence.utils.TransactionRunner
 import org.agrfesta.test.mothers.aDailyTime
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DynamicTest.dynamicTest
@@ -29,13 +29,13 @@ import org.junit.jupiter.api.TestFactory
 class HeatingAreasServiceTest {
     private val areasDao: AreasDao = mockk()
     private val temperatureSettingsDao: TemperatureSettingsDao = mockk()
-    private val transactionRunner: TransactionRunner = mockk()
+    private val unitOfWork: UnitOfWork = mockk()
 
-    private val sut = HeatingAreasService(areasDao, temperatureSettingsDao, transactionRunner)
+    private val sut = HeatingAreasService(areasDao, temperatureSettingsDao, unitOfWork)
 
     @BeforeEach
     fun setUp() {
-        every { transactionRunner.executeInTransaction(any<() -> Either<Any, Any>>()) } answers { call ->
+        every { unitOfWork.execute(any<() -> Either<Any, Any>>()) } answers { call ->
             @Suppress("UNCHECKED_CAST")
             (call.invocation.args[0] as () -> Either<Any, Any>)()
         }

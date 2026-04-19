@@ -25,12 +25,12 @@ import org.agrfesta.sh.api.domain.devices.Sensor
 import org.agrfesta.sh.api.domain.devices.SharedHeater
 import org.agrfesta.sh.api.domain.failures.PersistedCacheEntryNotFound
 import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.domain.UnitOfWork
 import org.agrfesta.sh.api.persistence.AreasDao
 import org.agrfesta.sh.api.persistence.AreasWithDevicesDao
 import org.agrfesta.sh.api.persistence.CacheDao
 import org.agrfesta.sh.api.persistence.DevicesDao
 import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
-import org.agrfesta.sh.api.persistence.utils.TransactionRunner
 import org.agrfesta.sh.api.services.AreasService
 import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.services.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
@@ -55,7 +55,7 @@ class HeatingOrchestrationServiceTest {
     private val cacheDao: CacheDao = mockk()
     private val timeService: TimeService = mockk()
     private val randomGenerator: RandomGenerator = mockk()
-    private val transactionRunner: TransactionRunner = mockk()
+    private val unitOfWork: UnitOfWork = mockk()
     private val economyStrategy: NamedSharedHeatingAreasStrategyService = mockk(relaxed = true) {
         every { strategy } returns ECONOMY
     }
@@ -64,7 +64,7 @@ class HeatingOrchestrationServiceTest {
     }
 
     private val devicesService = DevicesService(devicesDao, randomGenerator, listOf(factory))
-    private val heatingAreasService = HeatingAreasService(areasDao, temperatureSettingsDao, transactionRunner)
+    private val heatingAreasService = HeatingAreasService(areasDao, temperatureSettingsDao, unitOfWork)
     private val areasFactory = AreasFactory(heatingAreasService, timeService)
     private val areasService = AreasService(areasDao, areasWithDevicesDao, randomGenerator, areasFactory)
     private val strategy = DynamicSharedHeatingStrategyService(

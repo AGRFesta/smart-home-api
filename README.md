@@ -1,5 +1,17 @@
 # Smart Home API
 
+## Architecture and Guidelines
+
+This project follows a **Pragmatic Hexagonal Architecture** (Ports and Adapters). The core business logic is fully isolated from infrastructure concerns such as Spring, JDBC, and Ktor.
+
+For a complete description of the architecture, layer rules, the Unit of Work pattern, and coding conventions, refer to:
+
+**[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
+
+Every new feature and every refactoring must comply with the principles defined in that document. In particular: services must never use `@Transactional`, all failable operations must return `Either<DomainError, T>`, and exceptions must never escape the DAO layer.
+
+---
+
 A Kotlin-based Spring Boot application for managing and controlling smart home devices, focusing on climate monitoring and heating control. It integrates with providers like SwitchBot and Netatmo.
 
 ## Features

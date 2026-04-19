@@ -19,8 +19,8 @@ import org.agrfesta.sh.api.services.heating.HeatingAreasService
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.SmartCache
+import org.agrfesta.sh.api.domain.UnitOfWork
 import org.agrfesta.sh.api.utils.TimeServiceImpl
-import org.agrfesta.sh.api.persistence.utils.TransactionRunner
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.springframework.dao.DataIntegrityViolationException
 import org.junit.jupiter.api.Test
@@ -55,7 +55,7 @@ class HomeStatusControllerUnitTest(
     @Autowired @MockkBean private val randomGenerator: RandomGenerator,
     @Autowired @MockkBean private val temperatureSettingRepository: TemperatureSettingRepository,
     @Autowired @MockkBean private val temperatureIntervalRepository: TemperatureIntervalRepository,
-    @Autowired @MockkBean private val transactionRunner: TransactionRunner
+    @Autowired @MockkBean private val unitOfWork: UnitOfWork
 ) {
 
     @Test fun `getHomeStatus() return 401 when auth is missing`() {
