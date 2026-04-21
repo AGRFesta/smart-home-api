@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.persistence.jdbc.dao
+package org.agrfesta.sh.api.persistence.jdbc.adapters
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
@@ -24,7 +24,7 @@ import org.springframework.dao.DataAccessException
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 
-class TemperatureSettingsDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
+class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Autowired private lateinit var sut: TemperatureSettingsJdbcAdapter
 

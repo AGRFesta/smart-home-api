@@ -71,7 +71,7 @@ class HeatingAreasServiceTest {
     }
 
     @Test
-    fun `createSetting() Does not call dao when intervals overlap`() {
+    fun `createSetting() Does not call repository when intervals overlap`() {
         val setting = anAreaTemperatureSetting(
             temperatureSchedule = setOf(
                 aTemperatureInterval(startTime = aDailyTime(hour = 0), endTime = aDailyTime(hour = 9)),
@@ -234,7 +234,7 @@ class HeatingAreasServiceTest {
     }
 
     @Test
-    fun `findAreaSetting() Does not call findAreaSetting on dao when area is not found`() {
+    fun `findAreaSetting() Does not call findAreaSetting on repository when area is not found`() {
         val areaId = UUID.randomUUID()
         every { areasRepository.getAreaById(areaId) } returns AreaNotFound(areaId).left()
 

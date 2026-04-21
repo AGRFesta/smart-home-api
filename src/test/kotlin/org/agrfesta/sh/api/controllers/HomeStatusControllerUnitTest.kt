@@ -6,9 +6,9 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import org.agrfesta.sh.api.configuration.TimeConfiguration
 import org.agrfesta.sh.api.core.domain.areas.AreasFactory
-import org.agrfesta.sh.api.persistence.jdbc.dao.AreasJdbcAdapter
-import org.agrfesta.sh.api.persistence.jdbc.dao.AreasWithDevicesRepositoryJdbcImpl
-import org.agrfesta.sh.api.persistence.jdbc.dao.TemperatureSettingsJdbcAdapter
+import org.agrfesta.sh.api.persistence.jdbc.adapters.AreasJdbcAdapter
+import org.agrfesta.sh.api.persistence.jdbc.adapters.AreasWithDevicesRepositoryJdbcImpl
+import org.agrfesta.sh.api.persistence.jdbc.adapters.TemperatureSettingsJdbcAdapter
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasWithDevicesJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository

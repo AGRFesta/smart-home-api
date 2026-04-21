@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.persistence.jdbc.dao
+package org.agrfesta.sh.api.persistence.jdbc.adapters
 
 import arrow.core.Either
 import arrow.core.left

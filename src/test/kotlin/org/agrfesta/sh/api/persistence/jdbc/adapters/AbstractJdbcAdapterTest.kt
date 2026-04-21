@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.persistence.jdbc.dao
+package org.agrfesta.sh.api.persistence.jdbc.adapters
 
 import com.ninjasquad.springmockk.MockkBean
 import com.ninjasquad.springmockk.SpykBean
@@ -45,7 +45,7 @@ import org.springframework.context.annotation.Import
     RandomGeneratorImpl::class
 )
 @CleanSmartHomeDatabase
-abstract class AbstractDaoJdbcImplTest {
+abstract class AbstractJdbcAdapterTest {
 
     @SpykBean protected lateinit var areasRepo: AreasJdbcRepository
     @SpykBean protected lateinit var devicesRepo: DevicesJdbcRepository

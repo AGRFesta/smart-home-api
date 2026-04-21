@@ -166,10 +166,12 @@ class DevicesServiceTest {
     }
 
     @Test
-    fun `createDevice() returns failure when dao fails`() {
+    fun `createDevice() returns failure when repository fails`() {
         val device = aDeviceDataValue()
         every { randomGenerator.uuid() } returns UUID.randomUUID()
-        every { devicesRepository.create(any(), device, any()) } returns PersistenceFailure(Exception("db error")).left()
+        every {
+            devicesRepository.create(any(), device, any())
+        }returns PersistenceFailure(Exception("db error")).left()
 
         sut.createDevice(device).shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
     }
@@ -203,7 +205,7 @@ class DevicesServiceTest {
     }
 
     @Test
-    fun `getAllDevices() propagates PersistenceFailure when dao fails`() {
+    fun `getAllDevices() propagates PersistenceFailure when repository fails`() {
         every { devicesRepository.getAll() } returns PersistenceFailure(Exception("db error")).left()
 
         sut.getAllDevices().shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()

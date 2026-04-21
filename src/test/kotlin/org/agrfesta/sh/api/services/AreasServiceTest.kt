@@ -89,7 +89,7 @@ class AreasServiceTest {
     }
 
     @Test
-    fun `createArea() Returns PersistenceFailure when dao fails`() {
+    fun `createArea() Returns PersistenceFailure when repository fails`() {
         every { randomGenerator.uuid() } returns UUID.randomUUID()
         every { areasRepository.save(any()) } returns PersistenceFailure(Exception("db error")).left()
 
@@ -110,7 +110,7 @@ class AreasServiceTest {
     }
 
     @Test
-    fun `getAllAreasWithDevices() Returns areas from dao`() {
+    fun `getAllAreasWithDevices() Returns areas from repository`() {
         val areaA = anAreaDtoWithDevices()
         val areaB = anAreaDtoWithDevices()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(areaA, areaB).right()
@@ -121,7 +121,7 @@ class AreasServiceTest {
     }
 
     @Test
-    fun `getAllAreasWithDevices() Returns PersistenceFailure when dao fails`() {
+    fun `getAllAreasWithDevices() Returns PersistenceFailure when repository fails`() {
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns
             PersistenceFailure(Exception("db error")).left()
 
@@ -133,7 +133,7 @@ class AreasServiceTest {
     // getAllAreas()
 
     @Test
-    fun `getAllAreas() Returns PersistenceFailure when dao fails`() {
+    fun `getAllAreas() Returns PersistenceFailure when repository fails`() {
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns
             PersistenceFailure(Exception("db error")).left()
 

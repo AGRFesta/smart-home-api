@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.persistence.jdbc.dao
+package org.agrfesta.sh.api.persistence.jdbc.adapters
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataAccessResourceFailureException
 
-class AreasDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
+class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Autowired private lateinit var sut: AreasJdbcAdapter
 
