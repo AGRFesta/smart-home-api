@@ -17,14 +17,14 @@ import java.util.UUID
 import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aDeviceDataValue
-import org.agrfesta.sh.api.domain.devices.DeviceDataValue
-import org.agrfesta.sh.api.domain.devices.DeviceDto
-import org.agrfesta.sh.api.domain.devices.DeviceFeature.ACTUATOR
-import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
-import org.agrfesta.sh.api.domain.devices.DeviceStatus
-import org.agrfesta.sh.api.domain.devices.Provider.NETATMO
-import org.agrfesta.sh.api.domain.devices.Provider.SWITCHBOT
-import org.agrfesta.sh.api.persistence.DevicesDao
+import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
+import org.agrfesta.sh.api.core.domain.devices.DeviceDto
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.core.domain.devices.Provider.NETATMO
+import org.agrfesta.sh.api.core.domain.devices.Provider.SWITCHBOT
+import org.agrfesta.sh.api.core.application.ports.outbounds.DevicesRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.providers.netatmo.NetatmoIntegrationAsserter
 import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDevice
@@ -35,7 +35,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class DevicesControllerIntegrationTest(
-    private val devicesDao: DevicesDao,
+    private val devicesDao: DevicesRepository,
     private val devicesRepository: DevicesJdbcRepository,
     private val objectMapper: ObjectMapper,
     private val netatmoIntegrationAsserter: NetatmoIntegrationAsserter

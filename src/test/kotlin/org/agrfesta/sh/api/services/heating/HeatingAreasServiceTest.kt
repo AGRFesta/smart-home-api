@@ -14,12 +14,12 @@ import java.util.UUID
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.domain.aTemperatureInterval
-import org.agrfesta.sh.api.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.domain.failures.OverlappingIntervals
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.domain.UnitOfWork
-import org.agrfesta.sh.api.persistence.AreasDao
-import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
+import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.application.ports.outbounds.UnitOfWork
+import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.TemperatureSettingsRepository
 import org.agrfesta.test.mothers.aDailyTime
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DynamicTest.dynamicTest
@@ -27,11 +27,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 
 class HeatingAreasServiceTest {
-    private val areasDao: AreasDao = mockk()
-    private val temperatureSettingsDao: TemperatureSettingsDao = mockk()
+    private val areasRepository: AreasRepository = mockk()
+    private val temperatureSettingsRepository: TemperatureSettingsRepository = mockk()
     private val unitOfWork: UnitOfWork = mockk()
 
-    private val sut = HeatingAreasService(areasDao, temperatureSettingsDao, unitOfWork)
+    private val sut = HeatingAreasService(areasRepository, temperatureSettingsRepository, unitOfWork)
 
     @BeforeEach
     fun setUp() {
@@ -81,16 +81,16 @@ class HeatingAreasServiceTest {
 
         sut.createSetting(setting)
 
-        verify(exactly = 0) { temperatureSettingsDao.existsByAreaId(any()) }
-        verify(exactly = 0) { temperatureSettingsDao.deleteAreaSetting(any()) }
-        verify(exactly = 0) { temperatureSettingsDao.persistAreaTemperatureSetting(any()) }
+        verify(exactly = 0) { temperatureSettingsRepository.existsByAreaId(any()) }
+        verify(exactly = 0) { temperatureSettingsRepository.deleteAreaSetting(any()) }
+        verify(exactly = 0) { temperatureSettingsRepository.persistAreaTemperatureSetting(any()) }
     }
 
     @Test
     fun `createSetting() Returns Unit on success when no prior setting exists`() {
         val setting = anAreaTemperatureSetting()
-        every { temperatureSettingsDao.existsByAreaId(setting.areaId) } returns false.right()
-        every { temperatureSettingsDao.persistAreaTemperatureSetting(setting) } returns Unit.right()
+        every { temperatureSettingsRepository.existsByAreaId(setting.areaId) } returns false.right()
+        every { temperatureSettingsRepository.persistAreaTemperatureSetting(setting) } returns Unit.right()
 
         sut.createSetting(setting).shouldBeRight()
     }
@@ -98,9 +98,9 @@ class HeatingAreasServiceTest {
     @Test
     fun `createSetting() Returns Unit on success when prior setting already exists`() {
         val setting = anAreaTemperatureSetting()
-        every { temperatureSettingsDao.existsByAreaId(setting.areaId) } returns true.right()
-        every { temperatureSettingsDao.deleteAreaSetting(setting.areaId) } returns Unit.right()
-        every { temperatureSettingsDao.persistAreaTemperatureSetting(setting) } returns Unit.right()
+        every { temperatureSettingsRepository.existsByAreaId(setting.areaId) } returns true.right()
+        every { temperatureSettingsRepository.deleteAreaSetting(setting.areaId) } returns Unit.right()
+        every { temperatureSettingsRepository.persistAreaTemperatureSetting(setting) } returns Unit.right()
 
         sut.createSetting(setting).shouldBeRight()
     }
@@ -108,18 +108,18 @@ class HeatingAreasServiceTest {
     @Test
     fun `createSetting() Does not call deleteAreaSetting when no prior setting exists`() {
         val setting = anAreaTemperatureSetting()
-        every { temperatureSettingsDao.existsByAreaId(setting.areaId) } returns false.right()
-        every { temperatureSettingsDao.persistAreaTemperatureSetting(setting) } returns Unit.right()
+        every { temperatureSettingsRepository.existsByAreaId(setting.areaId) } returns false.right()
+        every { temperatureSettingsRepository.persistAreaTemperatureSetting(setting) } returns Unit.right()
 
         sut.createSetting(setting)
 
-        verify(exactly = 0) { temperatureSettingsDao.deleteAreaSetting(any()) }
+        verify(exactly = 0) { temperatureSettingsRepository.deleteAreaSetting(any()) }
     }
 
     @Test
     fun `createSetting() Returns PersistenceFailure when existsByAreaId fails`() {
         val setting = anAreaTemperatureSetting()
-        every { temperatureSettingsDao.existsByAreaId(setting.areaId) } returns
+        every { temperatureSettingsRepository.existsByAreaId(setting.areaId) } returns
             PersistenceFailure(Exception("db error")).left()
 
         sut.createSetting(setting).shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
@@ -128,8 +128,8 @@ class HeatingAreasServiceTest {
     @Test
     fun `createSetting() Returns PersistenceFailure when deleteAreaSetting fails`() {
         val setting = anAreaTemperatureSetting()
-        every { temperatureSettingsDao.existsByAreaId(setting.areaId) } returns true.right()
-        every { temperatureSettingsDao.deleteAreaSetting(setting.areaId) } returns
+        every { temperatureSettingsRepository.existsByAreaId(setting.areaId) } returns true.right()
+        every { temperatureSettingsRepository.deleteAreaSetting(setting.areaId) } returns
             PersistenceFailure(Exception("db error")).left()
 
         sut.createSetting(setting).shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
@@ -138,8 +138,8 @@ class HeatingAreasServiceTest {
     @Test
     fun `createSetting() Returns PersistenceFailure when persistAreaTemperatureSetting fails`() {
         val setting = anAreaTemperatureSetting()
-        every { temperatureSettingsDao.existsByAreaId(setting.areaId) } returns false.right()
-        every { temperatureSettingsDao.persistAreaTemperatureSetting(setting) } returns
+        every { temperatureSettingsRepository.existsByAreaId(setting.areaId) } returns false.right()
+        every { temperatureSettingsRepository.persistAreaTemperatureSetting(setting) } returns
             PersistenceFailure(Exception("db error")).left()
 
         sut.createSetting(setting).shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
@@ -149,8 +149,8 @@ class HeatingAreasServiceTest {
     fun `createSetting() Returns AreaNotFound when persistAreaTemperatureSetting returns AreaNotFound`() {
         val setting = anAreaTemperatureSetting()
         val failure = AreaNotFound(setting.areaId)
-        every { temperatureSettingsDao.existsByAreaId(setting.areaId) } returns false.right()
-        every { temperatureSettingsDao.persistAreaTemperatureSetting(setting) } returns failure.left()
+        every { temperatureSettingsRepository.existsByAreaId(setting.areaId) } returns false.right()
+        every { temperatureSettingsRepository.persistAreaTemperatureSetting(setting) } returns failure.left()
 
         sut.createSetting(setting).shouldBeLeft() shouldBe failure
     }
@@ -160,8 +160,8 @@ class HeatingAreasServiceTest {
     @Test
     fun `deleteSetting() Returns Unit on success`() {
         val areaId = UUID.randomUUID()
-        every { areasDao.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
-        every { temperatureSettingsDao.deleteAreaSetting(areaId) } returns Unit.right()
+        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { temperatureSettingsRepository.deleteAreaSetting(areaId) } returns Unit.right()
 
         sut.deleteSetting(areaId).shouldBeRight()
     }
@@ -170,7 +170,7 @@ class HeatingAreasServiceTest {
     fun `deleteSetting() Returns AreaNotFound when area does not exist`() {
         val areaId = UUID.randomUUID()
         val failure = AreaNotFound(areaId)
-        every { areasDao.getAreaById(areaId) } returns failure.left()
+        every { areasRepository.getAreaById(areaId) } returns failure.left()
 
         sut.deleteSetting(areaId).shouldBeLeft() shouldBe failure
     }
@@ -178,17 +178,17 @@ class HeatingAreasServiceTest {
     @Test
     fun `deleteSetting() Does not call deleteAreaSetting when area is not found`() {
         val areaId = UUID.randomUUID()
-        every { areasDao.getAreaById(areaId) } returns AreaNotFound(areaId).left()
+        every { areasRepository.getAreaById(areaId) } returns AreaNotFound(areaId).left()
 
         sut.deleteSetting(areaId)
 
-        verify(exactly = 0) { temperatureSettingsDao.deleteAreaSetting(any()) }
+        verify(exactly = 0) { temperatureSettingsRepository.deleteAreaSetting(any()) }
     }
 
     @Test
     fun `deleteSetting() Returns PersistenceFailure when areasDao fails`() {
         val areaId = UUID.randomUUID()
-        every { areasDao.getAreaById(areaId) } returns PersistenceFailure(Exception("db error")).left()
+        every { areasRepository.getAreaById(areaId) } returns PersistenceFailure(Exception("db error")).left()
 
         sut.deleteSetting(areaId).shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
     }
@@ -196,8 +196,8 @@ class HeatingAreasServiceTest {
     @Test
     fun `deleteSetting() Returns PersistenceFailure when temperatureSettingsDao fails`() {
         val areaId = UUID.randomUUID()
-        every { areasDao.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
-        every { temperatureSettingsDao.deleteAreaSetting(areaId) } returns
+        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { temperatureSettingsRepository.deleteAreaSetting(areaId) } returns
             PersistenceFailure(Exception("db error")).left()
 
         sut.deleteSetting(areaId).shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
@@ -209,8 +209,8 @@ class HeatingAreasServiceTest {
     fun `findAreaSetting() Returns setting when found`() {
         val areaId = UUID.randomUUID()
         val setting = anAreaTemperatureSetting(areaId = areaId)
-        every { areasDao.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
-        every { temperatureSettingsDao.findAreaSetting(areaId) } returns setting.right()
+        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { temperatureSettingsRepository.findAreaSetting(areaId) } returns setting.right()
 
         sut.findAreaSetting(areaId).shouldBeRight() shouldBe setting
     }
@@ -218,8 +218,8 @@ class HeatingAreasServiceTest {
     @Test
     fun `findAreaSetting() Returns null when no setting exists for the area`() {
         val areaId = UUID.randomUUID()
-        every { areasDao.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
-        every { temperatureSettingsDao.findAreaSetting(areaId) } returns null.right()
+        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { temperatureSettingsRepository.findAreaSetting(areaId) } returns null.right()
 
         sut.findAreaSetting(areaId).shouldBeRight() shouldBe null
     }
@@ -228,7 +228,7 @@ class HeatingAreasServiceTest {
     fun `findAreaSetting() Returns AreaNotFound when area does not exist`() {
         val areaId = UUID.randomUUID()
         val failure = AreaNotFound(areaId)
-        every { areasDao.getAreaById(areaId) } returns failure.left()
+        every { areasRepository.getAreaById(areaId) } returns failure.left()
 
         sut.findAreaSetting(areaId).shouldBeLeft() shouldBe failure
     }
@@ -236,17 +236,17 @@ class HeatingAreasServiceTest {
     @Test
     fun `findAreaSetting() Does not call findAreaSetting on dao when area is not found`() {
         val areaId = UUID.randomUUID()
-        every { areasDao.getAreaById(areaId) } returns AreaNotFound(areaId).left()
+        every { areasRepository.getAreaById(areaId) } returns AreaNotFound(areaId).left()
 
         sut.findAreaSetting(areaId)
 
-        verify(exactly = 0) { temperatureSettingsDao.findAreaSetting(any()) }
+        verify(exactly = 0) { temperatureSettingsRepository.findAreaSetting(any()) }
     }
 
     @Test
     fun `findAreaSetting() Returns PersistenceFailure when areasDao fails`() {
         val areaId = UUID.randomUUID()
-        every { areasDao.getAreaById(areaId) } returns PersistenceFailure(Exception("db error")).left()
+        every { areasRepository.getAreaById(areaId) } returns PersistenceFailure(Exception("db error")).left()
 
         sut.findAreaSetting(areaId).shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
     }
@@ -254,8 +254,8 @@ class HeatingAreasServiceTest {
     @Test
     fun `findAreaSetting() Returns PersistenceFailure when temperatureSettingsDao fails`() {
         val areaId = UUID.randomUUID()
-        every { areasDao.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
-        every { temperatureSettingsDao.findAreaSetting(areaId) } returns
+        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { temperatureSettingsRepository.findAreaSetting(areaId) } returns
             PersistenceFailure(Exception("db error")).left()
 
         sut.findAreaSetting(areaId).shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()

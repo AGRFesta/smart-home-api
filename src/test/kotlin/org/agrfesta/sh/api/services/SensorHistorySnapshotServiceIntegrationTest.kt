@@ -6,11 +6,11 @@ import io.mockk.every
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aDeviceDataValue
-import org.agrfesta.sh.api.domain.commons.Percentage
-import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
-import org.agrfesta.sh.api.domain.devices.SensorDataType.HUMIDITY
-import org.agrfesta.sh.api.domain.devices.SensorDataType.TEMPERATURE
-import org.agrfesta.sh.api.persistence.SensorsHistoryDataDao
+import org.agrfesta.sh.api.core.domain.commons.Percentage
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
+import org.agrfesta.sh.api.core.domain.devices.SensorDataType.HUMIDITY
+import org.agrfesta.sh.api.core.domain.devices.SensorDataType.TEMPERATURE
+import org.agrfesta.sh.api.core.application.ports.outbounds.SensorsHistoryDataRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotClientAsserter
 import org.agrfesta.test.mothers.aRandomIntHumidity
@@ -25,7 +25,7 @@ class SensorHistorySnapshotServiceIntegrationTest(
     private val sut: SensorHistorySnapshotService,
     private val syncService: SensorReadingsSyncService,
     private val devicesRepository: DevicesJdbcRepository,
-    private val historyDao: SensorsHistoryDataDao,
+    private val historyDao: SensorsHistoryDataRepository,
     private val switchBotClientAsserter: SwitchBotClientAsserter
 ): AbstractIntegrationTest() {
     private val now = Instant.now()

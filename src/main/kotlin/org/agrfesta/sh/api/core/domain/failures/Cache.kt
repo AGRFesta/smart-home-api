@@ -1,0 +1,5 @@
+package org.agrfesta.sh.api.core.domain.failures
+
+sealed interface GetPersistedCacheEntryFailure: Failure
+sealed interface FindPersistedCacheEntryFailure
+data object PersistedCacheEntryNotFound: GetPersistedCacheEntryFailure

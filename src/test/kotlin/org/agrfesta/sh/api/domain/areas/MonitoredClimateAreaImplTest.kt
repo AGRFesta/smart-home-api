@@ -14,10 +14,12 @@ import io.mockk.every
 import io.mockk.mockk
 import java.util.*
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.domain.commons.Temperature
-import org.agrfesta.sh.api.domain.devices.Sensor
-import org.agrfesta.sh.api.domain.failures.KtorRequestFailure
-import org.agrfesta.sh.api.domain.failures.MessageFailure
+import org.agrfesta.sh.api.core.domain.areas.Area
+import org.agrfesta.sh.api.core.domain.areas.MonitoredClimateAreaImpl
+import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.devices.Sensor
+import org.agrfesta.sh.api.core.domain.failures.KtorRequestFailure
+import org.agrfesta.sh.api.core.domain.failures.MessageFailure
 import org.agrfesta.test.mothers.aThermoHygroDataValue
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test

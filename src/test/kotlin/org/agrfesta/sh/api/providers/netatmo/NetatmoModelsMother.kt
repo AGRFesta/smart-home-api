@@ -3,7 +3,7 @@ package org.agrfesta.sh.api.providers.netatmo
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
-import org.agrfesta.sh.api.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.test.mothers.aRandomBoolean
 import org.agrfesta.test.mothers.aRandomHumidity
 import org.agrfesta.test.mothers.aRandomTemperature

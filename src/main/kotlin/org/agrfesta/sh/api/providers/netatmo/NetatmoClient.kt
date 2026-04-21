@@ -29,11 +29,11 @@ import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.JacksonConverter
 import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
-import org.agrfesta.sh.api.domain.failures.Failure
-import org.agrfesta.sh.api.domain.failures.KtorRequestFailure
+import org.agrfesta.sh.api.core.domain.failures.Failure
+import org.agrfesta.sh.api.core.domain.failures.KtorRequestFailure
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_REFRESH_TOKEN_CACHE_KEY
-import org.agrfesta.sh.api.persistence.CacheDao
+import org.agrfesta.sh.api.core.application.ports.outbounds.CacheRepository
 import org.agrfesta.sh.api.services.onLeftLogOn
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.LoggerDelegate
@@ -47,7 +47,7 @@ import kotlin.time.toDuration
 class NetatmoClient(
     private val config: NetatmoConfiguration,
     private val cache: Cache,
-    private val cacheDao: CacheDao,
+    private val cacheRepository: CacheRepository,
     private val mapper: ObjectMapper,
     @Autowired(required = false) netatmoClientEngine: HttpClientEngine = OkHttpEngine(OkHttpConfig())
 ) {
@@ -170,7 +170,7 @@ class NetatmoClient(
         )
 
     private suspend fun fetchAndCacheNewToken(): Either<Failure, String> =
-        cacheDao.getEntry(NETATMO_REFRESH_TOKEN_CACHE_KEY)
+        cacheRepository.getEntry(NETATMO_REFRESH_TOKEN_CACHE_KEY)
             .flatMap { refreshToken(it.value) }
             .map { refreshResp ->
                 try {
@@ -182,7 +182,7 @@ class NetatmoClient(
                 } catch (e: Exception) {
                     logger.error("Unable to refresh Netatmo token in cache. ${e.toDetailedString()}")
                 }
-                cacheDao.upsert(NETATMO_REFRESH_TOKEN_CACHE_KEY, refreshResp.refreshToken)
+                this@NetatmoClient.cacheRepository.upsert(NETATMO_REFRESH_TOKEN_CACHE_KEY, refreshResp.refreshToken)
                     .onLeftLogOn(logger)
                 refreshResp.accessToken
             }

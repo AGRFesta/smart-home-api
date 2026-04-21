@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.persistence.jdbc.utils
 
-import org.agrfesta.sh.api.domain.devices.DeviceStatus
-import org.agrfesta.sh.api.domain.devices.Provider
+import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.core.domain.devices.Provider
 import java.sql.ResultSet
 
 fun ResultSet.getProvider(columnLabel: String): Provider = Provider.valueOf(getString(columnLabel))

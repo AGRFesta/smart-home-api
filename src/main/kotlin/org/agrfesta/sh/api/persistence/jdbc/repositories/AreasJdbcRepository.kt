@@ -3,7 +3,7 @@ package org.agrfesta.sh.api.persistence.jdbc.repositories
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.util.*
-import org.agrfesta.sh.api.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.domain.areas.AreaDto
 import org.agrfesta.sh.api.persistence.SameNameAreaException
 import org.agrfesta.sh.api.persistence.jdbc.entities.AreaEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant

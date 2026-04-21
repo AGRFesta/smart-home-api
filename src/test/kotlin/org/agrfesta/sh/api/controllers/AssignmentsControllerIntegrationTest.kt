@@ -10,14 +10,14 @@ import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aSensorDataValue
 import org.agrfesta.sh.api.domain.anActuatorDataValue
 import org.agrfesta.sh.api.domain.anAreaDto
-import org.agrfesta.sh.api.persistence.AreasDao
-import org.agrfesta.sh.api.persistence.DevicesDao
+import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.DevicesRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class AssignmentsControllerIntegrationTest(
-    private val areasDao: AreasDao,
-    private val devicesDao: DevicesDao
+    private val areasRepository: AreasRepository,
+    private val devicesRepository: DevicesRepository
 ): AbstractIntegrationTest() {
     private val uuid: UUID = UUID.randomUUID()
 
@@ -28,9 +28,9 @@ class AssignmentsControllerIntegrationTest(
 
     @Test fun `assignSensorToArea() return 201 when successfully assigns device to area`() {
         val area = anAreaDto()
-        areasDao.save(area)
+        areasRepository.save(area)
         val deviceId = uuid
-        devicesDao.create(deviceId, aSensorDataValue()).getOrElse { error("Failed to create sensor: $it") }
+        devicesRepository.create(deviceId, aSensorDataValue()).getOrElse { error("Failed to create sensor: $it") }
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -48,9 +48,9 @@ class AssignmentsControllerIntegrationTest(
 
     @Test fun `assignActuatorToArea() return 201 when successfully assigns device to area`() {
         val area = anAreaDto()
-        areasDao.save(area)
+        areasRepository.save(area)
         val deviceId = uuid
-        devicesDao.create(deviceId, anActuatorDataValue()).getOrElse { error("Failed to create actuator: $it") }
+        devicesRepository.create(deviceId, anActuatorDataValue()).getOrElse { error("Failed to create actuator: $it") }
 
         val result = given()
             .contentType(ContentType.JSON)

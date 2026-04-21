@@ -6,16 +6,11 @@ import arrow.core.right
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.domain.devices.DeviceDataValue
-import org.agrfesta.sh.api.domain.devices.DevicesProvider
-import org.agrfesta.sh.api.domain.devices.FailureByException
-import org.agrfesta.sh.api.domain.devices.Provider
-import org.agrfesta.sh.api.domain.failures.ProviderFailure
-import org.agrfesta.sh.api.domain.devices.ReadableValuesDeviceProvider
-import org.agrfesta.sh.api.domain.devices.SensorReadings
-import org.agrfesta.sh.api.domain.devices.SensorReadingsFailure
+import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
+import org.agrfesta.sh.api.core.domain.devices.DevicesProvider
+import org.agrfesta.sh.api.core.domain.devices.Provider
+import org.agrfesta.sh.api.core.domain.failures.ProviderFailure
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
 
 @Service
 class SwitchBotService(

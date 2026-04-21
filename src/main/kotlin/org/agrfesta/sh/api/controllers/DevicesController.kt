@@ -1,12 +1,12 @@
 package org.agrfesta.sh.api.controllers
 
 import arrow.core.Either
-import org.agrfesta.sh.api.domain.devices.DeviceDto
-import org.agrfesta.sh.api.domain.devices.DeviceDataValue
-import org.agrfesta.sh.api.domain.devices.DevicesProvider
-import org.agrfesta.sh.api.domain.failures.ExceptionFailure
-import org.agrfesta.sh.api.domain.failures.MessageFailure
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.devices.DeviceDto
+import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
+import org.agrfesta.sh.api.core.domain.devices.DevicesProvider
+import org.agrfesta.sh.api.core.domain.failures.ExceptionFailure
+import org.agrfesta.sh.api.core.domain.failures.MessageFailure
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.http.HttpHeaders

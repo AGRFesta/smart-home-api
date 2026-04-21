@@ -2,8 +2,8 @@ package org.agrfesta.sh.api.controllers
 
 import arrow.core.Either.Left
 import arrow.core.Either.Right
-import org.agrfesta.sh.api.domain.failures.AreaNameConflict
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.services.AreasService
 import org.springframework.http.HttpStatus.CREATED
 import org.springframework.http.ResponseEntity

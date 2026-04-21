@@ -1,9 +1,9 @@
 package org.agrfesta.sh.api.services
 
 import arrow.core.Either
-import org.agrfesta.sh.api.domain.commons.ThermoHygroData
-import org.agrfesta.sh.api.domain.devices.DeviceDto
-import org.agrfesta.sh.api.domain.devices.DeviceFeature
+import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
+import org.agrfesta.sh.api.core.domain.devices.DeviceDto
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.utils.CacheFailure
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.utils.SmartCache

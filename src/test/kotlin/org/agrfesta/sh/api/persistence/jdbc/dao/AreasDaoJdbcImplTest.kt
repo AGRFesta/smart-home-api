@@ -11,9 +11,9 @@ import io.mockk.every
 import java.time.Instant
 import java.util.*
 import org.agrfesta.sh.api.domain.anAreaDto
-import org.agrfesta.sh.api.domain.failures.AreaNameConflict
-import org.agrfesta.sh.api.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
+import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,7 +21,7 @@ import org.springframework.dao.DataAccessResourceFailureException
 
 class AreasDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
 
-    @Autowired private lateinit var sut: AreasDaoJdbcImpl
+    @Autowired private lateinit var sut: AreasJdbcAdapter
 
     // getAreaById()
 

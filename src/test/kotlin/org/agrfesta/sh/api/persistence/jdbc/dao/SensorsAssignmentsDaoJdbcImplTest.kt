@@ -13,11 +13,11 @@ import java.util.*
 import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.domain.aSensorDataValue
 import org.agrfesta.sh.api.domain.anAreaDto
-import org.agrfesta.sh.api.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.domain.failures.DeviceNotFound
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.domain.failures.SameAreaAssignment
-import org.agrfesta.sh.api.domain.failures.SensorAlreadyAssigned
+import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
+import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
 import org.agrfesta.test.mothers.aProvider
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
@@ -26,7 +26,7 @@ import org.springframework.dao.DataAccessException
 
 class SensorsAssignmentsDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
 
-    @Autowired private lateinit var sut: SensorsAssignmentsDaoJdbcImpl
+    @Autowired private lateinit var sut: SensorsAssignmentsJdbcAdapter
 
     @Test
     fun `assign() Returns AreaNotFound when area is missing`() {

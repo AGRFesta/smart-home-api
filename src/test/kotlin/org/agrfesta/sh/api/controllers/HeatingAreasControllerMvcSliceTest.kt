@@ -10,9 +10,9 @@ import io.mockk.every
 import java.util.*
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.domain.aTemperatureInterval
-import org.agrfesta.sh.api.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.domain.failures.OverlappingIntervals
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.sh.api.services.heating.HeatingAreasService
 import org.agrfesta.test.mothers.aDailyTime

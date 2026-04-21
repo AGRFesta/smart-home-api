@@ -2,15 +2,15 @@ package org.agrfesta.sh.api.services
 
 import arrow.core.Either
 import java.util.*
-import org.agrfesta.sh.api.domain.devices.DeviceDto
-import org.agrfesta.sh.api.domain.devices.DeviceDataValue
-import org.agrfesta.sh.api.domain.devices.DeviceStatus
-import org.agrfesta.sh.api.domain.devices.Device
-import org.agrfesta.sh.api.domain.devices.ProviderDevicesFactory
-import org.agrfesta.sh.api.domain.failures.DeviceCreationFailure
-import org.agrfesta.sh.api.domain.failures.DeviceUpdateFailure
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.DevicesDao
+import org.agrfesta.sh.api.core.domain.devices.DeviceDto
+import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
+import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.ProviderDevicesFactory
+import org.agrfesta.sh.api.core.domain.failures.DeviceCreationFailure
+import org.agrfesta.sh.api.core.domain.failures.DeviceUpdateFailure
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.application.ports.outbounds.DevicesRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.springframework.stereotype.Service
@@ -21,13 +21,13 @@ import org.springframework.stereotype.Service
  * Handles device creation, update, refresh (synchronisation with provider-supplied data),
  * and retrieval in both DTO and domain-object forms.
  *
- * @property devicesDao persistence layer for device CRUD operations.
+ * @property devicesRepository persistence layer for device CRUD operations.
  * @param providerDevicesFactories all registered [ProviderDevicesFactory] instances; indexed internally
  *        by provider identifier to allow O(1) look-up when assembling domain [Device] objects.
  */
 @Service
 class DevicesService(
-    private val devicesDao: DevicesDao,
+    private val devicesRepository: DevicesRepository,
     private val randomGenerator: RandomGenerator,
     providerDevicesFactories: Collection<ProviderDevicesFactory>
 ) {
@@ -47,7 +47,7 @@ class DevicesService(
         initialStatus: DeviceStatus = DeviceStatus.PAIRED
     ): Either<DeviceCreationFailure, UUID> {
         val uuid = randomGenerator.uuid()
-        return devicesDao.create(uuid, device, initialStatus).map { uuid }
+        return devicesRepository.create(uuid, device, initialStatus).map { uuid }
     }
 
     /**
@@ -57,7 +57,7 @@ class DevicesService(
      * @return [Either.Right] with [Unit] on success, or [Either.Left] with a [DeviceUpdateFailure]
      *         if the device does not exist or the update fails.
      */
-    fun update(device: DeviceDto): Either<DeviceUpdateFailure, Unit> = devicesDao.update(device)
+    fun update(device: DeviceDto): Either<DeviceUpdateFailure, Unit> = devicesRepository.update(device)
 
     /**
      * Computes the difference between the current provider snapshot and the persisted device list.
@@ -90,7 +90,7 @@ class DevicesService(
      * @return [Either.Right] containing the full collection of [DeviceDto], or [Either.Left] with a
      *         [PersistenceFailure] if the query fails.
      */
-    fun getAllDto(): Either<PersistenceFailure, Collection<DeviceDto>> = devicesDao.getAll()
+    fun getAllDto(): Either<PersistenceFailure, Collection<DeviceDto>> = devicesRepository.getAll()
 
     /**
      * Retrieves all devices as fully assembled domain objects.
@@ -102,7 +102,7 @@ class DevicesService(
      *         [PersistenceFailure] if the underlying query fails.
      */
     fun getAllDevices(): Either<PersistenceFailure, Collection<Device>> =
-        devicesDao.getAll().map { dtos ->
+        devicesRepository.getAll().map { dtos ->
             dtos.mapNotNull { dto ->
                 val factory = mappedDevicesFactories[dto.provider]
                 if (factory == null) {

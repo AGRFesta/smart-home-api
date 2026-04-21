@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.persistence.jdbc.entities
 
-import org.agrfesta.sh.api.domain.devices.SensorDataType
-import org.agrfesta.sh.api.domain.devices.SensorHistoryData
+import org.agrfesta.sh.api.core.domain.devices.SensorDataType
+import org.agrfesta.sh.api.core.domain.devices.SensorHistoryData
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID

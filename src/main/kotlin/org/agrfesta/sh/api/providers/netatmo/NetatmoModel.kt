@@ -3,12 +3,12 @@ package org.agrfesta.sh.api.providers.netatmo
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.math.BigDecimal
 import java.time.Instant
-import org.agrfesta.sh.api.domain.commons.Percentage
-import org.agrfesta.sh.api.domain.commons.Temperature
-import org.agrfesta.sh.api.domain.commons.ThermoHygroData
-import org.agrfesta.sh.api.domain.devices.ThermoHygroDataValue
-import org.agrfesta.sh.api.domain.failures.ExceptionFailure
-import org.agrfesta.sh.api.domain.failures.Failure
+import org.agrfesta.sh.api.core.domain.commons.Percentage
+import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
+import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
+import org.agrfesta.sh.api.core.domain.failures.ExceptionFailure
+import org.agrfesta.sh.api.core.domain.failures.Failure
 
 data class NetatmoRefreshTokenResponse(
     @field:JsonProperty("access_token") val accessToken: String,

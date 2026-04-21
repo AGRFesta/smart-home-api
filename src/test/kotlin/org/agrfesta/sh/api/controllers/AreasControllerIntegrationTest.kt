@@ -6,14 +6,14 @@ import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import java.util.*
 import org.agrfesta.sh.api.AbstractIntegrationTest
-import org.agrfesta.sh.api.domain.areas.AreaDto
-import org.agrfesta.sh.api.persistence.AreasDao
+import org.agrfesta.sh.api.core.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class AreasControllerIntegrationTest(
-    private val areasDao: AreasDao
+    private val areasRepository: AreasRepository
 ): AbstractIntegrationTest() {
     private val uuid: UUID = UUID.randomUUID()
 
@@ -45,7 +45,7 @@ class AreasControllerIntegrationTest(
             name = name,
             isIndoor = true
         )
-        areasDao.findAreaByName(name).getOrNull() shouldBe expectedArea
+        areasRepository.findAreaByName(name).getOrNull() shouldBe expectedArea
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

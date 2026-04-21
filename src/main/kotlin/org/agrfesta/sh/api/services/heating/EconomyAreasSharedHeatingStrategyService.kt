@@ -2,10 +2,10 @@ package org.agrfesta.sh.api.services.heating
 
 import java.math.BigDecimal
 import java.math.RoundingMode
-import org.agrfesta.sh.api.domain.areas.HeatableArea
-import org.agrfesta.sh.api.domain.commons.Percentage
-import org.agrfesta.sh.api.domain.commons.Temperature
-import org.agrfesta.sh.api.domain.devices.Heater
+import org.agrfesta.sh.api.core.domain.areas.HeatableArea
+import org.agrfesta.sh.api.core.domain.commons.Percentage
+import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.services.heating.HeatingOrchestrationService.Companion.HYSTERESIS
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.beans.factory.annotation.Value

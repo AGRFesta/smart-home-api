@@ -7,9 +7,9 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
-import org.agrfesta.sh.api.domain.failures.GetPersistedCacheEntryFailure
-import org.agrfesta.sh.api.domain.failures.PersistedCacheEntryNotFound
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.GetPersistedCacheEntryFailure
+import org.agrfesta.sh.api.core.domain.failures.PersistedCacheEntryNotFound
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.CacheEntryDto
 import org.agrfesta.test.mothers.aRandomTtl
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -21,7 +21,7 @@ import org.springframework.dao.DataAccessResourceFailureException
 
 class CacheDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
 
-    @Autowired private lateinit var sut: CacheDaoJdbcImpl
+    @Autowired private lateinit var sut: CacheJdbcAdapter
 
     private val now = nowNoMills()
 

@@ -5,8 +5,8 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.agrfesta.sh.api.domain.commons.ThermoHygroData
-import org.agrfesta.sh.api.domain.devices.DeviceProviderIdentity
+import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
+import org.agrfesta.sh.api.core.domain.devices.DeviceProviderIdentity
 import org.slf4j.Logger
 import org.springframework.stereotype.Service
 

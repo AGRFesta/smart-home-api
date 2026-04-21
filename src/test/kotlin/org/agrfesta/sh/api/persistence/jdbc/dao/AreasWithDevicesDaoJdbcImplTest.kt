@@ -11,7 +11,7 @@ import java.util.UUID
 import org.agrfesta.sh.api.domain.anActuatorDataValue
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.aSensorDataValue
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,7 +19,7 @@ import org.springframework.dao.DataAccessResourceFailureException
 
 class AreasWithDevicesDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
 
-    @Autowired private lateinit var sut: AreasWithDevicesDaoJdbcImpl
+    @Autowired private lateinit var sut: AreasWithDevicesRepositoryJdbcImpl
 
     // getAllAreasWithDevices()
 

@@ -1,8 +1,8 @@
 package org.agrfesta.sh.api.services
 
-import org.agrfesta.sh.api.domain.devices.Sensor
-import org.agrfesta.sh.api.domain.devices.ThermoHygroDataValue
-import org.agrfesta.sh.api.domain.devices.onLeftLogOn
+import org.agrfesta.sh.api.core.domain.devices.Sensor
+import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
+import org.agrfesta.sh.api.core.domain.devices.onLeftLogOn
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.utils.SmartCache
 import org.springframework.stereotype.Service

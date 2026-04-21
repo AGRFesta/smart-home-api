@@ -10,23 +10,23 @@ import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
-import org.agrfesta.sh.api.domain.areas.TemperatureInterval
-import org.agrfesta.sh.api.persistence.AreasDao
-import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
+import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
+import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.TemperatureSettingsRepository
 import org.agrfesta.test.mothers.aDailyTime
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.junit.jupiter.api.Test
 
 class HeatingAreasControllerIntegrationTest(
-    private val areasDao: AreasDao,
-    private val tempSettingsDao: TemperatureSettingsDao
+    private val areasRepository: AreasRepository,
+    private val tempSettingsDao: TemperatureSettingsRepository
 ): AbstractIntegrationTest() {
 
     ///// createHeatingSchedule ////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `createHeatingSchedule() then getHeatingSchedule() then deleteHeatingSchedule() full lifecycle`() {
         val area = anAreaDto()
-        areasDao.save(area)
+        areasRepository.save(area)
         val defaultTemperature = aRandomTemperature()
         val tempIntA = aTemperatureInterval(startTime = aDailyTime(hour = 0), endTime = aDailyTime(hour = 1))
         val tempIntB = aTemperatureInterval(startTime = aDailyTime(hour = 2), endTime = aDailyTime(hour = 3))
@@ -93,7 +93,7 @@ class HeatingAreasControllerIntegrationTest(
 
     @Test fun `createHeatingSchedule() replaces existing setting`() {
         val area = anAreaDto()
-        areasDao.save(area)
+        areasRepository.save(area)
         tempSettingsDao.createSetting(anAreaTemperatureSetting(
             areaId = area.uuid,
             temperatureSchedule = setOf(aTemperatureInterval())
@@ -144,7 +144,7 @@ class HeatingAreasControllerIntegrationTest(
 
     @Test fun `deleteHeatingSchedule() returns 200 when area has no setting`() {
         val area = anAreaDto()
-        areasDao.save(area)
+        areasRepository.save(area)
 
         given()
             .authenticated()

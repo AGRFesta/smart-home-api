@@ -10,9 +10,9 @@ import io.mockk.every
 import java.time.Instant
 import java.util.*
 import org.agrfesta.sh.api.domain.aSensorDataValue
-import org.agrfesta.sh.api.domain.devices.SensorDataType.HUMIDITY
-import org.agrfesta.sh.api.domain.devices.SensorDataType.TEMPERATURE
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.devices.SensorDataType.HUMIDITY
+import org.agrfesta.sh.api.core.domain.devices.SensorDataType.TEMPERATURE
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.test.mothers.aRandomHumidity
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.agrfesta.test.mothers.nowNoMills
@@ -22,7 +22,7 @@ import org.springframework.dao.DataAccessException
 
 class SensorsHistoryDataDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
 
-    @Autowired private lateinit var sut: SensorsHistoryDataDaoJdbcImpl
+    @Autowired private lateinit var sut: SensorsHistoryDataJdbcAdapter
 
     // persistTemperature
 

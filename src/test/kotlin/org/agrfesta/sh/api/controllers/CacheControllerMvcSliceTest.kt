@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import org.agrfesta.sh.api.domain.commons.CacheEntry
-import org.agrfesta.sh.api.domain.failures.PersistedCacheEntryNotFound
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.CacheDao
+import org.agrfesta.sh.api.core.domain.commons.CacheEntry
+import org.agrfesta.sh.api.core.domain.failures.PersistedCacheEntryNotFound
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.application.ports.outbounds.CacheRepository
 import org.agrfesta.sh.api.persistence.CacheEntryDto
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.test.mothers.aRandomTtl
@@ -32,7 +32,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 class CacheControllerMvcSliceTest(
     @Autowired private val mockMvc: MockMvc,
     @Autowired private val objectMapper: ObjectMapper,
-    @Autowired @MockkBean private val cacheDao: CacheDao
+    @Autowired @MockkBean private val cacheRepository: CacheRepository
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
@@ -48,7 +48,7 @@ class CacheControllerMvcSliceTest(
         val key = aRandomUniqueString()
         val value = aRandomUniqueString()
         val ttl = aRandomTtl()
-        every { cacheDao.upsert(key, value, ttl) } returns PersistenceFailure(Exception()).left()
+        every { cacheRepository.upsert(key, value, ttl) } returns PersistenceFailure(Exception()).left()
 
         val responseBody: String = mockMvc.perform(
             put("/cache/$key")
@@ -66,7 +66,7 @@ class CacheControllerMvcSliceTest(
         val key = aRandomUniqueString()
         val value = aRandomUniqueString()
         val ttl = aRandomTtl()
-        every { cacheDao.upsert(key, value, ttl) } returns Unit.right()
+        every { cacheRepository.upsert(key, value, ttl) } returns Unit.right()
 
         val responseBody: String = mockMvc.perform(
             put("/cache/$key")
@@ -144,7 +144,7 @@ class CacheControllerMvcSliceTest(
             CacheEntryDto(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
             CacheEntryDto(aRandomUniqueString(), aRandomUniqueString())
         )
-        every { cacheDao.upsertBatch(batchEntries) } returns
+        every { cacheRepository.upsertBatch(batchEntries) } returns
                 PersistenceFailure(Exception("batch persist failure")).left()
         val responseBody: String = mockMvc.perform(
             post("/cache/batch")
@@ -163,7 +163,7 @@ class CacheControllerMvcSliceTest(
             CacheEntryDto(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
             CacheEntryDto(aRandomUniqueString(), aRandomUniqueString())
         )
-        every { cacheDao.upsertBatch(batchEntries) } returns Unit.right()
+        every { cacheRepository.upsertBatch(batchEntries) } returns Unit.right()
 
         val responseBody: String = mockMvc.perform(
             post("/cache/batch")
@@ -187,7 +187,7 @@ class CacheControllerMvcSliceTest(
 
     @Test fun `getCacheEntry() returns 500 when fails to get entry`() {
         val key = aRandomUniqueString()
-        every { cacheDao.getEntry(key) } returns PersistenceFailure(Exception()).left()
+        every { cacheRepository.getEntry(key) } returns PersistenceFailure(Exception()).left()
 
         val responseBody: String = mockMvc.perform(
             get("/cache/$key")
@@ -201,7 +201,7 @@ class CacheControllerMvcSliceTest(
 
     @Test fun `getCacheEntry() returns 404 when key is not found`() {
         val key = aRandomUniqueString()
-        every { cacheDao.getEntry(key) } returns PersistedCacheEntryNotFound.left()
+        every { cacheRepository.getEntry(key) } returns PersistedCacheEntryNotFound.left()
 
         val responseBody: String = mockMvc.perform(
             get("/cache/$key")
@@ -216,7 +216,7 @@ class CacheControllerMvcSliceTest(
     @Test fun `getCacheEntry() returns 200 with entry on success`() {
         val key = aRandomUniqueString()
         val entry = CacheEntry(value = aRandomUniqueString())
-        every { cacheDao.getEntry(key) } returns entry.right()
+        every { cacheRepository.getEntry(key) } returns entry.right()
 
         val responseBody: String = mockMvc.perform(
             get("/cache/$key")

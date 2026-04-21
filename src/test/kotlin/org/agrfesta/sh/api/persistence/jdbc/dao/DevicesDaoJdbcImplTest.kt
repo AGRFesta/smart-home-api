@@ -10,8 +10,8 @@ import java.time.Instant
 import java.util.*
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aDeviceDataValue
-import org.agrfesta.sh.api.domain.failures.DeviceNotFound
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.test.mothers.aProvider
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
@@ -20,7 +20,7 @@ import org.springframework.dao.DataAccessResourceFailureException
 
 class DevicesDaoJdbcImplTest : AbstractDaoJdbcImplTest() {
 
-    @Autowired private lateinit var sut: DevicesDaoJdbcImpl
+    @Autowired private lateinit var sut: DevicesJdbcAdapter
 
     @Test
     fun `getDeviceById() Returns DeviceNotFound when area is missing`() {

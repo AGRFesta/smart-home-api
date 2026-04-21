@@ -2,10 +2,10 @@ package org.agrfesta.sh.api.services.heating
 
 import java.math.BigDecimal
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.domain.areas.HeatableArea
-import org.agrfesta.sh.api.domain.commons.Temperature
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.CacheDao
+import org.agrfesta.sh.api.core.domain.areas.HeatableArea
+import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.application.ports.outbounds.CacheRepository
 import org.agrfesta.sh.api.services.AreasService
 import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.utils.LoggerDelegate
@@ -16,7 +16,7 @@ class HeatingOrchestrationService(
     private val devicesService: DevicesService,
     private val areasService: AreasService,
     private val strategy: DynamicSharedHeatingStrategyService,
-    private val cacheDao: CacheDao
+    private val cacheRepository: CacheRepository
 ) {
     private val logger by LoggerDelegate()
 
@@ -49,7 +49,7 @@ class HeatingOrchestrationService(
             }
     }
 
-    private fun isEnabled(): Boolean = cacheDao.findEntry(HEATING_ENABLED_KEY).fold(
+    private fun isEnabled(): Boolean = cacheRepository.findEntry(HEATING_ENABLED_KEY).fold(
         ifLeft = {
             when (it) {
                 is PersistenceFailure ->

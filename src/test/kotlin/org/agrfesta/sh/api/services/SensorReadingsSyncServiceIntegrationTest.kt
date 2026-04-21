@@ -3,9 +3,9 @@ package org.agrfesta.sh.api.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.domain.aDeviceDataValue
-import org.agrfesta.sh.api.domain.commons.Percentage
-import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
-import org.agrfesta.sh.api.domain.devices.Provider
+import org.agrfesta.sh.api.core.domain.commons.Percentage
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
+import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.providers.netatmo.NetatmoIntegrationAsserter
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotClientAsserter

@@ -1,9 +1,9 @@
 package org.agrfesta.sh.api.providers.switchbot.devices
 
-import org.agrfesta.sh.api.domain.devices.DeviceDto
-import org.agrfesta.sh.api.domain.devices.Device
-import org.agrfesta.sh.api.domain.devices.Provider
-import org.agrfesta.sh.api.domain.devices.ProviderDevicesFactory
+import org.agrfesta.sh.api.core.domain.devices.DeviceDto
+import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.Provider
+import org.agrfesta.sh.api.core.domain.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.springframework.stereotype.Service
 

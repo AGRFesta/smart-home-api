@@ -9,12 +9,12 @@ import java.time.Instant
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import java.util.*
-import org.agrfesta.sh.api.domain.commons.Percentage
-import org.agrfesta.sh.api.domain.commons.RelativeHumidity
-import org.agrfesta.sh.api.domain.commons.Temperature
-import org.agrfesta.sh.api.domain.commons.ThermoHygroData
-import org.agrfesta.sh.api.domain.devices.Provider
-import org.agrfesta.sh.api.domain.devices.ThermoHygroDataValue
+import org.agrfesta.sh.api.core.domain.commons.Percentage
+import org.agrfesta.sh.api.core.domain.commons.RelativeHumidity
+import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
+import org.agrfesta.sh.api.core.domain.devices.Provider
+import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
 import kotlin.random.Random
 
 fun aRandomBoolean(): Boolean = Random.nextBoolean()

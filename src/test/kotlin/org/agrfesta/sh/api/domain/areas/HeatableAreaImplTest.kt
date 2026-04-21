@@ -9,11 +9,13 @@ import io.mockk.every
 import io.mockk.mockk
 import java.time.LocalTime
 import java.util.*
+import org.agrfesta.sh.api.core.domain.areas.HeatableAreaImpl
+import org.agrfesta.sh.api.core.domain.areas.MonitoredClimateArea
 import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
-import org.agrfesta.sh.api.domain.commons.Temperature
-import org.agrfesta.sh.api.domain.devices.Heater
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.devices.Heater
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.services.heating.HeatingAreasService
 import org.agrfesta.sh.api.utils.TimeService
 import org.junit.jupiter.api.DynamicTest

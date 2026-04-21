@@ -4,8 +4,8 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.matchers.shouldBe
-import org.agrfesta.sh.api.domain.commons.ThermoHygroData
-import org.agrfesta.sh.api.domain.devices.DeviceDataValue
+import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
+import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
 import org.springframework.stereotype.Service
 
 @Service

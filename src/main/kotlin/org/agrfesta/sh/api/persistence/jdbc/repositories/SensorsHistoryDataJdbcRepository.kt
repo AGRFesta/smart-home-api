@@ -5,7 +5,7 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
 import java.util.*
-import org.agrfesta.sh.api.domain.devices.SensorDataType
+import org.agrfesta.sh.api.core.domain.devices.SensorDataType
 import org.agrfesta.sh.api.persistence.jdbc.entities.SensorHistoryDataEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid

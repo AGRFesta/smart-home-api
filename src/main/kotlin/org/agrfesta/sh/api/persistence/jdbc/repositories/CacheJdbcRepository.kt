@@ -2,7 +2,7 @@ package org.agrfesta.sh.api.persistence.jdbc.repositories
 
 import java.sql.Timestamp
 import java.time.temporal.ChronoUnit
-import org.agrfesta.sh.api.domain.commons.CacheEntry
+import org.agrfesta.sh.api.core.domain.commons.CacheEntry
 import org.agrfesta.sh.api.persistence.CacheEntryDto
 import org.agrfesta.sh.api.utils.TimeService
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource

@@ -4,12 +4,12 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import java.util.*
-import org.agrfesta.sh.api.domain.commons.Temperature
-import org.agrfesta.sh.api.domain.devices.FailureByException
-import org.agrfesta.sh.api.domain.devices.Provider
-import org.agrfesta.sh.api.domain.devices.Sensor
-import org.agrfesta.sh.api.domain.devices.SensorReadings
-import org.agrfesta.sh.api.domain.devices.SensorReadingsFailure
+import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.devices.FailureByException
+import org.agrfesta.sh.api.core.domain.devices.Provider
+import org.agrfesta.sh.api.core.domain.devices.Sensor
+import org.agrfesta.sh.api.core.domain.devices.SensorReadings
+import org.agrfesta.sh.api.core.domain.devices.SensorReadingsFailure
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotSensorReadings
 

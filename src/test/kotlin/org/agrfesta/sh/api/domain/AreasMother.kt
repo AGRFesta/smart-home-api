@@ -1,9 +1,9 @@
 package org.agrfesta.sh.api.domain
 
 import java.util.*
-import org.agrfesta.sh.api.domain.areas.AreaDto
-import org.agrfesta.sh.api.domain.areas.AreaDtoWithDevices
-import org.agrfesta.sh.api.domain.devices.DeviceDto
+import org.agrfesta.sh.api.core.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
+import org.agrfesta.sh.api.core.domain.devices.DeviceDto
 import org.agrfesta.test.mothers.aRandomUniqueString
 
 fun anAreaDto(

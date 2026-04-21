@@ -1,8 +1,8 @@
 package org.agrfesta.sh.api.providers.netatmo
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.agrfesta.sh.api.domain.commons.ThermoHygroData
-import org.agrfesta.sh.api.domain.devices.DeviceDataValue
+import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
+import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.springframework.stereotype.Service

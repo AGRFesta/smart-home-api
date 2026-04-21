@@ -1,12 +1,12 @@
 package org.agrfesta.sh.api.controllers
 
 import java.util.*
-import org.agrfesta.sh.api.domain.areas.AreaTemperatureSetting
-import org.agrfesta.sh.api.domain.areas.TemperatureInterval
-import org.agrfesta.sh.api.domain.commons.Temperature
-import org.agrfesta.sh.api.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.domain.failures.OverlappingIntervals
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.areas.AreaTemperatureSetting
+import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
+import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.services.heating.HeatingAreasService
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.http.HttpStatus.BAD_REQUEST

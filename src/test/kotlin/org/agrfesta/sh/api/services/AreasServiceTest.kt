@@ -14,18 +14,18 @@ import java.util.*
 import org.agrfesta.sh.api.domain.aSensor
 import org.agrfesta.sh.api.domain.anActuator
 import org.agrfesta.sh.api.domain.anAreaDtoWithDevices
-import org.agrfesta.sh.api.domain.areas.AreaImpl
-import org.agrfesta.sh.api.domain.areas.AreasFactory
-import org.agrfesta.sh.api.domain.areas.HeatableArea
-import org.agrfesta.sh.api.domain.areas.MonitoredClimateArea
-import org.agrfesta.sh.api.domain.devices.Sensor
-import org.agrfesta.sh.api.domain.devices.SharedHeater
-import org.agrfesta.sh.api.domain.failures.AreaNameConflict
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.domain.UnitOfWork
-import org.agrfesta.sh.api.persistence.AreasDao
-import org.agrfesta.sh.api.persistence.AreasWithDevicesDao
-import org.agrfesta.sh.api.persistence.TemperatureSettingsDao
+import org.agrfesta.sh.api.core.domain.areas.AreaImpl
+import org.agrfesta.sh.api.core.domain.areas.AreasFactory
+import org.agrfesta.sh.api.core.domain.areas.HeatableArea
+import org.agrfesta.sh.api.core.domain.areas.MonitoredClimateArea
+import org.agrfesta.sh.api.core.domain.devices.Sensor
+import org.agrfesta.sh.api.core.domain.devices.SharedHeater
+import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.application.ports.outbounds.UnitOfWork
+import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.AreasWithDevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.TemperatureSettingsRepository
 import org.agrfesta.sh.api.services.heating.HeatingAreasService
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
@@ -33,16 +33,16 @@ import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 
 class AreasServiceTest {
-    private val areasDao: AreasDao = mockk()
-    private val areasWithDevicesDao: AreasWithDevicesDao = mockk()
+    private val areasRepository: AreasRepository = mockk()
+    private val areasWithDevicesRepository: AreasWithDevicesRepository = mockk()
     private val randomGenerator: RandomGenerator = mockk()
     private val timeService: TimeService = mockk()
-    private val temperatureSettingsDao: TemperatureSettingsDao = mockk()
+    private val temperatureSettingsRepository: TemperatureSettingsRepository = mockk()
     private val unitOfWork: UnitOfWork = mockk()
-    private val heatingAreasService = HeatingAreasService(areasDao, temperatureSettingsDao, unitOfWork)
+    private val heatingAreasService = HeatingAreasService(areasRepository, temperatureSettingsRepository, unitOfWork)
     private val areasFactory = AreasFactory(heatingAreasService, timeService)
 
-    private val sut = AreasService(areasDao, areasWithDevicesDao, randomGenerator, areasFactory)
+    private val sut = AreasService(areasRepository, areasWithDevicesRepository, randomGenerator, areasFactory)
 
     // createArea()
 
@@ -51,7 +51,7 @@ class AreasServiceTest {
         val uuid = UUID.randomUUID()
         val name = aRandomUniqueString()
         every { randomGenerator.uuid() } returns uuid
-        every { areasDao.save(any()) } returns Unit.right()
+        every { areasRepository.save(any()) } returns Unit.right()
 
         val result = sut.createArea(name).shouldBeRight()
 
@@ -64,7 +64,7 @@ class AreasServiceTest {
     fun `createArea() Creates indoor area by default`() {
         val uuid = UUID.randomUUID()
         every { randomGenerator.uuid() } returns uuid
-        every { areasDao.save(any()) } returns Unit.right()
+        every { areasRepository.save(any()) } returns Unit.right()
 
         sut.createArea(aRandomUniqueString()).shouldBeRight().isIndoor shouldBe true
     }
@@ -73,7 +73,7 @@ class AreasServiceTest {
     fun `createArea() Creates outdoor area when isIndoor is false`() {
         val uuid = UUID.randomUUID()
         every { randomGenerator.uuid() } returns uuid
-        every { areasDao.save(any()) } returns Unit.right()
+        every { areasRepository.save(any()) } returns Unit.right()
 
         sut.createArea(aRandomUniqueString(), isIndoor = false).shouldBeRight().isIndoor shouldBe false
     }
@@ -81,7 +81,7 @@ class AreasServiceTest {
     @Test
     fun `createArea() Returns AreaNameConflict when area name already exists`() {
         every { randomGenerator.uuid() } returns UUID.randomUUID()
-        every { areasDao.save(any()) } returns AreaNameConflict.left()
+        every { areasRepository.save(any()) } returns AreaNameConflict.left()
 
         sut.createArea(aRandomUniqueString())
             .shouldBeLeft()
@@ -91,7 +91,7 @@ class AreasServiceTest {
     @Test
     fun `createArea() Returns PersistenceFailure when dao fails`() {
         every { randomGenerator.uuid() } returns UUID.randomUUID()
-        every { areasDao.save(any()) } returns PersistenceFailure(Exception("db error")).left()
+        every { areasRepository.save(any()) } returns PersistenceFailure(Exception("db error")).left()
 
         sut.createArea(aRandomUniqueString())
             .shouldBeLeft()
@@ -102,7 +102,7 @@ class AreasServiceTest {
 
     @Test
     fun `getAllAreasWithDevices() Returns empty collection when no areas exist`() {
-        every { areasWithDevicesDao.getAllAreasWithDevices() } returns emptyList<Nothing>().right()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns emptyList<Nothing>().right()
 
         sut.getAllAreasWithDevices()
             .shouldBeRight()
@@ -113,7 +113,7 @@ class AreasServiceTest {
     fun `getAllAreasWithDevices() Returns areas from dao`() {
         val areaA = anAreaDtoWithDevices()
         val areaB = anAreaDtoWithDevices()
-        every { areasWithDevicesDao.getAllAreasWithDevices() } returns listOf(areaA, areaB).right()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(areaA, areaB).right()
 
         sut.getAllAreasWithDevices()
             .shouldBeRight()
@@ -122,7 +122,7 @@ class AreasServiceTest {
 
     @Test
     fun `getAllAreasWithDevices() Returns PersistenceFailure when dao fails`() {
-        every { areasWithDevicesDao.getAllAreasWithDevices() } returns
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns
             PersistenceFailure(Exception("db error")).left()
 
         sut.getAllAreasWithDevices()
@@ -134,7 +134,7 @@ class AreasServiceTest {
 
     @Test
     fun `getAllAreas() Returns PersistenceFailure when dao fails`() {
-        every { areasWithDevicesDao.getAllAreasWithDevices() } returns
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns
             PersistenceFailure(Exception("db error")).left()
 
         sut.getAllAreas(emptyMap())
@@ -144,7 +144,7 @@ class AreasServiceTest {
 
     @Test
     fun `getAllAreas() Returns empty collection when no areas exist`() {
-        every { areasWithDevicesDao.getAllAreasWithDevices() } returns emptyList<Nothing>().right()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns emptyList<Nothing>().right()
 
         sut.getAllAreas(emptyMap())
             .shouldBeRight()
@@ -154,7 +154,7 @@ class AreasServiceTest {
     @Test
     fun `getAllAreas() Returns AreaImpl when area has no devices in registry`() {
         val area = anAreaDtoWithDevices()
-        every { areasWithDevicesDao.getAllAreasWithDevices() } returns listOf(area).right()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
 
         val result = sut.getAllAreas(emptyMap()).shouldBeRight()
 
@@ -168,7 +168,7 @@ class AreasServiceTest {
         val sensor: Sensor = mockk()
         every { sensor.uuid } returns sensorDto.uuid
         val area = anAreaDtoWithDevices(sensors = listOf(sensorDto))
-        every { areasWithDevicesDao.getAllAreasWithDevices() } returns listOf(area).right()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
 
         val result = sut.getAllAreas(mapOf(sensorDto.uuid to sensor)).shouldBeRight()
 
@@ -185,7 +185,7 @@ class AreasServiceTest {
         val heater: SharedHeater = mockk(relaxed = true)
         every { heater.uuid } returns actuatorDto.uuid
         val area = anAreaDtoWithDevices(sensors = listOf(sensorDto), actuators = listOf(actuatorDto))
-        every { areasWithDevicesDao.getAllAreasWithDevices() } returns listOf(area).right()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
 
         val result = sut.getAllAreas(mapOf(sensorDto.uuid to sensor, actuatorDto.uuid to heater)).shouldBeRight()
 
@@ -197,7 +197,7 @@ class AreasServiceTest {
     fun `getAllAreas() Returns AreaImpl when area sensors are not found in registry`() {
         val sensorDto = aSensor()
         val area = anAreaDtoWithDevices(sensors = listOf(sensorDto))
-        every { areasWithDevicesDao.getAllAreasWithDevices() } returns listOf(area).right()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
 
         val result = sut.getAllAreas(emptyMap()).shouldBeRight()
 

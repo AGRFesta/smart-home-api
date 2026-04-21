@@ -1,6 +1,6 @@
 package org.agrfesta.sh.api.persistence.jdbc.entities
 
-import org.agrfesta.sh.api.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.domain.areas.AreaDto
 import java.time.Instant
 import java.util.*
 

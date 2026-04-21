@@ -5,16 +5,16 @@ import arrow.core.right
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.agrfesta.sh.api.domain.commons.CacheEntry
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.CacheDao
+import org.agrfesta.sh.api.core.domain.commons.CacheEntry
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.application.ports.outbounds.CacheRepository
 import org.springframework.stereotype.Service
 import kotlin.time.Duration
 
 @Service
 class CacheAsserter(
     private val cache: Cache = mockk(relaxed = true),
-    private val cacheDao: CacheDao = mockk(relaxed = true)
+    private val cacheRepository: CacheRepository = mockk(relaxed = true)
 ) {
 
     fun givenCacheEntry(key: String, value: String) {
@@ -36,17 +36,17 @@ class CacheAsserter(
     }
 
     fun givenPersistedCacheEntry(key: String, value: String) {
-        every { cacheDao.getEntry(key) } returns CacheEntry(value).right()
+        every { cacheRepository.getEntry(key) } returns CacheEntry(value).right()
     }
     fun givenPersistedCacheEntryFetchFailure() {
-        every { cacheDao.getEntry(any()) } returns PersistenceFailure(Exception("persisted cache fetch failure")).left()
+        every { cacheRepository.getEntry(any()) } returns PersistenceFailure(Exception("persisted cache fetch failure")).left()
     }
     fun givenPersistedCacheEntryUpsertFailure() {
-        every { cacheDao.upsert(any(), any()) } returns PersistenceFailure(Exception("persisted cache set failure")).left()
+        every { cacheRepository.upsert(any(), any()) } returns PersistenceFailure(Exception("persisted cache set failure")).left()
     }
 
     fun verifyPersistedCacheEntryUpsert(key: String, value: String) {
-        verify { cacheDao.upsert(key, value) }
+        verify { cacheRepository.upsert(key, value) }
     }
 
 }

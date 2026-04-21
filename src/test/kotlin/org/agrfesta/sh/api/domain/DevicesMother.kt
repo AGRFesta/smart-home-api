@@ -1,14 +1,14 @@
 package org.agrfesta.sh.api.domain
 
-import org.agrfesta.sh.api.domain.devices.DeviceDto
-import org.agrfesta.sh.api.domain.devices.DeviceDataValue
-import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
-import org.agrfesta.sh.api.domain.devices.DeviceFeature.ACTUATOR
-import org.agrfesta.sh.api.domain.devices.DeviceStatus
-import org.agrfesta.sh.api.domain.devices.Provider
+import org.agrfesta.sh.api.core.domain.devices.DeviceDto
+import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.test.mothers.aRandomUniqueString
 import java.util.*
-import org.agrfesta.sh.api.domain.devices.DeviceFeature
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 
 fun aDevice(
     uuid: UUID = UUID.randomUUID(),

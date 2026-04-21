@@ -1,15 +1,15 @@
 package org.agrfesta.sh.api.controllers
 
 import java.util.*
-import org.agrfesta.sh.api.domain.failures.ActuatorAssignmentFailure
-import org.agrfesta.sh.api.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.domain.failures.DeviceNotFound
-import org.agrfesta.sh.api.domain.failures.NotASensor
-import org.agrfesta.sh.api.domain.failures.NotAnActuator
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.domain.failures.SameAreaAssignment
-import org.agrfesta.sh.api.domain.failures.SensorAlreadyAssigned
-import org.agrfesta.sh.api.domain.failures.SensorAssignmentFailure
+import org.agrfesta.sh.api.core.domain.failures.ActuatorAssignmentFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
+import org.agrfesta.sh.api.core.domain.failures.NotASensor
+import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
+import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
+import org.agrfesta.sh.api.core.domain.failures.SensorAssignmentFailure
 import org.agrfesta.sh.api.services.AssignmentsService
 import org.springframework.http.HttpStatus.CREATED
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR

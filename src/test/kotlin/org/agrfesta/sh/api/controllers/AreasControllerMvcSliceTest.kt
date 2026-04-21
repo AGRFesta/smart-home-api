@@ -7,9 +7,9 @@ import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import java.util.*
-import org.agrfesta.sh.api.domain.areas.AreaDto
-import org.agrfesta.sh.api.domain.failures.AreaNameConflict
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.sh.api.services.AreasService
 import org.agrfesta.test.mothers.aRandomUniqueString

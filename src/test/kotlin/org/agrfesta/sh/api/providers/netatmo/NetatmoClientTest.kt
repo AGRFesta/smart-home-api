@@ -9,9 +9,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.controllers.createMockEngine
-import org.agrfesta.sh.api.domain.failures.KtorRequestFailure
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.CacheDao
+import org.agrfesta.sh.api.core.domain.failures.KtorRequestFailure
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.application.ports.outbounds.CacheRepository
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_REFRESH_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.utils.Cache
@@ -37,14 +37,14 @@ class NetatmoClientTest {
     )
 
     private val cache: Cache = mockk(relaxed = true)
-    private val cacheDao: CacheDao = mockk(relaxed = true)
+    private val cacheRepository: CacheRepository = mockk(relaxed = true)
     private val registry = BehaviorRegistry()
     private val engine = createMockEngine(registry)
 
-    private val cacheAsserter = CacheAsserter(cache, cacheDao)
+    private val cacheAsserter = CacheAsserter(cache, cacheRepository)
     private val clientAsserter = NetatmoClientAsserter(config, registry, mapper)
 
-    private val sut = NetatmoClient(config, cache, cacheDao, mapper, engine)
+    private val sut = NetatmoClient(config, cache, cacheRepository, mapper, engine)
 
     init {
         // Default behaviour

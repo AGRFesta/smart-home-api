@@ -12,12 +12,12 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import java.util.UUID
-import org.agrfesta.sh.api.domain.devices.Device
-import org.agrfesta.sh.api.domain.devices.DeviceStatus
-import org.agrfesta.sh.api.domain.devices.Provider
-import org.agrfesta.sh.api.domain.devices.ProviderDevicesFactory
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.DevicesDao
+import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.core.domain.devices.Provider
+import org.agrfesta.sh.api.core.domain.devices.ProviderDevicesFactory
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.application.ports.outbounds.DevicesRepository
 import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.junit.jupiter.api.Test
@@ -25,10 +25,10 @@ import org.junit.jupiter.api.Test
 class DevicesServiceTest {
     private val devicesFactories: Collection<ProviderDevicesFactory> = listOf()
 
-    private val devicesDao: DevicesDao = mockk()
+    private val devicesRepository: DevicesRepository = mockk()
     private val randomGenerator: RandomGenerator = mockk()
 
-    private val sut: DevicesService = DevicesService(devicesDao, randomGenerator, devicesFactories)
+    private val sut: DevicesService = DevicesService(devicesRepository, randomGenerator, devicesFactories)
 
     @Test
     fun `refresh() returns empty result when there are no devices and no provider devices`() {
@@ -160,7 +160,7 @@ class DevicesServiceTest {
         val device = aDeviceDataValue()
         val uuid = UUID.randomUUID()
         every { randomGenerator.uuid() } returns uuid
-        every { devicesDao.create(uuid, device, any()) } returns Unit.right()
+        every { devicesRepository.create(uuid, device, any()) } returns Unit.right()
 
         sut.createDevice(device).shouldBeRight() shouldBe uuid
     }
@@ -169,7 +169,7 @@ class DevicesServiceTest {
     fun `createDevice() returns failure when dao fails`() {
         val device = aDeviceDataValue()
         every { randomGenerator.uuid() } returns UUID.randomUUID()
-        every { devicesDao.create(any(), device, any()) } returns PersistenceFailure(Exception("db error")).left()
+        every { devicesRepository.create(any(), device, any()) } returns PersistenceFailure(Exception("db error")).left()
 
         sut.createDevice(device).shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
     }
@@ -178,11 +178,11 @@ class DevicesServiceTest {
     fun `createDevice() uses PAIRED as default initial status`() {
         val device = aDeviceDataValue()
         every { randomGenerator.uuid() } returns UUID.randomUUID()
-        every { devicesDao.create(any(), device, any()) } returns Unit.right()
+        every { devicesRepository.create(any(), device, any()) } returns Unit.right()
 
         sut.createDevice(device)
 
-        verify { devicesDao.create(any(), device, DeviceStatus.PAIRED) }
+        verify { devicesRepository.create(any(), device, DeviceStatus.PAIRED) }
     }
 
     // getAllDevices()
@@ -194,8 +194,8 @@ class DevicesServiceTest {
         val factory: ProviderDevicesFactory = mockk()
         every { factory.provider } returns Provider.SWITCHBOT
         every { factory.createDevice(dto) } returns domainDevice
-        every { devicesDao.getAll() } returns listOf(dto).right()
-        val sut = DevicesService(devicesDao, randomGenerator, listOf(factory))
+        every { devicesRepository.getAll() } returns listOf(dto).right()
+        val sut = DevicesService(devicesRepository, randomGenerator, listOf(factory))
 
         val result = sut.getAllDevices().shouldBeRight()
 
@@ -204,7 +204,7 @@ class DevicesServiceTest {
 
     @Test
     fun `getAllDevices() propagates PersistenceFailure when dao fails`() {
-        every { devicesDao.getAll() } returns PersistenceFailure(Exception("db error")).left()
+        every { devicesRepository.getAll() } returns PersistenceFailure(Exception("db error")).left()
 
         sut.getAllDevices().shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
     }
@@ -212,7 +212,7 @@ class DevicesServiceTest {
     @Test
     fun `getAllDevices() skips device when no factory is registered for its provider`() {
         val dto = aDevice(provider = Provider.SWITCHBOT)
-        every { devicesDao.getAll() } returns listOf(dto).right()
+        every { devicesRepository.getAll() } returns listOf(dto).right()
 
         sut.getAllDevices().shouldBeRight().shouldBeEmpty()
     }
@@ -225,8 +225,8 @@ class DevicesServiceTest {
         val factory: ProviderDevicesFactory = mockk()
         every { factory.provider } returns Provider.SWITCHBOT
         every { factory.createDevice(dtoWithFactory) } returns domainDevice
-        every { devicesDao.getAll() } returns listOf(dtoWithFactory, dtoWithoutFactory).right()
-        val sut = DevicesService(devicesDao, randomGenerator, listOf(factory))
+        every { devicesRepository.getAll() } returns listOf(dtoWithFactory, dtoWithoutFactory).right()
+        val sut = DevicesService(devicesRepository, randomGenerator, listOf(factory))
 
         sut.getAllDevices().shouldBeRight().shouldContainExactlyInAnyOrder(domainDevice)
     }

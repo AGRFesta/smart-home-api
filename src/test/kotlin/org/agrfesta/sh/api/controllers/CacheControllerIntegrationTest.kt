@@ -9,7 +9,7 @@ import io.mockk.verify
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.agrfesta.sh.api.AbstractIntegrationTest
-import org.agrfesta.sh.api.domain.commons.CacheEntry
+import org.agrfesta.sh.api.core.domain.commons.CacheEntry
 import org.agrfesta.sh.api.persistence.CacheEntryDto
 import org.agrfesta.sh.api.persistence.jdbc.repositories.CacheJdbcRepository
 import org.agrfesta.test.mothers.aRandomTtl

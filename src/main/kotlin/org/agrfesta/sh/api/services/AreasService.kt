@@ -2,15 +2,15 @@ package org.agrfesta.sh.api.services
 
 import arrow.core.Either
 import java.util.*
-import org.agrfesta.sh.api.domain.areas.Area
-import org.agrfesta.sh.api.domain.areas.AreaDto
-import org.agrfesta.sh.api.domain.areas.AreaDtoWithDevices
-import org.agrfesta.sh.api.domain.areas.AreasFactory
-import org.agrfesta.sh.api.domain.devices.Device
-import org.agrfesta.sh.api.domain.failures.AreaCreationFailure
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.AreasDao
-import org.agrfesta.sh.api.persistence.AreasWithDevicesDao
+import org.agrfesta.sh.api.core.domain.areas.Area
+import org.agrfesta.sh.api.core.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
+import org.agrfesta.sh.api.core.domain.areas.AreasFactory
+import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.failures.AreaCreationFailure
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.AreasWithDevicesRepository
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.springframework.stereotype.Service
 
@@ -22,8 +22,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class AreasService(
-    private val areasDao: AreasDao,
-    private val areasWithDevicesDao: AreasWithDevicesDao,
+    private val areasRepository: AreasRepository,
+    private val areasWithDevicesRepository: AreasWithDevicesRepository,
     private val randomGenerator: RandomGenerator,
     private val areasFactory: AreasFactory
 ) {
@@ -44,7 +44,7 @@ class AreasService(
             name = name,
             isIndoor = isIndoor ?: true
         )
-        return areasDao.save(area).map { area }
+        return areasRepository.save(area).map { area }
     }
 
     /**
@@ -54,7 +54,7 @@ class AreasService(
      *         [PersistenceFailure] if the query fails.
      */
     fun getAllAreasWithDevices(): Either<PersistenceFailure, Collection<AreaDtoWithDevices>> =
-        areasWithDevicesDao.getAllAreasWithDevices()
+        areasWithDevicesRepository.getAllAreasWithDevices()
 
     /**
      * Retrieves all areas as fully assembled domain objects, resolving each area's devices from [devicesRegistry].

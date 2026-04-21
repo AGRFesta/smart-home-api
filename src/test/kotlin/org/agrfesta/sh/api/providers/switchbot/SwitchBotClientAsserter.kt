@@ -2,7 +2,7 @@ package org.agrfesta.sh.api.providers.switchbot
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.coEvery
-import org.agrfesta.sh.api.domain.commons.ThermoHygroData
+import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
 import org.springframework.stereotype.Service
 
 @Service

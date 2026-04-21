@@ -5,10 +5,10 @@ import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import org.agrfesta.sh.api.configuration.TimeConfiguration
-import org.agrfesta.sh.api.domain.areas.AreasFactory
-import org.agrfesta.sh.api.persistence.jdbc.dao.AreasDaoJdbcImpl
-import org.agrfesta.sh.api.persistence.jdbc.dao.AreasWithDevicesDaoJdbcImpl
-import org.agrfesta.sh.api.persistence.jdbc.dao.TemperatureSettingsDaoJdbcImpl
+import org.agrfesta.sh.api.core.domain.areas.AreasFactory
+import org.agrfesta.sh.api.persistence.jdbc.dao.AreasJdbcAdapter
+import org.agrfesta.sh.api.persistence.jdbc.dao.AreasWithDevicesRepositoryJdbcImpl
+import org.agrfesta.sh.api.persistence.jdbc.dao.TemperatureSettingsJdbcAdapter
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasWithDevicesJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository
@@ -19,7 +19,7 @@ import org.agrfesta.sh.api.services.heating.HeatingAreasService
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.SmartCache
-import org.agrfesta.sh.api.domain.UnitOfWork
+import org.agrfesta.sh.api.core.application.ports.outbounds.UnitOfWork
 import org.agrfesta.sh.api.utils.TimeServiceImpl
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.springframework.dao.DataIntegrityViolationException
@@ -37,10 +37,10 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @Import(
     AreasService::class,
     AreasFactory::class,
-    AreasDaoJdbcImpl::class,
-    AreasWithDevicesDaoJdbcImpl::class,
+    AreasJdbcAdapter::class,
+    AreasWithDevicesRepositoryJdbcImpl::class,
     HeatingAreasService::class,
-    TemperatureSettingsDaoJdbcImpl::class,
+    TemperatureSettingsJdbcAdapter::class,
     SmartCache::class,
     TimeServiceImpl::class,
     TimeConfiguration::class,

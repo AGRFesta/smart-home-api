@@ -7,9 +7,9 @@ import io.mockk.every
 import io.mockk.mockk
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.domain.areas.HeatableArea
-import org.agrfesta.sh.api.domain.devices.ActuatorStatus
-import org.agrfesta.sh.api.domain.devices.SharedHeater
+import org.agrfesta.sh.api.core.domain.areas.HeatableArea
+import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
+import org.agrfesta.sh.api.core.domain.devices.SharedHeater
 import org.junit.jupiter.api.Test
 
 class ComfortAreasSharedHeatingStrategyTest {

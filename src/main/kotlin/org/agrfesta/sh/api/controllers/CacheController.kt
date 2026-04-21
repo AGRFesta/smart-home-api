@@ -4,10 +4,10 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
-import org.agrfesta.sh.api.domain.failures.PersistedCacheEntryNotFound
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.PersistedCacheEntryNotFound
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.persistence.CacheEntryDto
-import org.agrfesta.sh.api.persistence.CacheDao
+import org.agrfesta.sh.api.core.application.ports.outbounds.CacheRepository
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.ResponseEntity
@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/cache")
 class CacheController(
-    private val cacheDao: CacheDao
+    private val cacheRepository: CacheRepository
 ) {
 
     companion object {
@@ -45,7 +45,7 @@ class CacheController(
      */
     @PutMapping("/{key}")
     fun putCacheEntry(@PathVariable key: String, @RequestBody request: CacheRequest): ResponseEntity<MessageResponse> =
-        cacheDao.upsert(key, request.value, request.ttl).fold(
+        cacheRepository.upsert(key, request.value, request.ttl).fold(
             ifLeft = { _ -> status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(MessageResponse("Failed to upsert cache entry")) },
             ifRight = { ok(MessageResponse("Entry for key '$key' upserted successfully")) }
@@ -61,7 +61,7 @@ class CacheController(
     fun postCacheBatch(@RequestBody batch: List<CacheEntryDto>): ResponseEntity<MessageResponse> =
         validateBatch(batch)
             .flatMap { validBatch ->
-                cacheDao.upsertBatch(validBatch).mapLeft {
+                cacheRepository.upsertBatch(validBatch).mapLeft {
                     status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(MessageResponse("Failed to persist batch"))
                 }
@@ -91,7 +91,7 @@ class CacheController(
      * error occurs.
      */
     @GetMapping("/{key}")
-    fun getCacheEntry(@PathVariable key: String): ResponseEntity<Any> = cacheDao.getEntry(key).fold(
+    fun getCacheEntry(@PathVariable key: String): ResponseEntity<Any> = cacheRepository.getEntry(key).fold(
         ifLeft = { failure ->
             when (failure) {
                 PersistedCacheEntryNotFound -> status(NOT_FOUND).body(MessageResponse("Key '$key' is missing"))

@@ -3,7 +3,7 @@ package org.agrfesta.sh.api.utils
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import org.agrfesta.sh.api.domain.failures.ExceptionFailure
+import org.agrfesta.sh.api.core.domain.failures.ExceptionFailure
 import org.slf4j.Logger
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service

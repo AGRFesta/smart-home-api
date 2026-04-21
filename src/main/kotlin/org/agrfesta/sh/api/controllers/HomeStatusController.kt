@@ -2,8 +2,8 @@ package org.agrfesta.sh.api.controllers
 
 import arrow.core.Either
 import java.util.*
-import org.agrfesta.sh.api.domain.commons.Temperature
-import org.agrfesta.sh.api.domain.commons.average
+import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.commons.average
 import org.agrfesta.sh.api.services.AreasService
 import org.agrfesta.sh.api.utils.SmartCache
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR

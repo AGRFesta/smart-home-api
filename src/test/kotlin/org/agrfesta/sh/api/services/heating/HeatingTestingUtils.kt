@@ -5,9 +5,9 @@ import arrow.core.right
 import io.mockk.coEvery
 import io.mockk.every
 import java.math.BigDecimal
-import org.agrfesta.sh.api.domain.areas.HeatableArea
-import org.agrfesta.sh.api.domain.commons.Temperature
-import org.agrfesta.sh.api.domain.failures.MessageFailure
+import org.agrfesta.sh.api.core.domain.areas.HeatableArea
+import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.failures.MessageFailure
 import org.agrfesta.sh.api.services.heating.HeatingOrchestrationService.Companion.HYSTERESIS
 import org.agrfesta.test.mothers.aRandomTemperature
 

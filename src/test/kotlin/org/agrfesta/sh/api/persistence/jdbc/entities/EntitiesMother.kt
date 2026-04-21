@@ -1,17 +1,17 @@
 package org.agrfesta.sh.api.persistence.jdbc.entities
 
-import org.agrfesta.sh.api.domain.devices.DeviceFeature
-import org.agrfesta.sh.api.domain.devices.DeviceFeature.SENSOR
-import org.agrfesta.sh.api.domain.devices.DeviceStatus
-import org.agrfesta.sh.api.domain.devices.Provider
-import org.agrfesta.sh.api.domain.devices.SensorDataType
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.core.domain.devices.Provider
+import org.agrfesta.sh.api.core.domain.devices.SensorDataType
 import org.agrfesta.test.mothers.aRandomHumidity
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.agrfesta.test.mothers.aRandomUniqueString
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.*
-import org.agrfesta.sh.api.domain.devices.DeviceFeature.ACTUATOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
 
 fun anAreaEntity(
     uuid: UUID = UUID.randomUUID(),

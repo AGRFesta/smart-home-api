@@ -1,6 +1,8 @@
 package org.agrfesta.sh.api.domain.commons
 
 import io.kotest.matchers.shouldBe
+import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.commons.average
 import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.TestFactory
 

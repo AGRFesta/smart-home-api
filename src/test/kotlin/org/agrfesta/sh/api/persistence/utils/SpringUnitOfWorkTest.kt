@@ -29,14 +29,14 @@ import org.springframework.transaction.annotation.Transactional
 @Import(
     TestContainersConfig::class,
     AreasJdbcRepository::class,
-    SpringUnitOfWork::class
+    SpringUnitOfWorkAdapter::class
 )
 @CleanSmartHomeDatabase
 class SpringUnitOfWorkTest {
     @Autowired
     private lateinit var areasRepo: AreasJdbcRepository
     @Autowired
-    private lateinit var sut: SpringUnitOfWork
+    private lateinit var sut: SpringUnitOfWorkAdapter
 
     @MockkBean
     private lateinit var timeService: TimeService

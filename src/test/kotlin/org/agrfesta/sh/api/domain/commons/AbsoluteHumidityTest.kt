@@ -4,6 +4,9 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.TestFactory
 import java.math.BigDecimal
+import org.agrfesta.sh.api.core.domain.commons.AbsoluteHumidity
+import org.agrfesta.sh.api.core.domain.commons.Percentage
+import org.agrfesta.sh.api.core.domain.commons.Temperature
 
 class AbsoluteHumidityTest {
 

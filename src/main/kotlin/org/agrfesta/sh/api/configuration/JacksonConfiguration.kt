@@ -14,7 +14,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.math.BigDecimal
 import java.time.Instant
-import org.agrfesta.sh.api.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 

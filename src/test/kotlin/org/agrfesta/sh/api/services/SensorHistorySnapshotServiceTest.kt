@@ -5,10 +5,11 @@ import arrow.core.right
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.agrfesta.sh.api.core.domain.devices.DeviceDto
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aSensor
 import org.agrfesta.sh.api.domain.anActuator
-import org.agrfesta.sh.api.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.utils.CachedValueNotFound
 import org.agrfesta.sh.api.utils.SmartCache
 import org.agrfesta.sh.api.utils.TimeService
@@ -34,7 +35,7 @@ class SensorHistorySnapshotServiceTest {
 
     @Test
     fun `snapshotDevicesData() does not interact with cache when device list is empty`() {
-        every { devicesService.getAllDto() } returns emptyList<org.agrfesta.sh.api.domain.devices.DeviceDto>().right()
+        every { devicesService.getAllDto() } returns emptyList<DeviceDto>().right()
 
         sut.snapshotDevicesData()
 

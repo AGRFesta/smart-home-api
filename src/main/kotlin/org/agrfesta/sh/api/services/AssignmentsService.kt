@@ -4,14 +4,14 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import java.util.*
-import org.agrfesta.sh.api.domain.failures.ActuatorAssignmentFailure
-import org.agrfesta.sh.api.domain.failures.NotASensor
-import org.agrfesta.sh.api.domain.failures.NotAnActuator
-import org.agrfesta.sh.api.domain.failures.SensorAssignmentFailure
-import org.agrfesta.sh.api.persistence.ActuatorsAssignmentsDao
-import org.agrfesta.sh.api.persistence.AreasDao
-import org.agrfesta.sh.api.persistence.DevicesDao
-import org.agrfesta.sh.api.persistence.SensorsAssignmentsDao
+import org.agrfesta.sh.api.core.domain.failures.ActuatorAssignmentFailure
+import org.agrfesta.sh.api.core.domain.failures.NotASensor
+import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
+import org.agrfesta.sh.api.core.domain.failures.SensorAssignmentFailure
+import org.agrfesta.sh.api.core.application.ports.outbounds.ActuatorsAssignmentsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.DevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.SensorsAssignmentsRepository
 import org.springframework.stereotype.Service
 
 /**
@@ -22,10 +22,10 @@ import org.springframework.stereotype.Service
  */
 @Service
 class AssignmentsService(
-    private val areasDao: AreasDao,
-    private val devicesDao: DevicesDao,
-    private val sensorsAssignmentsDao: SensorsAssignmentsDao,
-    private val actuatorsAssignmentsDao: ActuatorsAssignmentsDao
+    private val areasRepository: AreasRepository,
+    private val devicesRepository: DevicesRepository,
+    private val sensorsAssignmentsRepository: SensorsAssignmentsRepository,
+    private val actuatorsAssignmentsRepository: ActuatorsAssignmentsRepository
 ) {
 
     /**
@@ -38,10 +38,10 @@ class AssignmentsService(
      * @return [Either.Right] with [Unit] on success, or [Either.Left] with a [SensorAssignmentFailure].
      */
     fun assignSensorToArea(areaId: UUID, deviceId: UUID): Either<SensorAssignmentFailure, Unit> {
-        return areasDao.getAreaById(areaId).flatMap { area ->
-            devicesDao.getDeviceById(deviceId).flatMap { device ->
+        return areasRepository.getAreaById(areaId).flatMap { area ->
+            devicesRepository.getDeviceById(deviceId).flatMap { device ->
                 if (device.isSensor()) {
-                    sensorsAssignmentsDao.assign(areaId, deviceId)
+                    sensorsAssignmentsRepository.assign(areaId, deviceId)
                 } else {
                     NotASensor(device.uuid, device.features).left()
                 }
@@ -59,10 +59,10 @@ class AssignmentsService(
      * @return [Either.Right] with [Unit] on success, or [Either.Left] with an [ActuatorAssignmentFailure].
      */
     fun assignActuatorToArea(areaId: UUID, deviceId: UUID): Either<ActuatorAssignmentFailure, Unit> {
-        return areasDao.getAreaById(areaId).flatMap { _ ->
-            devicesDao.getDeviceById(deviceId).flatMap { device ->
+        return areasRepository.getAreaById(areaId).flatMap { _ ->
+            devicesRepository.getDeviceById(deviceId).flatMap { device ->
                 if (device.isActuator()) {
-                    actuatorsAssignmentsDao.assign(areaId, deviceId)
+                    actuatorsAssignmentsRepository.assign(areaId, deviceId)
                 } else {
                     NotAnActuator(device.uuid, device.features).left()
                 }

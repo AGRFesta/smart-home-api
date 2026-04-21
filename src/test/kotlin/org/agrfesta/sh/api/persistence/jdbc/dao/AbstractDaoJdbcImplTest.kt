@@ -24,14 +24,14 @@ import org.springframework.context.annotation.Import
 @Import(
     TestContainersConfig::class,
     // DAO implementations
-    AreasDaoJdbcImpl::class,
-    DevicesDaoJdbcImpl::class,
-    SensorsAssignmentsDaoJdbcImpl::class,
-    ActuatorsAssignmentsDaoJdbcImpl::class,
-    TemperatureSettingsDaoJdbcImpl::class,
-    AreasWithDevicesDaoJdbcImpl::class,
-    CacheDaoJdbcImpl::class,
-    SensorsHistoryDataDaoJdbcImpl::class,
+    AreasJdbcAdapter::class,
+    DevicesJdbcAdapter::class,
+    SensorsAssignmentsJdbcAdapter::class,
+    ActuatorsAssignmentsJdbcAdapter::class,
+    TemperatureSettingsJdbcAdapter::class,
+    AreasWithDevicesRepositoryJdbcImpl::class,
+    CacheJdbcAdapter::class,
+    SensorsHistoryDataJdbcAdapter::class,
     // Repositories
     AreasJdbcRepository::class,
     DevicesJdbcRepository::class,
