@@ -1,211 +1,110 @@
 # Architecture Guide — Smart Home API
 
-## Philosophy
+## Philosophy: Pragmatic Hexagonal Architecture
+The project follows a Hexagonal Architecture (Ports and Adapters) with the goal of completely isolating the **core business logic** from infrastructure concerns (databases, HTTP frameworks, external APIs).
 
-The Smart Home API follows a **Pragmatic Hexagonal Architecture** (Ports and Adapters).
-
-The goal is to keep the **core business logic completely isolated** from infrastructure concerns (databases, HTTP frameworks, external APIs). The domain layer has zero knowledge of Spring, JDBC, or Ktor. It depends only on pure Kotlin and [Arrow](https://arrow-kt.io/).
-
-### Error Handling — `Either` over Exceptions
-
-All operations that can fail return `Either<DomainError, Success>`. Exceptions are **never** allowed to propagate into the service or domain layers. They are caught at infrastructure boundaries and converted into typed domain errors.
-
-```kotlin
-// DAO implementation — exception is caught here and never leaks upward
-override fun save(area: AreaDto): Either<AreaCreationFailure, Unit> = try {
-    areasRepo.persist(area).right()
-} catch (_: SameNameAreaException) {
-    AreaNameConflict.left()
-} catch (e: DataAccessException) {
-    PersistenceFailure(e).left()
-}
-```
-
-Domain errors are **sealed interfaces**, organized by operation (e.g. `AreaCreationFailure`, `AreaFetchFailure`). This makes exhaustive `when` matching possible and eliminates implicit error paths.
+The domain layer has zero knowledge of Spring or JDBC; it depends only on pure Kotlin and the [Arrow](https://arrow-kt.io/) library.
 
 ---
 
-## Layer Overview
+## Layer Overview (Inbound & Outbound)
 
 ```mermaid
 flowchart TD
     HTTP(["HTTP Request"])
 
-    subgraph primary["Primary Adapters"]
-        C["Controllers\nmap HTTP ↔ domain\nhandle Either results"]
+    subgraph inbound_adapters["Inbound Adapters (Drivers)"]
+        C["Controllers\nMap HTTP ↔ Domain"]
     end
 
-    subgraph core["Core"]
-        S["Services\npure business logic\norchestrate ports"]
+    subgraph core["Core (Domain & Application)"]
+        IP["Inbound Ports\n(Use Cases/Services)"]
+        D["Domain Model\n(Entities & Value Objects)"]
+        OP["Outbound Ports\n(Interfaces)"]
     end
 
-    subgraph secondary["Secondary Adapters"]
-        D["DAOs\nAnti-Corruption Layer\nDataAccessException → domain failure"]
-        P["Providers\nSwitchBot / Netatmo\nKtor HTTP client"]
-    end
-
-    subgraph infra["Infrastructure"]
-        DB[("PostgreSQL / Redis")]
-        EXT(["External APIs"])
+    subgraph outbound_adapters["Outbound Adapters (Driven)"]
+        DAO["JDBC DAOs\nPersistence"]
+        P["Providers\nExternal APIs"]
     end
 
     HTTP --> C
-    C --> S
-    S --> D
-    S --> P
-    D --> DB
-    P --> EXT
+    C --> IP
+    IP --> D
+    IP --> OP
+    OP --> DAO
+    OP --> P
 ```
 
 ---
 
-## Layer Rules
+## 1. Inbound Ports & Adapters (Driving Side)
 
-### Controllers — Primary Adapters
+### Inbound Ports (Use Cases)
+Define the system's capabilities exposed to the outside world.
+- **Responsibility:** Orchestrating business logic and outbound ports.
+- **Rules:** Must be behavior-centric and task-specific (e.g., `HeatingAreasService` or `RegisterUserUseCase`) and return functional types (`Either`). They must accept only primitive types, standard library types, or specific DTOs defined inside the Core.
 
-Controllers live in `controllers/` and are the only layer allowed to depend on Spring Web (`@RestController`, `ResponseEntity`, etc.).
-
-**Responsibilities:**
-- Deserialize HTTP request bodies into plain data objects.
-- Delegate all logic to a service.
-- Pattern-match the `Either` result and produce the appropriate HTTP response.
-
-```kotlin
-when (val result = areasService.createArea(name = request.name)) {
-    is Right -> status(CREATED).body(CreatedResourceResponse(...))
-    is Left  -> when (result.value) {
-        AreaNameConflict   -> badRequest().body(...)
-        is PersistenceFailure -> internalServerError().body(...)
-    }
-}
-```
-
-Controllers must contain **no business logic**. They translate; they do not decide.
+### Inbound Adapters (Controllers)
+Infrastructure components that trigger the Inbound Ports.
+- **Responsibility:** Deserializing HTTP bodies (JSON/HTTP Requests), mapping them to Domain Commands/Queries, delegating to services/ports, and mapping `Either` results to the appropriate HTTP response (e.g., `ResponseEntity`).
+- **Rules:** Contain **no business logic**. They translate; they do not decide. Only controllers are allowed to depend on Spring Web.
 
 ---
 
-### Services — Core
+## 2. Outbound Ports & Adapters (Driven Side)
 
-Services live in `services/` and contain all business logic. They depend only on domain interfaces (DAO ports, `UnitOfWork`). They must never depend on concrete infrastructure classes.
+### Outbound Ports (Interfaces)
+Interfaces defined in the Core used by the domain to communicate with the external world (Databases, Third-party APIs).
+- **Examples:** `AreasRepository`, `DevicesProvider`, `UnitOfWork`.
+- **Rules:** Must only accept and return Domain Entities, Value Objects, or primitive types. Must not throw technical exceptions; use monadic types like `Either` to explicitly declare expected domain errors.
 
-**Responsibilities:**
-- Enforce business invariants (e.g. overlapping schedule validation in `HeatingAreasService`).
-- Orchestrate multiple DAO calls inside a `UnitOfWork.execute {}` block when atomicity is required.
-- Compose `Either` results using Arrow operators (`flatMap`, `map`, etc.).
-
-Services are **not allowed** to use `@Transactional`. Transaction boundaries are declared explicitly via `UnitOfWork`.
-
----
-
-### DAOs — Secondary Adapters (Anti-Corruption Layer)
-
-DAO interfaces are defined in `persistence/` as pure Kotlin interfaces that return `Either`. JDBC implementations live in `persistence/jdbc/dao/`.
-
-**Responsibilities:**
-- Translate between domain types and persistence entities.
-- Catch all infrastructure exceptions (`DataAccessException`, etc.) at this boundary and convert them into typed domain failures.
-- Never let raw exceptions reach the service layer.
-
-```kotlin
-override fun getAreaById(areaId: UUID): Either<AreaFetchFailure, AreaDto> = try {
-    areasRepo.findAreaById(areaId)?.asArea()?.right()
-        ?: AreaNotFound(missingAreaId = areaId).left()
-} catch (e: DataAccessException) {
-    PersistenceFailure(e).left()
-}
-```
-
-Spring Data JDBC repositories are an **internal implementation detail** of the DAO layer and must not be referenced outside of it.
+### Outbound Adapters (Persistence & API)
+Technological implementations of the Outbound Ports.
+- **Persistence:** We use **JdbcTemplate / Spring Data JDBC**. Implementations live in `persistence/jdbc/dao/` and should ideally be `internal` to prevent direct coupling.
+- **Mapping:** Must translate between Domain Entities and Infrastructure Models (e.g., Database Rows) before saving or retrieving.
+- **Exception Boundary:** Must catch infrastructure/technical exceptions (e.g., `DataAccessException`, `RestClientException`) and map them to the expected Domain Errors (e.g., `Left(PersistenceFailure)`).
 
 ---
 
-### Providers — Secondary Adapters
+## 3. Core Domain Rules
 
-Providers live in `providers/` and integrate with external device APIs (SwitchBot, Netatmo). They use the Ktor HTTP client and implement the `DevicesProvider` domain port.
+### Error Handling — `Either` over Exceptions
+Every operation that can fail returns `Either<DomainError, Success>`.
+- Exceptions are **never** allowed to propagate into the service or domain layers. They are caught at infrastructure boundaries and converted into typed errors (sealed interfaces organized by domain concern, like `AreaCreationFailure`).
 
-**Responsibilities:**
-- Communicate with external APIs via Ktor suspend functions.
-- Map provider-specific response models to domain `Device` types via a factory.
-- Wrap all failures in `Either.Left` using `ProviderFailure`.
+### Value Objects
+Never use raw `Double` or `Float` for domain quantities. Use **inline value classes**:
+- `Temperature`, `Percentage`, `RelativeHumidity` (based on `BigDecimal` with `HALF_UP` rounding).
+
+### Domain Model Composition
+Domain entities prefer Kotlin delegation (`by`) over deep inheritance:
+```kotlin
+class HeatableAreaImpl(mcArea: MonitoredClimateArea, ...) 
+    : HeatableArea, MonitoredClimateArea by mcArea
+```
 
 ---
 
-## Unit of Work Pattern
+## 4. Unit of Work Pattern
+When a service operation requires multiple writes that must succeed or fail together, it uses the `UnitOfWork` port defined in the domain layer.
+The adapter (`SpringUnitOfWork`) implements transactionality via Spring's `TransactionTemplate` in the infrastructure layer.
 
-When a service operation requires **multiple writes** that must succeed or fail together, it uses `UnitOfWork`.
-
-### Port — domain layer
-
-```kotlin
-// org.agrfesta.sh.api.domain.UnitOfWork
-interface UnitOfWork {
-    fun <E, A> execute(block: () -> Either<E, A>): Either<E, A>
-}
-```
-
-The interface lives in the `domain` package and has no infrastructure dependencies.
-
-### Adapter — infrastructure layer
-
-```kotlin
-// org.agrfesta.sh.api.persistence.utils.SpringUnitOfWork
-@Component
-class SpringUnitOfWork(
-    private val transactionTemplate: TransactionTemplate
-) : UnitOfWork {
-    override fun <E, A> execute(block: () -> Either<E, A>): Either<E, A> {
-        return transactionTemplate.execute { status ->
-            val result = block()
-            if (result is Either.Left) status.setRollbackOnly()
-            result
-        }!!
-    }
-}
-```
-
-`SpringUnitOfWork` lives in the infrastructure layer and is the only place where Spring's transaction infrastructure is referenced.
-
-### Usage in a service
-
-The idiomatic Arrow style (Arrow 1.2+) uses `either { }` with `bind()` and `raise()` instead of chained `flatMap` calls. This turns nested functional pipelines into readable sequential code.
-
-`UnitOfWork.execute` accepts a plain `() -> Either<E, A>` lambda, so an inner `either { }` block is needed to use `bind()` inside it. The outer `either { }` wraps the full operation and lets `raise()` short-circuit on validation failures.
-
-```kotlin
-fun createSetting(setting: AreaTemperatureSetting): Either<TemperatureSettingCreationFailure, Unit> = either {
-    if (setting.temperatureSchedule.hasOverlap()) raise(OverlappingIntervals)
-
-    unitOfWork.execute {
-        either {
-            val exists = temperatureSettingsDao.existsByAreaId(setting.areaId).bind()
-            if (exists) temperatureSettingsDao.deleteAreaSetting(setting.areaId).bind()
-            temperatureSettingsDao.persistAreaTemperatureSetting(setting).bind()
-        }
-    }.bind()
-}
-```
+This keeps the domain completely clean of `@Transactional` annotations.
 
 ---
 
 ## Do's and Don'ts
 
 ### DO
-
 - **DO** return `Either<DomainError, T>` from every operation that can fail.
-- **DO** use `UnitOfWork.execute {}` when a service method performs two or more writes that must be atomic.
-- **DO** catch all infrastructure exceptions inside DAO implementations and convert them to typed domain failures.
-- **DO** use sealed interfaces to model domain errors, organized by operation (e.g. `AreaCreationFailure`).
-- **DO** keep the `domain` package free of Spring, JDBC, and Ktor imports.
-- **DO** inject DAO and provider **interfaces** (ports) into services — never concrete implementations.
-- **DO** use Arrow operators (`flatMap`, `map`, `recover`) to chain `Either` results inside services.
-- **DO** use value objects (`Temperature`, `Percentage`, `RelativeHumidity`) for domain quantities — never raw `Double` or `Float`.
+- **DO** use `UnitOfWork.execute {}` when an operation performs two or more writes that must be atomic.
+- **DO** catch all infrastructure exceptions inside Outbound Adapters and convert them to typed domain failures.
+- **DO** use value objects (`Temperature`, `Percentage`, etc.) for domain quantities.
+- **DO** use Arrow operators (`flatMap`, `map`, `recover`, or `either { }` blocks with `bind()`) to chain `Either` results.
 
 ### DON'T
-
 - **DON'T** annotate service methods with `@Transactional`. Transaction boundaries belong to `UnitOfWork`.
-- **DON'T** let exceptions propagate beyond the DAO layer.
-- **DON'T** reference Spring Data JDBC repositories outside of `persistence/jdbc/`.
-- **DON'T** put business logic in controllers. They translate; they do not decide.
-- **DON'T** use raw `Double` or `Float` for domain values. Use the typed value classes.
-- **DON'T** add new infrastructure imports to the `domain` package.
+- **DON'T** let exceptions propagate beyond the Adapter layer.
+- **DON'T** put business logic in controllers (Inbound Adapters).
 - **DON'T** use `Either.getOrElse` or force-unwrap results in the service layer to avoid handling errors.
