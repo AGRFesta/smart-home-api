@@ -7,11 +7,11 @@ import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import java.util.*
+import org.agrfesta.sh.api.core.application.ports.inbounds.CreateAreaUseCase
 import org.agrfesta.sh.api.core.domain.areas.AreaDto
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.security.SecurityConfig
-import org.agrfesta.sh.api.services.AreasService
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
@@ -29,7 +29,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 class AreasControllerMvcSliceTest(
     @Autowired private val mockMvc: MockMvc,
     @Autowired private val objectMapper: ObjectMapper,
-    @Autowired @MockkBean private val areasService: AreasService
+    @Autowired @MockkBean private val createAreaUseCase: CreateAreaUseCase
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
@@ -43,7 +43,7 @@ class AreasControllerMvcSliceTest(
 
     @Test fun `create() returns 400 when area name already exists`() {
         val name = aRandomUniqueString()
-        every { areasService.createArea(name, null) } returns AreaNameConflict.left()
+        every { createAreaUseCase.execute(name, null) } returns AreaNameConflict.left()
 
         val responseBody: String = mockMvc.perform(
             post("/areas")
@@ -59,7 +59,7 @@ class AreasControllerMvcSliceTest(
 
     @Test fun `create() returns 500 when persistence fails`() {
         val name = aRandomUniqueString()
-        every { areasService.createArea(name, null) } returns
+        every { createAreaUseCase.execute(name, null) } returns
                 PersistenceFailure(RuntimeException("db error")).left()
 
         val responseBody: String = mockMvc.perform(
@@ -77,7 +77,7 @@ class AreasControllerMvcSliceTest(
     @Test fun `create() returns 201 with resource id on success`() {
         val name = aRandomUniqueString()
         val uuid = UUID.randomUUID()
-        every { areasService.createArea(name, null) } returns AreaDto(uuid = uuid, name = name, isIndoor = true).right()
+        every { createAreaUseCase.execute(name, null) } returns AreaDto(uuid = uuid, name = name, isIndoor = true).right()
 
         val responseBody: String = mockMvc.perform(
             post("/areas")
@@ -95,7 +95,7 @@ class AreasControllerMvcSliceTest(
     @Test fun `create() returns 201 when isIndoor is true`() {
         val name = aRandomUniqueString()
         val uuid = UUID.randomUUID()
-        every { areasService.createArea(name, true) } returns AreaDto(uuid = uuid, name = name, isIndoor = true).right()
+        every { createAreaUseCase.execute(name, true) } returns AreaDto(uuid = uuid, name = name, isIndoor = true).right()
 
         val responseBody: String = mockMvc.perform(
             post("/areas")
@@ -113,7 +113,7 @@ class AreasControllerMvcSliceTest(
     @Test fun `create() returns 201 when isIndoor is false`() {
         val name = aRandomUniqueString()
         val uuid = UUID.randomUUID()
-        every { areasService.createArea(name, false) } returns AreaDto(uuid = uuid, name = name, isIndoor = false).right()
+        every { createAreaUseCase.execute(name, false) } returns AreaDto(uuid = uuid, name = name, isIndoor = false).right()
 
         val responseBody: String = mockMvc.perform(
             post("/areas")

@@ -2,7 +2,7 @@
 
 ## Collaboration Style
 - **Senior Tech Lead:** Honest, critical of architectural choices, flags risks ❗️.
-- **TDD Strict:** Strictly follows `docs/TDD_WORKFLOW.md` for new features and bug fixes.
+- **TDD Strict:** Strictly follows `docs/TDD_WORKFLOW.md` for new features and bug fixes. **For pure structural refactoring (no new behaviour, no bug fix) TDD phases do not apply — skip the workflow entirely and do NOT load `docs/TDD_WORKFLOW.md` into context.**
 
 ## Commands
 ```bash

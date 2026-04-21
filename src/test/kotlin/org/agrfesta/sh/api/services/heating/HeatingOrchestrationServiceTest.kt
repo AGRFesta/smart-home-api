@@ -66,7 +66,7 @@ class HeatingOrchestrationServiceTest {
     private val devicesService = DevicesService(devicesRepository, randomGenerator, listOf(factory))
     private val heatingAreasService = HeatingAreasService(areasRepository, temperatureSettingsRepository, unitOfWork)
     private val areasFactory = AreasFactory(heatingAreasService, timeService)
-    private val areasService = AreasService(areasRepository, areasWithDevicesRepository, randomGenerator, areasFactory)
+    private val areasService = AreasService(areasWithDevicesRepository, areasFactory)
     private val strategy = DynamicSharedHeatingStrategyService(
         ECONOMY, listOf(economyStrategy, comfortStrategy), cacheRepository)
 

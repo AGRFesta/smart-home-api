@@ -6,7 +6,6 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
@@ -20,83 +19,25 @@ import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.areas.MonitoredClimateArea
 import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.SharedHeater
-import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.application.ports.outbounds.UnitOfWork
 import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.AreasWithDevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.TemperatureSettingsRepository
 import org.agrfesta.sh.api.services.heating.HeatingAreasService
-import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
-import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 
 class AreasServiceTest {
     private val areasRepository: AreasRepository = mockk()
     private val areasWithDevicesRepository: AreasWithDevicesRepository = mockk()
-    private val randomGenerator: RandomGenerator = mockk()
     private val timeService: TimeService = mockk()
     private val temperatureSettingsRepository: TemperatureSettingsRepository = mockk()
     private val unitOfWork: UnitOfWork = mockk()
     private val heatingAreasService = HeatingAreasService(areasRepository, temperatureSettingsRepository, unitOfWork)
     private val areasFactory = AreasFactory(heatingAreasService, timeService)
 
-    private val sut = AreasService(areasRepository, areasWithDevicesRepository, randomGenerator, areasFactory)
-
-    // createArea()
-
-    @Test
-    fun `createArea() Returns created area on success`() {
-        val uuid = UUID.randomUUID()
-        val name = aRandomUniqueString()
-        every { randomGenerator.uuid() } returns uuid
-        every { areasRepository.save(any()) } returns Unit.right()
-
-        val result = sut.createArea(name).shouldBeRight()
-
-        result.uuid shouldBe uuid
-        result.name shouldBe name
-        result.isIndoor shouldBe true
-    }
-
-    @Test
-    fun `createArea() Creates indoor area by default`() {
-        val uuid = UUID.randomUUID()
-        every { randomGenerator.uuid() } returns uuid
-        every { areasRepository.save(any()) } returns Unit.right()
-
-        sut.createArea(aRandomUniqueString()).shouldBeRight().isIndoor shouldBe true
-    }
-
-    @Test
-    fun `createArea() Creates outdoor area when isIndoor is false`() {
-        val uuid = UUID.randomUUID()
-        every { randomGenerator.uuid() } returns uuid
-        every { areasRepository.save(any()) } returns Unit.right()
-
-        sut.createArea(aRandomUniqueString(), isIndoor = false).shouldBeRight().isIndoor shouldBe false
-    }
-
-    @Test
-    fun `createArea() Returns AreaNameConflict when area name already exists`() {
-        every { randomGenerator.uuid() } returns UUID.randomUUID()
-        every { areasRepository.save(any()) } returns AreaNameConflict.left()
-
-        sut.createArea(aRandomUniqueString())
-            .shouldBeLeft()
-            .shouldBe(AreaNameConflict)
-    }
-
-    @Test
-    fun `createArea() Returns PersistenceFailure when repository fails`() {
-        every { randomGenerator.uuid() } returns UUID.randomUUID()
-        every { areasRepository.save(any()) } returns PersistenceFailure(Exception("db error")).left()
-
-        sut.createArea(aRandomUniqueString())
-            .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
-    }
+    private val sut = AreasService(areasWithDevicesRepository, areasFactory)
 
     // getAllAreasWithDevices()
 

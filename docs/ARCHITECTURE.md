@@ -43,7 +43,12 @@ flowchart TD
 ### Inbound Ports (Use Cases)
 Define the system's capabilities exposed to the outside world.
 - **Responsibility:** Orchestrating business logic and outbound ports.
-- **Rules:** Must be behavior-centric and task-specific (e.g., `HeatingAreasService` or `RegisterUserUseCase`) and return functional types (`Either`). They must accept only primitive types, standard library types, or specific DTOs defined inside the Core.
+- **Rules:**
+  - Must be behavior-centric and **task-specific** (one interface = one use case, e.g., `CreateAreaUseCase`, `RegisterDeviceUseCase`). Named examples like `HeatingAreasService` are legacy names being migrated.
+  - The single method on each use case interface **must be named `execute()`** — never repeat the use case name (e.g., `CreateAreaUseCase.execute(...)`, not `CreateAreaUseCase.createArea(...)`).
+  - Must return functional types (`Either`). Must accept only primitive types, standard library types, or specific DTOs defined inside the Core.
+  - Live in `core/application/ports/inbounds/`.
+- **Implementation (ISP/SRP):** Each use case interface must be implemented by its **own dedicated service class** (e.g., `CreateAreaService implements CreateAreaUseCase`). A single service class must **not** implement multiple use case interfaces. Service implementations live in `core/application/usecases/`.
 
 ### Inbound Adapters (Controllers)
 Infrastructure components that trigger the Inbound Ports.
@@ -97,6 +102,7 @@ This keeps the domain completely clean of `@Transactional` annotations.
 ## Do's and Don'ts
 
 ### DO
+- **DO** add KDoc to every public method on inbound port interfaces and public service methods whose contract is non-obvious (parameters with side-effects, default values with domain meaning, non-trivial return types). When moving a method from one file to another, port its KDoc verbatim.
 - **DO** return `Either<DomainError, T>` from every operation that can fail.
 - **DO** use `UnitOfWork.execute {}` when an operation performs two or more writes that must be atomic.
 - **DO** catch all infrastructure exceptions inside Outbound Adapters and convert them to typed domain failures.
@@ -108,3 +114,5 @@ This keeps the domain completely clean of `@Transactional` annotations.
 - **DON'T** let exceptions propagate beyond the Adapter layer.
 - **DON'T** put business logic in controllers (Inbound Adapters).
 - **DON'T** use `Either.getOrElse` or force-unwrap results in the service layer to avoid handling errors.
+- **DON'T** name the method on a use case interface after the use case itself — always use `execute()`.
+- **DON'T** let a single service class implement more than one use case interface.

@@ -2,9 +2,9 @@ package org.agrfesta.sh.api.controllers
 
 import arrow.core.Either.Left
 import arrow.core.Either.Right
+import org.agrfesta.sh.api.core.application.ports.inbounds.CreateAreaUseCase
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.services.AreasService
 import org.springframework.http.HttpStatus.CREATED
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.badRequest
@@ -18,12 +18,12 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/areas")
 class AreasController(
-    private val areasService: AreasService
+    private val createAreaUseCase: CreateAreaUseCase
 ) {
 
     @PostMapping
     fun create(@RequestBody request: CreateAreaRequest): ResponseEntity<Any> =
-        when (val result = areasService.createArea(name = request.name, isIndoor = request.isIndoor)) {
+        when (val result = createAreaUseCase.execute(name = request.name, isIndoor = request.isIndoor)) {
             is Right -> status(CREATED).body(
                 CreatedResourceResponse(
                     message = "Area '${request.name}' successfully created!",

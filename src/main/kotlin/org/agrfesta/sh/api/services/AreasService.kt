@@ -3,49 +3,24 @@ package org.agrfesta.sh.api.services
 import arrow.core.Either
 import java.util.*
 import org.agrfesta.sh.api.core.domain.areas.Area
-import org.agrfesta.sh.api.core.domain.areas.AreaDto
 import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
 import org.agrfesta.sh.api.core.domain.areas.AreasFactory
 import org.agrfesta.sh.api.core.domain.devices.Device
-import org.agrfesta.sh.api.core.domain.failures.AreaCreationFailure
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.AreasWithDevicesRepository
-import org.agrfesta.sh.api.utils.RandomGenerator
 import org.springframework.stereotype.Service
 
 /**
- * Service responsible for managing areas within the smart home system.
+ * Service responsible for retrieving areas within the smart home system.
  *
- * Provides operations to create areas and retrieve them, optionally enriched with
+ * Provides operations to retrieve areas, optionally enriched with
  * the devices associated to each area.
  */
 @Service
 class AreasService(
-    private val areasRepository: AreasRepository,
     private val areasWithDevicesRepository: AreasWithDevicesRepository,
-    private val randomGenerator: RandomGenerator,
     private val areasFactory: AreasFactory
 ) {
-
-    /**
-     * Creates a new area with the given [name] and optional [isIndoor] flag.
-     *
-     * A fresh UUID is generated for the area. When [isIndoor] is not provided it defaults to `true`.
-     *
-     * @param name the display name of the area to create.
-     * @param isIndoor whether the area is indoors; defaults to `true` when `null`.
-     * @return [Either.Right] containing the persisted [AreaDto], or [Either.Left] with an [AreaCreationFailure]
-     *         if the area could not be saved (e.g. a duplicate name conflict).
-     */
-    fun createArea(name: String, isIndoor: Boolean? = null): Either<AreaCreationFailure, AreaDto> {
-        val area = AreaDto(
-            uuid = randomGenerator.uuid(),
-            name = name,
-            isIndoor = isIndoor ?: true
-        )
-        return areasRepository.save(area).map { area }
-    }
 
     /**
      * Retrieves all areas together with the raw list of devices associated to each one.
