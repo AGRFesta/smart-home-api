@@ -16,19 +16,19 @@ import org.agrfesta.sh.api.domain.anAreaDtoWithDevices
 import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
 import org.agrfesta.sh.api.core.domain.areas.AreasFactory
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
-import org.agrfesta.sh.api.core.domain.commons.CacheEntry
+import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.devices.DeviceDto
 import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.SharedHeater
-import org.agrfesta.sh.api.core.domain.failures.PersistedCacheEntryNotFound
+import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.application.ports.outbounds.UnitOfWork
 import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.AreasWithDevicesRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.CacheRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.PropertyRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.DevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.TemperatureSettingsRepository
 import org.agrfesta.sh.api.services.AreasService
@@ -52,7 +52,7 @@ class HeatingOrchestrationServiceTest {
     private val areasRepository: AreasRepository = mockk()
     private val areasWithDevicesRepository: AreasWithDevicesRepository = mockk()
     private val temperatureSettingsRepository: TemperatureSettingsRepository = mockk()
-    private val cacheRepository: CacheRepository = mockk()
+    private val propertyRepository: PropertyRepository = mockk()
     private val timeService: TimeService = mockk()
     private val randomGenerator: RandomGenerator = mockk()
     private val unitOfWork: UnitOfWork = mockk()
@@ -68,20 +68,20 @@ class HeatingOrchestrationServiceTest {
     private val areasFactory = AreasFactory(heatingAreasService, timeService)
     private val areasService = AreasService(areasWithDevicesRepository, areasFactory)
     private val strategy = DynamicSharedHeatingStrategyService(
-        ECONOMY, listOf(economyStrategy, comfortStrategy), cacheRepository)
+        ECONOMY, listOf(economyStrategy, comfortStrategy), propertyRepository)
 
-    private val sut = HeatingOrchestrationService(devicesService, areasService, strategy, cacheRepository)
+    private val sut = HeatingOrchestrationService(devicesService, areasService, strategy, propertyRepository)
 
     init {
         every { timeService.now() } returns now
-        every { cacheRepository.findEntry(HEATING_ENABLED_KEY) } returns CacheEntry("true").right()
+        every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PropertyEntry("true").right()
         every { devicesRepository.getAll() } returns emptyList<DeviceDto>().right()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns emptyList<AreaDtoWithDevices>().right()
     }
 
     @Test
     fun `evaluateHeatingState() Do nothing when is disabled`() {
-        every { cacheRepository.findEntry(HEATING_ENABLED_KEY) } returns CacheEntry("false").right()
+        every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PropertyEntry("false").right()
 
         sut.evaluateHeatingState()
 
@@ -92,7 +92,7 @@ class HeatingOrchestrationServiceTest {
 
     @Test
     fun `evaluateHeatingState() Do nothing when HEATING_ENABLED_KEY is missing`() {
-        every { cacheRepository.findEntry(HEATING_ENABLED_KEY) } returns null.right()
+        every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns null.right()
 
         sut.evaluateHeatingState()
 
@@ -104,7 +104,7 @@ class HeatingOrchestrationServiceTest {
     @Test
     fun `evaluateHeatingState() Do nothing when fails to fetch HEATING_ENABLED_KEY from persistence`() {
         val failure = PersistenceFailure(Exception("cache fetch failure!"))
-        every { cacheRepository.findEntry(HEATING_ENABLED_KEY) } returns failure.left()
+        every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns failure.left()
 
         sut.evaluateHeatingState()
 
@@ -115,7 +115,7 @@ class HeatingOrchestrationServiceTest {
 
     @Test
     fun `evaluateHeatingState() Do nothing when HEATING_ENABLED_KEY is not a boolean`() {
-        every { cacheRepository.findEntry(HEATING_ENABLED_KEY) } returns CacheEntry(aRandomUniqueString()).right()
+        every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PropertyEntry(aRandomUniqueString()).right()
 
         sut.evaluateHeatingState()
 
@@ -207,9 +207,9 @@ class HeatingOrchestrationServiceTest {
 
     @Test
     fun `evaluateHeatingState() Do nothing when both default and selected strategies services are missing`() {
-        every { cacheRepository.getEntry(HEATING_STRATEGY_KEY) } returns CacheEntry(COMFORT.name).right()
-        val strategy = DynamicSharedHeatingStrategyService(ECONOMY, emptyList(), cacheRepository)
-        val sut = HeatingOrchestrationService(devicesService, areasService, strategy, cacheRepository)
+        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(COMFORT.name).right()
+        val strategy = DynamicSharedHeatingStrategyService(ECONOMY, emptyList(), propertyRepository)
+        val sut = HeatingOrchestrationService(devicesService, areasService, strategy, propertyRepository)
         givenHeatableArea()
 
         sut.evaluateHeatingState()
@@ -221,9 +221,9 @@ class HeatingOrchestrationServiceTest {
 
     @Test
     fun `evaluateHeatingState() Handle heater based on default strategy when the selected strategy is missing`() {
-        every { cacheRepository.getEntry(HEATING_STRATEGY_KEY) } returns CacheEntry(COMFORT.name).right()
-        val strategy = DynamicSharedHeatingStrategyService(ECONOMY, listOf(economyStrategy), cacheRepository)
-        val sut = HeatingOrchestrationService(devicesService, areasService, strategy, cacheRepository)
+        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(COMFORT.name).right()
+        val strategy = DynamicSharedHeatingStrategyService(ECONOMY, listOf(economyStrategy), propertyRepository)
+        val sut = HeatingOrchestrationService(devicesService, areasService, strategy, propertyRepository)
         val testData = givenHeatableArea()
 
         sut.evaluateHeatingState()
@@ -233,7 +233,7 @@ class HeatingOrchestrationServiceTest {
 
     @Test
     fun `evaluateHeatingState() Handle heater based on economy strategy`() {
-        every { cacheRepository.getEntry(HEATING_STRATEGY_KEY) } returns CacheEntry(ECONOMY.name).right()
+        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(ECONOMY.name).right()
         val testData = givenHeatableArea()
 
         sut.evaluateHeatingState()
@@ -243,7 +243,7 @@ class HeatingOrchestrationServiceTest {
 
     @Test
     fun `evaluateHeatingState() Handle heater based on default strategy when selected strategy is not valid`() {
-        every { cacheRepository.getEntry(HEATING_STRATEGY_KEY) } returns CacheEntry(aRandomUniqueString()).right()
+        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(aRandomUniqueString()).right()
         val testData = givenHeatableArea()
 
         sut.evaluateHeatingState()
@@ -253,7 +253,7 @@ class HeatingOrchestrationServiceTest {
 
     @Test
     fun `evaluateHeatingState() Handle heater based on default strategy when there is no selected strategy`() {
-        every { cacheRepository.getEntry(HEATING_STRATEGY_KEY) } returns PersistedCacheEntryNotFound.left()
+        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyNotFound.left()
         val testData = givenHeatableArea()
 
         sut.evaluateHeatingState()
@@ -264,7 +264,7 @@ class HeatingOrchestrationServiceTest {
     @Test
     fun `evaluateHeatingState() Handle heater based on default strategy when fails to fetch selected strategy`() {
         val failure = PersistenceFailure(Exception("cache fetch failure!"))
-        every { cacheRepository.getEntry(HEATING_STRATEGY_KEY) } returns failure.left()
+        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns failure.left()
         val testData = givenHeatableArea()
 
         sut.evaluateHeatingState()
@@ -274,7 +274,7 @@ class HeatingOrchestrationServiceTest {
 
     @Test
     fun `evaluateHeatingState() Handle heater based on comfort strategy`() {
-        every { cacheRepository.getEntry(HEATING_STRATEGY_KEY) } returns CacheEntry(COMFORT.name).right()
+        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(COMFORT.name).right()
         val testData = givenHeatableArea()
 
         sut.evaluateHeatingState()
@@ -284,7 +284,7 @@ class HeatingOrchestrationServiceTest {
 
     @Test
     fun `evaluateHeatingState() Handle heater based on strategy name ignoring case`() {
-        every { cacheRepository.getEntry(HEATING_STRATEGY_KEY) } returns CacheEntry(COMFORT.name.lowercase()).right()
+        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(COMFORT.name.lowercase()).right()
         val testData = givenHeatableArea()
 
         sut.evaluateHeatingState()

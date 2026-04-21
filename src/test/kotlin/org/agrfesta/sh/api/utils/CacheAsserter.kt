@@ -5,16 +5,16 @@ import arrow.core.right
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.agrfesta.sh.api.core.domain.commons.CacheEntry
+import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.CacheRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.PropertyRepository
 import org.springframework.stereotype.Service
 import kotlin.time.Duration
 
 @Service
 class CacheAsserter(
     private val cache: Cache = mockk(relaxed = true),
-    private val cacheRepository: CacheRepository = mockk(relaxed = true)
+    private val propertyRepository: PropertyRepository = mockk(relaxed = true)
 ) {
 
     fun givenCacheEntry(key: String, value: String) {
@@ -35,18 +35,18 @@ class CacheAsserter(
         verify { cache.remove(key) }
     }
 
-    fun givenPersistedCacheEntry(key: String, value: String) {
-        every { cacheRepository.getEntry(key) } returns CacheEntry(value).right()
+    fun givenProperty(key: String, value: String) {
+        every { propertyRepository.getEntry(key) } returns PropertyEntry(value).right()
     }
-    fun givenPersistedCacheEntryFetchFailure() {
-        every { cacheRepository.getEntry(any()) } returns PersistenceFailure(Exception("persisted cache fetch failure")).left()
+    fun givenPropertyFetchFailure() {
+        every { propertyRepository.getEntry(any()) } returns PersistenceFailure(Exception("property fetch failure")).left()
     }
-    fun givenPersistedCacheEntryUpsertFailure() {
-        every { cacheRepository.upsert(any(), any()) } returns PersistenceFailure(Exception("persisted cache set failure")).left()
+    fun givenPropertyUpsertFailure() {
+        every { propertyRepository.upsert(any(), any()) } returns PersistenceFailure(Exception("property set failure")).left()
     }
 
-    fun verifyPersistedCacheEntryUpsert(key: String, value: String) {
-        verify { cacheRepository.upsert(key, value) }
+    fun verifyPropertyUpsert(key: String, value: String) {
+        verify { propertyRepository.upsert(key, value) }
     }
 
 }

@@ -9,5 +9,5 @@ data class PersistenceFailure(
     AreaDeletionFailure,
     DeviceCreationFailure,
     DeviceUpdateFailure,
-    GetPersistedCacheEntryFailure,
-    FindPersistedCacheEntryFailure
+    GetPropertyFailure,
+    FindPropertyFailure

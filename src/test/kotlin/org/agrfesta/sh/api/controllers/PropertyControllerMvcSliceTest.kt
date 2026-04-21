@@ -6,11 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import org.agrfesta.sh.api.core.domain.commons.CacheEntry
-import org.agrfesta.sh.api.core.domain.failures.PersistedCacheEntryNotFound
+import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
+import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.CacheRepository
-import org.agrfesta.sh.api.persistence.CacheEntryDto
+import org.agrfesta.sh.api.core.application.ports.outbounds.PropertyRepository
+import org.agrfesta.sh.api.persistence.PropertyEntryDto
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.test.mothers.aRandomTtl
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -26,32 +26,32 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-@WebMvcTest(CacheController::class)
+@WebMvcTest(PropertyController::class)
 @Import(SecurityConfig::class)
 @ActiveProfiles("test")
-class CacheControllerMvcSliceTest(
+class PropertyControllerMvcSliceTest(
     @Autowired private val mockMvc: MockMvc,
     @Autowired private val objectMapper: ObjectMapper,
-    @Autowired @MockkBean private val cacheRepository: CacheRepository
+    @Autowired @MockkBean private val propertyRepository: PropertyRepository
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
-    ///// putCacheEntry ////////////////////////////////////////////////////////////////////////////////////////////////
+    ///// putPropertyEntry /////////////////////////////////////////////////////////////////////////////////////////////
 
-    @TestFactory fun `putCacheEntry() auth tests`() = authTestSupport.dynamicTestsBy {
-        put("/cache/${aRandomUniqueString()}")
+    @TestFactory fun `putPropertyEntry() auth tests`() = authTestSupport.dynamicTestsBy {
+        put("/properties/${aRandomUniqueString()}")
             .contentType("application/json")
             .content("""{"value": "${aRandomUniqueString()}"}""")
     }
 
-    @Test fun `putCacheEntry() returns 500 when fails to persist entry`() {
+    @Test fun `putPropertyEntry() returns 500 when fails to persist entry`() {
         val key = aRandomUniqueString()
         val value = aRandomUniqueString()
         val ttl = aRandomTtl()
-        every { cacheRepository.upsert(key, value, ttl) } returns PersistenceFailure(Exception()).left()
+        every { propertyRepository.upsert(key, value, ttl) } returns PersistenceFailure(Exception()).left()
 
         val responseBody: String = mockMvc.perform(
-            put("/cache/$key")
+            put("/properties/$key")
                 .contentType("application/json")
                 .authenticated()
                 .content("""{"value": "$value", "ttl": $ttl}"""))
@@ -59,17 +59,17 @@ class CacheControllerMvcSliceTest(
             .andReturn().response.contentAsString
 
         val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
-        response.message shouldBe "Failed to upsert cache entry"
+        response.message shouldBe "Failed to upsert property entry"
     }
 
-    @Test fun `putCacheEntry() returns 200 on success`() {
+    @Test fun `putPropertyEntry() returns 200 on success`() {
         val key = aRandomUniqueString()
         val value = aRandomUniqueString()
         val ttl = aRandomTtl()
-        every { cacheRepository.upsert(key, value, ttl) } returns Unit.right()
+        every { propertyRepository.upsert(key, value, ttl) } returns Unit.right()
 
         val responseBody: String = mockMvc.perform(
-            put("/cache/$key")
+            put("/properties/$key")
                 .contentType("application/json")
                 .authenticated()
                 .content("""{"value": "$value", "ttl": $ttl}"""))
@@ -82,17 +82,17 @@ class CacheControllerMvcSliceTest(
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// postCacheBatch ///////////////////////////////////////////////////////////////////////////////////////////////
+    ///// postPropertyBatch ////////////////////////////////////////////////////////////////////////////////////////////
 
-    @TestFactory fun `postCacheBatch() auth tests`() = authTestSupport.dynamicTestsBy {
-        post("/cache/batch")
+    @TestFactory fun `postPropertyBatch() auth tests`() = authTestSupport.dynamicTestsBy {
+        post("/properties/batch")
             .contentType("application/json")
             .content("""[{"key": "${aRandomUniqueString()}", "value": "${aRandomUniqueString()}"}]""")
     }
 
-    @Test fun `postCacheBatch() returns 400 when entries list is empty`() {
+    @Test fun `postPropertyBatch() returns 400 when entries list is empty`() {
         val responseBody: String = mockMvc.perform(
-            post("/cache/batch")
+            post("/properties/batch")
                 .contentType("application/json")
                 .authenticated()
                 .content("[]"))
@@ -103,12 +103,12 @@ class CacheControllerMvcSliceTest(
         response.message shouldBe "There are no entries to persist"
     }
 
-    @Test fun `postCacheBatch() returns 413 when the list has too many entries`() {
-        val tooManyEntries = (1..(CacheController.MAX_BATCH_SIZE + 1)).map {
-            CacheEntryDto(aRandomUniqueString(), aRandomUniqueString())
+    @Test fun `postPropertyBatch() returns 413 when the list has too many entries`() {
+        val tooManyEntries = (1..(PropertyController.MAX_BATCH_SIZE + 1)).map {
+            PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString())
         }
         val responseBody: String = mockMvc.perform(
-            post("/cache/batch")
+            post("/properties/batch")
                 .contentType("application/json")
                 .authenticated()
                 .content(objectMapper.writeValueAsString(tooManyEntries)))
@@ -116,18 +116,18 @@ class CacheControllerMvcSliceTest(
             .andReturn().response.contentAsString
 
         val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
-        response.message shouldBe "Batch size exceeds the maximum of ${CacheController.MAX_BATCH_SIZE} entries"
+        response.message shouldBe "Batch size exceeds the maximum of ${PropertyController.MAX_BATCH_SIZE} entries"
     }
 
-    @Test fun `postCacheBatch() returns 400 when the list has duplicates`() {
+    @Test fun `postPropertyBatch() returns 400 when the list has duplicates`() {
         val dupKey = aRandomUniqueString()
         val batchEntries = listOf(
-            CacheEntryDto(dupKey, aRandomUniqueString(), aRandomTtl()),
-            CacheEntryDto(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
-            CacheEntryDto(dupKey, aRandomUniqueString())
+            PropertyEntryDto(dupKey, aRandomUniqueString(), aRandomTtl()),
+            PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
+            PropertyEntryDto(dupKey, aRandomUniqueString())
         )
         val responseBody: String = mockMvc.perform(
-            post("/cache/batch")
+            post("/properties/batch")
                 .contentType("application/json")
                 .authenticated()
                 .content(objectMapper.writeValueAsString(batchEntries)))
@@ -138,16 +138,16 @@ class CacheControllerMvcSliceTest(
         response.message shouldBe "Batch contains duplicate keys"
     }
 
-    @Test fun `postCacheBatch() returns 500 when fails to persist batch entries`() {
+    @Test fun `postPropertyBatch() returns 500 when fails to persist batch entries`() {
         val batchEntries = listOf(
-            CacheEntryDto(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
-            CacheEntryDto(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
-            CacheEntryDto(aRandomUniqueString(), aRandomUniqueString())
+            PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
+            PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
+            PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString())
         )
-        every { cacheRepository.upsertBatch(batchEntries) } returns
+        every { propertyRepository.upsertBatch(batchEntries) } returns
                 PersistenceFailure(Exception("batch persist failure")).left()
         val responseBody: String = mockMvc.perform(
-            post("/cache/batch")
+            post("/properties/batch")
                 .contentType("application/json")
                 .authenticated()
                 .content(objectMapper.writeValueAsString(batchEntries)))
@@ -158,15 +158,15 @@ class CacheControllerMvcSliceTest(
         response.message shouldBe "Failed to persist batch"
     }
 
-    @Test fun `postCacheBatch() returns 200 on success`() {
+    @Test fun `postPropertyBatch() returns 200 on success`() {
         val batchEntries = listOf(
-            CacheEntryDto(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
-            CacheEntryDto(aRandomUniqueString(), aRandomUniqueString())
+            PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
+            PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString())
         )
-        every { cacheRepository.upsertBatch(batchEntries) } returns Unit.right()
+        every { propertyRepository.upsertBatch(batchEntries) } returns Unit.right()
 
         val responseBody: String = mockMvc.perform(
-            post("/cache/batch")
+            post("/properties/batch")
                 .contentType("application/json")
                 .authenticated()
                 .content(objectMapper.writeValueAsString(batchEntries)))
@@ -179,32 +179,32 @@ class CacheControllerMvcSliceTest(
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// getCacheEntry ////////////////////////////////////////////////////////////////////////////////////////////////
+    ///// getPropertyEntry /////////////////////////////////////////////////////////////////////////////////////////////
 
-    @TestFactory fun `getCacheEntry() auth tests`() = authTestSupport.dynamicTestsBy {
-        get("/cache/${aRandomUniqueString()}")
+    @TestFactory fun `getPropertyEntry() auth tests`() = authTestSupport.dynamicTestsBy {
+        get("/properties/${aRandomUniqueString()}")
     }
 
-    @Test fun `getCacheEntry() returns 500 when fails to get entry`() {
+    @Test fun `getPropertyEntry() returns 500 when fails to get entry`() {
         val key = aRandomUniqueString()
-        every { cacheRepository.getEntry(key) } returns PersistenceFailure(Exception()).left()
+        every { propertyRepository.getEntry(key) } returns PersistenceFailure(Exception()).left()
 
         val responseBody: String = mockMvc.perform(
-            get("/cache/$key")
+            get("/properties/$key")
                 .authenticated())
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
         val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
-        response.message shouldBe "Failed to get cache entry"
+        response.message shouldBe "Failed to get property entry"
     }
 
-    @Test fun `getCacheEntry() returns 404 when key is not found`() {
+    @Test fun `getPropertyEntry() returns 404 when key is not found`() {
         val key = aRandomUniqueString()
-        every { cacheRepository.getEntry(key) } returns PersistedCacheEntryNotFound.left()
+        every { propertyRepository.getEntry(key) } returns PropertyNotFound.left()
 
         val responseBody: String = mockMvc.perform(
-            get("/cache/$key")
+            get("/properties/$key")
                 .authenticated())
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
@@ -213,18 +213,18 @@ class CacheControllerMvcSliceTest(
         response.message shouldBe "Key '$key' is missing"
     }
 
-    @Test fun `getCacheEntry() returns 200 with entry on success`() {
+    @Test fun `getPropertyEntry() returns 200 with entry on success`() {
         val key = aRandomUniqueString()
-        val entry = CacheEntry(value = aRandomUniqueString())
-        every { cacheRepository.getEntry(key) } returns entry.right()
+        val entry = PropertyEntry(value = aRandomUniqueString())
+        every { propertyRepository.getEntry(key) } returns entry.right()
 
         val responseBody: String = mockMvc.perform(
-            get("/cache/$key")
+            get("/properties/$key")
                 .authenticated())
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
-        val response: CacheEntry = objectMapper.readValue(responseBody, CacheEntry::class.java)
+        val response: PropertyEntry = objectMapper.readValue(responseBody, PropertyEntry::class.java)
         response shouldBe entry
     }
 

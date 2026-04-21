@@ -68,6 +68,7 @@ class DevicesController(
                     { failure ->
                         when (failure) {
                             is PersistenceFailure -> logger.error("Unable to persist device", failure.exception)
+                            else -> logger.error("Unable to persist device")
                         }
                         null
                     },

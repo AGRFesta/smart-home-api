@@ -7,7 +7,7 @@ import org.agrfesta.sh.api.TestContainersConfig
 import org.agrfesta.sh.api.persistence.jdbc.repositories.ActuatorsAssignmentsJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasWithDevicesJdbcRepository
-import org.agrfesta.sh.api.persistence.jdbc.repositories.CacheJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsHistoryDataJdbcRepository
@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Import
     ActuatorsAssignmentsJdbcAdapter::class,
     TemperatureSettingsJdbcAdapter::class,
     AreasWithDevicesRepositoryJdbcImpl::class,
-    CacheJdbcAdapter::class,
+    PropertyJdbcAdapter::class,
     SensorsHistoryDataJdbcAdapter::class,
     // Repositories
     AreasJdbcRepository::class,
@@ -40,7 +40,7 @@ import org.springframework.context.annotation.Import
     TemperatureSettingRepository::class,
     TemperatureIntervalRepository::class,
     AreasWithDevicesJdbcRepository::class,
-    CacheJdbcRepository::class,
+    PropertyJdbcRepository::class,
     SensorsHistoryDataJdbcRepository::class,
     RandomGeneratorImpl::class
 )
@@ -54,7 +54,7 @@ abstract class AbstractJdbcAdapterTest {
     @SpykBean protected lateinit var tempSettingsRepo: TemperatureSettingRepository
     @SpykBean protected lateinit var tempIntervalsRepo: TemperatureIntervalRepository
     @SpykBean protected lateinit var areasWithDevicesRepo: AreasWithDevicesJdbcRepository
-    @SpykBean protected lateinit var cacheRepo: CacheJdbcRepository
+    @SpykBean protected lateinit var propertyRepo: PropertyJdbcRepository
     @SpykBean protected lateinit var historyDataRepository: SensorsHistoryDataJdbcRepository
 
     @MockkBean protected lateinit var timeService: TimeService

@@ -4,10 +4,10 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
-import org.agrfesta.sh.api.core.domain.failures.PersistedCacheEntryNotFound
+import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.CacheEntryDto
-import org.agrfesta.sh.api.core.application.ports.outbounds.CacheRepository
+import org.agrfesta.sh.api.persistence.PropertyEntryDto
+import org.agrfesta.sh.api.core.application.ports.outbounds.PropertyRepository
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.ResponseEntity
@@ -22,14 +22,14 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * REST controller for managing persisted cache entries.
+ * REST controller for managing persisted property entries.
  *
- * This controller exposes endpoints to create, update, and retrieve cache entries.
+ * This controller exposes endpoints to create, update, and retrieve property entries.
  */
 @RestController
-@RequestMapping("/cache")
-class CacheController(
-    private val cacheRepository: CacheRepository
+@RequestMapping("/properties")
+class PropertyController(
+    private val propertyRepository: PropertyRepository
 ) {
 
     companion object {
@@ -37,31 +37,31 @@ class CacheController(
     }
 
     /**
-     * Inserts or updates a single cache entry.
+     * Inserts or updates a single property entry.
      *
-     * @param key The unique key for the cache entry.
+     * @param key The unique key for the property entry.
      * @param request The request body containing the value and an optional TTL.
      * @return A [ResponseEntity] containing a [MessageResponse] indicating success or failure.
      */
     @PutMapping("/{key}")
-    fun putCacheEntry(@PathVariable key: String, @RequestBody request: CacheRequest): ResponseEntity<MessageResponse> =
-        cacheRepository.upsert(key, request.value, request.ttl).fold(
+    fun putPropertyEntry(@PathVariable key: String, @RequestBody request: PropertyRequest): ResponseEntity<MessageResponse> =
+        propertyRepository.upsert(key, request.value, request.ttl).fold(
             ifLeft = { _ -> status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(MessageResponse("Failed to upsert cache entry")) },
+                .body(MessageResponse("Failed to upsert property entry")) },
             ifRight = { ok(MessageResponse("Entry for key '$key' upserted successfully")) }
         )
 
     /**
-     * Inserts or updates a batch of cache entries.
+     * Inserts or updates a batch of property entries.
      *
-     * @param batch A collection of [CacheEntryDto] objects to be persisted. The maximum batch size is [MAX_BATCH_SIZE].
+     * @param batch A collection of [PropertyEntryDto] objects to be persisted. The maximum batch size is [MAX_BATCH_SIZE].
      * @return A [ResponseEntity] containing a [MessageResponse] indicating success or failure.
      */
     @PostMapping("/batch")
-    fun postCacheBatch(@RequestBody batch: List<CacheEntryDto>): ResponseEntity<MessageResponse> =
+    fun postPropertyBatch(@RequestBody batch: List<PropertyEntryDto>): ResponseEntity<MessageResponse> =
         validateBatch(batch)
             .flatMap { validBatch ->
-                cacheRepository.upsertBatch(validBatch).mapLeft {
+                propertyRepository.upsertBatch(validBatch).mapLeft {
                     status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(MessageResponse("Failed to persist batch"))
                 }
@@ -72,8 +72,8 @@ class CacheController(
             )
 
     private fun validateBatch(
-        batch: List<CacheEntryDto>
-    ): Either<ResponseEntity<MessageResponse>, List<CacheEntryDto>> = when {
+        batch: List<PropertyEntryDto>
+    ): Either<ResponseEntity<MessageResponse>, List<PropertyEntryDto>> = when {
         batch.isEmpty() -> status(HttpStatus.BAD_REQUEST)
             .body(MessageResponse("There are no entries to persist")).left()
         batch.size > MAX_BATCH_SIZE -> status(HttpStatus.PAYLOAD_TOO_LARGE)
@@ -84,37 +84,37 @@ class CacheController(
     }
 
     /**
-     * Retrieves a cache entry by its key.
+     * Retrieves a property entry by its key.
      *
-     * @param key The unique key of the cache entry to retrieve.
-     * @return A [ResponseEntity] containing the cache entry value if found, or an error message if not found or if an
-     * error occurs.
+     * @param key The unique key of the property entry to retrieve.
+     * @return A [ResponseEntity] containing the property entry value if found, or an error message if not found or if
+     * an error occurs.
      */
     @GetMapping("/{key}")
-    fun getCacheEntry(@PathVariable key: String): ResponseEntity<Any> = cacheRepository.getEntry(key).fold(
+    fun getPropertyEntry(@PathVariable key: String): ResponseEntity<Any> = propertyRepository.getEntry(key).fold(
         ifLeft = { failure ->
             when (failure) {
-                PersistedCacheEntryNotFound -> status(NOT_FOUND).body(MessageResponse("Key '$key' is missing"))
+                PropertyNotFound -> status(NOT_FOUND).body(MessageResponse("Key '$key' is missing"))
                 is PersistenceFailure -> status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(MessageResponse("Failed to get cache entry"))
+                    .body(MessageResponse("Failed to get property entry"))
             }
         },
         ifRight = { entry -> ok(entry) }
     )
 
-    private fun hasDuplicateKeys(batch: List<CacheEntryDto>): Boolean {
+    private fun hasDuplicateKeys(batch: List<PropertyEntryDto>): Boolean {
         return batch.map { it.key }.toSet().size < batch.size
     }
 
 }
 
 /**
- * Request body for creating or updating a cache entry.
+ * Request body for creating or updating a property entry.
  *
- * @property value The value to be cached.
+ * @property value The value to be stored.
  * @property ttl The time-to-live in seconds. If `null`, the entry does not expire automatically based on TTL.
  */
-data class CacheRequest(
+data class PropertyRequest(
     val value: String,
     val ttl: Long? = null
 )

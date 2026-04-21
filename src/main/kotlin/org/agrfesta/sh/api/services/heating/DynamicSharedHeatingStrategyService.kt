@@ -2,9 +2,9 @@ package org.agrfesta.sh.api.services.heating
 
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.devices.Heater
-import org.agrfesta.sh.api.core.domain.failures.PersistedCacheEntryNotFound
+import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.CacheRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.PropertyRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service
 class DynamicSharedHeatingStrategyService(
     @param:Value("\${heating.default-strategy:ECONOMY}") private val defaultStrategy: SharedHeatingAreasStrategy,
     strategyServices: Collection<NamedSharedHeatingAreasStrategyService>,
-    private val cacheRepository: CacheRepository
+    private val propertyRepository: PropertyRepository
 ): SharedHeatingAreasStrategyService {
     private val logger by LoggerDelegate()
     private val servicesByStrategy: Map<SharedHeatingAreasStrategy, NamedSharedHeatingAreasStrategyService> =
@@ -55,10 +55,10 @@ class DynamicSharedHeatingStrategyService(
         service?.handleHeatingFor(sharedHeater, areas)
     }
 
-    private fun getStrategy(): SharedHeatingAreasStrategy = cacheRepository.getEntry(HEATING_STRATEGY_KEY).fold(
+    private fun getStrategy(): SharedHeatingAreasStrategy = propertyRepository.getEntry(HEATING_STRATEGY_KEY).fold(
         ifLeft = {
             when(it) {
-                is PersistedCacheEntryNotFound ->
+                is PropertyNotFound ->
                     logger.error("$HEATING_STRATEGY_KEY cache entry is missing. " +
                             "Falling back to ${defaultStrategy.name}")
                 is PersistenceFailure ->

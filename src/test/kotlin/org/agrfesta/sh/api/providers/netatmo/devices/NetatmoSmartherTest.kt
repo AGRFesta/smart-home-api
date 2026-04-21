@@ -22,7 +22,7 @@ import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.ON
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.UNDEFINED
 import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
 import org.agrfesta.sh.api.core.domain.failures.KtorRequestFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.CacheRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.PropertyRepository
 import org.agrfesta.sh.api.providers.netatmo.BehaviorRegistry
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClient
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClientAsserter
@@ -59,14 +59,14 @@ class NetatmoSmartherTest {
 
     private val timeService: TimeService = mockk()
     private val cache: Cache = mockk(relaxed = true)
-    private val cacheRepository: CacheRepository = mockk(relaxed = true)
+    private val propertyRepository: PropertyRepository = mockk(relaxed = true)
     private val registry = BehaviorRegistry()
     private val engine = createMockEngine(registry)
 
-    private val cacheAsserter = CacheAsserter(cache, cacheRepository)
+    private val cacheAsserter = CacheAsserter(cache, propertyRepository)
     private val clientAsserter = NetatmoClientAsserter(config = config, registry = registry)
 
-    private val client = NetatmoClient(config, cache, cacheRepository, mapper, engine)
+    private val client = NetatmoClient(config, cache, propertyRepository, mapper, engine)
     private val sut = NetatmoSmarther(
         uuid = uuid,
         deviceProviderId = deviceProviderId,

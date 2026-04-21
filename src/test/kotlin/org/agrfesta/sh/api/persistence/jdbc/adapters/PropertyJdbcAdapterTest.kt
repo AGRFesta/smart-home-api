@@ -7,10 +7,10 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
-import org.agrfesta.sh.api.core.domain.failures.GetPersistedCacheEntryFailure
-import org.agrfesta.sh.api.core.domain.failures.PersistedCacheEntryNotFound
+import org.agrfesta.sh.api.core.domain.failures.GetPropertyFailure
+import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.CacheEntryDto
+import org.agrfesta.sh.api.persistence.PropertyEntryDto
 import org.agrfesta.test.mothers.aRandomTtl
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.nowNoMills
@@ -19,9 +19,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataAccessResourceFailureException
 
-class CacheJdbcAdapterTest : AbstractJdbcAdapterTest() {
+class PropertyJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
-    @Autowired private lateinit var sut: CacheJdbcAdapter
+    @Autowired private lateinit var sut: PropertyJdbcAdapter
 
     private val now = nowNoMills()
 
@@ -37,11 +37,11 @@ class CacheJdbcAdapterTest : AbstractJdbcAdapterTest() {
         val key = aRandomUniqueString()
         val value = aRandomUniqueString()
         val ttl = aRandomTtl()
-        cacheRepo.findEntry(key).shouldBeNull()
+        propertyRepo.findEntry(key).shouldBeNull()
 
         sut.upsert(key, value, ttl).shouldBeRight()
 
-        val entry = cacheRepo.findEntry(key).shouldNotBeNull()
+        val entry = propertyRepo.findEntry(key).shouldNotBeNull()
         entry.value shouldBe value
         entry.expiresAt shouldBe now.plusSeconds(ttl)
     }
@@ -53,7 +53,7 @@ class CacheJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
         sut.upsert(key, value).shouldBeRight()
 
-        val entry = cacheRepo.findEntry(key).shouldNotBeNull()
+        val entry = propertyRepo.findEntry(key).shouldNotBeNull()
         entry.value shouldBe value
         entry.expiresAt.shouldBeNull()
     }
@@ -63,11 +63,11 @@ class CacheJdbcAdapterTest : AbstractJdbcAdapterTest() {
         val key = aRandomUniqueString()
         val newValue = aRandomUniqueString()
         val newTtl = aRandomTtl()
-        cacheRepo.upsert(key, aRandomUniqueString(), aRandomTtl())
+        propertyRepo.upsert(key, aRandomUniqueString(), aRandomTtl())
 
         sut.upsert(key, newValue, newTtl).shouldBeRight()
 
-        val entry = cacheRepo.findEntry(key).shouldNotBeNull()
+        val entry = propertyRepo.findEntry(key).shouldNotBeNull()
         entry.value shouldBe newValue
         entry.expiresAt shouldBe now.plusSeconds(newTtl)
     }
@@ -76,7 +76,7 @@ class CacheJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `upsert() Returns PersistenceFailure when repository throws`() {
         val key = aRandomUniqueString()
         val failure = DataAccessResourceFailureException("upsert failure")
-        every { cacheRepo.upsert(key, any(), any()) } throws failure
+        every { propertyRepo.upsert(key, any(), any()) } throws failure
 
         sut.upsert(key, aRandomUniqueString(), aRandomTtl())
             .shouldBeLeft()
@@ -92,14 +92,14 @@ class CacheJdbcAdapterTest : AbstractJdbcAdapterTest() {
         val key2 = aRandomUniqueString()
         val value2 = aRandomUniqueString()
         val entries = listOf(
-            CacheEntryDto(key1, value1),
-            CacheEntryDto(key2, value2)
+            PropertyEntryDto(key1, value1),
+            PropertyEntryDto(key2, value2)
         )
 
         sut.upsertBatch(entries).shouldBeRight()
 
-        cacheRepo.findEntry(key1).shouldNotBeNull().value shouldBe value1
-        cacheRepo.findEntry(key2).shouldNotBeNull().value shouldBe value2
+        propertyRepo.findEntry(key1).shouldNotBeNull().value shouldBe value1
+        propertyRepo.findEntry(key2).shouldNotBeNull().value shouldBe value2
     }
 
     @Test
@@ -108,26 +108,26 @@ class CacheJdbcAdapterTest : AbstractJdbcAdapterTest() {
         val newKey = aRandomUniqueString()
         val newValueForExisting = aRandomUniqueString()
         val newTtl = aRandomTtl()
-        cacheRepo.upsert(existingKey, aRandomUniqueString(), aRandomTtl())
+        propertyRepo.upsert(existingKey, aRandomUniqueString(), aRandomTtl())
         val entries = listOf(
-            CacheEntryDto(existingKey, newValueForExisting, newTtl),
-            CacheEntryDto(newKey, aRandomUniqueString())
+            PropertyEntryDto(existingKey, newValueForExisting, newTtl),
+            PropertyEntryDto(newKey, aRandomUniqueString())
         )
 
         sut.upsertBatch(entries).shouldBeRight()
 
-        cacheRepo.findEntry(existingKey).shouldNotBeNull().also {
+        propertyRepo.findEntry(existingKey).shouldNotBeNull().also {
             it.value shouldBe newValueForExisting
             it.expiresAt shouldBe now.plusSeconds(newTtl)
         }
-        cacheRepo.findEntry(newKey).shouldNotBeNull()
+        propertyRepo.findEntry(newKey).shouldNotBeNull()
     }
 
     @Test
     fun `upsertBatch() Returns PersistenceFailure when repository throws`() {
-        val entries = listOf(CacheEntryDto(aRandomUniqueString(), aRandomUniqueString()))
+        val entries = listOf(PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString()))
         val failure = DataAccessResourceFailureException("batch upsert failure")
-        every { cacheRepo.upsertBatch(entries) } throws failure
+        every { propertyRepo.upsertBatch(entries) } throws failure
 
         sut.upsertBatch(entries)
             .shouldBeLeft()
@@ -140,7 +140,7 @@ class CacheJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `findEntry() Returns entry when found and not expired`() {
         val key = aRandomUniqueString()
         val value = aRandomUniqueString()
-        cacheRepo.upsert(key, value)
+        propertyRepo.upsert(key, value)
 
         sut.findEntry(key)
             .shouldBeRight()
@@ -161,7 +161,7 @@ class CacheJdbcAdapterTest : AbstractJdbcAdapterTest() {
         val ttl = aRandomTtl()
         // upsert calls timeService.now() twice (createdAt + expiresAt), findEntry calls it once
         every { timeService.now() } returns now andThen now andThen now.plusSeconds(ttl + 10)
-        cacheRepo.upsert(key, aRandomUniqueString(), ttl)
+        propertyRepo.upsert(key, aRandomUniqueString(), ttl)
 
         sut.findEntry(key)
             .shouldBeRight()
@@ -172,7 +172,7 @@ class CacheJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `findEntry() Returns PersistenceFailure when repository throws`() {
         val key = aRandomUniqueString()
         val failure = DataAccessResourceFailureException("find entry failure")
-        every { cacheRepo.findEntry(key) } throws failure
+        every { propertyRepo.findEntry(key) } throws failure
 
         sut.findEntry(key)
             .shouldBeLeft()
@@ -185,7 +185,7 @@ class CacheJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `getEntry() Returns entry when found and not expired`() {
         val key = aRandomUniqueString()
         val value = aRandomUniqueString()
-        cacheRepo.upsert(key, value)
+        propertyRepo.upsert(key, value)
 
         sut.getEntry(key)
             .shouldBeRight()
@@ -193,35 +193,35 @@ class CacheJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `getEntry() Returns PersistedCacheEntryNotFound when key is missing`() {
+    fun `getEntry() Returns PropertyNotFound when key is missing`() {
         sut.getEntry(aRandomUniqueString())
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistedCacheEntryNotFound>()
+            .shouldBeInstanceOf<PropertyNotFound>()
     }
 
     @Test
-    fun `getEntry() Returns PersistedCacheEntryNotFound when entry is expired`() {
+    fun `getEntry() Returns PropertyNotFound when entry is expired`() {
         val key = aRandomUniqueString()
         val ttl = aRandomTtl()
         // upsert calls timeService.now() twice (createdAt + expiresAt), getEntry calls it once
         every { timeService.now() } returns now andThen now andThen now.plusSeconds(ttl + 10)
-        cacheRepo.upsert(key, aRandomUniqueString(), ttl)
+        propertyRepo.upsert(key, aRandomUniqueString(), ttl)
 
         sut.getEntry(key)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistedCacheEntryNotFound>()
+            .shouldBeInstanceOf<PropertyNotFound>()
     }
 
     @Test
     fun `getEntry() Returns PersistenceFailure when repository throws`() {
         val key = aRandomUniqueString()
         val failure = DataAccessResourceFailureException("get entry failure")
-        every { cacheRepo.findEntry(key) } throws failure
+        every { propertyRepo.findEntry(key) } throws failure
 
         sut.getEntry(key)
             .shouldBeLeft()
             .shouldBeInstanceOf<PersistenceFailure>()
-            .shouldBeInstanceOf<GetPersistedCacheEntryFailure>()
+            .shouldBeInstanceOf<GetPropertyFailure>()
     }
 
 }
