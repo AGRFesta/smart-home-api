@@ -3,6 +3,7 @@ package org.agrfesta.sh.api.core.domain.commons
 import java.math.BigDecimal
 import java.math.BigDecimal.ONE
 import java.math.BigDecimal.ZERO
+import java.math.RoundingMode
 
 @JvmInline
 value class Percentage(val value: BigDecimal) {
@@ -26,4 +27,11 @@ value class Percentage(val value: BigDecimal) {
         fun ofHundreds(value: Int) = ofHundreds(BigDecimal(value))
         fun ofHundreds(value: String) = ofHundreds(BigDecimal(value))
     }
+}
+
+fun Collection<Percentage>.average(): BigDecimal? {
+    if (isEmpty()) return null
+    return fold(ZERO) { acc, p -> acc + p.value }
+        .divide(BigDecimal(size), 10, RoundingMode.HALF_UP)
+        .stripTrailingZeros()
 }

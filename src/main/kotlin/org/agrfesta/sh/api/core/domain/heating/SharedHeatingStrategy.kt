@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.services.heating
+package org.agrfesta.sh.api.core.domain.heating
 
 /**
  * Enumeration of available strategies for controlling shared heating areas.
@@ -6,7 +6,7 @@ package org.agrfesta.sh.api.services.heating
  * These strategies define how the system decides to turn a shared heater ON or OFF
  * based on the requirements of the associated areas.
  */
-enum class SharedHeatingAreasStrategy {
+enum class SharedHeatingStrategy {
     ECONOMY,
     COMFORT
 }

@@ -116,3 +116,4 @@ This keeps the domain completely clean of `@Transactional` annotations.
 - **DON'T** use `Either.getOrElse` or force-unwrap results in the service layer to avoid handling errors.
 - **DON'T** name the method on a use case interface after the use case itself — always use `execute()`.
 - **DON'T** let a single service class implement more than one use case interface.
+- **DON'T** use the generic `Failure` type as the `Left` of a use case's `Either` — define a use-case-specific `sealed interface` (e.g. `GetHomeDashboardFailure`) so callers get an exhaustive and meaningful `when`.

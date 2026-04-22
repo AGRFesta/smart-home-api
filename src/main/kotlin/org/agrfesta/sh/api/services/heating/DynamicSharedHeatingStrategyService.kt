@@ -4,6 +4,7 @@ import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 import org.agrfesta.sh.api.core.application.ports.outbounds.PropertyRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.beans.factory.annotation.Value
@@ -19,12 +20,12 @@ import org.springframework.stereotype.Service
  */
 @Service
 class DynamicSharedHeatingStrategyService(
-    @param:Value("\${heating.default-strategy:ECONOMY}") private val defaultStrategy: SharedHeatingAreasStrategy,
+    @param:Value("\${heating.default-strategy:ECONOMY}") private val defaultStrategy: SharedHeatingStrategy,
     strategyServices: Collection<NamedSharedHeatingAreasStrategyService>,
     private val propertyRepository: PropertyRepository
 ): SharedHeatingAreasStrategyService {
     private val logger by LoggerDelegate()
-    private val servicesByStrategy: Map<SharedHeatingAreasStrategy, NamedSharedHeatingAreasStrategyService> =
+    private val servicesByStrategy: Map<SharedHeatingStrategy, NamedSharedHeatingAreasStrategyService> =
         strategyServices.associateBy { it.strategy }
 
     companion object {
@@ -55,7 +56,7 @@ class DynamicSharedHeatingStrategyService(
         service?.handleHeatingFor(sharedHeater, areas)
     }
 
-    private fun getStrategy(): SharedHeatingAreasStrategy = propertyRepository.getEntry(HEATING_STRATEGY_KEY).fold(
+    private fun getStrategy(): SharedHeatingStrategy = propertyRepository.getEntry(HEATING_STRATEGY_KEY).fold(
         ifLeft = {
             when(it) {
                 is PropertyNotFound ->
@@ -67,11 +68,11 @@ class DynamicSharedHeatingStrategyService(
             }
             defaultStrategy
         },
-        ifRight = { it.value.toSharedHeatingAreasStrategy() }
+        ifRight = { it.value.toSharedHeatingStrategy() }
     )
 
-    private fun String.toSharedHeatingAreasStrategy() = try {
-        SharedHeatingAreasStrategy.valueOf(this.uppercase())
+    private fun String.toSharedHeatingStrategy() = try {
+        SharedHeatingStrategy.valueOf(this.uppercase())
     } catch (e: IllegalArgumentException) {
         logger.error("Value $this is not a valid HeatingStrategy. Falling back to ${defaultStrategy.name}", e)
         defaultStrategy

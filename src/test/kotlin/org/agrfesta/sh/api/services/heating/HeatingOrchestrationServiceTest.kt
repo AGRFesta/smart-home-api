@@ -35,8 +35,8 @@ import org.agrfesta.sh.api.services.AreasService
 import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.services.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.sh.api.services.heating.HeatingOrchestrationService.Companion.HEATING_ENABLED_KEY
-import org.agrfesta.sh.api.services.heating.SharedHeatingAreasStrategy.COMFORT
-import org.agrfesta.sh.api.services.heating.SharedHeatingAreasStrategy.ECONOMY
+import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.COMFORT
+import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.ECONOMY
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aRandomUniqueString

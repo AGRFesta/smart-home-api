@@ -10,4 +10,5 @@ data class PersistenceFailure(
     DeviceCreationFailure,
     DeviceUpdateFailure,
     GetPropertyFailure,
-    FindPropertyFailure
+    FindPropertyFailure,
+    GetHomeDashboardFailure

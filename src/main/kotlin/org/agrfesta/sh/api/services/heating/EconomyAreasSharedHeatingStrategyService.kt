@@ -3,6 +3,7 @@ package org.agrfesta.sh.api.services.heating
 import java.math.BigDecimal
 import java.math.RoundingMode
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
+import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 import org.agrfesta.sh.api.core.domain.commons.Percentage
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.Heater
@@ -21,7 +22,7 @@ import org.springframework.stereotype.Service
  * Additionally, to prevent overheating, the heater is forced OFF if any single area exceeds
  * its target temperature by the defined hysteresis margin.
  *
- * It corresponds to the [SharedHeatingAreasStrategy.ECONOMY] strategy.
+ * It corresponds to the [SharedHeatingStrategy.ECONOMY] strategy.
  *
  * @property percentage The minimum percentage of areas that must require heating to turn the shared heater on.
  */
@@ -31,7 +32,7 @@ class EconomyAreasSharedHeatingStrategyService(
 ): NamedSharedHeatingAreasStrategyService, AbstractSharedHeatingAreasStrategyService() {
     private val percentage = Percentage(percentageValue)
     private val logger by LoggerDelegate()
-    override val strategy: SharedHeatingAreasStrategy = SharedHeatingAreasStrategy.ECONOMY
+    override val strategy: SharedHeatingStrategy = SharedHeatingStrategy.ECONOMY
 
     override suspend fun internalHandleHeatingFor(
         sharedHeater: Heater,

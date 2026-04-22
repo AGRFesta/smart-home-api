@@ -9,7 +9,9 @@ When generating or modifying tests, you must adhere to the following rules:
 * **Behavior over Implementation:** Test the actual behavior and output of the component, not its internal implementation details.
 * **Mocking Boundaries:** Use mocks and stubs ONLY for system boundaries (e.g., API calls, external services, databases, filesystem). **Never** mock internal logic or private methods. Rely on Dependency Injection.
 * **Test Organization:** Prefer one test class per method under test (e.g., `FooServiceBarMethodTest.kt`) ONLY when the methods have significantly different setup, or when the class grows beyond ~400 lines. If the shared setup dominates, keep tests together or extract a base class.
-* **Explicit "Given" Phase:** You must explicitly declare any value, mock behavior, or state that is the primary subject of the test, even if that exact value is already provided as a default by an Object Mother, Factory, or Base Class.
+* **Explicit "Given" Phase:** This rule has two complementary sides:
+  * **Subject setup — always explicit:** Declare any value, mock behavior, or state that is the **primary subject** of the test directly in the test body, even if the same value is already provided as a default by an Object Mother, `init` block, or `@BeforeEach`. The subject must be visible at a glance.
+  * **Non-subject setup — centralize, don't repeat:** Setup that is shared across multiple tests and is **not the subject** of any of them must be extracted to a single point (`init` block or `@BeforeEach`). Repeating it in every test body is noise that obscures what each test is actually about.
 * **Descriptive Naming:** Test names must clearly state the behavior being verified and the context (e.g., in Kotest use clear string descriptions like `"should return error when input is negative"`).
 * **Assertions:** For collections or complex objects, wrap assertions with `withClue("context message") { ... }` instead of relying solely on `shouldBe` diff output. The clue should describe what is being compared, not repeat the assertion. For simple scalar values, `shouldBe` alone is sufficient.
 

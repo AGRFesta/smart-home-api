@@ -19,6 +19,9 @@
 - **Cache:** Redis via `spring-boot-starter-data-redis`.
 - **Error Handling:** Functional via `Either<Failure, T>`.
 
+## Conventions
+- **API Docs:** When adding or modifying an endpoint, update `docs/api/<resource>.md` and the table in `docs/api/API_INDEX.md`.
+
 ## Context Links
 - **Architecture & Domain:** See `docs/ARCHITECTURE.md` for rules on Ports, Adapters, Value Objects, and Error Handling.
 - **Security:** See `docs/SECURITY.md` (API Key SHA-256).
