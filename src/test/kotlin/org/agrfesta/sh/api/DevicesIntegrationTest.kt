@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.controllers
+package org.agrfesta.sh.api
 
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
@@ -14,7 +14,8 @@ import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import java.time.Instant
 import java.util.UUID
-import org.agrfesta.sh.api.AbstractIntegrationTest
+import org.agrfesta.sh.api.controllers.DevicesRefreshResponse
+import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
@@ -34,7 +35,7 @@ import org.agrfesta.sh.api.services.DevicesRefreshResult
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class DevicesControllerIntegrationTest(
+class DevicesIntegrationTest(
     private val devicesDao: DevicesRepository,
     private val devicesRepository: DevicesJdbcRepository,
     private val objectMapper: ObjectMapper,

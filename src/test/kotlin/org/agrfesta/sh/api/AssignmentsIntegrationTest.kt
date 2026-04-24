@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.controllers
+package org.agrfesta.sh.api
 
 import arrow.core.getOrElse
 import io.kotest.matchers.shouldBe
@@ -6,7 +6,8 @@ import io.mockk.every
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import java.util.*
-import org.agrfesta.sh.api.AbstractIntegrationTest
+import org.agrfesta.sh.api.controllers.MessageResponse
+import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.domain.aSensorDataValue
 import org.agrfesta.sh.api.domain.anActuatorDataValue
 import org.agrfesta.sh.api.domain.anAreaDto
@@ -15,7 +16,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.DevicesRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class AssignmentsControllerIntegrationTest(
+class AssignmentsIntegrationTest(
     private val areasRepository: AreasRepository,
     private val devicesRepository: DevicesRepository
 ): AbstractIntegrationTest() {

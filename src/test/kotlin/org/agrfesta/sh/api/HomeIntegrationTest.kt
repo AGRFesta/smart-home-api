@@ -1,11 +1,11 @@
-package org.agrfesta.sh.api.controllers
+package org.agrfesta.sh.api
 
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.assertions.withClue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.restassured.RestAssured.given
-import org.agrfesta.sh.api.AbstractIntegrationTest
+import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.aSensorDataValue
@@ -18,7 +18,7 @@ import org.agrfesta.sh.api.utils.SmartCache
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.junit.jupiter.api.Test
 
-class HomeControllerIntegrationTest(
+class HomeIntegrationTest(
     private val areasRepository: AreasRepository,
     private val devicesService: DevicesService,
     private val assignmentsService: AssignmentsService,
