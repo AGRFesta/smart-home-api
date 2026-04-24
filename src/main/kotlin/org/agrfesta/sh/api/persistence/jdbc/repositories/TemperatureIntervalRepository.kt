@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository
 class TemperatureIntervalRepository(private val jdbcTemplate: NamedParameterJdbcTemplate) {
 
     fun findAllByArea(areaId: UUID): List<TemperatureIntervalEntity> {
-        val sql = "SELECT * FROM smart_home.temperature_interval WHERE area_uuid = :areaId"
+        val sql = "SELECT * FROM smart_home.temperature_interval WHERE area_uuid = :areaId ORDER BY start_time"
         val params = mapOf("areaId" to areaId)
         return jdbcTemplate.query(sql, params) { rs, _ ->
             TemperatureIntervalEntity(

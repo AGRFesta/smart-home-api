@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.controllers
+package org.agrfesta.sh.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.matchers.nulls.shouldBeNull
@@ -8,7 +8,8 @@ import io.mockk.every
 import io.mockk.verify
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
-import org.agrfesta.sh.api.AbstractIntegrationTest
+import org.agrfesta.sh.api.controllers.MessageResponse
+import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.persistence.PropertyEntryDto
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
@@ -18,7 +19,7 @@ import org.agrfesta.test.mothers.nowNoMills
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class PropertyControllerIntegrationTest(
+class PropertyIntegrationTest(
     private val propertyRepository: PropertyJdbcRepository,
     private val objectMapper: ObjectMapper
 ): AbstractIntegrationTest() {

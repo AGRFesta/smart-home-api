@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.controllers
+package org.agrfesta.sh.api
 
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.nulls.shouldBeNull
@@ -6,7 +6,9 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
-import org.agrfesta.sh.api.AbstractIntegrationTest
+import org.agrfesta.sh.api.controllers.TemperatureSettings
+import org.agrfesta.sh.api.controllers.MessageResponse
+import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
@@ -17,7 +19,7 @@ import org.agrfesta.test.mothers.aDailyTime
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.junit.jupiter.api.Test
 
-class HeatingAreasControllerIntegrationTest(
+class HeatingAreasIntegrationTest(
     private val areasRepository: AreasRepository,
     private val tempSettingsDao: TemperatureSettingsRepository
 ): AbstractIntegrationTest() {
