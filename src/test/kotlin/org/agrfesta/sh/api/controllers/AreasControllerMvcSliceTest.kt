@@ -15,21 +15,22 @@ import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.TestConstructor
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(AreasController::class)
 @Import(SecurityConfig::class)
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @ActiveProfiles("test")
 class AreasControllerMvcSliceTest(
-    @Autowired private val mockMvc: MockMvc,
-    @Autowired private val objectMapper: ObjectMapper,
-    @Autowired @MockkBean private val createAreaUseCase: CreateAreaUseCase
+    private val mockMvc: MockMvc,
+    private val objectMapper: ObjectMapper,
+    @MockkBean private val createAreaUseCase: CreateAreaUseCase
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
@@ -77,7 +78,9 @@ class AreasControllerMvcSliceTest(
     @Test fun `create() returns 201 with resource id on success`() {
         val name = aRandomUniqueString()
         val uuid = UUID.randomUUID()
-        every { createAreaUseCase.execute(name, null) } returns AreaDto(uuid = uuid, name = name, isIndoor = true).right()
+        every {
+            createAreaUseCase.execute(name, null)
+        } returns AreaDto(uuid = uuid, name = name, isIndoor = true).right()
 
         val responseBody: String = mockMvc.perform(
             post("/areas")
@@ -87,7 +90,8 @@ class AreasControllerMvcSliceTest(
             .andExpect(status().isCreated)
             .andReturn().response.contentAsString
 
-        val response: CreatedResourceResponse = objectMapper.readValue(responseBody, CreatedResourceResponse::class.java)
+        val response: CreatedResourceResponse =
+            objectMapper.readValue(responseBody, CreatedResourceResponse::class.java)
         response.message shouldBe "Area '$name' successfully created!"
         response.resourceId shouldBe uuid.toString()
     }
@@ -95,7 +99,9 @@ class AreasControllerMvcSliceTest(
     @Test fun `create() returns 201 when isIndoor is true`() {
         val name = aRandomUniqueString()
         val uuid = UUID.randomUUID()
-        every { createAreaUseCase.execute(name, true) } returns AreaDto(uuid = uuid, name = name, isIndoor = true).right()
+        every {
+            createAreaUseCase.execute(name, true)
+        } returns AreaDto(uuid = uuid, name = name, isIndoor = true).right()
 
         val responseBody: String = mockMvc.perform(
             post("/areas")
@@ -105,7 +111,8 @@ class AreasControllerMvcSliceTest(
             .andExpect(status().isCreated)
             .andReturn().response.contentAsString
 
-        val response: CreatedResourceResponse = objectMapper.readValue(responseBody, CreatedResourceResponse::class.java)
+        val response: CreatedResourceResponse =
+            objectMapper.readValue(responseBody, CreatedResourceResponse::class.java)
         response.message shouldBe "Area '$name' successfully created!"
         response.resourceId shouldBe uuid.toString()
     }
@@ -113,7 +120,9 @@ class AreasControllerMvcSliceTest(
     @Test fun `create() returns 201 when isIndoor is false`() {
         val name = aRandomUniqueString()
         val uuid = UUID.randomUUID()
-        every { createAreaUseCase.execute(name, false) } returns AreaDto(uuid = uuid, name = name, isIndoor = false).right()
+        every {
+            createAreaUseCase.execute(name, false)
+        } returns AreaDto(uuid = uuid, name = name, isIndoor = false).right()
 
         val responseBody: String = mockMvc.perform(
             post("/areas")
@@ -123,7 +132,8 @@ class AreasControllerMvcSliceTest(
             .andExpect(status().isCreated)
             .andReturn().response.contentAsString
 
-        val response: CreatedResourceResponse = objectMapper.readValue(responseBody, CreatedResourceResponse::class.java)
+        val response: CreatedResourceResponse =
+            objectMapper.readValue(responseBody, CreatedResourceResponse::class.java)
         response.message shouldBe "Area '$name' successfully created!"
         response.resourceId shouldBe uuid.toString()
     }

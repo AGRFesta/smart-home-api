@@ -7,32 +7,33 @@ import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import java.util.*
-import org.agrfesta.sh.api.domain.anActuator
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
-import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
 import org.agrfesta.sh.api.core.domain.failures.NotASensor
+import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
+import org.agrfesta.sh.api.domain.anActuator
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.sh.api.services.AssignmentsService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.TestConstructor
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(AssignmentsController::class)
 @Import(SecurityConfig::class)
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @ActiveProfiles("test")
 class AssignmentsControllerMvcSliceTest(
-    @Autowired private val mockMvc: MockMvc,
-    @Autowired private val objectMapper: ObjectMapper,
-    @Autowired @MockkBean private val assignmentsService: AssignmentsService
+    private val mockMvc: MockMvc,
+    private val objectMapper: ObjectMapper,
+    @MockkBean private val assignmentsService: AssignmentsService
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
@@ -194,7 +195,9 @@ class AssignmentsControllerMvcSliceTest(
     @Test fun `assignActuatorToArea() returns 400 when device is not an actuator`() {
         val areaId = UUID.randomUUID()
         val deviceId = UUID.randomUUID()
-        every { assignmentsService.assignActuatorToArea(areaId, deviceId) } returns NotAnActuator(deviceId, emptySet()).left()
+        every {
+            assignmentsService.assignActuatorToArea(areaId, deviceId)
+        } returns NotAnActuator(deviceId, emptySet()).left()
 
         val responseBody: String = mockMvc.perform(
             post("/assignments/actuators")

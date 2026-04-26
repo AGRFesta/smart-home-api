@@ -9,7 +9,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import java.math.BigDecimal
-import java.util.UUID
+import java.util.*
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHomeDashboardUseCase
 import org.agrfesta.sh.api.core.domain.commons.FieldFailure
 import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
@@ -25,21 +25,22 @@ import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.TestConstructor
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(HomeController::class)
 @Import(SecurityConfig::class)
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @ActiveProfiles("test")
 class HomeControllerMvcSliceTest(
-    @Autowired private val mockMvc: MockMvc,
-    @Autowired private val objectMapper: ObjectMapper,
-    @Autowired @MockkBean private val getHomeDashboardUseCase: GetHomeDashboardUseCase
+    private val mockMvc: MockMvc,
+    private val objectMapper: ObjectMapper,
+    @MockkBean private val getHomeDashboardUseCase: GetHomeDashboardUseCase
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 

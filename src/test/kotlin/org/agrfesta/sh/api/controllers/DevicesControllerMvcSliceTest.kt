@@ -9,40 +9,41 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import java.util.*
-import org.agrfesta.sh.api.domain.aDevice
-import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
 import org.agrfesta.sh.api.core.domain.devices.DeviceDto
 import org.agrfesta.sh.api.core.domain.devices.DevicesProvider
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.failures.MessageFailure
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.domain.aDevice
+import org.agrfesta.sh.api.domain.aDeviceDataValue
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.sh.api.services.DevicesRefreshResult
 import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.TestConstructor
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(DevicesController::class)
 @Import(SecurityConfig::class)
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @ActiveProfiles("test")
 class DevicesControllerMvcSliceTest(
-    @Autowired private val mockMvc: MockMvc,
-    @Autowired private val objectMapper: ObjectMapper,
-    @Autowired @MockkBean private val devicesService: DevicesService,
-    @Autowired @MockkBean private val devicesProvider: DevicesProvider
+    private val mockMvc: MockMvc,
+    private val objectMapper: ObjectMapper,
+    @MockkBean private val devicesService: DevicesService,
+    @MockkBean private val devicesProvider: DevicesProvider
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
-    ///// refresh /////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///// refresh //////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `refresh() auth tests`() = authTestSupport.dynamicTestsBy {
         post("/devices/refresh")
@@ -103,7 +104,9 @@ class DevicesControllerMvcSliceTest(
         val updatedDevice = storedDevice.copy(name = aRandomUniqueString())
         every { devicesService.getAllDto() } returns listOf(storedDevice).right()
         every { devicesProvider.getAllDevices() } returns emptyList<DeviceDataValue>().right()
-        every { devicesService.refresh(any(), any()) } returns DevicesRefreshResult(updatedDevices = listOf(updatedDevice))
+        every {
+            devicesService.refresh(any(), any())
+        } returns DevicesRefreshResult(updatedDevices = listOf(updatedDevice))
         every { devicesService.update(updatedDevice) } returns Unit.right()
 
         val resultContent: String = mockMvc.perform(
@@ -123,7 +126,9 @@ class DevicesControllerMvcSliceTest(
         val detachedDevice = storedDevice.copy(name = aRandomUniqueString())
         every { devicesService.getAllDto() } returns listOf(storedDevice).right()
         every { devicesProvider.getAllDevices() } returns emptyList<DeviceDataValue>().right()
-        every { devicesService.refresh(any(), any()) } returns DevicesRefreshResult(detachedDevices = listOf(detachedDevice))
+        every {
+            devicesService.refresh(any(), any())
+        } returns DevicesRefreshResult(detachedDevices = listOf(detachedDevice))
         every { devicesService.update(detachedDevice) } returns Unit.right()
 
         val resultContent: String = mockMvc.perform(

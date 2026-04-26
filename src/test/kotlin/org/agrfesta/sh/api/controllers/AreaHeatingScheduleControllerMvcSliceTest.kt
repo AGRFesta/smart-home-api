@@ -7,7 +7,7 @@ import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import java.util.UUID
+import java.util.*
 import org.agrfesta.sh.api.core.application.ports.inbounds.DeleteHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingScheduleUseCase
@@ -22,11 +22,11 @@ import org.agrfesta.test.mothers.aDailyTime
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.ProblemDetail
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.TestConstructor
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -35,13 +35,14 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(AreaHeatingScheduleController::class)
 @Import(SecurityConfig::class)
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @ActiveProfiles("test")
 class AreaHeatingScheduleControllerMvcSliceTest(
-    @Autowired private val mockMvc: MockMvc,
-    @Autowired private val objectMapper: ObjectMapper,
-    @Autowired @MockkBean private val deleteHeatingScheduleUseCase: DeleteHeatingScheduleUseCase,
-    @Autowired @MockkBean private val replaceHeatingScheduleUseCase: ReplaceHeatingScheduleUseCase,
-    @Autowired @MockkBean private val getHeatingScheduleUseCase: GetHeatingScheduleUseCase
+    private val mockMvc: MockMvc,
+    private val objectMapper: ObjectMapper,
+    @MockkBean private val deleteHeatingScheduleUseCase: DeleteHeatingScheduleUseCase,
+    @MockkBean private val replaceHeatingScheduleUseCase: ReplaceHeatingScheduleUseCase,
+    @MockkBean private val getHeatingScheduleUseCase: GetHeatingScheduleUseCase
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 

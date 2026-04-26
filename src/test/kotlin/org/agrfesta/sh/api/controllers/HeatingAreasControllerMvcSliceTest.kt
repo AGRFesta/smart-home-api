@@ -8,21 +8,21 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import java.util.*
-import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
-import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.domain.aTemperatureInterval
+import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.sh.api.services.heating.HeatingAreasService
 import org.agrfesta.test.mothers.aDailyTime
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.TestConstructor
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -30,12 +30,13 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(HeatingAreasController::class)
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @Import(SecurityConfig::class)
 @ActiveProfiles("test")
 class HeatingAreasControllerMvcSliceTest(
-    @Autowired private val mockMvc: MockMvc,
-    @Autowired private val objectMapper: ObjectMapper,
-    @Autowired @MockkBean private val heatingAreasService: HeatingAreasService
+    private val mockMvc: MockMvc,
+    private val objectMapper: ObjectMapper,
+    @MockkBean private val heatingAreasService: HeatingAreasService
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
