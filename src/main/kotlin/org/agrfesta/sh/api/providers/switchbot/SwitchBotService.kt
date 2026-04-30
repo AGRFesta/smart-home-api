@@ -6,8 +6,8 @@ import arrow.core.right
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
-import org.agrfesta.sh.api.core.domain.devices.DevicesProvider
+import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesProvider
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.failures.ProviderFailure
 import org.springframework.stereotype.Service
@@ -19,12 +19,12 @@ class SwitchBotService(
 ): DevicesProvider {
     override val provider: Provider = Provider.SWITCHBOT
 
-    override fun getAllDevices(): Either<ProviderFailure, Collection<DeviceDataValue>> = runBlocking {
+    override fun getAllDevices(): Either<ProviderFailure, Collection<ProviderDeviceData>> = runBlocking {
             try {
                 (devicesClient.getDevices().at("/body/deviceList") as ArrayNode)
                     .map { mapper.treeToValue(it, SwitchBotDevice::class.java) }
                     .map {
-                        DeviceDataValue(
+                        ProviderDeviceData(
                             deviceProviderId = it.deviceId,
                             provider = Provider.SWITCHBOT,
                             name = it.deviceName,

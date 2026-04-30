@@ -5,10 +5,10 @@ import java.math.BigDecimal
 import java.time.LocalTime
 import java.util.UUID
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHomeDashboardUseCase
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasWithDevicesRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.PropertyRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.SensorsCurrentReadingsRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.TemperatureSettingsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.commons.FieldFailure
 import org.agrfesta.sh.api.core.domain.commons.FieldResult
 import org.agrfesta.sh.api.core.domain.commons.FieldSuccess

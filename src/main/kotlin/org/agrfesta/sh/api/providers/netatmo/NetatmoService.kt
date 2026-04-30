@@ -3,10 +3,10 @@ package org.agrfesta.sh.api.providers.netatmo
 import arrow.core.Either
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
+import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
-import org.agrfesta.sh.api.core.domain.devices.DevicesProvider
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesProvider
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.Provider.NETATMO
 import org.agrfesta.sh.api.core.domain.failures.Failure
@@ -28,12 +28,12 @@ class NetatmoService(
         const val NETATMO_REFRESH_TOKEN_CACHE_KEY = "provider.netatmo.refresh-token"
     }
 
-    override fun getAllDevices(): Either<Failure, Collection<DeviceDataValue>> = runBlocking {
+    override fun getAllDevices(): Either<Failure, Collection<ProviderDeviceData>> = runBlocking {
         netatmoClient.getHomesData().map { data ->
             data.at("/body/homes/0/modules")
                 .map { node -> objectMapper.treeToValue(node, NetatmoModuleData::class.java) }
                 .map { module ->
-                    DeviceDataValue(
+                    ProviderDeviceData(
                         deviceProviderId = module.id,
                         provider = provider,
                         name = module.name,

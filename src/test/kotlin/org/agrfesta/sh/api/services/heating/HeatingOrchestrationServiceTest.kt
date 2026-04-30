@@ -17,20 +17,20 @@ import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
 import org.agrfesta.sh.api.core.domain.areas.AreasFactory
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
-import org.agrfesta.sh.api.core.domain.devices.DeviceDto
+import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.devices.Provider
-import org.agrfesta.sh.api.core.domain.devices.ProviderDevicesFactory
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.SharedHeater
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.application.ports.outbounds.UnitOfWork
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasWithDevicesRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.PropertyRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.DevicesRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.TemperatureSettingsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.services.AreasService
 import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.services.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
@@ -75,7 +75,7 @@ class HeatingOrchestrationServiceTest {
     init {
         every { timeService.now() } returns now
         every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PropertyEntry("true").right()
-        every { devicesRepository.getAll() } returns emptyList<DeviceDto>().right()
+        every { devicesRepository.getAll() } returns emptyList<Device>().right()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns emptyList<AreaDtoWithDevices>().right()
     }
 
@@ -321,7 +321,7 @@ class HeatingOrchestrationServiceTest {
         coVerify(exactly = 0) { comfortStrategy.handleHeatingFor(any(), any()) }
     }
 
-    private fun DeviceDto.toSensorMockk(): Sensor {
+    private fun Device.toSensorMockk(): Sensor {
         val dto = this
         val sensor: Sensor = mockk()
         every { sensor.uuid } returns uuid
@@ -329,7 +329,7 @@ class HeatingOrchestrationServiceTest {
         return sensor
     }
 
-    private fun DeviceDto.toSharedHeaterMockk(): SharedHeater {
+    private fun Device.toSharedHeaterMockk(): SharedHeater {
         val dto = this
         val heater: SharedHeater = mockk(relaxed = true)
         every { heater.uuid } returns uuid

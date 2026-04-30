@@ -9,7 +9,7 @@ import io.mockk.every
 import java.time.Instant
 import java.util.*
 import org.agrfesta.sh.api.domain.aDevice
-import org.agrfesta.sh.api.domain.aDeviceDataValue
+import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.test.mothers.aProvider
@@ -36,7 +36,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `getDeviceById() Returns device`() {
         every { timeService.now() } returns Instant.now()
-        val device = aDeviceDataValue(
+        val device = aProviderDeviceData(
             providerId = aRandomUniqueString(),
             provider = aProvider(),
             name = aRandomUniqueString(),
@@ -80,8 +80,8 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `getAll() Returns all persisted devices`() {
         every { timeService.now() } returns Instant.now()
-        devicesRepo.persist(UUID.randomUUID(), aDeviceDataValue())
-        devicesRepo.persist(UUID.randomUUID(), aDeviceDataValue())
+        devicesRepo.persist(UUID.randomUUID(), aProviderDeviceData())
+        devicesRepo.persist(UUID.randomUUID(), aProviderDeviceData())
 
         sut.getAll()
             .shouldBeRight()
@@ -104,7 +104,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `create() Persists a device retrievable by the given UUID`() {
         every { timeService.now() } returns Instant.now()
-        val device = aDeviceDataValue()
+        val device = aProviderDeviceData()
         val deviceId = UUID.randomUUID()
 
         sut.create(deviceId, device).shouldBeRight()
@@ -121,7 +121,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `create() Returns PersistenceFailure when fails to persist device`() {
         every { timeService.now() } returns Instant.now()
-        val device = aDeviceDataValue()
+        val device = aProviderDeviceData()
         val failure = DataAccessResourceFailureException("device creation failure")
         every { devicesRepo.persist(any(), any(), any()) } throws failure
 
@@ -135,7 +135,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `update() Updates device data`() {
         every { timeService.now() } returns Instant.now()
-        val data = aDeviceDataValue()
+        val data = aProviderDeviceData()
         val deviceId = UUID.randomUUID()
         devicesRepo.persist(deviceId, data)
         val updatedDevice = aDevice(data = data, uuid = deviceId)
@@ -163,7 +163,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `update() Returns PersistenceFailure when fails to update device`() {
         every { timeService.now() } returns Instant.now()
-        val data = aDeviceDataValue()
+        val data = aProviderDeviceData()
         val deviceId = UUID.randomUUID()
         devicesRepo.persist(deviceId, data)
         val device = aDevice(data = data, uuid = deviceId)

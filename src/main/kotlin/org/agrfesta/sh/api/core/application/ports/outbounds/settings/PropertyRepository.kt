@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.core.application.ports.outbounds
+package org.agrfesta.sh.api.core.application.ports.outbounds.settings
 
 import arrow.core.Either
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry

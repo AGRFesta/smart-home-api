@@ -11,7 +11,7 @@ import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
 import org.agrfesta.sh.api.core.domain.failures.SensorAssignmentFailure
 import org.agrfesta.sh.api.persistence.AreaNotFoundException
-import org.agrfesta.sh.api.core.application.ports.outbounds.SensorsAssignmentsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignmentsRepository
 import org.agrfesta.sh.api.persistence.DeviceNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcRepository
 import org.springframework.dao.DataAccessException

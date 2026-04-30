@@ -11,7 +11,7 @@ import org.agrfesta.sh.api.core.domain.failures.AreaFetchFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.persistence.SameNameAreaException
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.springframework.dao.DataAccessException

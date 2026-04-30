@@ -2,7 +2,7 @@ package org.agrfesta.sh.api.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.agrfesta.sh.api.AbstractIntegrationTest
-import org.agrfesta.sh.api.domain.aDeviceDataValue
+import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.agrfesta.sh.api.core.domain.commons.Percentage
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.Provider
@@ -28,21 +28,21 @@ class SensorReadingsSyncServiceIntegrationTest(
     @Test fun `fetchAndCacheSensorData() caches sensors device values only and ignores failures`() {
         //TODO this is a no features device that proves it will be not considered, once features will be deprecated
         // have no sense anymore, replace it with a no sensor device (at moment do not exist)
-        val noSensorDevice = aDeviceDataValue(features = emptySet()).apply { devicesRepository.persist(UUID.randomUUID(), this) }
+        val noSensorDevice = aProviderDeviceData(features = emptySet()).apply { devicesRepository.persist(UUID.randomUUID(), this) }
 
         val swbSensorData = aRandomThermoHygroData(
             relativeHumidity = Percentage.ofHundreds(aRandomIntHumidity()))
-        val swbSensor = aDeviceDataValue(provider = Provider.SWITCHBOT, features = setOf(SENSOR))
+        val swbSensor = aProviderDeviceData(provider = Provider.SWITCHBOT, features = setOf(SENSOR))
             .apply { devicesRepository.persist(UUID.randomUUID(), this) }
         switchBotClientAsserter.givenSensorData(swbSensor.deviceProviderId, swbSensorData)
 
-        val swbFaultySensor = aDeviceDataValue(provider = Provider.SWITCHBOT, features = setOf(SENSOR))
+        val swbFaultySensor = aProviderDeviceData(provider = Provider.SWITCHBOT, features = setOf(SENSOR))
             .apply { devicesRepository.persist(UUID.randomUUID(), this) }
         switchBotClientAsserter.givenSensorDataFailure(swbFaultySensor.deviceProviderId)
 
         val nttSensorData = aRandomThermoHygroData(
             relativeHumidity = Percentage.ofHundreds(aRandomIntHumidity()))
-        val nttSensor = aDeviceDataValue(provider = Provider.NETATMO, features = setOf(SENSOR))
+        val nttSensor = aProviderDeviceData(provider = Provider.NETATMO, features = setOf(SENSOR))
             .apply { devicesRepository.persist(UUID.randomUUID(), this) }
         netatmoIntegrationAsserter.givenDevice(nttSensor, nttSensorData)
 

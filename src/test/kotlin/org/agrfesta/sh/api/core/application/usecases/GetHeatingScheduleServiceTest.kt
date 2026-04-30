@@ -12,8 +12,8 @@ import io.mockk.mockk
 import io.mockk.verify
 import java.time.LocalTime
 import java.util.*
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.TemperatureSettingsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.areas.AreaTemperatureSetting
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound

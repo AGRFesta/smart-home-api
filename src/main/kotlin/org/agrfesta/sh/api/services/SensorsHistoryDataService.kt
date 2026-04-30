@@ -7,7 +7,7 @@ import org.agrfesta.sh.api.core.domain.commons.RelativeHumidity
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.SensorHistoryData
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.SensorsHistoryDataRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsHistoryDataRepository
 import org.springframework.stereotype.Service
 
 @Service

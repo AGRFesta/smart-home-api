@@ -1,9 +1,9 @@
 package org.agrfesta.sh.api.providers.netatmo.devices
 
+import org.agrfesta.sh.api.core.domain.devices.DeviceDriver
 import org.agrfesta.sh.api.core.domain.devices.Device
-import org.agrfesta.sh.api.core.domain.devices.DeviceDto
 import org.agrfesta.sh.api.core.domain.devices.Provider
-import org.agrfesta.sh.api.core.domain.devices.ProviderDevicesFactory
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClient
 import org.agrfesta.sh.api.providers.netatmo.NetatmoConfiguration
 import org.agrfesta.sh.api.utils.TimeService
@@ -17,7 +17,7 @@ class NetatmoDevicesFactory(
 ): ProviderDevicesFactory {
     override val provider = Provider.NETATMO
 
-    override fun createDevice(dto: DeviceDto): Device =
+    override fun createDevice(dto: Device): DeviceDriver =
         NetatmoSmarther(
             uuid = dto.uuid,
             deviceProviderId = dto.deviceProviderId,

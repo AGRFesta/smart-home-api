@@ -5,7 +5,7 @@ import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.PropertyRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.services.AreasService
 import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.utils.LoggerDelegate

@@ -11,7 +11,7 @@ import org.agrfesta.sh.api.core.domain.devices.SensorDataType.HUMIDITY
 import org.agrfesta.sh.api.core.domain.devices.SensorDataType.TEMPERATURE
 import org.agrfesta.sh.api.core.domain.devices.SensorHistoryData
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.SensorsHistoryDataRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsHistoryDataRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsHistoryDataJdbcRepository
 import org.springframework.dao.DataAccessException
 import org.springframework.stereotype.Service

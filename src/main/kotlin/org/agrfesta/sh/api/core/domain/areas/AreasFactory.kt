@@ -2,7 +2,7 @@ package org.agrfesta.sh.api.core.domain.areas
 
 import java.util.*
 import org.agrfesta.sh.api.core.domain.devices.Actuator
-import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.DeviceDriver
 import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.services.heating.HeatingAreasService
@@ -17,7 +17,7 @@ class AreasFactory(
 ) {
     private val logger by LoggerDelegate()
 
-    fun createArea(dto: AreaDtoWithDevices, devicesRegistry: Map<UUID, Device>): Area {
+    fun createArea(dto: AreaDtoWithDevices, devicesRegistry: Map<UUID, DeviceDriver>): Area {
         val sensors = dto.sensors.mapNotNull {
             devicesRegistry[it.uuid] ?: run {
                 logger.error("Data inconsistency: Sensor with UUID ${it.uuid} referenced by area ${dto.name} but not found in persisted records")

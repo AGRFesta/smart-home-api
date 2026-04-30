@@ -10,8 +10,8 @@ import io.mockk.every
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
-import org.agrfesta.sh.api.domain.aDeviceDataValue
-import org.agrfesta.sh.api.domain.aSensorDataValue
+import org.agrfesta.sh.api.domain.aProviderDeviceData
+import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
@@ -31,7 +31,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `assign() Returns AreaNotFound when area is missing`() {
         every { timeService.now() } returns Instant.now()
-        val device = aDeviceDataValue(
+        val device = aProviderDeviceData(
             providerId = aRandomUniqueString(),
             provider = aProvider(),
             name = aRandomUniqueString(),
@@ -67,7 +67,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
         every { timeService.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val sensorId = UUID.randomUUID()
-        devicesRepo.persist(sensorId, aSensorDataValue())
+        devicesRepo.persist(sensorId, aSensorProviderData())
         sensorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = sensorId)
 
         sut.assign(area.uuid, sensorId)
@@ -81,7 +81,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val anotherArea = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val sensorId = UUID.randomUUID()
-        devicesRepo.persist(sensorId, aSensorDataValue())
+        devicesRepo.persist(sensorId, aSensorProviderData())
         sensorsAssignmentsRepo.persistAssignment(areaId = anotherArea.uuid, deviceId = sensorId)
 
         sut.assign(area.uuid, sensorId)
@@ -106,7 +106,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
         every { timeService.now() } returns now
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val sensorId = UUID.randomUUID()
-        devicesRepo.persist(sensorId, aSensorDataValue())
+        devicesRepo.persist(sensorId, aSensorProviderData())
 
         sut.assign(area.uuid, sensorId).shouldBeRight()
 

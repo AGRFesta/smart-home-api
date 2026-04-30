@@ -7,7 +7,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.PropertyRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.springframework.stereotype.Service
 import kotlin.time.Duration
 

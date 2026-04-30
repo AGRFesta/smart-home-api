@@ -2,15 +2,15 @@ package org.agrfesta.sh.api.services
 
 import arrow.core.Either
 import java.util.*
-import org.agrfesta.sh.api.core.domain.devices.DeviceDto
-import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
-import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Device
-import org.agrfesta.sh.api.core.domain.devices.ProviderDevicesFactory
+import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
+import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.core.domain.devices.DeviceDriver
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.core.domain.failures.DeviceCreationFailure
 import org.agrfesta.sh.api.core.domain.failures.DeviceUpdateFailure
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.DevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.springframework.stereotype.Service
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service
  * Service responsible for managing devices within the smart home system.
  *
  * Handles device creation, update, refresh (synchronisation with provider-supplied data),
- * and retrieval in both DTO and domain-object forms.
+ * and retrieval in both record and domain-object forms.
  *
  * @property devicesRepository persistence layer for device CRUD operations.
  * @param providerDevicesFactories all registered [ProviderDevicesFactory] instances; indexed internally
@@ -35,7 +35,7 @@ class DevicesService(
     private val mappedDevicesFactories = providerDevicesFactories.associateBy { it.provider }
 
     /**
-     * Persists a new device derived from [device] raw data.
+     * Persists a new device derived from [device] provider data.
      *
      * @param device the provider-supplied data describing the device to create.
      * @param initialStatus the initial [DeviceStatus] assigned to the new device; defaults to [DeviceStatus.PAIRED].
@@ -43,7 +43,7 @@ class DevicesService(
      *         [DeviceCreationFailure] if the device could not be persisted.
      */
     fun createDevice(
-        device: DeviceDataValue,
+        device: ProviderDeviceData,
         initialStatus: DeviceStatus = DeviceStatus.PAIRED
     ): Either<DeviceCreationFailure, UUID> {
         val uuid = randomGenerator.uuid()
@@ -53,11 +53,11 @@ class DevicesService(
     /**
      * Updates the persisted representation of an existing device.
      *
-     * @param device the [DeviceDto] carrying the updated field values.
+     * @param device the [Device] carrying the updated field values.
      * @return [Either.Right] with [Unit] on success, or [Either.Left] with a [DeviceUpdateFailure]
      *         if the device does not exist or the update fails.
      */
-    fun update(device: DeviceDto): Either<DeviceUpdateFailure, Unit> = devicesRepository.update(device)
+    fun update(device: Device): Either<DeviceUpdateFailure, Unit> = devicesRepository.update(device)
 
     /**
      * Computes the difference between the current provider snapshot and the persisted device list.
@@ -72,7 +72,7 @@ class DevicesService(
      * @param devices the collection of devices currently stored in the system.
      * @return a [DevicesRefreshResult] describing the three change sets.
      */
-    fun refresh(providersDevices: Collection<DeviceDataValue>, devices: Collection<DeviceDto>): DevicesRefreshResult {
+    fun refresh(providersDevices: Collection<ProviderDeviceData>, devices: Collection<Device>): DevicesRefreshResult {
         return DevicesRefreshResult(
             newDevices = providersDevices
                 .filter { devices.find(it.deviceProviderId) == null },
@@ -85,38 +85,38 @@ class DevicesService(
     }
 
     /**
-     * Retrieves all persisted devices as [DeviceDto] objects.
+     * Retrieves all persisted devices as [Device] objects.
      *
-     * @return [Either.Right] containing the full collection of [DeviceDto], or [Either.Left] with a
+     * @return [Either.Right] containing the full collection of [Device], or [Either.Left] with a
      *         [PersistenceFailure] if the query fails.
      */
-    fun getAllDto(): Either<PersistenceFailure, Collection<DeviceDto>> = devicesRepository.getAll()
+    fun getAllDto(): Either<PersistenceFailure, Collection<Device>> = devicesRepository.getAll()
 
     /**
      * Retrieves all devices as fully assembled domain objects.
      *
-     * Each [DeviceDto] is converted to a [Device] using the [ProviderDevicesFactory] registered for
+     * Each [Device] is converted to a [Device] using the [ProviderDevicesFactory] registered for
      * the device's provider. Throws if no factory is registered for a given provider.
      *
      * @return [Either.Right] containing a collection of domain [Device] objects, or [Either.Left] with a
      *         [PersistenceFailure] if the underlying query fails.
      */
-    fun getAllDevices(): Either<PersistenceFailure, Collection<Device>> =
-        devicesRepository.getAll().map { dtos ->
-            dtos.mapNotNull { dto ->
-                val factory = mappedDevicesFactories[dto.provider]
+    fun getAllDevices(): Either<PersistenceFailure, Collection<DeviceDriver>> =
+        devicesRepository.getAll().map { records ->
+            records.mapNotNull { record ->
+                val factory = mappedDevicesFactories[record.provider]
                 if (factory == null) {
-                    logger.error("No ProviderDevicesFactory registered for provider '${dto.provider}', skipping device '${dto.uuid}'")
+                    logger.error("No ProviderDevicesFactory registered for provider '${record.provider}', skipping device '${record.uuid}'")
                     null
                 } else {
-                    factory.createDevice(dto)
+                    factory.createDevice(record)
                 }
             }
         }
 
-    private fun Collection<DeviceDto>.find(providerId: String): DeviceDto? =
+    private fun Collection<Device>.find(providerId: String): Device? =
         firstOrNull { it.deviceProviderId == providerId }
-    private fun Collection<DeviceDataValue>.find(providerId: String): DeviceDataValue? =
+    private fun Collection<ProviderDeviceData>.find(providerId: String): ProviderDeviceData? =
         firstOrNull { it.deviceProviderId == providerId }
 
 }
@@ -129,7 +129,7 @@ class DevicesService(
  * @property detachedDevices devices persisted in the system but no longer reported by the provider.
  */
 data class DevicesRefreshResult(
-    val newDevices: Collection<DeviceDataValue> = emptyList(),
-    val updatedDevices: Collection<DeviceDto> = emptyList(),
-    val detachedDevices: Collection<DeviceDto> = emptyList()
+    val newDevices: Collection<ProviderDeviceData> = emptyList(),
+    val updatedDevices: Collection<Device> = emptyList(),
+    val detachedDevices: Collection<Device> = emptyList()
 )

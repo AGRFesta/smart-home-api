@@ -9,7 +9,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import java.time.Instant
 import java.util.*
-import org.agrfesta.sh.api.domain.aSensorDataValue
+import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.core.domain.devices.SensorDataType.HUMIDITY
 import org.agrfesta.sh.api.core.domain.devices.SensorDataType.TEMPERATURE
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
@@ -30,7 +30,7 @@ class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `persistTemperature() Persists temperature reading for sensor`() {
         every { timeService.now() } returns Instant.now()
         val sensorUuid = UUID.randomUUID()
-        devicesRepo.persist(sensorUuid, aSensorDataValue())
+        devicesRepo.persist(sensorUuid, aSensorProviderData())
         val time = nowNoMills()
         val temperature = aRandomTemperature()
 
@@ -62,7 +62,7 @@ class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `persistHumidity() Persists humidity reading for sensor`() {
         every { timeService.now() } returns Instant.now()
         val sensorUuid = UUID.randomUUID()
-        devicesRepo.persist(sensorUuid, aSensorDataValue())
+        devicesRepo.persist(sensorUuid, aSensorProviderData())
         val time = nowNoMills()
         val humidity = aRandomHumidity()
 
@@ -94,7 +94,7 @@ class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `findBySensor() Returns empty collection when no history exists for sensor`() {
         every { timeService.now() } returns Instant.now()
         val sensorUuid = UUID.randomUUID()
-        devicesRepo.persist(sensorUuid, aSensorDataValue())
+        devicesRepo.persist(sensorUuid, aSensorProviderData())
 
         sut.findBySensor(sensorUuid)
             .shouldBeRight()
@@ -105,7 +105,7 @@ class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `findBySensor() Returns all history data for sensor`() {
         every { timeService.now() } returns Instant.now()
         val sensorUuid = UUID.randomUUID()
-        devicesRepo.persist(sensorUuid, aSensorDataValue())
+        devicesRepo.persist(sensorUuid, aSensorProviderData())
         val time = nowNoMills()
         sut.persistTemperature(sensorUuid, time, aRandomTemperature()).shouldBeRight()
         sut.persistHumidity(sensorUuid, time, aRandomHumidity()).shouldBeRight()

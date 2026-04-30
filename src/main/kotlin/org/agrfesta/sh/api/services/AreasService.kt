@@ -5,9 +5,9 @@ import java.util.*
 import org.agrfesta.sh.api.core.domain.areas.Area
 import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
 import org.agrfesta.sh.api.core.domain.areas.AreasFactory
-import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.DeviceDriver
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasWithDevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
 import org.springframework.stereotype.Service
 
 /**
@@ -34,12 +34,12 @@ class AreasService(
     /**
      * Retrieves all areas as fully assembled domain objects, resolving each area's devices from [devicesRegistry].
      *
-     * @param devicesRegistry a map from device UUID to the corresponding [Device] domain object used to
+     * @param devicesRegistry a map from device UUID to the corresponding [DeviceDriver] used to
      *        hydrate device references inside each area.
      * @return [Either.Right] containing a collection of domain [Area] objects, or [Either.Left] with a
      *         [PersistenceFailure] if the underlying query fails.
      */
-    fun getAllAreas(devicesRegistry: Map<UUID, Device>): Either<PersistenceFailure, Collection<Area>> =
+    fun getAllAreas(devicesRegistry: Map<UUID, DeviceDriver>): Either<PersistenceFailure, Collection<Area>> =
         getAllAreasWithDevices().map { areas -> areas.map { areasFactory.createArea(it, devicesRegistry) } }
 
 }

@@ -9,14 +9,14 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import java.util.*
-import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
-import org.agrfesta.sh.api.core.domain.devices.DeviceDto
-import org.agrfesta.sh.api.core.domain.devices.DevicesProvider
+import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
+import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesProvider
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.failures.MessageFailure
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.domain.aDevice
-import org.agrfesta.sh.api.domain.aDeviceDataValue
+import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.sh.api.services.DevicesRefreshResult
 import org.agrfesta.sh.api.services.DevicesService
@@ -63,8 +63,8 @@ class DevicesControllerMvcSliceTest(
     }
 
     @Test fun `refresh() returns 200 with empty response when no stored devices and provider returns empty`() {
-        every { devicesService.getAllDto() } returns emptyList<DeviceDto>().right()
-        every { devicesProvider.getAllDevices() } returns emptyList<DeviceDataValue>().right()
+        every { devicesService.getAllDto() } returns emptyList<Device>().right()
+        every { devicesProvider.getAllDevices() } returns emptyList<ProviderDeviceData>().right()
         every { devicesService.refresh(any(), any()) } returns DevicesRefreshResult()
 
         val resultContent: String = mockMvc.perform(
@@ -80,9 +80,9 @@ class DevicesControllerMvcSliceTest(
     }
 
     @Test fun `refresh() returns 200 with new devices when provider returns unknown devices`() {
-        val deviceData = aDeviceDataValue()
+        val deviceData = aProviderDeviceData()
         val createdUuid = UUID.randomUUID()
-        every { devicesService.getAllDto() } returns emptyList<DeviceDto>().right()
+        every { devicesService.getAllDto() } returns emptyList<Device>().right()
         every { devicesProvider.getAllDevices() } returns listOf(deviceData).right()
         every { devicesService.refresh(any(), any()) } returns DevicesRefreshResult(newDevices = listOf(deviceData))
         every { devicesService.createDevice(deviceData) } returns createdUuid.right()
@@ -103,7 +103,7 @@ class DevicesControllerMvcSliceTest(
         val storedDevice = aDevice()
         val updatedDevice = storedDevice.copy(name = aRandomUniqueString())
         every { devicesService.getAllDto() } returns listOf(storedDevice).right()
-        every { devicesProvider.getAllDevices() } returns emptyList<DeviceDataValue>().right()
+        every { devicesProvider.getAllDevices() } returns emptyList<ProviderDeviceData>().right()
         every {
             devicesService.refresh(any(), any())
         } returns DevicesRefreshResult(updatedDevices = listOf(updatedDevice))
@@ -125,7 +125,7 @@ class DevicesControllerMvcSliceTest(
         val storedDevice = aDevice()
         val detachedDevice = storedDevice.copy(name = aRandomUniqueString())
         every { devicesService.getAllDto() } returns listOf(storedDevice).right()
-        every { devicesProvider.getAllDevices() } returns emptyList<DeviceDataValue>().right()
+        every { devicesProvider.getAllDevices() } returns emptyList<ProviderDeviceData>().right()
         every {
             devicesService.refresh(any(), any())
         } returns DevicesRefreshResult(detachedDevices = listOf(detachedDevice))
@@ -144,7 +144,7 @@ class DevicesControllerMvcSliceTest(
     }
 
     @Test fun `refresh() returns 200 when provider fails`() {
-        every { devicesService.getAllDto() } returns emptyList<DeviceDto>().right()
+        every { devicesService.getAllDto() } returns emptyList<Device>().right()
         every { devicesProvider.provider } returns Provider.SWITCHBOT
         every { devicesProvider.getAllDevices() } returns MessageFailure("provider unavailable").left()
         every { devicesService.refresh(any(), any()) } returns DevicesRefreshResult()
@@ -162,8 +162,8 @@ class DevicesControllerMvcSliceTest(
     }
 
     @Test fun `refresh() returns 200 excluding new devices that fail to persist`() {
-        val deviceData = aDeviceDataValue()
-        every { devicesService.getAllDto() } returns emptyList<DeviceDto>().right()
+        val deviceData = aProviderDeviceData()
+        every { devicesService.getAllDto() } returns emptyList<Device>().right()
         every { devicesProvider.getAllDevices() } returns listOf(deviceData).right()
         every { devicesService.refresh(any(), any()) } returns DevicesRefreshResult(newDevices = listOf(deviceData))
         every { devicesService.createDevice(deviceData) } returns PersistenceFailure(Exception("insert failure")).left()

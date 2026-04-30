@@ -3,7 +3,7 @@ package org.agrfesta.sh.api.core.domain.devices
 import arrow.core.Either
 import org.agrfesta.sh.api.core.domain.failures.Failure
 
-interface Actuator: Device
+interface Actuator: DeviceDriver
 
 interface OnOffActuator: Actuator {
     suspend fun getActuatorStatus(): Either<Failure, ActuatorStatus>

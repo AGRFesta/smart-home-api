@@ -13,8 +13,8 @@ import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.TemperatureSettingsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.test.mothers.aDailyTime
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.junit.jupiter.api.Test

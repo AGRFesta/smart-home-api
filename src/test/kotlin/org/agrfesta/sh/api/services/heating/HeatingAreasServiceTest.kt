@@ -18,8 +18,8 @@ import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.application.ports.outbounds.UnitOfWork
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.TemperatureSettingsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.test.mothers.aDailyTime
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DynamicTest.dynamicTest

@@ -1,7 +1,8 @@
 package org.agrfesta.sh.api.domain
 
-import org.agrfesta.sh.api.core.domain.devices.DeviceDto
-import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
+import org.agrfesta.sh.api.controllers.DeviceResponse
+import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
@@ -10,6 +11,8 @@ import org.agrfesta.test.mothers.aRandomUniqueString
 import java.util.*
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 
+fun DeviceResponse.toDevice() = Device(uuid, status, deviceProviderId, provider, name, features)
+
 fun aDevice(
     uuid: UUID = UUID.randomUUID(),
     providerId: String = aRandomUniqueString(),
@@ -17,7 +20,7 @@ fun aDevice(
     status: DeviceStatus = DeviceStatus.PAIRED,
     name: String = aRandomUniqueString(),
     features: Set<DeviceFeature> = emptySet()
-) = DeviceDto(uuid, status, providerId, provider, name, features)
+) = Device(uuid, status, providerId, provider, name, features)
 
 fun aSensor(
     uuid: UUID = UUID.randomUUID(),
@@ -26,7 +29,7 @@ fun aSensor(
     status: DeviceStatus = DeviceStatus.PAIRED,
     name: String = aRandomUniqueString(),
     additionalFeatures: Set<DeviceFeature> = emptySet()
-) = DeviceDto(uuid, status, providerId, provider, name, additionalFeatures + SENSOR)
+) = Device(uuid, status, providerId, provider, name, additionalFeatures + SENSOR)
 
 fun anActuator(
     uuid: UUID = UUID.randomUUID(),
@@ -35,13 +38,13 @@ fun anActuator(
     status: DeviceStatus = DeviceStatus.PAIRED,
     name: String = aRandomUniqueString(),
     additionalFeatures: Set<DeviceFeature> = emptySet()
-) = DeviceDto(uuid, status, providerId, provider, name, additionalFeatures + ACTUATOR)
+) = Device(uuid, status, providerId, provider, name, additionalFeatures + ACTUATOR)
 
 fun aDevice(
-    data: DeviceDataValue,
+    data: ProviderDeviceData,
     uuid: UUID = UUID.randomUUID(),
     status: DeviceStatus = DeviceStatus.PAIRED
-) = DeviceDto(
+) = Device(
     uuid = uuid,
     status = status,
     deviceProviderId = data.deviceProviderId,
@@ -50,24 +53,23 @@ fun aDevice(
     features = data.features
 )
 
-fun aDeviceDataValue(
+fun aProviderDeviceData(
     providerId: String = aRandomUniqueString(),
     provider: Provider = Provider.SWITCHBOT,
     name: String = aRandomUniqueString(),
     features: Set<DeviceFeature> = emptySet()
-) = DeviceDataValue(providerId, provider, name, features)
+) = ProviderDeviceData(providerId, provider, name, features)
 
-fun aSensorDataValue(
+fun aSensorProviderData(
     providerId: String = aRandomUniqueString(),
     provider: Provider = Provider.SWITCHBOT,
     name: String = aRandomUniqueString(),
     additionalFeatures: Set<DeviceFeature> = emptySet()
-) = DeviceDataValue(providerId, provider, name, additionalFeatures + SENSOR)
+) = ProviderDeviceData(providerId, provider, name, additionalFeatures + SENSOR)
 
-fun anActuatorDataValue(
+fun anActuatorProviderData(
     providerId: String = aRandomUniqueString(),
     provider: Provider = Provider.SWITCHBOT,
     name: String = aRandomUniqueString(),
     additionalFeatures: Set<DeviceFeature> = emptySet()
-) = DeviceDataValue(providerId, provider, name, additionalFeatures + ACTUATOR)
-
+) = ProviderDeviceData(providerId, provider, name, additionalFeatures + ACTUATOR)

@@ -5,8 +5,8 @@ import arrow.core.flatMap
 import arrow.core.left
 import java.util.UUID
 import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingScheduleUseCase
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.TemperatureSettingsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.areas.AreaTemperatureSetting
 import org.agrfesta.sh.api.core.domain.areas.HeatingScheduleDto
 import org.agrfesta.sh.api.core.domain.areas.IntervalDto

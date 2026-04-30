@@ -12,12 +12,12 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import java.util.UUID
-import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.DeviceDriver
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
-import org.agrfesta.sh.api.core.domain.devices.ProviderDevicesFactory
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.DevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.utils.RandomGenerator
 import org.junit.jupiter.api.Test
@@ -44,9 +44,9 @@ class DevicesServiceTest {
 
     @Test
     fun `refresh() returns new devices only when there are no devices`() {
-        val deviceA = aDeviceDataValue()
-        val deviceB = aDeviceDataValue()
-        val deviceC = aDeviceDataValue()
+        val deviceA = aProviderDeviceData()
+        val deviceB = aProviderDeviceData()
+        val deviceC = aProviderDeviceData()
 
         val result = sut.refresh(
             providersDevices = listOf(deviceA, deviceB, deviceC),
@@ -79,9 +79,9 @@ class DevicesServiceTest {
 
     @Test
     fun `refresh() returns updated devices only providers devices are exactly the same devices`() {
-        val providerDeviceA = aDeviceDataValue()
-        val providerDeviceB = aDeviceDataValue()
-        val providerDeviceC = aDeviceDataValue()
+        val providerDeviceA = aProviderDeviceData()
+        val providerDeviceB = aProviderDeviceData()
+        val providerDeviceC = aProviderDeviceData()
         val deviceA = aDevice(providerId = providerDeviceA.deviceProviderId, provider = providerDeviceA.provider)
         val deviceB = aDevice(providerId = providerDeviceB.deviceProviderId, provider = providerDeviceB.provider)
         val deviceC = aDevice(providerId = providerDeviceC.deviceProviderId, provider = providerDeviceC.provider)
@@ -103,8 +103,8 @@ class DevicesServiceTest {
 
     @Test
     fun `refresh() correctly distributes devices across new, updated, and detached sets`() {
-        val providerDeviceA = aDeviceDataValue()
-        val providerDeviceB = aDeviceDataValue()
+        val providerDeviceA = aProviderDeviceData()
+        val providerDeviceB = aProviderDeviceData()
         val deviceA = aDevice(providerId = providerDeviceA.deviceProviderId, provider = providerDeviceA.provider)
         val deviceC = aDevice()
 
@@ -122,9 +122,9 @@ class DevicesServiceTest {
 
     @Test
     fun `refresh() returns updated detached devices as paired when provider returns them`() {
-        val providerDeviceA = aDeviceDataValue()
-        val providerDeviceB = aDeviceDataValue()
-        val providerDeviceC = aDeviceDataValue()
+        val providerDeviceA = aProviderDeviceData()
+        val providerDeviceB = aProviderDeviceData()
+        val providerDeviceC = aProviderDeviceData()
         val deviceA = aDevice(
             providerId = providerDeviceA.deviceProviderId,
             provider = providerDeviceA.provider,
@@ -157,7 +157,7 @@ class DevicesServiceTest {
 
     @Test
     fun `createDevice() returns UUID on success`() {
-        val device = aDeviceDataValue()
+        val device = aProviderDeviceData()
         val uuid = UUID.randomUUID()
         every { randomGenerator.uuid() } returns uuid
         every { devicesRepository.create(uuid, device, any()) } returns Unit.right()
@@ -167,7 +167,7 @@ class DevicesServiceTest {
 
     @Test
     fun `createDevice() returns failure when repository fails`() {
-        val device = aDeviceDataValue()
+        val device = aProviderDeviceData()
         every { randomGenerator.uuid() } returns UUID.randomUUID()
         every {
             devicesRepository.create(any(), device, any())
@@ -178,7 +178,7 @@ class DevicesServiceTest {
 
     @Test
     fun `createDevice() uses PAIRED as default initial status`() {
-        val device = aDeviceDataValue()
+        val device = aProviderDeviceData()
         every { randomGenerator.uuid() } returns UUID.randomUUID()
         every { devicesRepository.create(any(), device, any()) } returns Unit.right()
 
@@ -192,7 +192,7 @@ class DevicesServiceTest {
     @Test
     fun `getAllDevices() returns domain devices built by the provider factory`() {
         val dto = aDevice(provider = Provider.SWITCHBOT)
-        val domainDevice: Device = mockk()
+        val domainDevice: DeviceDriver = mockk()
         val factory: ProviderDevicesFactory = mockk()
         every { factory.provider } returns Provider.SWITCHBOT
         every { factory.createDevice(dto) } returns domainDevice
@@ -223,7 +223,7 @@ class DevicesServiceTest {
     fun `getAllDevices() skips only devices with unregistered provider`() {
         val dtoWithFactory = aDevice(provider = Provider.SWITCHBOT)
         val dtoWithoutFactory = aDevice(provider = Provider.NETATMO)
-        val domainDevice: Device = mockk()
+        val domainDevice: DeviceDriver = mockk()
         val factory: ProviderDevicesFactory = mockk()
         every { factory.provider } returns Provider.SWITCHBOT
         every { factory.createDevice(dtoWithFactory) } returns domainDevice

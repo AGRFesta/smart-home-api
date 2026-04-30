@@ -9,7 +9,7 @@ import io.mockk.verify
 import org.agrfesta.sh.api.utils.CacheOkResponse
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.domain.devices.BatteryValue
-import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.DeviceDriver
 import org.agrfesta.sh.api.core.domain.devices.FailureByException
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.Sensor
@@ -40,7 +40,7 @@ class SensorReadingsSyncServiceTest {
 
     @Test
     fun `fetchAndCacheSensorData() does not interact with cache when device list is empty`() {
-        every { devicesService.getAllDevices() } returns emptyList<Device>().right()
+        every { devicesService.getAllDevices() } returns emptyList<DeviceDriver>().right()
 
         runBlocking { sut.fetchAndCacheSensorData() }
 
@@ -49,7 +49,7 @@ class SensorReadingsSyncServiceTest {
 
     @Test
     fun `fetchAndCacheSensorData() does not interact with cache when no sensors are present`() {
-        val nonSensor: Device = mockk()
+        val nonSensor: DeviceDriver = mockk()
         every { devicesService.getAllDevices() } returns listOf(nonSensor).right()
 
         runBlocking { sut.fetchAndCacheSensorData() }
@@ -114,7 +114,7 @@ class SensorReadingsSyncServiceTest {
         val thermoHygroSensor = aSensorMock()
         val batteryOnlySensor = aSensorMock()
         val failingSensor = aSensorMock()
-        val nonSensor: Device = mockk()
+        val nonSensor: DeviceDriver = mockk()
         val thermoHygro = aThermoHygroDataValue()
         val batteryReading = object : BatteryValue { override val battery: Int = 80 }
         every { devicesService.getAllDevices() } returns

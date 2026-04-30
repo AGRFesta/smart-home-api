@@ -11,7 +11,7 @@ import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.domain.failures.TemperatureSettingCreationFailure
 import org.agrfesta.sh.api.persistence.AreaNotFoundException
-import org.agrfesta.sh.api.core.application.ports.outbounds.TemperatureSettingsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureIntervalEntity
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository

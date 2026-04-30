@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.core.application.ports.outbounds
+package org.agrfesta.sh.api.core.application.ports.outbounds.sensors
 
 import arrow.core.Either
 import java.time.Instant

@@ -2,7 +2,7 @@ package org.agrfesta.sh.api.providers.netatmo
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
-import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
+import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.springframework.stereotype.Service
@@ -20,7 +20,7 @@ class NetatmoIntegrationAsserter(
         asserter.clear()
     }
 
-    fun givenDevice(data: DeviceDataValue, status: ThermoHygroData? = null) {
+    fun givenDevice(data: ProviderDeviceData, status: ThermoHygroData? = null) {
         cache.set("provider.netatmo.access-token", token)
         val homeData = objectMapper.aHomeData(
             name = data.name,

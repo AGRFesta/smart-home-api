@@ -8,9 +8,9 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import java.time.Instant
 import java.util.UUID
-import org.agrfesta.sh.api.domain.anActuatorDataValue
+import org.agrfesta.sh.api.domain.anActuatorProviderData
 import org.agrfesta.sh.api.domain.anAreaDto
-import org.agrfesta.sh.api.domain.aSensorDataValue
+import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
@@ -48,7 +48,7 @@ class AreasWithDevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
         every { timeService.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val sensorId = UUID.randomUUID()
-        devicesRepo.persist(sensorId, aSensorDataValue())
+        devicesRepo.persist(sensorId, aSensorProviderData())
         sensorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = sensorId)
 
         val result = sut.getAllAreasWithDevices().shouldBeRight()
@@ -67,7 +67,7 @@ class AreasWithDevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
         every { timeService.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val actuatorId = UUID.randomUUID()
-        devicesRepo.persist(actuatorId, anActuatorDataValue())
+        devicesRepo.persist(actuatorId, anActuatorProviderData())
         actuatorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = actuatorId)
 
         val result = sut.getAllAreasWithDevices().shouldBeRight()

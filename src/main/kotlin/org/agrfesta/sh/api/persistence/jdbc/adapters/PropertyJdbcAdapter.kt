@@ -8,7 +8,7 @@ import org.agrfesta.sh.api.core.domain.failures.FindPropertyFailure
 import org.agrfesta.sh.api.core.domain.failures.GetPropertyFailure
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
-import org.agrfesta.sh.api.core.application.ports.outbounds.PropertyRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.persistence.PropertyEntryDto
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
 import org.springframework.dao.DataAccessException

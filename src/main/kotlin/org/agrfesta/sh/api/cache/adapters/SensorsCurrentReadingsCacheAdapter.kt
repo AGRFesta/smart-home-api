@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.agrfesta.sh.api.core.application.ports.outbounds.SensorsCurrentReadingsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.core.domain.devices.DeviceProviderIdentity
 import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupError

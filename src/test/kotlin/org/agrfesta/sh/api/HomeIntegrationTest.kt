@@ -6,9 +6,9 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.restassured.RestAssured.given
 import org.agrfesta.sh.api.controllers.authenticated
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.domain.anAreaDto
-import org.agrfesta.sh.api.domain.aSensorDataValue
+import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
 import org.agrfesta.sh.api.services.AssignmentsService
 import org.agrfesta.sh.api.services.DevicesService
@@ -31,7 +31,7 @@ class HomeIntegrationTest(
     @Test fun `getHome() returns area measurements populated from sensor readings in Redis`() {
         val area = anAreaDto()
         areasRepository.save(area)
-        val sensorData = aSensorDataValue()
+        val sensorData = aSensorProviderData()
         val sensorId = devicesService.createDevice(sensorData).shouldBeRight()
         assignmentsService.assignSensorToArea(area.uuid, sensorId).shouldBeRight()
         val readings = aRandomThermoHygroData()

@@ -1,9 +1,9 @@
 package org.agrfesta.sh.api.controllers
 
 import arrow.core.Either
-import org.agrfesta.sh.api.core.domain.devices.DeviceDto
-import org.agrfesta.sh.api.core.domain.devices.DeviceDataValue
-import org.agrfesta.sh.api.core.domain.devices.DevicesProvider
+import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesProvider
 import org.agrfesta.sh.api.core.domain.failures.ExceptionFailure
 import org.agrfesta.sh.api.core.domain.failures.MessageFailure
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
@@ -42,7 +42,7 @@ class DevicesController(
             }
             is Either.Right -> result.value
         }
-        val providersDevices: List<DeviceDataValue> = devicesProviders
+        val providersDevices: List<ProviderDeviceData> = devicesProviders
             .flatMap { service ->
                 service.getAllDevices()
                     .fold(
@@ -72,17 +72,17 @@ class DevicesController(
                         }
                         null
                     },
-                    { uuid -> DeviceDto(uuid = uuid, dataValue = it) }
+                    { uuid -> Device(uuid = uuid, providerData = it).toResponse() }
                 )},
-            updatedDevices = result.updatedDevices,
-            detachedDevices = result.detachedDevices
+            updatedDevices = result.updatedDevices.map { it.toResponse() },
+            detachedDevices = result.detachedDevices.map { it.toResponse() }
         ))
     }
 
 }
 
 data class DevicesRefreshResponse(
-    val newDevices: Collection<DeviceDto> = emptyList(),
-    val updatedDevices: Collection<DeviceDto> = emptyList(),
-    val detachedDevices: Collection<DeviceDto> = emptyList()
+    val newDevices: Collection<DeviceResponse> = emptyList(),
+    val updatedDevices: Collection<DeviceResponse> = emptyList(),
+    val detachedDevices: Collection<DeviceResponse> = emptyList()
 )

@@ -5,7 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasWithDevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasWithDevicesJdbcRepository
 import org.springframework.dao.DataAccessException
 import org.springframework.stereotype.Service

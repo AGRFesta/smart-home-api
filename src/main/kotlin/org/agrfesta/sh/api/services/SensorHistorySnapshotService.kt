@@ -2,7 +2,7 @@ package org.agrfesta.sh.api.services
 
 import arrow.core.Either
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
-import org.agrfesta.sh.api.core.domain.devices.DeviceDto
+import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.utils.CacheFailure
 import org.agrfesta.sh.api.utils.LoggerDelegate
@@ -33,7 +33,7 @@ class SensorHistorySnapshotService(
             .onLeft { failure -> logger.error("unable to get devices", failure.exception) }
     }
 
-    private fun Either<CacheFailure, ThermoHygroData>.onRightPersistAsTemperatureAndHumidityOf(sensor: DeviceDto) =
+    private fun Either<CacheFailure, ThermoHygroData>.onRightPersistAsTemperatureAndHumidityOf(sensor: Device) =
         onRight {
             val now = timeService.now()
             historyDataService.persistTemperature(

@@ -8,7 +8,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import java.time.Instant
 import java.util.*
-import org.agrfesta.sh.api.domain.anActuatorDataValue
+import org.agrfesta.sh.api.domain.anActuatorProviderData
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
@@ -27,7 +27,7 @@ class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `assign() Returns AreaNotFound when area is missing`() {
         every { timeService.now() } returns Instant.now()
         val actuatorId = UUID.randomUUID()
-        devicesRepo.persist(actuatorId, anActuatorDataValue())
+        devicesRepo.persist(actuatorId, anActuatorProviderData())
         val missingAreaId = UUID.randomUUID()
 
         sut.assign(missingAreaId, actuatorId)
@@ -53,7 +53,7 @@ class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
         every { timeService.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val actuatorId = UUID.randomUUID()
-        devicesRepo.persist(actuatorId, anActuatorDataValue())
+        devicesRepo.persist(actuatorId, anActuatorProviderData())
         actuatorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = actuatorId)
 
         sut.assign(area.uuid, actuatorId)
@@ -77,7 +77,7 @@ class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
         every { timeService.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val actuatorId = UUID.randomUUID()
-        devicesRepo.persist(actuatorId, anActuatorDataValue())
+        devicesRepo.persist(actuatorId, anActuatorProviderData())
 
         sut.assign(area.uuid, actuatorId).shouldBeRight()
 

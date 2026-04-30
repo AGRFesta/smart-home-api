@@ -9,7 +9,7 @@ import org.agrfesta.sh.api.core.domain.failures.ActuatorAssignmentFailure
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
-import org.agrfesta.sh.api.core.application.ports.outbounds.ActuatorsAssignmentsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.ActuatorsAssignmentsRepository
 import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.persistence.DeviceNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.repositories.ActuatorsAssignmentsJdbcRepository

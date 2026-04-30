@@ -22,7 +22,7 @@ import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.ON
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.UNDEFINED
 import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
 import org.agrfesta.sh.api.core.domain.failures.KtorRequestFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.PropertyRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.providers.netatmo.BehaviorRegistry
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClient
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClientAsserter

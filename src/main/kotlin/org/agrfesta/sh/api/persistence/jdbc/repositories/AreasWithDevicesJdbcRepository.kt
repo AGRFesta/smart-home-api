@@ -2,7 +2,7 @@ package org.agrfesta.sh.api.persistence.jdbc.repositories
 
 import java.util.*
 import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
-import org.agrfesta.sh.api.core.domain.devices.DeviceDto
+import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
@@ -45,8 +45,8 @@ class AreasWithDevicesJdbcRepository(
                 val uuid: UUID,
                 val name: String,
                 val isIndoor: Boolean,
-                val sensors: MutableList<DeviceDto>,
-                val actuators: MutableList<DeviceDto>
+                val sensors: MutableList<Device>,
+                val actuators: MutableList<Device>
             )
 
             val areaMap = LinkedHashMap<UUID, MutableAreaBuilder>()
@@ -66,7 +66,7 @@ class AreasWithDevicesJdbcRepository(
 
                 val deviceUuid = rs.getString("device_uuid")
                 if (deviceUuid != null) {
-                    val device = DeviceDto(
+                    val device = Device(
                         uuid = UUID.fromString(deviceUuid),
                         name = rs.getString("device_name"),
                         provider = Provider.valueOf(rs.getString("provider")),

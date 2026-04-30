@@ -18,10 +18,10 @@ import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
 import org.agrfesta.sh.api.core.domain.failures.NotASensor
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
-import org.agrfesta.sh.api.core.application.ports.outbounds.ActuatorsAssignmentsRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.DevicesRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.SensorsAssignmentsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.ActuatorsAssignmentsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignmentsRepository
 import org.junit.jupiter.api.Test
 
 class AssignmentsServiceTest {

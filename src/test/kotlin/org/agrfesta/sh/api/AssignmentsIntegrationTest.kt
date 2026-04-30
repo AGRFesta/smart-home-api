@@ -8,11 +8,11 @@ import io.restassured.http.ContentType
 import java.util.*
 import org.agrfesta.sh.api.controllers.MessageResponse
 import org.agrfesta.sh.api.controllers.authenticated
-import org.agrfesta.sh.api.domain.aSensorDataValue
-import org.agrfesta.sh.api.domain.anActuatorDataValue
+import org.agrfesta.sh.api.domain.aSensorProviderData
+import org.agrfesta.sh.api.domain.anActuatorProviderData
 import org.agrfesta.sh.api.domain.anAreaDto
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.DevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -31,7 +31,7 @@ class AssignmentsIntegrationTest(
         val area = anAreaDto()
         areasRepository.save(area)
         val deviceId = uuid
-        devicesRepository.create(deviceId, aSensorDataValue()).getOrElse { error("Failed to create sensor: $it") }
+        devicesRepository.create(deviceId, aSensorProviderData()).getOrElse { error("Failed to create sensor: $it") }
 
         val result = given()
             .contentType(ContentType.JSON)
@@ -51,7 +51,7 @@ class AssignmentsIntegrationTest(
         val area = anAreaDto()
         areasRepository.save(area)
         val deviceId = uuid
-        devicesRepository.create(deviceId, anActuatorDataValue()).getOrElse { error("Failed to create actuator: $it") }
+        devicesRepository.create(deviceId, anActuatorProviderData()).getOrElse { error("Failed to create actuator: $it") }
 
         val result = given()
             .contentType(ContentType.JSON)

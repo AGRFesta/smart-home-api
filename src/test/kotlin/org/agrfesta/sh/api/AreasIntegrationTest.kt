@@ -8,7 +8,7 @@ import java.util.*
 import org.agrfesta.sh.api.controllers.CreatedResourceResponse
 import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.core.domain.areas.AreaDto
-import org.agrfesta.sh.api.core.application.ports.outbounds.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

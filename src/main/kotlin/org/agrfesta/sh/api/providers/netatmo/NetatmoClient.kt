@@ -33,7 +33,7 @@ import org.agrfesta.sh.api.core.domain.failures.Failure
 import org.agrfesta.sh.api.core.domain.failures.KtorRequestFailure
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_REFRESH_TOKEN_CACHE_KEY
-import org.agrfesta.sh.api.core.application.ports.outbounds.PropertyRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.services.onLeftLogOn
 import org.agrfesta.sh.api.utils.Cache
 import org.agrfesta.sh.api.utils.LoggerDelegate

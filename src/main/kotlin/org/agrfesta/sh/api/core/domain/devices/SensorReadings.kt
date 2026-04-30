@@ -19,10 +19,6 @@ sealed interface SensorReadingsFailure: Failure
 
 class FailureByException(val reason: Throwable): SensorReadingsFailure
 
-interface ReadableValuesDeviceProvider {
-    suspend fun fetchSensorReadings(deviceProviderId: String): Either<SensorReadingsFailure, SensorReadings>
-}
-
 fun Either<Failure, SensorReadings>.onLeftLogOn(logger: Logger) = onLeft {
     when (it) {
         is FailureByException -> logger.error("Failure fetching data", it.reason)
