@@ -26,3 +26,4 @@
 - **Architecture & Domain:** See `docs/ARCHITECTURE.md` for rules on Ports, Adapters, Value Objects, and Error Handling.
 - **Security:** See `docs/SECURITY.md` (API Key SHA-256).
 - **Workflow:** See `docs/TDD_WORKFLOW.md` for the Red/Green/Refactor cycle.
+- **Domain Models:** See `docs/domain/` for domain-specific lifecycle and design decisions (e.g. `DEVICES.md` for device status semantics and synchronization flow).

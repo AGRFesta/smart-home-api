@@ -53,31 +53,34 @@ class DevicesIntegrationTest(
     }
 
     @Test
-    fun `refresh() happy case with all possible device status`() {
+    fun `synchronize() happy path with new, updated, re-paired and detached devices`() {
         val existingSBDeviceData = aProviderDeviceData(provider = SWITCHBOT)
         val existingDetachedSBDeviceData = aProviderDeviceData(provider = SWITCHBOT)
+        val orphanSBDeviceData = aProviderDeviceData(provider = SWITCHBOT)
         val newSBDeviceData = aProviderDeviceData(provider = SWITCHBOT)
-        val uuid = UUID.randomUUID()
-        devicesDao.create(uuid, existingSBDeviceData).getOrElse { error("Failed to create device: $it") }
-        val expectedUpdatedSBDevice: Device = aDevice(existingSBDeviceData, uuid)
+        val existingUuid = UUID.randomUUID()
+        devicesDao.create(existingUuid, existingSBDeviceData).getOrElse { error("Failed to create device: $it") }
+        val expectedUpdatedDevice = aDevice(existingSBDeviceData, existingUuid)
         val detachedUuid = UUID.randomUUID()
         devicesDao.create(detachedUuid, existingDetachedSBDeviceData, DeviceStatus.DETACHED)
             .getOrElse { error("Failed to create device: $it") }
-        val expectedPairedDevice = aDevice(existingDetachedSBDeviceData, detachedUuid, DeviceStatus.PAIRED)
+        val expectedRePairedDevice = aDevice(existingDetachedSBDeviceData, detachedUuid, DeviceStatus.PAIRED)
+        val orphanUuid = UUID.randomUUID()
+        devicesDao.create(orphanUuid, orphanSBDeviceData).getOrElse { error("Failed to create device: $it") }
+        val expectedDetachedDevice = aDevice(orphanSBDeviceData, orphanUuid, DeviceStatus.DETACHED)
         coEvery {
             switchBotDevicesClient.getDevices()
         } returns objectMapper.aSwitchBotDevicesListSuccessResponse(listOf(
             newSBDeviceData.asSBDeviceJsonNode(),
             existingSBDeviceData.asSBDeviceJsonNode(),
             existingDetachedSBDeviceData.asSBDeviceJsonNode()))
-
         netatmoIntegrationAsserter.givenNoDevices()
 
         val result = given()
             .contentType(ContentType.JSON)
             .authenticated()
             .`when`()
-            .post("/devices/refresh")
+            .post("/devices/synchronizations")
             .then()
             .statusCode(200)
             .extract()
@@ -89,46 +92,14 @@ class DevicesIntegrationTest(
         newDevice.provider shouldBe newSBDeviceData.provider
         newDevice.name shouldBe newSBDeviceData.name
         newDevice.features shouldBe newSBDeviceData.features
-        result.updatedDevices.shouldContainExactly(
-            expectedUpdatedSBDevice.toResponse(), expectedPairedDevice.toResponse())
-        result.detachedDevices.shouldBeEmpty()
+        result.updatedDevices.shouldContainExactlyInAnyOrder(
+            expectedUpdatedDevice.toResponse(), expectedRePairedDevice.toResponse())
+        result.detachedDevices.shouldContainExactly(expectedDetachedDevice.toResponse())
         devicesDao.getAll().getOrElse { error("Failed to fetch devices: $it") }
-            .shouldContainExactlyInAnyOrder(expectedUpdatedSBDevice, expectedPairedDevice, newDevice.toDevice())
+            .shouldContainExactlyInAnyOrder(
+                expectedUpdatedDevice, expectedRePairedDevice, expectedDetachedDevice, newDevice.toDevice())
     }
 
-    @Test
-    fun `refresh() updates existing devices to 'DETACHED' when fails to fetch them from provider`() {
-        val deviceData = aProviderDeviceData(provider = SWITCHBOT)
-        val uuid = UUID.randomUUID()
-        devicesDao.create(uuid, deviceData).getOrElse { error("Failed to create device: $it") }
-        val expectedUpdatedSBDevice = aDevice(deviceData, uuid, DeviceStatus.DETACHED)
-        coEvery { switchBotDevicesClient.getDevices() } throws Exception("switchbot fetch failure")
-
-        val existingNetatmoDeviceData = aProviderDeviceData(provider = NETATMO, features = setOf(SENSOR, ACTUATOR))
-        val uuid1 = UUID.randomUUID()
-        devicesDao.create(uuid1, existingNetatmoDeviceData).getOrElse { error("Failed to create device: $it") }
-        val expectedUpdatedNetatmoDevice = aDevice(existingNetatmoDeviceData, uuid1, DeviceStatus.DETACHED)
-        netatmoIntegrationAsserter.givenHomeDataFetchFailure()
-
-        val result = given()
-            .contentType(ContentType.JSON)
-            .authenticated()
-            .`when`()
-            .post("/devices/refresh")
-            .then()
-            .statusCode(200)
-            .extract()
-            .`as`(DevicesRefreshResponse::class.java)
-
-        result.newDevices.shouldBeEmpty()
-        result.updatedDevices.shouldBeEmpty()
-        result.detachedDevices.shouldContainExactlyInAnyOrder(
-            expectedUpdatedNetatmoDevice.toResponse(),
-            expectedUpdatedSBDevice.toResponse()
-        )
-        devicesDao.getAll().getOrElse { error("Failed to fetch devices: $it") }
-            .shouldContainExactlyInAnyOrder(expectedUpdatedNetatmoDevice, expectedUpdatedSBDevice)
-    }
 
     private fun ProviderDeviceData.asSBDeviceJsonNode(): JsonNode =
         objectMapper.aSwitchBotDevice(

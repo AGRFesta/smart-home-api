@@ -7,11 +7,11 @@ import io.kotest.matchers.shouldBe
 import io.restassured.RestAssured.given
 import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
 import org.agrfesta.sh.api.services.AssignmentsService
-import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.services.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.sh.api.services.heating.HeatingOrchestrationService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.sh.api.utils.SmartCache
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 
 class HomeIntegrationTest(
     private val areasRepository: AreasRepository,
-    private val devicesService: DevicesService,
+    private val devicesRepository: DevicesRepository,
     private val assignmentsService: AssignmentsService,
     private val smartCache: SmartCache,
     private val propertyRepository: PropertyJdbcRepository
@@ -32,7 +32,8 @@ class HomeIntegrationTest(
         val area = anAreaDto()
         areasRepository.save(area)
         val sensorData = aSensorProviderData()
-        val sensorId = devicesService.createDevice(sensorData).shouldBeRight()
+        val sensorId = randomGenerator.uuid()
+        devicesRepository.create(sensorId, sensorData).shouldBeRight()
         assignmentsService.assignSensorToArea(area.uuid, sensorId).shouldBeRight()
         val readings = aRandomThermoHygroData()
         smartCache.setThermoHygroOf(sensorData, readings)

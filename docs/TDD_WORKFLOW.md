@@ -10,8 +10,15 @@ When generating or modifying tests, you must adhere to the following rules:
 * **Mocking Boundaries:** Use mocks and stubs ONLY for system boundaries (e.g., API calls, external services, databases, filesystem). **Never** mock internal logic or private methods. Rely on Dependency Injection.
 * **Test Organization:** Prefer one test class per method under test (e.g., `FooServiceBarMethodTest.kt`) ONLY when the methods have significantly different setup, or when the class grows beyond ~400 lines. If the shared setup dominates, keep tests together or extract a base class.
 * **Visual Structure (Arrange-Act-Assert):** The body of the test MUST be visually separated into three distinct blocks (e.g., using `// Given`, `// When`, `// Then` comments or blank lines) to clearly separate data setup, execution, and verification.
-* **Explicit "Given" Phase:** * **Subject setup — always explicit:** Declare any value, mock behavior, or state that is the **primary subject** of the test directly in the test body, even if the same value is already provided as a default by an Object Mother, `init` block, or `@BeforeEach`. The subject must be visible at a glance.
+* **Explicit "Given" Phase:**
+    * **Subject setup — always explicit:** Declare any value, mock behavior, or state that is the **primary subject** of the test directly in the test body, even if the same value is already provided as a default by an Object Mother, `init` block, or `@BeforeEach`. The subject must be visible at a glance.
     * **Non-subject setup — centralize, don't repeat:** Setup that is shared across multiple tests and is **not the subject** of any of them must be extracted to a single point (`init` block or `@BeforeEach`). Repeating it in every test body is noise that obscures what each test is actually about.
+
+> ❗ **Given phase checklist — apply at every Phase 3 (Refactor):**
+> 1. Does any `@BeforeEach` / `init` block contain setup that IS the subject of at least one test? → move it into that test body.
+> 2. Does any test body repeat setup that is shared and NOT the subject of any test? → extract it to `@BeforeEach` / `init`.
+> 3. Is the SUT construction repeated in every test? → move it to a field, unless constructor args vary per test.
+> 4. Could a reader understand *what* this test is about from the Given block alone, without reading the rest of the class? → if not, something is in the wrong place.
 * **Descriptive Naming:** Test names must clearly state the behavior being verified and the context (e.g., in Kotest use clear string descriptions like `"should return error when input is negative"`).
 * **Assertions & Arrow `Either`:** * For collections or complex objects, wrap assertions with `withClue("context message") { ... }` instead of relying solely on `shouldBe` diff output.
     * When asserting on Arrow `Either` results, **never** just check if it is left or right. You must assert the exact type of the domain error using strongly typed assertions (e.g., `result.shouldBeLeft().shouldBeInstanceOf<AreaCreationFailure.NameAlreadyExists>()`).
