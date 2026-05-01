@@ -4,6 +4,7 @@ All endpoints require authentication via Bearer token. See [SECURITY.md](../SECU
 
 | Method | Path     | Resource | Description                        |
 |--------|----------|----------|------------------------------------|
+| `POST`   | `/devices/synchronizations` | [devices](devices.md#post-devicessynchronizations) | Synchronise persisted devices with provider snapshot |
 | `GET`    | `/home`  | [home](home.md#get-home) | BFF dashboard — global state + areas |
 | `GET`    | `/areas/{areaId}/heating-schedule` | [areas](areas.md#get-areasareaidheating-schedule) | Get the heating schedule for an area |
 | `PUT`    | `/areas/{areaId}/heating-schedule` | [areas](areas.md#put-areasareaidheating-schedule) | Create or replace the heating schedule for an area |
