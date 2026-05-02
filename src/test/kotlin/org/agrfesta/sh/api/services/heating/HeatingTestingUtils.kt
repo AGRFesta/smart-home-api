@@ -4,12 +4,33 @@ import arrow.core.left
 import arrow.core.right
 import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.mockk
 import java.math.BigDecimal
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.Sensor
+import org.agrfesta.sh.api.core.domain.devices.SharedHeater
 import org.agrfesta.sh.api.core.domain.failures.MessageFailure
-import org.agrfesta.sh.api.services.heating.HeatingOrchestrationService.Companion.HYSTERESIS
+import org.agrfesta.sh.api.services.heating.AbstractSharedHeatingAreasStrategyService.Companion.HYSTERESIS
 import org.agrfesta.test.mothers.aRandomTemperature
+
+fun Device.toSensorMockk(factory: ProviderDevicesFactory): Sensor {
+    val dto = this
+    val sensor: Sensor = mockk()
+    every { sensor.uuid } returns uuid
+    every { factory.createDevice(dto) } returns sensor
+    return sensor
+}
+
+fun Device.toSharedHeaterMockk(factory: ProviderDevicesFactory): SharedHeater {
+    val dto = this
+    val heater: SharedHeater = mockk(relaxed = true)
+    every { heater.uuid } returns uuid
+    every { factory.createDevice(dto) } returns heater
+    return heater
+}
 
 fun HeatableArea.hasTempAsTarget(): Temperature {
     val temperature = aRandomTemperature()

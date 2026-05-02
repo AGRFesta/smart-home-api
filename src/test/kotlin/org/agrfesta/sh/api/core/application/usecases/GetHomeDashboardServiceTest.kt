@@ -16,6 +16,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevic
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
+import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.sh.api.core.domain.commons.FieldFailure
 import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
@@ -28,7 +29,6 @@ import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.aSensor
 import org.agrfesta.sh.api.services.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
-import org.agrfesta.sh.api.services.heating.HeatingOrchestrationService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.agrfesta.sh.api.utils.TimeService

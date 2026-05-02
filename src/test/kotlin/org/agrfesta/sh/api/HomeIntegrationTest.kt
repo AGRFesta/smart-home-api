@@ -8,12 +8,12 @@ import io.restassured.RestAssured.given
 import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
 import org.agrfesta.sh.api.services.AssignmentsService
 import org.agrfesta.sh.api.services.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
-import org.agrfesta.sh.api.services.heating.HeatingOrchestrationService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.sh.api.utils.SmartCache
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.junit.jupiter.api.Test

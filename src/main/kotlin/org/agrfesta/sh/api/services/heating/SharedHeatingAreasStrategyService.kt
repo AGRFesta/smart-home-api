@@ -1,10 +1,10 @@
 package org.agrfesta.sh.api.services.heating
 
+import java.math.BigDecimal
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.Heater
-import org.agrfesta.sh.api.services.heating.HeatingOrchestrationService.Companion.HYSTERESIS
 import org.agrfesta.sh.api.utils.LoggerDelegate
 
 /**
@@ -28,6 +28,10 @@ sealed interface SharedHeatingAreasStrategyService {
  */
 abstract class AbstractSharedHeatingAreasStrategyService: SharedHeatingAreasStrategyService {
     private val logger by LoggerDelegate()
+
+    companion object {
+        val HYSTERESIS: Temperature = Temperature.of(BigDecimal.ONE)
+    }
 
     protected abstract suspend fun internalHandleHeatingFor(sharedHeater: Heater, areas: Collection<HeatableArea>)
 

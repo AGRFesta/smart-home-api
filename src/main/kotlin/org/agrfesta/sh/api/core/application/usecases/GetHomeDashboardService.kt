@@ -25,7 +25,7 @@ import org.agrfesta.sh.api.core.domain.home.HomeDashboardDto
 import org.agrfesta.sh.api.core.domain.home.HumidityDto
 import org.agrfesta.sh.api.core.domain.home.MeasurementsDto
 import org.agrfesta.sh.api.services.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
-import org.agrfesta.sh.api.services.heating.HeatingOrchestrationService.Companion.HEATING_ENABLED_KEY
+import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.sh.api.utils.TimeService
 import org.springframework.stereotype.Service
 
