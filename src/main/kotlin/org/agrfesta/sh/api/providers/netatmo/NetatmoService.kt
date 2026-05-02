@@ -10,7 +10,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesProvi
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.Provider.NETATMO
 import org.agrfesta.sh.api.core.domain.failures.Failure
-import org.agrfesta.sh.api.utils.Cache
+import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.stereotype.Service
 

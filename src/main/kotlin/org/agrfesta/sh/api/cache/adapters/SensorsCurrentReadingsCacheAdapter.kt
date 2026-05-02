@@ -4,15 +4,17 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
+import org.agrfesta.sh.api.core.application.ports.outbounds.CacheError
+import org.agrfesta.sh.api.core.application.ports.outbounds.CachedValueNotFound
+import org.agrfesta.sh.api.core.application.ports.outbounds.CacheOkResponse
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.core.domain.devices.DeviceProviderIdentity
 import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupError
 import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupFailure
-import org.agrfesta.sh.api.utils.Cache
-import org.agrfesta.sh.api.utils.CacheError
-import org.agrfesta.sh.api.utils.CachedValueNotFound
-import org.agrfesta.sh.api.utils.getThermoHygroKey
+import org.agrfesta.sh.api.core.domain.failures.SensorReadingsSaveError
+import org.agrfesta.sh.api.core.domain.failures.SensorReadingsSaveFailure
 import org.springframework.stereotype.Service
 
 @Service
@@ -33,6 +35,18 @@ class SensorsCurrentReadingsCacheAdapter(
                 { json -> deserialize(json) }
             )
 
+    override fun save(sensor: DeviceProviderIdentity, data: ThermoHygroData): Either<SensorReadingsSaveFailure, Unit> {
+        val json = try {
+            objectMapper.writeValueAsString(data)
+        } catch (e: Exception) {
+            return SensorReadingsSaveError(e).left()
+        }
+        return when (val response = cache.set(sensor.getThermoHygroKey(), json)) {
+            is CacheError -> SensorReadingsSaveError(response.exception).left()
+            CacheOkResponse -> Unit.right()
+        }
+    }
+
     private fun deserialize(json: String): Either<ReadingsLookupFailure, ThermoHygroData?> =
         try {
             objectMapper.readValue(json, ThermoHygroData::class.java).right()
@@ -41,3 +55,6 @@ class SensorsCurrentReadingsCacheAdapter(
         }
 
 }
+
+fun DeviceProviderIdentity.getThermoHygroKey() =
+    "sensors:${provider.name.lowercase()}:${deviceProviderId}:thermohygro"

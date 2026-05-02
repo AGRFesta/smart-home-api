@@ -5,6 +5,11 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.agrfesta.sh.api.cache.adapters.getThermoHygroKey
+import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
+import org.agrfesta.sh.api.core.application.ports.outbounds.CacheError
+import org.agrfesta.sh.api.core.application.ports.outbounds.CacheFailure
+import org.agrfesta.sh.api.core.application.ports.outbounds.CachedValueNotFound
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.core.domain.devices.DeviceProviderIdentity
 import org.slf4j.Logger
@@ -50,11 +55,8 @@ class SmartCache(
 
 }
 
-fun DeviceProviderIdentity.getThermoHygroKey() =
-    "sensors:${provider.name.lowercase()}:${deviceProviderId}:thermohygro"
-
 fun Either<CacheFailure, ThermoHygroData>.onLeftLogOn(logger: Logger) = onLeft {
-    when(it) {
+    when (it) {
         is CacheError -> logger.error("ThermoHygroData cache fetch failure", it.exception)
         is CachedValueNotFound -> logger.error("missing cache key: ${it.key}")
     }

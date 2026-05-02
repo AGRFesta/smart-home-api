@@ -34,7 +34,7 @@ import org.agrfesta.sh.api.providers.netatmo.aNetatmoRoomStatus
 import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoSmarther.Companion.MAX_SET_POINT_TEMPERATURE
 import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoSmarther.Companion.MIN_SET_POINT_TEMPERATURE
 import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoSmarther.Companion.SET_POINT_MODE
-import org.agrfesta.sh.api.utils.Cache
+import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.utils.CacheAsserter
 import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aJsonNode

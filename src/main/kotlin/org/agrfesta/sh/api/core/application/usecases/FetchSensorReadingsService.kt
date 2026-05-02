@@ -1,0 +1,55 @@
+package org.agrfesta.sh.api.core.application.usecases
+
+import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.left
+import arrow.core.right
+import kotlinx.coroutines.runBlocking
+import org.agrfesta.sh.api.core.application.ports.inbounds.FetchSensorReadingsUseCase
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
+import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
+import org.agrfesta.sh.api.core.domain.devices.Sensor
+import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
+import org.agrfesta.sh.api.core.domain.failures.FetchSensorReadingsError
+import org.agrfesta.sh.api.core.domain.failures.FetchSensorReadingsFailure
+import org.agrfesta.sh.api.utils.LoggerDelegate
+import org.springframework.stereotype.Service
+
+@Service
+class FetchSensorReadingsService(
+    private val devicesRepository: DevicesRepository,
+    providerDevicesFactories: Collection<ProviderDevicesFactory>,
+    private val readingsRepository: SensorsCurrentReadingsRepository
+) : FetchSensorReadingsUseCase {
+
+    private val logger by LoggerDelegate()
+    private val factories = providerDevicesFactories.associateBy { it.provider }
+
+    override fun execute(): Either<FetchSensorReadingsFailure, Unit> {
+        val devices = devicesRepository.getAll().getOrElse { failure ->
+            return FetchSensorReadingsError(failure.exception).left()
+        }
+        devices
+            .filter { it.features.contains(DeviceFeature.SENSOR) }
+            .forEach { device ->
+                val driver = factories[device.provider]?.createDevice(device) ?: return@forEach
+                if (driver is Sensor) {
+                    // fetchReadings() is suspend; runBlocking bridges to the synchronous use case contract
+                    // so that callers (e.g. scheduler) remain unaware of coroutines.
+                    val readings = runBlocking { driver.fetchReadings() }
+                        .getOrElse { failure ->
+                            logger.error("Failed to fetch readings for device ${device.uuid}: $failure")
+                            return@forEach
+                        }
+                    if (readings is ThermoHygroDataValue) {
+                        readingsRepository.save(driver, readings.thermoHygroData)
+                            .onLeft { failure -> logger.error("Failed to save readings for device ${device.uuid}: $failure") }
+                    }
+                }
+            }
+        return Unit.right()
+    }
+
+}

@@ -6,10 +6,9 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupError
 import org.agrfesta.sh.api.domain.aSensor
-import org.agrfesta.sh.api.utils.Cache
-import org.agrfesta.sh.api.utils.getThermoHygroKey
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,6 +49,26 @@ class SensorsCurrentReadingsCacheAdapterTest : AbstractCacheAdapterTest() {
         sut.findBy(sensor)
             .shouldBeLeft()
             .shouldBeInstanceOf<ReadingsLookupError>()
+    }
+
+    @Test fun `save() stores serialized ThermoHygroData at the sensor's cache key`() {
+        val sensor = aSensor()
+        val data = aRandomThermoHygroData()
+
+        sut.save(sensor, data).shouldBeRight()
+
+        cache.get(sensor.getThermoHygroKey()).shouldBeRight() shouldBe objectMapper.writeValueAsString(data)
+    }
+
+    @Test fun `save() overwrites previously stored data for the same sensor`() {
+        val sensor = aSensor()
+        val first = aRandomThermoHygroData()
+        val second = aRandomThermoHygroData()
+        sut.save(sensor, first)
+
+        sut.save(sensor, second).shouldBeRight()
+
+        cache.get(sensor.getThermoHygroKey()).shouldBeRight() shouldBe objectMapper.writeValueAsString(second)
     }
 
 }

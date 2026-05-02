@@ -3,14 +3,14 @@ package org.agrfesta.sh.api.services
 import arrow.core.getOrElse
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.mockk.every
-import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.AbstractIntegrationTest
-import org.agrfesta.sh.api.domain.aProviderDeviceData
+import org.agrfesta.sh.api.core.application.ports.inbounds.FetchSensorReadingsUseCase
+import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsHistoryDataRepository
 import org.agrfesta.sh.api.core.domain.commons.Percentage
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.SensorDataType.HUMIDITY
 import org.agrfesta.sh.api.core.domain.devices.SensorDataType.TEMPERATURE
-import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsHistoryDataRepository
+import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotClientAsserter
 import org.agrfesta.test.mothers.aRandomIntHumidity
@@ -23,7 +23,7 @@ import java.util.UUID
 
 class SensorHistorySnapshotServiceIntegrationTest(
     private val sut: SensorHistorySnapshotService,
-    private val syncService: SensorReadingsSyncService,
+    private val fetchSensorReadings: FetchSensorReadingsUseCase,
     private val devicesRepository: DevicesJdbcRepository,
     private val historyDao: SensorsHistoryDataRepository,
     private val switchBotClientAsserter: SwitchBotClientAsserter
@@ -42,7 +42,7 @@ class SensorHistorySnapshotServiceIntegrationTest(
         val uuid = UUID.randomUUID()
         devicesRepository.persist(uuid, sensor)
         switchBotClientAsserter.givenSensorData(sensor.deviceProviderId, sensorData)
-        runBlocking { syncService.fetchAndCacheSensorData() }
+        fetchSensorReadings.execute()
 
         sut.snapshotDevicesData()
 
