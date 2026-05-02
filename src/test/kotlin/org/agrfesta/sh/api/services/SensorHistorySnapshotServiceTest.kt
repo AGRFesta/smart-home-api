@@ -10,7 +10,7 @@ import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aSensor
 import org.agrfesta.sh.api.domain.anActuator
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.utils.CachedValueNotFound
+import org.agrfesta.sh.api.core.application.ports.outbounds.CachedValueNotFound
 import org.agrfesta.sh.api.utils.SmartCache
 import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aRandomThermoHygroData

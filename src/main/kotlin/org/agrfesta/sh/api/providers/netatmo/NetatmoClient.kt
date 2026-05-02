@@ -35,7 +35,7 @@ import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_AC
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_REFRESH_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.services.onLeftLogOn
-import org.agrfesta.sh.api.utils.Cache
+import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.utils.toDetailedString
 import org.springframework.beans.factory.annotation.Autowired
