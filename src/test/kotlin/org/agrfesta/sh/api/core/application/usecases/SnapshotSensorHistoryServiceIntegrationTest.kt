@@ -1,10 +1,11 @@
-package org.agrfesta.sh.api.services
+package org.agrfesta.sh.api.core.application.usecases
 
 import arrow.core.getOrElse
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.mockk.every
 import org.agrfesta.sh.api.AbstractIntegrationTest
 import org.agrfesta.sh.api.core.application.ports.inbounds.FetchSensorReadingsUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.SnapshotSensorHistoryUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsHistoryDataRepository
 import org.agrfesta.sh.api.core.domain.commons.Percentage
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
@@ -21,8 +22,8 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-class SensorHistorySnapshotServiceIntegrationTest(
-    private val sut: SensorHistorySnapshotService,
+class SnapshotSensorHistoryServiceIntegrationTest(
+    private val sut: SnapshotSensorHistoryUseCase,
     private val fetchSensorReadings: FetchSensorReadingsUseCase,
     private val devicesRepository: DevicesJdbcRepository,
     private val historyDao: SensorsHistoryDataRepository,
@@ -35,7 +36,7 @@ class SensorHistorySnapshotServiceIntegrationTest(
         every { timeService.now() } returns now
     }
 
-    @Test fun `snapshotDevicesData() saves all cached sensor values`() {
+    @Test fun `execute() saves all cached sensor values as history records`() {
         val sensorData = aRandomThermoHygroData(
             relativeHumidity = Percentage.ofHundreds(aRandomIntHumidity()))
         val sensor = aProviderDeviceData(features = setOf(SENSOR))
@@ -44,7 +45,7 @@ class SensorHistorySnapshotServiceIntegrationTest(
         switchBotClientAsserter.givenSensorData(sensor.deviceProviderId, sensorData)
         fetchSensorReadings.execute()
 
-        sut.snapshotDevicesData()
+        sut.execute()
 
         historyDao.findBySensor(uuid)
             .getOrElse { error("Failed to fetch sensor history: $it") }
