@@ -14,7 +14,7 @@ import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
 import org.agrfesta.sh.api.services.AssignmentsService
 import org.agrfesta.sh.api.services.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
-import org.agrfesta.sh.api.utils.SmartCache
+import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.junit.jupiter.api.Test
 
@@ -22,7 +22,7 @@ class HomeIntegrationTest(
     private val areasRepository: AreasRepository,
     private val devicesRepository: DevicesRepository,
     private val assignmentsService: AssignmentsService,
-    private val smartCache: SmartCache,
+    private val readingsRepository: SensorsCurrentReadingsRepository,
     private val propertyRepository: PropertyJdbcRepository
 ): AbstractIntegrationTest() {
 
@@ -36,7 +36,7 @@ class HomeIntegrationTest(
         devicesRepository.create(sensorId, sensorData).shouldBeRight()
         assignmentsService.assignSensorToArea(area.uuid, sensorId).shouldBeRight()
         val readings = aRandomThermoHygroData()
-        smartCache.setThermoHygroOf(sensorData, readings)
+        readingsRepository.save(sensorData, readings).shouldBeRight()
 
         val json = given()
             .authenticated()
