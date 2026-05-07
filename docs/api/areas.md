@@ -1,5 +1,225 @@
 # Resource: Areas
 
+## POST /areas
+
+Creates a new area.
+
+### Authentication
+
+Bearer token required. Returns `401 Unauthorized` if the token is missing or invalid.
+
+### Request Body
+
+```json
+{ "name": "Living Room", "isIndoor": true }
+```
+
+| Field      | Type      | Required | Notes                              |
+|------------|-----------|----------|------------------------------------|
+| `name`     | `string`  | Yes      | Must be unique                     |
+| `isIndoor` | `boolean` | No       | Defaults to `true` when omitted    |
+
+### Response: `201 Created`
+
+```json
+{ "message": "Area 'Living Room' successfully created!", "resourceId": "<uuid>" }
+```
+
+### Response: `400 Bad Request` — name already exists
+
+```json
+{ "message": "An Area 'Living Room' already exists!" }
+```
+
+### Response: `500 Internal Server Error`
+
+```json
+{ "message": "Unable to create Area 'Living Room'!" }
+```
+
+### HTTP Status Codes
+
+| Status | Condition                               |
+|--------|-----------------------------------------|
+| `201`  | Area created; body contains the new id |
+| `400`  | An area with the same name exists       |
+| `401`  | Missing, empty, or invalid Bearer token |
+| `500`  | Persistence failure                     |
+
+---
+
+## GET /areas
+
+Returns all persisted areas.
+
+### Authentication
+
+Bearer token required. Returns `401 Unauthorized` if the token is missing or invalid.
+
+### Response: `200 OK`
+
+```json
+[
+  { "uuid": "<uuid>", "name": "Living Room", "isIndoor": true },
+  { "uuid": "<uuid>", "name": "Garden",      "isIndoor": false }
+]
+```
+
+### Response: `500 Internal Server Error`
+
+```json
+{ "message": "Unable to retrieve areas!" }
+```
+
+### HTTP Status Codes
+
+| Status | Condition                               |
+|--------|-----------------------------------------|
+| `200`  | List returned (may be empty)            |
+| `401`  | Missing, empty, or invalid Bearer token |
+| `500`  | Persistence failure                     |
+
+---
+
+## GET /areas/{id}
+
+Returns a single area by its unique identifier.
+
+### Authentication
+
+Bearer token required. Returns `401 Unauthorized` if the token is missing or invalid.
+
+### Path Parameters
+
+| Parameter | Type   | Description        |
+|-----------|--------|--------------------|
+| `id`      | `UUID` | The area's id      |
+
+### Response: `200 OK`
+
+```json
+{ "uuid": "<uuid>", "name": "Living Room", "isIndoor": true }
+```
+
+### Response: `404 Not Found` — area does not exist
+
+No response body.
+
+### Response: `500 Internal Server Error`
+
+```json
+{ "message": "Unable to retrieve area '<id>'!" }
+```
+
+### HTTP Status Codes
+
+| Status | Condition                               |
+|--------|-----------------------------------------|
+| `200`  | Area returned                           |
+| `401`  | Missing, empty, or invalid Bearer token |
+| `404`  | Area not found                          |
+| `500`  | Persistence failure                     |
+
+---
+
+## PUT /areas/{id}
+
+Updates an existing area's name and indoor flag.
+
+### Authentication
+
+Bearer token required. Returns `401 Unauthorized` if the token is missing or invalid.
+
+### Path Parameters
+
+| Parameter | Type   | Description        |
+|-----------|--------|--------------------|
+| `id`      | `UUID` | The area's id      |
+
+### Request Body
+
+```json
+{ "name": "Kitchen", "isIndoor": true }
+```
+
+| Field      | Type      | Required | Notes          |
+|------------|-----------|----------|----------------|
+| `name`     | `string`  | Yes      | Must be unique |
+| `isIndoor` | `boolean` | Yes      |                |
+
+### Response: `200 OK`
+
+```json
+{ "uuid": "<uuid>", "name": "Kitchen", "isIndoor": true }
+```
+
+### Response: `400 Bad Request` — name already taken
+
+```json
+{ "message": "An Area 'Kitchen' already exists!" }
+```
+
+### Response: `404 Not Found` — area does not exist
+
+No response body.
+
+### Response: `500 Internal Server Error`
+
+```json
+{ "message": "Unable to update area '<id>'!" }
+```
+
+### HTTP Status Codes
+
+| Status | Condition                               |
+|--------|-----------------------------------------|
+| `200`  | Area updated; body contains updated resource |
+| `400`  | Another area with the same name exists  |
+| `401`  | Missing, empty, or invalid Bearer token |
+| `404`  | Area not found                          |
+| `500`  | Persistence failure                     |
+
+---
+
+## DELETE /areas/{id}
+
+Deletes an area by its unique identifier.
+
+### Authentication
+
+Bearer token required. Returns `401 Unauthorized` if the token is missing or invalid.
+
+### Path Parameters
+
+| Parameter | Type   | Description        |
+|-----------|--------|--------------------|
+| `id`      | `UUID` | The area's id      |
+
+### Response: `204 No Content`
+
+Area deleted successfully. No response body.
+
+### Response: `404 Not Found` — area does not exist
+
+No response body.
+
+### Response: `500 Internal Server Error`
+
+```json
+{ "message": "Unable to delete area '<id>'!" }
+```
+
+### HTTP Status Codes
+
+| Status | Condition                               |
+|--------|-----------------------------------------|
+| `204`  | Area deleted successfully               |
+| `401`  | Missing, empty, or invalid Bearer token |
+| `404`  | Area not found                          |
+| `500`  | Persistence failure                     |
+
+---
+
 ## GET /areas/{areaId}/heating-schedule
 
 Returns the heating schedule for the given area. If the area has no schedule configured, returns a default empty structure.

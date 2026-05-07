@@ -60,6 +60,29 @@ class AreasJdbcRepository(
 
     fun getAll(): Collection<AreaEntity> = jdbcTemplate.query("""SELECT * FROM smart_home.area""", AreaRowMapper)
 
+    fun update(area: AreaDto): Int {
+        val sql = """
+            UPDATE smart_home.area
+            SET name = :name, is_indoor = :isIndoor, updated_on = :updatedOn
+            WHERE uuid = :uuid
+        """
+        val params = mapOf(
+            "uuid" to area.uuid,
+            "name" to area.name,
+            "isIndoor" to area.isIndoor,
+            "updatedOn" to Timestamp.from(timeService.now())
+        )
+        try {
+            return jdbcTemplate.update(sql, params)
+        } catch (e: DuplicateKeyException) {
+            val cause = e.cause as? PSQLException
+            if (cause?.serverErrorMessage?.constraint == "area_name_key") {
+                throw SameNameAreaException()
+            }
+            throw e
+        }
+    }
+
     fun deleteAreaById(uuid: UUID): Int {
         val sql = """
             DELETE FROM smart_home.area

@@ -10,6 +10,7 @@ import org.agrfesta.sh.api.core.domain.failures.AreaDeletionFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaFetchFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.AreaUpdateFailure
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.persistence.SameNameAreaException
@@ -45,6 +46,15 @@ import org.springframework.stereotype.Service
 
     override fun getAll(): Either<PersistenceFailure, Collection<AreaDto>> = try {
         areasRepo.getAll().map { it.asArea() }.right()
+    } catch (e: DataAccessException) {
+        PersistenceFailure(e).left()
+    }
+
+    override fun update(area: AreaDto): Either<AreaUpdateFailure, AreaDto> = try {
+        if (areasRepo.update(area) == 0) AreaNotFound(missingAreaId = area.uuid).left()
+        else area.right()
+    } catch (_: SameNameAreaException) {
+        AreaNameConflict.left()
     } catch (e: DataAccessException) {
         PersistenceFailure(e).left()
     }
