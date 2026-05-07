@@ -167,6 +167,61 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
             .shouldBeInstanceOf<PersistenceFailure>()
     }
 
+    // update()
+
+    @Test
+    fun `update() Returns PersistenceFailure when repository throws DataAccessException`() {
+        every { timeService.now() } returns Instant.now()
+        val area = anAreaDto(name = aRandomUniqueString())
+        val failure = DataAccessResourceFailureException("update failure")
+        every { areasRepo.update(area) } throws failure
+
+        sut.update(area)
+            .shouldBeLeft()
+            .shouldBeInstanceOf<PersistenceFailure>()
+    }
+
+    @Test
+    fun `update() Returns AreaNameConflict when new name clashes`() {
+        every { timeService.now() } returns Instant.now()
+        val existingName = aRandomUniqueString()
+        areasRepo.persist(anAreaDto(name = existingName))
+        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+
+        sut.update(area.copy(name = existingName))
+            .shouldBeLeft()
+            .shouldBeInstanceOf<AreaNameConflict>()
+    }
+
+    @Test
+    fun `update() Returns AreaNotFound when area does not exist`() {
+        every { timeService.now() } returns Instant.now()
+        val missingAreaId = UUID.randomUUID()
+
+        sut.update(anAreaDto(uuid = missingAreaId, name = aRandomUniqueString()))
+            .shouldBeLeft()
+            .shouldBeInstanceOf<AreaNotFound>()
+            .missingAreaId shouldBe missingAreaId
+    }
+
+    @Test
+    fun `update() Updates area successfully`() {
+        every { timeService.now() } returns Instant.now()
+        val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val updated = area.copy(name = aRandomUniqueString(), isIndoor = false)
+
+        val result = sut.update(updated)
+
+        result.shouldBeRight().also {
+            it.name shouldBe updated.name
+            it.isIndoor shouldBe false
+        }
+        sut.getAreaById(area.uuid).shouldBeRight().also {
+            it.name shouldBe updated.name
+            it.isIndoor shouldBe false
+        }
+    }
+
     // deleteAreaById()
 
     @Test

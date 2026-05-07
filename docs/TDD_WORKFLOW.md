@@ -60,6 +60,9 @@ The project has three distinct test layers. Use the right one for the right scop
 ## Phase 2: GREEN (Minimal Implementation)
 1. Once approved, write the production code to make **only that specific test pass**.
 2. **Constraint:** Write *only* the simplest, minimal code necessary. Do not optimize, do not abstract, do not anticipate future test cases from your Phase 0 list.
+   - Do **not** add `if/when` branches that are not exercised by the current test.
+   - Do **not** propagate `Either` results through multiple cases if the current test only verifies one — use a hardcoded return or `TODO()` for untested branches.
+   - **Diagnostic check:** If the *next* test on the Phase 0 list is already GREEN before you write it, you over-implemented. Stop, revert the excess, and re-introduce it only when its test demands it.
 3. **BARRIER - STOP AND ASK:** Ask the user: *"I have written the minimal implementation. Could you please run the tests to verify they pass (GREEN)?"*
 4. **Do not proceed** until the user confirms the tests are GREEN.
 

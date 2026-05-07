@@ -7,6 +7,7 @@ data class PersistenceFailure(
     DeviceFetchFailure,
     AreaCreationFailure,
     AreaDeletionFailure,
+    AreaUpdateFailure,
     DeviceCreationFailure,
     DeviceUpdateFailure,
     GetPropertyFailure,

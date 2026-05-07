@@ -6,6 +6,7 @@ import org.agrfesta.sh.api.core.domain.areas.AreaDto
 import org.agrfesta.sh.api.core.domain.failures.AreaCreationFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaDeletionFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaFetchFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaUpdateFailure
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 
 /**
@@ -52,6 +53,16 @@ interface AreasRepository {
      * or [Either.Left] with [PersistenceFailure] if a database error occurs.
      */
     fun getAll(): Either<PersistenceFailure, Collection<AreaDto>>
+
+    /**
+     * Updates an existing [AreaDto].
+     *
+     * @param area the area with updated values. The [AreaDto.uuid] is used to identify the record to update.
+     * @return [Either.Right] with the updated [AreaDto] on success,
+     *         or [Either.Left] with an [AreaUpdateFailure] if the area does not exist,
+     *         a name conflict occurs, or a persistence error occurs.
+     */
+    fun update(area: AreaDto): Either<AreaUpdateFailure, AreaDto>
 
     /**
      * Deletes an [AreaDto] by its unique identifier.
