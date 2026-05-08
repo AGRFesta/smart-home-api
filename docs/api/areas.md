@@ -220,6 +220,110 @@ No response body.
 
 ---
 
+## PUT /areas/{areaId}/sensors/{deviceId}
+
+Assigns a device as a sensor to the given area.
+
+### Authentication
+
+Bearer token required. Returns `401 Unauthorized` if the token is missing or invalid.
+
+### Path Parameters
+
+| Parameter  | Type   | Description              |
+|------------|--------|--------------------------|
+| `areaId`   | `UUID` | The target area's id     |
+| `deviceId` | `UUID` | The device to assign     |
+
+### Response: `204 No Content`
+
+Sensor assigned successfully (or already assigned to the same area — idempotent). No response body.
+
+### Response: `400 Bad Request` — device is not a sensor
+
+```json
+{ "message": "Device with id '<deviceId>' is not a sensor!" }
+```
+
+### Response: `400 Bad Request` — sensor already assigned to another area
+
+```json
+{ "message": "Device with id '<deviceId>' is already assigned to another area!" }
+```
+
+### Response: `404 Not Found` — area does not exist
+
+```json
+{ "message": "Area with id '<areaId>' is missing!" }
+```
+
+### Response: `404 Not Found` — device does not exist
+
+```json
+{ "message": "Device with id '<deviceId>' is missing!" }
+```
+
+### HTTP Status Codes
+
+| Status | Condition                                                              |
+|--------|------------------------------------------------------------------------|
+| `204`  | Sensor assigned (or already assigned to the same area — idempotent)   |
+| `400`  | Device is not a sensor, or already assigned to a different area        |
+| `401`  | Missing, empty, or invalid Bearer token                                |
+| `404`  | Area or device not found                                               |
+| `500`  | Persistence failure                                                    |
+
+---
+
+## PUT /areas/{areaId}/actuators/{deviceId}
+
+Assigns a device as an actuator to the given area.
+
+### Authentication
+
+Bearer token required. Returns `401 Unauthorized` if the token is missing or invalid.
+
+### Path Parameters
+
+| Parameter  | Type   | Description              |
+|------------|--------|--------------------------|
+| `areaId`   | `UUID` | The target area's id     |
+| `deviceId` | `UUID` | The device to assign     |
+
+### Response: `204 No Content`
+
+Actuator assigned successfully (or already assigned to the same area — idempotent). No response body.
+
+### Response: `400 Bad Request` — device is not an actuator
+
+```json
+{ "message": "Device with id '<deviceId>' is not an actuator!" }
+```
+
+### Response: `404 Not Found` — area does not exist
+
+```json
+{ "message": "Area with id '<areaId>' is missing!" }
+```
+
+### Response: `404 Not Found` — device does not exist
+
+```json
+{ "message": "Device with id '<deviceId>' is missing!" }
+```
+
+### HTTP Status Codes
+
+| Status | Condition                                                                 |
+|--------|---------------------------------------------------------------------------|
+| `204`  | Actuator assigned (or already assigned to the same area — idempotent)    |
+| `400`  | Device is not an actuator                                                 |
+| `401`  | Missing, empty, or invalid Bearer token                                   |
+| `404`  | Area or device not found                                                  |
+| `500`  | Persistence failure                                                       |
+
+---
+
 ## GET /areas/{areaId}/heating-schedule
 
 Returns the heating schedule for the given area. If the area has no schedule configured, returns a default empty structure.
