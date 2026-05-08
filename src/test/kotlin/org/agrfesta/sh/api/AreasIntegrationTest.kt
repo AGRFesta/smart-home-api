@@ -7,17 +7,22 @@ import io.mockk.every
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import java.util.*
+import arrow.core.getOrElse
 import org.agrfesta.sh.api.controllers.CreatedResourceResponse
 import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.core.domain.areas.AreaDto
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anActuatorProviderData
+import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class AreasIntegrationTest(
-    private val areasRepository: AreasRepository
+    private val areasRepository: AreasRepository,
+    private val devicesRepository: DevicesRepository
 ): AbstractIntegrationTest() {
     private val uuid: UUID = UUID.randomUUID()
 
@@ -149,6 +154,41 @@ class AreasIntegrationTest(
         val persisted = areasRepository.getAreaById(area.uuid).getOrNull()
         withClue("DB should reflect new name") { persisted?.name shouldBe newName }
         withClue("DB should reflect new isIndoor") { persisted?.isIndoor shouldBe false }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ///// assignSensorToArea //////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test fun `assignSensorToArea() returns 204 on success`() {
+        val area = anAreaDto()
+        areasRepository.save(area)
+        val deviceId = uuid
+        devicesRepository.create(deviceId, aSensorProviderData()).getOrElse { error("Failed to create sensor: $it") }
+
+        given()
+            .authenticated()
+            .`when`()
+            .put("/areas/${area.uuid}/sensors/$deviceId")
+            .then()
+            .statusCode(204)
+    }
+
+    ///// assignActuatorToArea ////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test fun `assignActuatorToArea() returns 204 on success`() {
+        val area = anAreaDto()
+        areasRepository.save(area)
+        val deviceId = uuid
+        devicesRepository.create(deviceId, anActuatorProviderData())
+            .getOrElse { error("Failed to create actuator: $it") }
+
+        given()
+            .authenticated()
+            .`when`()
+            .put("/areas/${area.uuid}/actuators/$deviceId")
+            .then()
+            .statusCode(204)
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

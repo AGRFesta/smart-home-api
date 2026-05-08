@@ -12,7 +12,7 @@ import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
-import org.agrfesta.sh.api.services.AssignmentsService
+import org.agrfesta.sh.api.core.application.ports.inbounds.AssignSensorToAreaUseCase
 import org.agrfesta.sh.api.services.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.test.mothers.aRandomThermoHygroData
@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test
 class HomeIntegrationTest(
     private val areasRepository: AreasRepository,
     private val devicesRepository: DevicesRepository,
-    private val assignmentsService: AssignmentsService,
+    private val assignSensorToAreaUseCase: AssignSensorToAreaUseCase,
     private val readingsRepository: SensorsCurrentReadingsRepository,
     private val propertyRepository: PropertyJdbcRepository
 ): AbstractIntegrationTest() {
@@ -34,7 +34,7 @@ class HomeIntegrationTest(
         val sensorData = aSensorProviderData()
         val sensorId = randomGenerator.uuid()
         devicesRepository.create(sensorId, sensorData).shouldBeRight()
-        assignmentsService.assignSensorToArea(area.uuid, sensorId).shouldBeRight()
+        assignSensorToAreaUseCase.execute(area.uuid, sensorId).shouldBeRight()
         val readings = aRandomThermoHygroData()
         readingsRepository.save(sensorData, readings).shouldBeRight()
 
