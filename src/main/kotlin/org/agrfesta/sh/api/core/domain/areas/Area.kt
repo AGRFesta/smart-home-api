@@ -13,7 +13,6 @@ import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
 import org.agrfesta.sh.api.core.domain.failures.Failure
 import org.agrfesta.sh.api.core.domain.failures.MessageFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
 
 /**
@@ -104,28 +103,19 @@ interface HeatableArea: MonitoredClimateArea {
 
 /**
  * Implementation of [HeatableArea].
- * It combines a [MonitoredClimateArea] with a [Heater] and uses [TemperatureSettingsRepository] to determine target
- * temperatures based on schedules.
+ * It combines a [MonitoredClimateArea] with a [Heater] and a pre-resolved [AreaTemperatureSetting].
  *
  * @property heater The heater associated with this area.
  * @param mcArea The underlying monitored climate area.
- * @param temperatureSettingsRepository Repository to retrieve heating settings and schedules.
+ * @param setting The temperature setting for this area, or null if none is configured.
  */
 class HeatableAreaImpl(
     override val heater: Heater,
     private val mcArea: MonitoredClimateArea,
-    private val temperatureSettingsRepository: TemperatureSettingsRepository
+    private val setting: AreaTemperatureSetting?
 ): HeatableArea, MonitoredClimateArea by mcArea {
 
-    override fun getCurrentTargetTemperature(currentTime: LocalTime): Temperature? {
-        return temperatureSettingsRepository.findAreaSetting(uuid).fold(
-            ifLeft = {null},
-            ifRight = {
-                it?.temperatureSchedule
-                    ?.firstNotNullOfOrNull { i -> i.temperatureAt(currentTime) }
-                    ?: it?.defaultTemperature
-            }
-        )
-    }
+    override fun getCurrentTargetTemperature(currentTime: LocalTime): Temperature? =
+        setting?.targetTemperatureAt(currentTime)
 
 }
