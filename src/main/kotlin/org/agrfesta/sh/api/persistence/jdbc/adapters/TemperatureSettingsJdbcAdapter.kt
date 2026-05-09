@@ -17,7 +17,6 @@ import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureSettingRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
-import org.agrfesta.sh.api.utils.RandomGenerator
 import org.springframework.dao.DataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -26,8 +25,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @Service
 class TemperatureSettingsJdbcAdapter(
     private val tempSettingsRepository: TemperatureSettingRepository,
-    private val tempIntervalsRepo: TemperatureIntervalRepository,
-    private val randomGenerator: RandomGenerator
+    private val tempIntervalsRepo: TemperatureIntervalRepository
 ): TemperatureSettingsRepository {
     private val logger by LoggerDelegate()
 
@@ -52,7 +50,7 @@ class TemperatureSettingsJdbcAdapter(
             ))
             setting.temperatureSchedule.map {
                 TemperatureIntervalEntity(
-                    uuid = randomGenerator.uuid(),
+                    uuid = UUID.randomUUID(),
                     areaUuid = setting.areaId,
                     startTime = it.startTime,
                     endTime = it.endTime,
@@ -78,7 +76,7 @@ class TemperatureSettingsJdbcAdapter(
         ))
         setting.temperatureSchedule.map {
             TemperatureIntervalEntity(
-                uuid = randomGenerator.uuid(),
+                uuid = UUID.randomUUID(),
                 areaUuid = setting.areaId,
                 startTime = it.startTime,
                 endTime = it.endTime,

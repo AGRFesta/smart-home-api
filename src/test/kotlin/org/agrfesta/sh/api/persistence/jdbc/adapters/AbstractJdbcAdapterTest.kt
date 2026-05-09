@@ -13,7 +13,6 @@ import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcR
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsHistoryDataJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureSettingRepository
-import org.agrfesta.sh.api.utils.RandomGeneratorImpl
 import org.agrfesta.sh.api.utils.TimeService
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest
@@ -41,8 +40,7 @@ import org.springframework.context.annotation.Import
     TemperatureIntervalRepository::class,
     AreasWithDevicesJdbcRepository::class,
     PropertyJdbcRepository::class,
-    SensorsHistoryDataJdbcRepository::class,
-    RandomGeneratorImpl::class
+    SensorsHistoryDataJdbcRepository::class
 )
 @CleanSmartHomeDatabase
 abstract class AbstractJdbcAdapterTest {

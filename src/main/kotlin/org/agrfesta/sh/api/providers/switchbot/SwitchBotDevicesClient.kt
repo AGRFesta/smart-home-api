@@ -9,7 +9,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import org.agrfesta.sh.api.utils.RandomGenerator
+import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

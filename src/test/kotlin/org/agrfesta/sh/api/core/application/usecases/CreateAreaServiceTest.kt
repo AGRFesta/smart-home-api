@@ -12,7 +12,7 @@ import java.util.*
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.utils.RandomGenerator
+import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 

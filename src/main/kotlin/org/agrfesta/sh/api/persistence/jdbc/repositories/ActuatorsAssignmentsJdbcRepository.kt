@@ -6,7 +6,6 @@ import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.persistence.DeviceNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.entities.ActuatorAssignmentEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
-import org.agrfesta.sh.api.utils.RandomGenerator
 import org.postgresql.util.PSQLException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.RowMapper
@@ -16,8 +15,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class ActuatorsAssignmentsJdbcRepository(
-    private val jdbcTemplate: NamedParameterJdbcTemplate,
-    private val randomGenerator: RandomGenerator
+    private val jdbcTemplate: NamedParameterJdbcTemplate
 ) {
 
     fun persistAssignment(areaId: UUID, deviceId: UUID) {
@@ -26,7 +24,7 @@ class ActuatorsAssignmentsJdbcRepository(
             VALUES (:uuid, :areaUuid, :deviceUuid)
         """
         val params = mapOf(
-            "uuid" to randomGenerator.uuid(),
+            "uuid" to UUID.randomUUID(),
             "areaUuid" to areaId,
             "deviceUuid" to deviceId
         )

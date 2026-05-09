@@ -7,7 +7,7 @@ import io.ktor.http.*
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.utils.RandomGenerator
+import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aJsonNode
 import org.agrfesta.test.mothers.aRandomUniqueString

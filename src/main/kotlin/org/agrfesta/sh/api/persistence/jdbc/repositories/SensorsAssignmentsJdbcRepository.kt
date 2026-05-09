@@ -9,7 +9,6 @@ import org.agrfesta.sh.api.persistence.jdbc.entities.SensorAssignmentEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
-import org.agrfesta.sh.api.utils.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
 import org.postgresql.util.PSQLException
 import org.springframework.dao.DataIntegrityViolationException
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Service
 @Service
 class SensorsAssignmentsJdbcRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
-    private val randomGenerator: RandomGenerator,
     private val timeService: TimeService
 ) {
 
@@ -31,7 +29,7 @@ class SensorsAssignmentsJdbcRepository(
             VALUES (:uuid, :areaUuid, :deviceUuid, :connectedOn, NULL)
         """
         val params = mapOf(
-            "uuid" to randomGenerator.uuid(),
+            "uuid" to UUID.randomUUID(),
             "areaUuid" to areaId,
             "deviceUuid" to deviceId,
             "connectedOn" to Timestamp.from(timeService.now())
