@@ -22,7 +22,7 @@ import org.agrfesta.sh.api.core.domain.failures.MessageFailure
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aProviderDeviceData
-import org.agrfesta.sh.api.utils.RandomGenerator
+import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 

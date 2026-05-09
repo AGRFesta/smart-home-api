@@ -4,7 +4,7 @@ import com.ninjasquad.springmockk.MockkBean
 import com.ninjasquad.springmockk.SpykBean
 import io.restassured.RestAssured
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
-import org.agrfesta.sh.api.utils.RandomGenerator
+import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.sh.api.utils.TimeService
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
