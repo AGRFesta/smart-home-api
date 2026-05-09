@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.services
+package org.agrfesta.sh.api.core.application.usecases
 
 import arrow.core.left
 import arrow.core.right
@@ -9,44 +9,44 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import java.util.UUID
-import org.agrfesta.sh.api.core.application.ports.outbounds.areas.ActuatorsAssignmentsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignmentsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
-import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
+import org.agrfesta.sh.api.core.domain.failures.NotASensor
 import org.agrfesta.sh.api.domain.anActuator
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.aSensor
 import org.junit.jupiter.api.Test
 
-class AssignActuatorToAreaServiceTest {
+class AssignSensorToAreaServiceTest {
     private val areasRepository: AreasRepository = mockk()
     private val devicesRepository: DevicesRepository = mockk()
-    private val actuatorsAssignmentsRepository: ActuatorsAssignmentsRepository = mockk()
+    private val sensorsAssignmentsRepository: SensorsAssignmentsRepository = mockk()
 
-    private val sut = AssignActuatorToAreaService(areasRepository, devicesRepository, actuatorsAssignmentsRepository)
+    private val sut = AssignSensorToAreaService(areasRepository, devicesRepository, sensorsAssignmentsRepository)
 
     @Test fun `execute() returns Right(Unit) on success`() {
         val area = anAreaDto()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
-        val device = anActuator()
+        val device = aSensor()
         every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
-        every { actuatorsAssignmentsRepository.assign(area.uuid, device.uuid) } returns Unit.right()
+        every { sensorsAssignmentsRepository.assign(area.uuid, device.uuid) } returns Unit.right()
 
         sut.execute(areaId = area.uuid, deviceId = device.uuid)
             .shouldBeRight()
     }
 
-    @Test fun `execute() returns NotAnActuator when device lacks ACTUATOR feature`() {
+    @Test fun `execute() returns NotASensor when device lacks SENSOR feature`() {
         val area = anAreaDto()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
-        val device = aSensor()
+        val device = anActuator()
         every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
 
         sut.execute(areaId = area.uuid, deviceId = device.uuid)
             .shouldBeLeft()
-            .shouldBeInstanceOf<NotAnActuator>().also {
+            .shouldBeInstanceOf<NotASensor>().also {
                 it.deviceId shouldBe device.uuid
                 it.features shouldBe device.features
             }

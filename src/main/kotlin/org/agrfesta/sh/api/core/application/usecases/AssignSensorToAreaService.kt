@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.services
+package org.agrfesta.sh.api.core.application.usecases
 
 import arrow.core.Either
 import arrow.core.flatMap
