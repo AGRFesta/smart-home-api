@@ -28,7 +28,7 @@ import org.agrfesta.sh.api.domain.anAreaDtoWithDevices
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.aSensor
-import org.agrfesta.sh.api.services.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
+import org.agrfesta.sh.api.core.application.usecases.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.agrfesta.sh.api.utils.TimeService

@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.services
+package org.agrfesta.sh.api.utils
 
 import arrow.core.Either
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure

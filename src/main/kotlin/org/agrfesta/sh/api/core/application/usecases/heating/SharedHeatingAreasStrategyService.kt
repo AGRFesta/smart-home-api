@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.services.heating
+package org.agrfesta.sh.api.core.application.usecases.heating
 
 import java.math.BigDecimal
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea

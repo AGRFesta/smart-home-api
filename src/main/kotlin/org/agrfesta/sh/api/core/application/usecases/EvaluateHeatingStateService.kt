@@ -9,7 +9,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRep
 import org.agrfesta.sh.api.core.domain.areas.AreasFactory
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.services.heating.SharedHeatingAreasStrategyService
+import org.agrfesta.sh.api.core.application.usecases.heating.SharedHeatingAreasStrategyService
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.stereotype.Service
 

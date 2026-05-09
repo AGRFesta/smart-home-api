@@ -1,22 +1,18 @@
-package org.agrfesta.sh.api.services.heating
+package org.agrfesta.sh.api.core.application.usecases.heating
 
 import arrow.core.right
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import java.math.BigDecimal
-import java.util.*
+import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
-import org.agrfesta.sh.api.core.domain.commons.Percentage
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.SharedHeater
 import org.junit.jupiter.api.Test
 
-class EconomyAreasSharedHeatingStrategyTest {
-    val percentage = Percentage(BigDecimal("0.5"))
-
+class ComfortAreasSharedHeatingStrategyTest {
     private val sharedHeater: SharedHeater = mockk(relaxed = true) {
         every { uuid } returns UUID.randomUUID()
     }
@@ -34,7 +30,8 @@ class EconomyAreasSharedHeatingStrategyTest {
     }
     private val areas = listOf(areaB, areaC, areaA)
 
-    private val sut = EconomyAreasSharedHeatingStrategyService(percentage.value)
+    private val sut = ComfortAreasSharedHeatingStrategyService()
+
 
     @Test
     fun `handleHeatingFor() Do nothing when there are no areas`() {
@@ -70,24 +67,11 @@ class EconomyAreasSharedHeatingStrategyTest {
     }
 
     @Test
-    fun `handleHeatingFor() Keep the heater off when only one area needs heating`() {
+    fun `handleHeatingFor() Turn the heater on when an area needs heating`() {
         coEvery { sharedHeater.getActuatorStatus() } returns ActuatorStatus.OFF.right()
         areaA.hasTempAsTarget()
         areaB.hasTempBelowTargetRange()
         areaC.hasNoTargetTemp() // in this case we consider heating not needed
-
-        runBlocking { sut.handleHeatingFor(sharedHeater, areas) }
-
-        coVerify(exactly = 0) { sharedHeater.on() }
-        coVerify(exactly = 1) { sharedHeater.off() }
-    }
-
-    @Test
-    fun `handleHeatingFor() Turn the heater on when enough areas need heating`() {
-        coEvery { sharedHeater.getActuatorStatus() } returns ActuatorStatus.OFF.right()
-        areaA.hasTempBelowTargetRange()
-        areaB.hasTempBelowTargetRange()
-        areaC.hasTempAsTarget()
 
         runBlocking { sut.handleHeatingFor(sharedHeater, areas) }
 
@@ -96,11 +80,37 @@ class EconomyAreasSharedHeatingStrategyTest {
     }
 
     @Test
-    fun `handleHeatingFor() Turn the heater off when an area is above target range`() {
+    fun `handleHeatingFor() Keep the heater on when an area still needs heating`() {
         coEvery { sharedHeater.getActuatorStatus() } returns ActuatorStatus.ON.right()
-        areaA.hasTempBelowTargetRange()
+        areaA.hasTempAboveTargetRange()
+        areaB.hasTempAsTarget()
+        areaC.hasTempAboveTargetRange()
+
+        runBlocking { sut.handleHeatingFor(sharedHeater, areas) }
+
+        coVerify(exactly = 1) { sharedHeater.on() }
+        coVerify(exactly = 0) { sharedHeater.off() }
+    }
+
+    @Test
+    fun `handleHeatingFor() Turn the heater off when all areas are above target range`() {
+        coEvery { sharedHeater.getActuatorStatus() } returns ActuatorStatus.ON.right()
+        areaA.hasTempAboveTargetRange()
         areaB.hasTempAboveTargetRange()
-        areaC.hasTempBelowTargetRange()
+        areaC.hasTempAboveTargetRange()
+
+        runBlocking { sut.handleHeatingFor(sharedHeater, areas) }
+
+        coVerify(exactly = 0) { sharedHeater.on() }
+        coVerify(exactly = 1) { sharedHeater.off() }
+    }
+
+    @Test
+    fun `handleHeatingFor() Keep the heater off when areas are in range`() {
+        coEvery { sharedHeater.getActuatorStatus() } returns ActuatorStatus.OFF.right()
+        areaA.hasTempInTargetRangeAboveTarget()
+        areaB.hasTempInTargetRangeBelowTarget()
+        areaC.hasTempInTargetRangeBelowTarget()
 
         runBlocking { sut.handleHeatingFor(sharedHeater, areas) }
 
@@ -120,19 +130,5 @@ class EconomyAreasSharedHeatingStrategyTest {
         coVerify(exactly = 0) { sharedHeater.on() }
         coVerify(exactly = 1) { sharedHeater.off() }
     }
-
-    @Test
-    fun `handleHeatingFor() Keep the heater on when no area is above target range`() {
-        coEvery { sharedHeater.getActuatorStatus() } returns ActuatorStatus.ON.right()
-        areaA.hasTempInTargetRangeAboveTarget()
-        areaB.hasTempInTargetRangeAboveTarget()
-        areaC.hasTempInTargetRangeAboveTarget()
-
-        runBlocking { sut.handleHeatingFor(sharedHeater, areas) }
-
-        coVerify(exactly = 1) { sharedHeater.on() }
-        coVerify(exactly = 0) { sharedHeater.off() }
-    }
-
 
 }

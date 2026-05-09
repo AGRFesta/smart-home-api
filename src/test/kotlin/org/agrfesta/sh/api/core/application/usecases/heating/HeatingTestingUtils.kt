@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.services.heating
+package org.agrfesta.sh.api.core.application.usecases.heating
 
 import arrow.core.left
 import arrow.core.right
@@ -13,7 +13,7 @@ import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.SharedHeater
 import org.agrfesta.sh.api.core.domain.failures.MessageFailure
-import org.agrfesta.sh.api.services.heating.AbstractSharedHeatingAreasStrategyService.Companion.HYSTERESIS
+import org.agrfesta.sh.api.core.application.usecases.heating.AbstractSharedHeatingAreasStrategyService.Companion.HYSTERESIS
 import org.agrfesta.test.mothers.aRandomTemperature
 
 fun Device.toSensorMockk(factory: ProviderDevicesFactory): Sensor {
