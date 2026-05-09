@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.core.domain.areas
+package org.agrfesta.sh.api.core.application.areas
 
 import java.util.*
 import org.agrfesta.sh.api.core.domain.devices.Actuator
@@ -6,6 +6,11 @@ import org.agrfesta.sh.api.core.domain.devices.DeviceDriver
 import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
+import org.agrfesta.sh.api.core.domain.areas.Area
+import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
+import org.agrfesta.sh.api.core.domain.areas.AreaImpl
+import org.agrfesta.sh.api.core.domain.areas.HeatableAreaImpl
+import org.agrfesta.sh.api.core.domain.areas.MonitoredClimateAreaImpl
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.stereotype.Service
 

@@ -19,7 +19,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRep
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
-import org.agrfesta.sh.api.core.domain.areas.AreasFactory
+import org.agrfesta.sh.api.core.application.areas.AreasFactory
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.devices.Device
