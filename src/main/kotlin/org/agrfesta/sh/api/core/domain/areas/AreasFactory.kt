@@ -36,7 +36,10 @@ class AreasFactory(
                 if (heaters.size > 1) {
                     logger.warn("Area '${dto.uuid}' has multiple heaters assigned. Using the first one: '${heaters.first().uuid}'.")
                 }
-                HeatableAreaImpl(heaters.first(), mcArea, temperatureSettingsRepository)
+                val setting = temperatureSettingsRepository.findAreaSetting(dto.uuid)
+                    .onLeft { logger.error("Failed to retrieve temperature settings for area '${dto.uuid}': $it") }
+                    .getOrNull()
+                HeatableAreaImpl(heaters.first(), mcArea, setting)
             } else {
                 mcArea
             }

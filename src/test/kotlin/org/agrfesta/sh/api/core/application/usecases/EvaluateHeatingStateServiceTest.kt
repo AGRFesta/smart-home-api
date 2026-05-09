@@ -71,6 +71,7 @@ class EvaluateHeatingStateServiceTest {
         every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PropertyEntry("true").right()
         every { devicesRepository.getAll() } returns emptyList<Device>().right()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns emptyList<AreaDtoWithDevices>().right()
+        every { temperatureSettingsRepository.findAreaSetting(any()) } returns null.right()
     }
 
     @Test

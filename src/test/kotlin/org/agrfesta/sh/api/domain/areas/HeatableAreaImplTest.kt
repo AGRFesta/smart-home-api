@@ -1,7 +1,5 @@
 package org.agrfesta.sh.api.domain.areas
 
-import arrow.core.left
-import arrow.core.right
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -15,8 +13,6 @@ import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.Heater
-import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.Test
@@ -29,23 +25,10 @@ class HeatableAreaImplTest {
     private val mcArea: MonitoredClimateArea = mockk {
         every { uuid } returns areaId
     }
-    private val temperatureSettingsRepository: TemperatureSettingsRepository = mockk()
-
-    private val sut = HeatableAreaImpl(heater, mcArea, temperatureSettingsRepository)
 
     @Test
     fun `getCurrentTargetTemperature() return null when there is no setting`() {
-        every { temperatureSettingsRepository.findAreaSetting(areaId) } returns null.right()
-
-        val result = sut.getCurrentTargetTemperature(LocalTime.now())
-
-        result.shouldBeNull()
-    }
-
-    @Test
-    fun `getCurrentTargetTemperature() return null when fails to fetch setting`() {
-        val failure = Exception("fetch failure")
-        every { temperatureSettingsRepository.findAreaSetting(areaId) } returns PersistenceFailure(failure).left()
+        val sut = HeatableAreaImpl(heater, mcArea, null)
 
         val result = sut.getCurrentTargetTemperature(LocalTime.now())
 
@@ -70,7 +53,7 @@ class HeatableAreaImplTest {
                 )
             )
         )
-        every { temperatureSettingsRepository.findAreaSetting(areaId) } returns settings.right()
+        val sut = HeatableAreaImpl(heater, mcArea, settings)
         return listOf(
             LocalTime.of(1, 30) to Temperature.of("17.0"), // Default
             LocalTime.of(6, 0) to Temperature.of("19.0"),  // Start of first interval

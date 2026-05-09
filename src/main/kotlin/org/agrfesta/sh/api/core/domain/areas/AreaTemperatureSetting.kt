@@ -36,7 +36,11 @@ data class AreaTemperatureSetting(
     val areaId: UUID,
     val defaultTemperature: Temperature,
     val temperatureSchedule: Set<TemperatureInterval>
-)
+) {
+    fun targetTemperatureAt(time: LocalTime): Temperature =
+        temperatureSchedule.firstNotNullOfOrNull { it.temperatureAt(time) }
+            ?: defaultTemperature
+}
 
 /**
  * Defines a time interval during which a specific temperature should be maintained.
