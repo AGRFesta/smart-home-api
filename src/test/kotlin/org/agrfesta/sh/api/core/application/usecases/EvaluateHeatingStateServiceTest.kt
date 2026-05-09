@@ -38,8 +38,6 @@ import org.agrfesta.sh.api.services.heating.DynamicSharedHeatingStrategyService.
 import org.agrfesta.sh.api.services.heating.NamedSharedHeatingAreasStrategyService
 import org.agrfesta.sh.api.services.heating.toSensorMockk
 import org.agrfesta.sh.api.services.heating.toSharedHeaterMockk
-import org.agrfesta.sh.api.services.AreasService
-import org.agrfesta.sh.api.services.DevicesService
 import org.agrfesta.sh.api.services.heating.HeatingAreasService
 import org.agrfesta.sh.api.services.heating.SharedHeatingAreasStrategyService
 import org.agrfesta.sh.api.utils.TimeService
@@ -67,12 +65,11 @@ class EvaluateHeatingStateServiceTest {
         every { strategy } returns COMFORT
     }
 
-    private val devicesService = DevicesService(devicesRepository, listOf(factory))
     private val heatingAreasService = HeatingAreasService(areasRepository, temperatureSettingsRepository, unitOfWork)
     private val areasFactory = AreasFactory(heatingAreasService, timeService)
-    private val areasService = AreasService(areasWithDevicesRepository, areasFactory)
 
-    private val sut = EvaluateHeatingStateService(devicesService, areasService, strategy, propertyRepository)
+    private val sut = EvaluateHeatingStateService(devicesRepository, listOf(factory),
+        areasWithDevicesRepository, areasFactory, strategy, propertyRepository)
 
     init {
         every { timeService.now() } returns now
@@ -98,7 +95,9 @@ class EvaluateHeatingStateServiceTest {
     @Test
     fun `execute() does nothing when HEATING_ENABLED_KEY fetch fails`() {
         // Given
-        every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PersistenceFailure(Exception("cache error")).left()
+        every {
+            propertyRepository.findEntry(HEATING_ENABLED_KEY)
+        } returns PersistenceFailure(Exception("cache error")).left()
 
         // When
         sut.execute()
@@ -153,7 +152,9 @@ class EvaluateHeatingStateServiceTest {
     @Test
     fun `execute() does nothing when area fetch fails`() {
         // Given
-        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns PersistenceFailure(Exception("db failure")).left()
+        every {
+            areasWithDevicesRepository.getAllAreasWithDevices()
+        } returns PersistenceFailure(Exception("db failure")).left()
 
         // When
         sut.execute()
@@ -183,7 +184,8 @@ class EvaluateHeatingStateServiceTest {
         // Given
         every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(COMFORT.name).right()
         val emptyStrategy = DynamicSharedHeatingStrategyService(ECONOMY, emptyList(), propertyRepository)
-        val sut = EvaluateHeatingStateService(devicesService, areasService, emptyStrategy, propertyRepository)
+        val sut = EvaluateHeatingStateService(devicesRepository, listOf(factory),
+            areasWithDevicesRepository, areasFactory, emptyStrategy, propertyRepository)
         givenHeatableArea()
 
         // When
@@ -277,7 +279,9 @@ class EvaluateHeatingStateServiceTest {
     @Test
     fun `execute() handles heater using strategy name ignoring case`() {
         // Given
-        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(COMFORT.name.lowercase()).right()
+        every {
+            propertyRepository.getEntry(HEATING_STRATEGY_KEY)
+        } returns PropertyEntry(COMFORT.name.lowercase()).right()
         val sut = sutWithBothStrategies()
         val testData = givenHeatableArea()
 
@@ -319,7 +323,9 @@ class EvaluateHeatingStateServiceTest {
     @Test
     fun `execute() handles heater using default strategy when strategy fetch fails`() {
         // Given
-        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PersistenceFailure(Exception("cache failure")).left()
+        every {
+            propertyRepository.getEntry(HEATING_STRATEGY_KEY)
+        } returns PersistenceFailure(Exception("cache failure")).left()
         val sut = sutWithBothStrategies()
         val testData = givenHeatableArea()
 
@@ -345,10 +351,12 @@ class EvaluateHeatingStateServiceTest {
     }
 
     private fun sutWith(strategy: SharedHeatingAreasStrategyService) =
-        EvaluateHeatingStateService(devicesService, areasService, strategy, propertyRepository)
+        EvaluateHeatingStateService(devicesRepository, listOf(factory),
+            areasWithDevicesRepository, areasFactory, strategy, propertyRepository)
 
     private fun sutWithBothStrategies() =
-        sutWith(DynamicSharedHeatingStrategyService(ECONOMY, listOf(economyStrategy, comfortStrategy), propertyRepository))
+        sutWith(DynamicSharedHeatingStrategyService(ECONOMY,
+            listOf(economyStrategy, comfortStrategy), propertyRepository))
 
     private fun givenHeatableArea(): Pair<AreaDtoWithDevices, SharedHeater> {
         val sensorDto = aSensor()
