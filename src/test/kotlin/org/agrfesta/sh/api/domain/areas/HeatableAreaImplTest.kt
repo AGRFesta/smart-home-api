@@ -15,8 +15,8 @@ import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.Heater
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.services.heating.HeatingAreasService
 import org.agrfesta.sh.api.utils.TimeService
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.DynamicTest.dynamicTest
@@ -30,14 +30,14 @@ class HeatableAreaImplTest {
     private val mcArea: MonitoredClimateArea = mockk {
         every { uuid } returns areaId
     }
-    private val heatingAreasService: HeatingAreasService = mockk()
+    private val temperatureSettingsRepository: TemperatureSettingsRepository = mockk()
     private val timeService: TimeService = mockk()
 
-    private val sut = HeatableAreaImpl(heater, mcArea, heatingAreasService, timeService)
+    private val sut = HeatableAreaImpl(heater, mcArea, temperatureSettingsRepository, timeService)
 
     @Test
     fun `getCurrentTargetTemperature() return null when there is no setting`() {
-        every { heatingAreasService.findAreaSetting(areaId) } returns null.right()
+        every { temperatureSettingsRepository.findAreaSetting(areaId) } returns null.right()
 
         val result = sut.getCurrentTargetTemperature()
 
@@ -47,7 +47,7 @@ class HeatableAreaImplTest {
     @Test
     fun `getCurrentTargetTemperature() return null when fails to fetch setting`() {
         val failure = Exception("fetch failure")
-        every { heatingAreasService.findAreaSetting(areaId) } returns PersistenceFailure(failure).left()
+        every { temperatureSettingsRepository.findAreaSetting(areaId) } returns PersistenceFailure(failure).left()
 
         val result = sut.getCurrentTargetTemperature()
 
@@ -72,7 +72,7 @@ class HeatableAreaImplTest {
                 )
             )
         )
-        every { heatingAreasService.findAreaSetting(areaId) } returns settings.right()
+        every { temperatureSettingsRepository.findAreaSetting(areaId) } returns settings.right()
         return listOf(
             LocalTime.of(1, 30) to Temperature.of("17.0"), // Default
             LocalTime.of(6, 0) to Temperature.of("19.0"),  // Start of first interval

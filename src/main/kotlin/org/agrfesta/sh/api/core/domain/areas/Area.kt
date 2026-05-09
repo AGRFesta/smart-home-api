@@ -12,7 +12,7 @@ import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
 import org.agrfesta.sh.api.core.domain.failures.Failure
 import org.agrfesta.sh.api.core.domain.failures.MessageFailure
-import org.agrfesta.sh.api.services.heating.HeatingAreasService
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.utils.TimeService
 
@@ -103,23 +103,23 @@ interface HeatableArea: MonitoredClimateArea {
 
 /**
  * Implementation of [HeatableArea].
- * It combines a [MonitoredClimateArea] with a [Heater] and uses [HeatingAreasService] to determine target temperatures
- * based on schedules.
+ * It combines a [MonitoredClimateArea] with a [Heater] and uses [TemperatureSettingsRepository] to determine target
+ * temperatures based on schedules.
  *
  * @property heater The heater associated with this area.
  * @param mcArea The underlying monitored climate area.
- * @param heatingAreasService Service to retrieve heating settings and schedules.
+ * @param temperatureSettingsRepository Repository to retrieve heating settings and schedules.
  * @param timeService Service to provide the current time for schedule calculations.
  */
 class HeatableAreaImpl(
     override val heater: Heater,
     private val mcArea: MonitoredClimateArea,
-    private val heatingAreasService: HeatingAreasService,
+    private val temperatureSettingsRepository: TemperatureSettingsRepository,
     private val timeService: TimeService
 ): HeatableArea, MonitoredClimateArea by mcArea {
 
     override fun getCurrentTargetTemperature(): Temperature? {
-        return heatingAreasService.findAreaSetting(uuid).fold(
+        return temperatureSettingsRepository.findAreaSetting(uuid).fold(
             ifLeft = {null},
             ifRight = {
                 it?.temperatureSchedule

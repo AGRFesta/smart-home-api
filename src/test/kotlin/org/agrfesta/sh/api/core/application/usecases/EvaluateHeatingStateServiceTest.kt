@@ -10,8 +10,6 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import java.time.Instant
-import org.agrfesta.sh.api.core.application.ports.outbounds.UnitOfWork
-import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
@@ -38,7 +36,6 @@ import org.agrfesta.sh.api.services.heating.DynamicSharedHeatingStrategyService.
 import org.agrfesta.sh.api.services.heating.NamedSharedHeatingAreasStrategyService
 import org.agrfesta.sh.api.services.heating.toSensorMockk
 import org.agrfesta.sh.api.services.heating.toSharedHeaterMockk
-import org.agrfesta.sh.api.services.heating.HeatingAreasService
 import org.agrfesta.sh.api.services.heating.SharedHeatingAreasStrategyService
 import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -51,12 +48,10 @@ class EvaluateHeatingStateServiceTest {
     private val factory: ProviderDevicesFactory = mockk {
         every { provider } returns Provider.SWITCHBOT
     }
-    private val areasRepository: AreasRepository = mockk()
     private val areasWithDevicesRepository: AreasWithDevicesRepository = mockk()
     private val temperatureSettingsRepository: TemperatureSettingsRepository = mockk()
     private val propertyRepository: PropertyRepository = mockk()
     private val timeService: TimeService = mockk()
-    private val unitOfWork: UnitOfWork = mockk()
     private val strategy: SharedHeatingAreasStrategyService = mockk(relaxed = true)
     private val economyStrategy: NamedSharedHeatingAreasStrategyService = mockk(relaxed = true) {
         every { strategy } returns ECONOMY
@@ -65,8 +60,7 @@ class EvaluateHeatingStateServiceTest {
         every { strategy } returns COMFORT
     }
 
-    private val heatingAreasService = HeatingAreasService(areasRepository, temperatureSettingsRepository, unitOfWork)
-    private val areasFactory = AreasFactory(heatingAreasService, timeService)
+    private val areasFactory = AreasFactory(temperatureSettingsRepository, timeService)
 
     private val sut = EvaluateHeatingStateService(devicesRepository, listOf(factory),
         areasWithDevicesRepository, areasFactory, strategy, propertyRepository)
