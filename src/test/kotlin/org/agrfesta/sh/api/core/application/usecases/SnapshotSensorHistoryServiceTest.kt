@@ -18,7 +18,7 @@ import org.agrfesta.sh.api.core.domain.failures.SnapshotSensorHistoryError
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.anActuator
 import org.agrfesta.sh.api.domain.aSensor
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.agrfesta.test.mothers.nowNoMills
 import org.junit.jupiter.api.Test
@@ -27,9 +27,9 @@ class SnapshotSensorHistoryServiceTest {
     private val devicesRepository: DevicesRepository = mockk()
     private val readingsRepository: SensorsCurrentReadingsRepository = mockk()
     private val historyRepository: SensorsHistoryDataRepository = mockk()
-    private val timeService: TimeService = mockk()
+    private val timeProvider: TimeProvider = mockk()
 
-    private val sut = SnapshotSensorHistoryService(devicesRepository, readingsRepository, historyRepository, timeService)
+    private val sut = SnapshotSensorHistoryService(devicesRepository, readingsRepository, historyRepository, timeProvider)
 
     @Test fun `execute() returns Left(SnapshotSensorHistoryError) when device repository getAll() fails`() {
         // Given
@@ -104,7 +104,7 @@ class SnapshotSensorHistoryServiceTest {
         val now = nowNoMills()
         every { devicesRepository.getAll() } returns listOf(sensor).right()
         every { readingsRepository.findBy(sensor) } returns readings.right()
-        every { timeService.now() } returns now
+        every { timeProvider.now() } returns now
         every { historyRepository.persistTemperature(sensor.uuid, now, readings.temperature) } returns Unit.right()
         every { historyRepository.persistHumidity(sensor.uuid, now, readings.relativeHumidity) } returns Unit.right()
 
@@ -127,7 +127,7 @@ class SnapshotSensorHistoryServiceTest {
         every { devicesRepository.getAll() } returns listOf(sensor1, sensor2).right()
         every { readingsRepository.findBy(sensor1) } returns readings1.right()
         every { readingsRepository.findBy(sensor2) } returns readings2.right()
-        every { timeService.now() } returns now
+        every { timeProvider.now() } returns now
         every { historyRepository.persistTemperature(sensor1.uuid, now, readings1.temperature) } returns Unit.right()
         every { historyRepository.persistHumidity(sensor1.uuid, now, readings1.relativeHumidity) } returns Unit.right()
         every { historyRepository.persistTemperature(sensor2.uuid, now, readings2.temperature) } returns Unit.right()
@@ -153,7 +153,7 @@ class SnapshotSensorHistoryServiceTest {
         every { devicesRepository.getAll() } returns listOf(missingSensor, successSensor).right()
         every { readingsRepository.findBy(missingSensor) } returns null.right()
         every { readingsRepository.findBy(successSensor) } returns readings.right()
-        every { timeService.now() } returns now
+        every { timeProvider.now() } returns now
         every { historyRepository.persistTemperature(successSensor.uuid, now, readings.temperature) } returns Unit.right()
         every { historyRepository.persistHumidity(successSensor.uuid, now, readings.relativeHumidity) } returns Unit.right()
 
@@ -176,7 +176,7 @@ class SnapshotSensorHistoryServiceTest {
         val now = nowNoMills()
         every { devicesRepository.getAll() } returns listOf(sensor, nonSensor).right()
         every { readingsRepository.findBy(sensor) } returns readings.right()
-        every { timeService.now() } returns now
+        every { timeProvider.now() } returns now
         every { historyRepository.persistTemperature(sensor.uuid, now, readings.temperature) } returns Unit.right()
         every { historyRepository.persistHumidity(sensor.uuid, now, readings.relativeHumidity) } returns Unit.right()
 
@@ -197,7 +197,7 @@ class SnapshotSensorHistoryServiceTest {
         val now = nowNoMills()
         every { devicesRepository.getAll() } returns listOf(sensor).right()
         every { readingsRepository.findBy(sensor) } returns readings.right()
-        every { timeService.now() } returns now
+        every { timeProvider.now() } returns now
         every { historyRepository.persistTemperature(sensor.uuid, now, readings.temperature) } returns
             PersistenceFailure(Exception("db error")).left()
         every { historyRepository.persistHumidity(sensor.uuid, now, readings.relativeHumidity) } returns Unit.right()
@@ -218,7 +218,7 @@ class SnapshotSensorHistoryServiceTest {
         val now = nowNoMills()
         every { devicesRepository.getAll() } returns listOf(sensor).right()
         every { readingsRepository.findBy(sensor) } returns readings.right()
-        every { timeService.now() } returns now
+        every { timeProvider.now() } returns now
         every { historyRepository.persistTemperature(sensor.uuid, now, readings.temperature) } returns Unit.right()
         every { historyRepository.persistHumidity(sensor.uuid, now, readings.relativeHumidity) } returns
             PersistenceFailure(Exception("db error")).left()

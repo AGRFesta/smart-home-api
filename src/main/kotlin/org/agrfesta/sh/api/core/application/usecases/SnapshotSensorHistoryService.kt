@@ -10,7 +10,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurre
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsHistoryDataRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.domain.failures.SnapshotSensorHistoryFailure
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.springframework.stereotype.Service
 
 @Service
@@ -18,14 +18,14 @@ class SnapshotSensorHistoryService(
     private val devicesRepository: DevicesRepository,
     private val readingsRepository: SensorsCurrentReadingsRepository,
     private val historyRepository: SensorsHistoryDataRepository,
-    private val timeService: TimeService
+    private val timeProvider: TimeProvider
 ) : SnapshotSensorHistoryUseCase {
 
     override fun execute(): Either<SnapshotSensorHistoryFailure, Unit> {
         val devices = devicesRepository.getAll().getOrElse { failure ->
             return SnapshotSensorHistoryError(failure.exception).left()
         }
-        val now by lazy { timeService.now() }
+        val now by lazy { timeProvider.now() }
         devices
             .filter { it.isSensor() }
             .forEach { sensor ->

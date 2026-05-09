@@ -9,7 +9,7 @@ import org.agrfesta.sh.api.persistence.jdbc.entities.AreaEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.postgresql.util.PSQLException
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.jdbc.core.RowMapper
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service
 @Service
 class AreasJdbcRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
-    private val timeService: TimeService
+    private val timeProvider: TimeProvider
 ) {
 
     fun persist(area: AreaDto) {
@@ -30,7 +30,7 @@ class AreasJdbcRepository(
         val params = mapOf(
             "uuid" to area.uuid,
             "name" to area.name,
-            "createdOn" to Timestamp.from(timeService.now()),
+            "createdOn" to Timestamp.from(timeProvider.now()),
             "updatedOn" to null
         )
         try {
@@ -70,7 +70,7 @@ class AreasJdbcRepository(
             "uuid" to area.uuid,
             "name" to area.name,
             "isIndoor" to area.isIndoor,
-            "updatedOn" to Timestamp.from(timeService.now())
+            "updatedOn" to Timestamp.from(timeProvider.now())
         )
         try {
             return jdbcTemplate.update(sql, params)

@@ -30,7 +30,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `assign() Returns AreaNotFound when area is missing`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val device = aProviderDeviceData(
             providerId = aRandomUniqueString(),
             provider = aProvider(),
@@ -49,7 +49,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `assign() Returns DeviceNotFound when area is missing`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(
             name = aRandomUniqueString(),
             isIndoor = true
@@ -64,7 +64,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `assign() Returns SameAreaAssignment when sensor is already assigned to that area`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val sensorId = UUID.randomUUID()
         devicesRepo.persist(sensorId, aSensorProviderData())
@@ -77,7 +77,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `assign() Returns SensorAlreadyAssigned when sensor is already assigned to another area`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val anotherArea = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val sensorId = UUID.randomUUID()
@@ -103,7 +103,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `assign() Assigns sensor to area`() {
         val now = Instant.now().truncatedTo(ChronoUnit.MICROS)
-        every { timeService.now() } returns now
+        every { timeProvider.now() } returns now
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val sensorId = UUID.randomUUID()
         devicesRepo.persist(sensorId, aSensorProviderData())

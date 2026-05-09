@@ -36,7 +36,7 @@ import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoSmarther.Companion.M
 import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoSmarther.Companion.SET_POINT_MODE
 import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.utils.CacheAsserter
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.test.mothers.aJsonNode
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -57,7 +57,7 @@ class NetatmoSmartherTest {
     )
     private val now = generateNoNanosInstant()
 
-    private val timeService: TimeService = mockk()
+    private val timeProvider: TimeProvider = mockk()
     private val cache: Cache = mockk(relaxed = true)
     private val propertyRepository: PropertyRepository = mockk(relaxed = true)
     private val registry = BehaviorRegistry()
@@ -73,13 +73,13 @@ class NetatmoSmartherTest {
         homeId = config.homeId,
         roomId = config.roomId,
         client = client,
-        timeService = timeService
+        timeProvider = timeProvider
     )
 
     init {
         // Default behaviour
         cacheAsserter.givenCacheEntry(NETATMO_ACCESS_TOKEN_CACHE_KEY, accessToken)
-        every { timeService.now() } returns now
+        every { timeProvider.now() } returns now
     }
 
     ///// fetchReadings() //////////////////////////////////////////////////////////////////////////////////////////////

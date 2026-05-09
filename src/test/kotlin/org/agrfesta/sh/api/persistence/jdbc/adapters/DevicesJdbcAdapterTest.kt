@@ -24,7 +24,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getDeviceById() Returns DeviceNotFound when area is missing`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val missingDeviceId = UUID.randomUUID()
 
         sut.getDeviceById(missingDeviceId)
@@ -35,7 +35,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getDeviceById() Returns device`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val device = aProviderDeviceData(
             providerId = aRandomUniqueString(),
             provider = aProvider(),
@@ -56,7 +56,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getDeviceById() Returns PersistenceFailure when fails to fetch device`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val deviceId = UUID.randomUUID()
         val failure = DataAccessResourceFailureException("device fetching failure")
         every { devicesRepo.findDeviceById(deviceId) } throws failure
@@ -70,7 +70,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getAll() Returns empty collection when no devices exist`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
 
         sut.getAll()
             .shouldBeRight()
@@ -79,7 +79,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getAll() Returns all persisted devices`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         devicesRepo.persist(UUID.randomUUID(), aProviderDeviceData())
         devicesRepo.persist(UUID.randomUUID(), aProviderDeviceData())
 
@@ -90,7 +90,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getAll() Returns PersistenceFailure when fails to fetch devices`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val failure = DataAccessResourceFailureException("devices fetching failure")
         every { devicesRepo.getAll() } throws failure
 
@@ -103,7 +103,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `create() Persists a device retrievable by the given UUID`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val device = aProviderDeviceData()
         val deviceId = UUID.randomUUID()
 
@@ -120,7 +120,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `create() Returns PersistenceFailure when fails to persist device`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val device = aProviderDeviceData()
         val failure = DataAccessResourceFailureException("device creation failure")
         every { devicesRepo.persist(any(), any(), any()) } throws failure
@@ -134,7 +134,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `update() Updates device data`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val data = aProviderDeviceData()
         val deviceId = UUID.randomUUID()
         devicesRepo.persist(deviceId, data)
@@ -151,7 +151,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `update() Returns DeviceNotFound when device does not exist`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val missingDevice = aDevice()
 
         sut.update(missingDevice)
@@ -162,7 +162,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `update() Returns PersistenceFailure when fails to update device`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val data = aProviderDeviceData()
         val deviceId = UUID.randomUUID()
         devicesRepo.persist(deviceId, data)

@@ -28,7 +28,7 @@ class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `persistTemperature() Persists temperature reading for sensor`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val sensorUuid = UUID.randomUUID()
         devicesRepo.persist(sensorUuid, aSensorProviderData())
         val time = nowNoMills()
@@ -60,7 +60,7 @@ class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `persistHumidity() Persists humidity reading for sensor`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val sensorUuid = UUID.randomUUID()
         devicesRepo.persist(sensorUuid, aSensorProviderData())
         val time = nowNoMills()
@@ -92,7 +92,7 @@ class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `findBySensor() Returns empty collection when no history exists for sensor`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val sensorUuid = UUID.randomUUID()
         devicesRepo.persist(sensorUuid, aSensorProviderData())
 
@@ -103,7 +103,7 @@ class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `findBySensor() Returns all history data for sensor`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val sensorUuid = UUID.randomUUID()
         devicesRepo.persist(sensorUuid, aSensorProviderData())
         val time = nowNoMills()

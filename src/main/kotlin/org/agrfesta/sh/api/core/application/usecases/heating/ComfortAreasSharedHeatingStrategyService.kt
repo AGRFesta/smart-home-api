@@ -1,5 +1,6 @@
 package org.agrfesta.sh.api.core.application.usecases.heating
 
+import java.time.LocalTime
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
@@ -22,10 +23,11 @@ class ComfortAreasSharedHeatingStrategyService: NamedSharedHeatingAreasStrategyS
 
     override suspend fun internalHandleHeatingFor(
         sharedHeater: Heater,
-        areas: Collection<HeatableArea>
+        areas: Collection<HeatableArea>,
+        currentTime: LocalTime
     ) {
         val areasToHeat = areas.filter { a ->
-            a.getCurrentTargetTemperature()
+            a.getCurrentTargetTemperature(currentTime)
                 ?.let { a.requiresHeatingFor(it) }
                 ?: false
         }

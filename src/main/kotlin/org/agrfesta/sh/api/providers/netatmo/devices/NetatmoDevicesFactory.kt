@@ -6,14 +6,14 @@ import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClient
 import org.agrfesta.sh.api.providers.netatmo.NetatmoConfiguration
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.springframework.stereotype.Service
 
 @Service
 class NetatmoDevicesFactory(
     private val config: NetatmoConfiguration,
     private val client: NetatmoClient,
-    private val timeService: TimeService
+    private val timeProvider: TimeProvider
 ): ProviderDevicesFactory {
     override val provider = Provider.NETATMO
 
@@ -24,7 +24,7 @@ class NetatmoDevicesFactory(
             homeId = config.homeId,
             roomId = config.roomId,
             client = client,
-            timeService = timeService
+            timeProvider = timeProvider
         )
 
 }

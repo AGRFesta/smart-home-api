@@ -27,7 +27,7 @@ class PropertyIntegrationTest(
 
     @BeforeEach
     fun init() {
-        every { timeService.now() } returns now
+        every { timeProvider.now() } returns now
     }
 
     ///// putPropertyEntry /////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,7 +62,7 @@ class PropertyIntegrationTest(
     @Test fun `getPropertyEntry() return 404 when key is expired`() {
         val key = aRandomUniqueString()
         val ttl = aRandomTtl()
-        every { timeService.now() } returns now andThen now andThen now andThen now.plusSeconds(ttl+10)
+        every { timeProvider.now() } returns now andThen now andThen now.plusSeconds(ttl+10)
         propertyRepository.upsert(key, aRandomUniqueString(), ttl)
         propertyRepository.findEntry(key)
 
@@ -77,14 +77,14 @@ class PropertyIntegrationTest(
             .`as`(MessageResponse::class.java)
 
         result.message shouldBe "Key '$key' is missing"
-        verify(exactly = 4) { timeService.now() }
+        verify(exactly = 3) { timeProvider.now() }
     }
 
     @Test fun `getPropertyEntry() returns property entry when is not missing nor expired`() {
         val key = aRandomUniqueString()
         val ttl = aRandomTtl()
-        every { timeService.now() } returns now andThen now.plusSeconds(ttl-1)
-        propertyRepository.upsert(key, aRandomUniqueString(), aRandomTtl())
+        every { timeProvider.now() } returns now andThen now.plusSeconds(ttl-1)
+        propertyRepository.upsert(key, aRandomUniqueString(), ttl)
         propertyRepository.findEntry(key)
 
         val result = given()

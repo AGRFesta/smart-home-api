@@ -2,6 +2,7 @@ package org.agrfesta.sh.api.core.application.usecases.heating
 
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.LocalTime
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 import org.agrfesta.sh.api.core.domain.commons.Percentage
@@ -36,10 +37,11 @@ class EconomyAreasSharedHeatingStrategyService(
 
     override suspend fun internalHandleHeatingFor(
         sharedHeater: Heater,
-        areas: Collection<HeatableArea>
+        areas: Collection<HeatableArea>,
+        currentTime: LocalTime
     ) {
         val enoughHeatingArea = areas.firstOrNull { a ->
-            a.getCurrentTargetTemperature()?.let { target ->
+            a.getCurrentTargetTemperature(currentTime)?.let { target ->
                 a.tempAboveTargetRange(target)
             } ?: false
         }
@@ -49,7 +51,7 @@ class EconomyAreasSharedHeatingStrategyService(
             return
         }
         val areasToHeat = areas.filter { a ->
-            a.getCurrentTargetTemperature()
+            a.getCurrentTargetTemperature(currentTime)
                 ?.let { a.requiresHeatingFor(it) }
                 ?: false
         }

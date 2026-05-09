@@ -9,7 +9,7 @@ import org.agrfesta.sh.api.persistence.jdbc.entities.SensorAssignmentEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.postgresql.util.PSQLException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.RowMapper
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service
 @Service
 class SensorsAssignmentsJdbcRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
-    private val timeService: TimeService
+    private val timeProvider: TimeProvider
 ) {
 
     fun persistAssignment(areaId: UUID, deviceId: UUID) {
@@ -32,7 +32,7 @@ class SensorsAssignmentsJdbcRepository(
             "uuid" to UUID.randomUUID(),
             "areaUuid" to areaId,
             "deviceUuid" to deviceId,
-            "connectedOn" to Timestamp.from(timeService.now())
+            "connectedOn" to Timestamp.from(timeProvider.now())
         )
         try {
             jdbcTemplate.update(sql, params)

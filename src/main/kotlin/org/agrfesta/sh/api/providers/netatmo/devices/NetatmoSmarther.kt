@@ -22,7 +22,7 @@ import org.agrfesta.sh.api.providers.netatmo.NetatmoContractBreak
 import org.agrfesta.sh.api.providers.netatmo.NetatmoHomeStatusChange
 import org.agrfesta.sh.api.providers.netatmo.NetatmoRoomStatusChange
 import org.agrfesta.sh.api.utils.LoggerDelegate
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 
 class NetatmoSmarther(
     override val uuid: UUID,
@@ -30,7 +30,7 @@ class NetatmoSmarther(
     private val homeId: String,
     private val roomId: String,
     private val client: NetatmoClient,
-    private val timeService: TimeService
+    private val timeProvider: TimeProvider
 ): Sensor, Heater {
     private val logger by LoggerDelegate()
     override val provider = Provider.NETATMO
@@ -56,7 +56,7 @@ class NetatmoSmarther(
 
     override suspend fun getActuatorStatus(): Either<Failure, ActuatorStatus> = client.getHomeStatus(homeId).map {
         val room = it.rooms.first()
-        val now = timeService.now()
+        val now = timeProvider.now()
         if (room.setPointMode == SET_POINT_MODE
             && now.greaterEqualThan(room.setPointStartTime) && now.lessEqualThan(room.setPointEndTime)) {
             when(room.setPointTemperature) {
@@ -84,7 +84,7 @@ class NetatmoSmarther(
                     id = roomId,
                     setPointTemperature = MAX_SET_POINT_TEMPERATURE,
                     setPointMode = SET_POINT_MODE,
-                    setPointEndTime = timeService.now().plus(Duration.ofHours(1))
+                    setPointEndTime = timeProvider.now().plus(Duration.ofHours(1))
                 )
             )
         )
@@ -99,7 +99,7 @@ class NetatmoSmarther(
                     id = roomId,
                     setPointTemperature = MIN_SET_POINT_TEMPERATURE,
                     setPointMode = SET_POINT_MODE,
-                    setPointEndTime = timeService.now().plus(Duration.ofHours(1))
+                    setPointEndTime = timeProvider.now().plus(Duration.ofHours(1))
                 )
             )
         )

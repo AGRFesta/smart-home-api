@@ -4,7 +4,7 @@ import java.sql.Timestamp
 import java.time.temporal.ChronoUnit
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.persistence.PropertyEntryDto
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.core.namedparam.SqlParameterSource
@@ -17,12 +17,12 @@ import org.springframework.stereotype.Service
  * It handles the expiration logic based on the provided time-to-live (TTL) or expiration timestamp.
  *
  * @property jdbcTemplate The [NamedParameterJdbcTemplate] used for database operations.
- * @property timeService The [TimeService] used to obtain the current time for timestamp calculations.
+ * @property timeProvider The [TimeProvider] used to obtain the current time for timestamp calculations.
  */
 @Service
 class PropertyJdbcRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
-    private val timeService: TimeService
+    private val timeProvider: TimeProvider
 ) {
 
     /**
@@ -41,8 +41,9 @@ class PropertyJdbcRepository(
             ON CONFLICT (key) DO UPDATE
             SET value = EXCLUDED.value, expires_at = EXCLUDED.expires_at
         """.trimIndent()
-        val createdAt = Timestamp.from(timeService.now())
-        val expiresAt = ttl?.let { Timestamp.from(timeService.now().truncatedTo(ChronoUnit.SECONDS).plusSeconds(it)) }
+        val now = timeProvider.now()
+        val createdAt = Timestamp.from(now)
+        val expiresAt = ttl?.let { Timestamp.from(now.truncatedTo(ChronoUnit.SECONDS).plusSeconds(it)) }
         val params = MapSqlParameterSource()
             .addValue("key", key)
             .addValue("value", value)
@@ -65,7 +66,7 @@ class PropertyJdbcRepository(
             SET value = EXCLUDED.value, expires_at = EXCLUDED.expires_at
         """.trimIndent()
 
-        val now = timeService.now()
+        val now = timeProvider.now()
         val createdAt = Timestamp.from(now)
         val nowTruncated = now.truncatedTo(ChronoUnit.SECONDS)
         val params: Array<SqlParameterSource> = entries.map { entry ->
@@ -97,7 +98,7 @@ class PropertyJdbcRepository(
         """.trimIndent()
         val params = MapSqlParameterSource()
             .addValue("key", key)
-            .addValue("currentTime", Timestamp.from(timeService.now()))
+            .addValue("currentTime", Timestamp.from(timeProvider.now()))
         return jdbcTemplate.query(sql, params) { rs, _ ->
             PropertyEntry(
                 value = rs.getString("value"),

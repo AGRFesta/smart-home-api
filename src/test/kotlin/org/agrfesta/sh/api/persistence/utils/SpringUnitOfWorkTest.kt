@@ -14,7 +14,7 @@ import org.agrfesta.sh.api.CleanSmartHomeDatabase
 import org.agrfesta.sh.api.TestContainersConfig
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,12 +39,12 @@ class SpringUnitOfWorkTest {
     private lateinit var sut: SpringUnitOfWorkAdapter
 
     @MockkBean
-    private lateinit var timeService: TimeService
+    private lateinit var timeProvider: TimeProvider
 
     @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     fun `execute() Commits transaction and returns Right when block succeeds`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString())
 
         val result = sut.execute {
@@ -59,7 +59,7 @@ class SpringUnitOfWorkTest {
     @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     fun `execute() Rolls back transaction and returns Left when block fails`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString())
         val failure = "persistence-failure"
 
