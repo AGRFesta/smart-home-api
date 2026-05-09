@@ -27,7 +27,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getAreaById() Returns AreaNotFound when area is missing`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val missingAreaId = UUID.randomUUID()
 
         sut.getAreaById(missingAreaId)
@@ -38,7 +38,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getAreaById() Returns area`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(
             name = aRandomUniqueString(),
             isIndoor = true
@@ -53,7 +53,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getAreaById() Returns PersistenceFailure when fails to fetch area`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val areaId = UUID.randomUUID()
         val failure = DataAccessResourceFailureException("are fetching failure")
         every { areasRepo.findAreaById(areaId) } throws failure
@@ -67,7 +67,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `findAreaByName() Returns area when found`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
 
         sut.findAreaByName(area.name)
@@ -78,7 +78,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `findAreaByName() Returns null when area is not found`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
 
         sut.findAreaByName(aRandomUniqueString())
             .shouldBeRight()
@@ -87,7 +87,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `findAreaByName() Returns PersistenceFailure when fails to fetch area`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val name = aRandomUniqueString()
         val failure = DataAccessResourceFailureException("area by name fetching failure")
         every { areasRepo.findAreaByName(name) } throws failure
@@ -101,7 +101,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `save() Persists area successfully`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString())
 
         sut.save(area).shouldBeRight()
@@ -114,7 +114,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `save() Returns AreaNameConflict when area with same name already exists`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val name = aRandomUniqueString()
         areasRepo.persist(anAreaDto(name = name))
 
@@ -125,7 +125,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `save() Returns PersistenceFailure when fails to persist area`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val failure = DataAccessResourceFailureException("area creation failure")
         every { areasRepo.persist(any()) } throws failure
 
@@ -138,7 +138,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getAll() Returns empty collection when no areas exist`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
 
         sut.getAll()
             .shouldBeRight()
@@ -147,7 +147,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getAll() Returns all persisted areas`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         areasRepo.persist(anAreaDto(name = aRandomUniqueString()))
         areasRepo.persist(anAreaDto(name = aRandomUniqueString()))
 
@@ -158,7 +158,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getAll() Returns PersistenceFailure when fails to fetch areas`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val failure = DataAccessResourceFailureException("areas fetching failure")
         every { areasRepo.getAll() } throws failure
 
@@ -171,7 +171,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `update() Returns PersistenceFailure when repository throws DataAccessException`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString())
         val failure = DataAccessResourceFailureException("update failure")
         every { areasRepo.update(area) } throws failure
@@ -183,7 +183,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `update() Returns AreaNameConflict when new name clashes`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val existingName = aRandomUniqueString()
         areasRepo.persist(anAreaDto(name = existingName))
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
@@ -195,7 +195,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `update() Returns AreaNotFound when area does not exist`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val missingAreaId = UUID.randomUUID()
 
         sut.update(anAreaDto(uuid = missingAreaId, name = aRandomUniqueString()))
@@ -206,7 +206,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `update() Updates area successfully`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val updated = area.copy(name = aRandomUniqueString(), isIndoor = false)
 
@@ -226,7 +226,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `deleteAreaById() Deletes area successfully`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
 
         sut.deleteAreaById(area.uuid).shouldBeRight()
@@ -238,7 +238,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `deleteAreaById() Returns AreaNotFound when area does not exist`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val missingAreaId = UUID.randomUUID()
 
         sut.deleteAreaById(missingAreaId)
@@ -249,7 +249,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `deleteAreaById() Returns PersistenceFailure when fails to delete area`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val areaId = UUID.randomUUID()
         val failure = DataAccessResourceFailureException("area deletion failure")
         every { areasRepo.deleteAreaById(areaId) } throws failure

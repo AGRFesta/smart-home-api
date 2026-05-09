@@ -41,11 +41,11 @@ fun HeatableArea.hasTempAsTarget(): Temperature {
 fun HeatableArea.hasUnavailableCurrentTemp() {
     val failure = MessageFailure("fetch failure")
     coEvery { getCurrentTemperature() } returns failure.left()
-    every { getCurrentTargetTemperature() } returns aRandomTemperature()
+    every { getCurrentTargetTemperature(any()) } returns aRandomTemperature()
 }
 
 fun HeatableArea.hasNoTargetTemp() {
-    every { getCurrentTargetTemperature() } returns null
+    every { getCurrentTargetTemperature(any()) } returns null
 }
 
 fun HeatableArea.hasTempAboveTargetRange(): Pair<Temperature, Temperature> {
@@ -78,5 +78,5 @@ fun HeatableArea.hasTempInTargetRangeBelowTarget(): Pair<Temperature, Temperatur
 
 private fun HeatableArea.defineTempStatus(currentTemp: Temperature, targetTemp: Temperature) {
     coEvery { getCurrentTemperature() } returns currentTemp.right()
-    every { getCurrentTargetTemperature() } returns targetTemp
+    every { getCurrentTargetTemperature(any()) } returns targetTemp
 }

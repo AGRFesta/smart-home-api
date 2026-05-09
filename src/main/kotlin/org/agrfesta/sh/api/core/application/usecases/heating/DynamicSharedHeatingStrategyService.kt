@@ -1,5 +1,6 @@
 package org.agrfesta.sh.api.core.application.usecases.heating
 
+import java.time.LocalTime
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
@@ -39,7 +40,8 @@ class DynamicSharedHeatingStrategyService(
 
     override suspend fun handleHeatingFor(
         sharedHeater: Heater,
-        areas: Collection<HeatableArea>
+        areas: Collection<HeatableArea>,
+        currentTime: LocalTime
     ) {
         val strategy = getStrategy()
         val service = when {
@@ -55,7 +57,7 @@ class DynamicSharedHeatingStrategyService(
                 null
             }
         }
-        service?.handleHeatingFor(sharedHeater, areas)
+        service?.handleHeatingFor(sharedHeater, areas, currentTime)
     }
 
     private fun getStrategy(): SharedHeatingStrategy = propertyRepository.getEntry(HEATING_STRATEGY_KEY).fold(

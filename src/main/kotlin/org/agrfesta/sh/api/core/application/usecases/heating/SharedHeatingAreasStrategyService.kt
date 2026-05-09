@@ -1,6 +1,7 @@
 package org.agrfesta.sh.api.core.application.usecases.heating
 
 import java.math.BigDecimal
+import java.time.LocalTime
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
@@ -14,7 +15,7 @@ import org.agrfesta.sh.api.utils.LoggerDelegate
  * based on the state and requirements of the associated areas.
  */
 sealed interface SharedHeatingAreasStrategyService {
-    suspend fun handleHeatingFor(sharedHeater: Heater, areas: Collection<HeatableArea>)
+    suspend fun handleHeatingFor(sharedHeater: Heater, areas: Collection<HeatableArea>, currentTime: LocalTime)
 }
 
 /**
@@ -33,9 +34,17 @@ abstract class AbstractSharedHeatingAreasStrategyService: SharedHeatingAreasStra
         val HYSTERESIS: Temperature = Temperature.of(BigDecimal.ONE)
     }
 
-    protected abstract suspend fun internalHandleHeatingFor(sharedHeater: Heater, areas: Collection<HeatableArea>)
+    protected abstract suspend fun internalHandleHeatingFor(
+        sharedHeater: Heater,
+        areas: Collection<HeatableArea>,
+        currentTime: LocalTime
+    )
 
-    override suspend fun handleHeatingFor(sharedHeater: Heater, areas: Collection<HeatableArea>) {
+    override suspend fun handleHeatingFor(
+        sharedHeater: Heater,
+        areas: Collection<HeatableArea>,
+        currentTime: LocalTime
+    ) {
         if (areas.isEmpty()) {
             logger.warn("There are no areas! Skipping heating control task.")
             return
@@ -48,7 +57,7 @@ abstract class AbstractSharedHeatingAreasStrategyService: SharedHeatingAreasStra
             logger.error("Areas are not sharing same heater! Skipping heating control task.")
             return
         }
-        internalHandleHeatingFor(sharedHeater, areas)
+        internalHandleHeatingFor(sharedHeater, areas, currentTime)
     }
 
     suspend fun HeatableArea.requiresHeatingFor(targetTemp: Temperature): Boolean =

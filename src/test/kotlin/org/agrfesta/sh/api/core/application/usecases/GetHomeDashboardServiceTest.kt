@@ -31,7 +31,7 @@ import org.agrfesta.sh.api.domain.aSensor
 import org.agrfesta.sh.api.core.application.usecases.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.agrfesta.test.mothers.aRandomThermoHygroData
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.junit.jupiter.api.Test
 
 class GetHomeDashboardServiceTest {
@@ -39,14 +39,14 @@ class GetHomeDashboardServiceTest {
     private val areasWithDevicesRepository: AreasWithDevicesRepository = mockk()
     private val sensorsCurrentReadingsRepository: SensorsCurrentReadingsRepository = mockk()
     private val temperatureSettingsRepository: TemperatureSettingsRepository = mockk()
-    private val timeService: TimeService = mockk()
+    private val timeProvider: TimeProvider = mockk()
 
     private val sut = GetHomeDashboardService(
         propertyRepository,
         areasWithDevicesRepository,
         sensorsCurrentReadingsRepository,
         temperatureSettingsRepository,
-        timeService
+        timeProvider
     )
 
     init {
@@ -54,7 +54,7 @@ class GetHomeDashboardServiceTest {
         every { propertyRepository.findEntry(HEATING_STRATEGY_KEY) } returns null.right()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns emptyList<Nothing>().right()
         every { temperatureSettingsRepository.findAreaSetting(any()) } returns null.right()
-        every { timeService.currentLocalTime() } returns LocalTime.NOON
+        every { timeProvider.currentLocalTime() } returns LocalTime.NOON
     }
 
     // heatingActive ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -320,7 +320,7 @@ class GetHomeDashboardServiceTest {
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { temperatureSettingsRepository.findAreaSetting(area.uuid) } returns setting.right()
         every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PropertyEntry("true").right()
-        every { timeService.currentLocalTime() } returns LocalTime.of(12, 0)
+        every { timeProvider.currentLocalTime() } returns LocalTime.of(12, 0)
 
         val result = sut.execute().shouldBeRight()
 
@@ -343,7 +343,7 @@ class GetHomeDashboardServiceTest {
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { temperatureSettingsRepository.findAreaSetting(area.uuid) } returns setting.right()
         every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PropertyEntry("true").right()
-        every { timeService.currentLocalTime() } returns LocalTime.of(14, 0)
+        every { timeProvider.currentLocalTime() } returns LocalTime.of(14, 0)
 
         val result = sut.execute().shouldBeRight()
 

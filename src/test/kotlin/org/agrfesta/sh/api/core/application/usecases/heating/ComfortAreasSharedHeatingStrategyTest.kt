@@ -5,6 +5,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import java.time.LocalTime
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
@@ -35,7 +36,7 @@ class ComfortAreasSharedHeatingStrategyTest {
 
     @Test
     fun `handleHeatingFor() Do nothing when there are no areas`() {
-        runBlocking { sut.handleHeatingFor(sharedHeater, emptyList()) }
+        runBlocking { sut.handleHeatingFor(sharedHeater, emptyList(), LocalTime.now()) }
 
         coVerify(exactly = 0) { sharedHeater.on() }
         coVerify(exactly = 0) { sharedHeater.off() }
@@ -60,7 +61,7 @@ class ComfortAreasSharedHeatingStrategyTest {
         }
         val areas = listOf(areaB, areaC, areaA)
 
-        runBlocking { sut.handleHeatingFor(sharedHeater, areas) }
+        runBlocking { sut.handleHeatingFor(sharedHeater, areas, LocalTime.now()) }
 
         coVerify(exactly = 0) { sharedHeater.on() }
         coVerify(exactly = 0) { sharedHeater.off() }
@@ -73,7 +74,7 @@ class ComfortAreasSharedHeatingStrategyTest {
         areaB.hasTempBelowTargetRange()
         areaC.hasNoTargetTemp() // in this case we consider heating not needed
 
-        runBlocking { sut.handleHeatingFor(sharedHeater, areas) }
+        runBlocking { sut.handleHeatingFor(sharedHeater, areas, LocalTime.now()) }
 
         coVerify(exactly = 1) { sharedHeater.on() }
         coVerify(exactly = 0) { sharedHeater.off() }
@@ -86,7 +87,7 @@ class ComfortAreasSharedHeatingStrategyTest {
         areaB.hasTempAsTarget()
         areaC.hasTempAboveTargetRange()
 
-        runBlocking { sut.handleHeatingFor(sharedHeater, areas) }
+        runBlocking { sut.handleHeatingFor(sharedHeater, areas, LocalTime.now()) }
 
         coVerify(exactly = 1) { sharedHeater.on() }
         coVerify(exactly = 0) { sharedHeater.off() }
@@ -99,7 +100,7 @@ class ComfortAreasSharedHeatingStrategyTest {
         areaB.hasTempAboveTargetRange()
         areaC.hasTempAboveTargetRange()
 
-        runBlocking { sut.handleHeatingFor(sharedHeater, areas) }
+        runBlocking { sut.handleHeatingFor(sharedHeater, areas, LocalTime.now()) }
 
         coVerify(exactly = 0) { sharedHeater.on() }
         coVerify(exactly = 1) { sharedHeater.off() }
@@ -112,7 +113,7 @@ class ComfortAreasSharedHeatingStrategyTest {
         areaB.hasTempInTargetRangeBelowTarget()
         areaC.hasTempInTargetRangeBelowTarget()
 
-        runBlocking { sut.handleHeatingFor(sharedHeater, areas) }
+        runBlocking { sut.handleHeatingFor(sharedHeater, areas, LocalTime.now()) }
 
         coVerify(exactly = 0) { sharedHeater.on() }
         coVerify(exactly = 1) { sharedHeater.off() }
@@ -125,7 +126,7 @@ class ComfortAreasSharedHeatingStrategyTest {
         areaB.hasUnavailableCurrentTemp()
         areaC.hasUnavailableCurrentTemp()
 
-        runBlocking { sut.handleHeatingFor(sharedHeater, areas) }
+        runBlocking { sut.handleHeatingFor(sharedHeater, areas, LocalTime.now()) }
 
         coVerify(exactly = 0) { sharedHeater.on() }
         coVerify(exactly = 1) { sharedHeater.off() }

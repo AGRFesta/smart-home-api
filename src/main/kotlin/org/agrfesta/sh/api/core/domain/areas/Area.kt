@@ -3,6 +3,7 @@ package org.agrfesta.sh.api.core.domain.areas
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import java.time.LocalTime
 import java.util.*
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.commons.average
@@ -14,7 +15,6 @@ import org.agrfesta.sh.api.core.domain.failures.Failure
 import org.agrfesta.sh.api.core.domain.failures.MessageFailure
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
-import org.agrfesta.sh.api.utils.TimeService
 
 /**
  * Represents a physical or logical space within the smart home system.
@@ -96,9 +96,10 @@ interface HeatableArea: MonitoredClimateArea {
     /**
      * Calculates the current target temperature for the area based on current settings and schedules.
      *
+     * @param currentTime The current local time used to evaluate the active schedule slot.
      * @return The target [Temperature], or null if no target is set or available.
      */
-    fun getCurrentTargetTemperature(): Temperature?
+    fun getCurrentTargetTemperature(currentTime: LocalTime): Temperature?
 }
 
 /**
@@ -109,21 +110,19 @@ interface HeatableArea: MonitoredClimateArea {
  * @property heater The heater associated with this area.
  * @param mcArea The underlying monitored climate area.
  * @param temperatureSettingsRepository Repository to retrieve heating settings and schedules.
- * @param timeService Service to provide the current time for schedule calculations.
  */
 class HeatableAreaImpl(
     override val heater: Heater,
     private val mcArea: MonitoredClimateArea,
-    private val temperatureSettingsRepository: TemperatureSettingsRepository,
-    private val timeService: TimeService
+    private val temperatureSettingsRepository: TemperatureSettingsRepository
 ): HeatableArea, MonitoredClimateArea by mcArea {
 
-    override fun getCurrentTargetTemperature(): Temperature? {
+    override fun getCurrentTargetTemperature(currentTime: LocalTime): Temperature? {
         return temperatureSettingsRepository.findAreaSetting(uuid).fold(
             ifLeft = {null},
             ifRight = {
                 it?.temperatureSchedule
-                    ?.firstNotNullOfOrNull { i -> i.temperatureAt(timeService.currentLocalTime()) }
+                    ?.firstNotNullOfOrNull { i -> i.temperatureAt(currentTime) }
                     ?: it?.defaultTemperature
             }
         )

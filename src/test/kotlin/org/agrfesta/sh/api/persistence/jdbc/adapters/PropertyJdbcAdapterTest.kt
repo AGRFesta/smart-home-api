@@ -27,7 +27,7 @@ class PropertyJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @BeforeEach
     fun init() {
-        every { timeService.now() } returns now
+        every { timeProvider.now() } returns now
     }
 
     // upsert() ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,8 +159,8 @@ class PropertyJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `findEntry() Returns null when entry is expired`() {
         val key = aRandomUniqueString()
         val ttl = aRandomTtl()
-        // upsert calls timeService.now() twice (createdAt + expiresAt), findEntry calls it once
-        every { timeService.now() } returns now andThen now andThen now.plusSeconds(ttl + 10)
+        // upsert calls timeProvider.now() once, findEntry calls it once
+        every { timeProvider.now() } returns now andThen now.plusSeconds(ttl + 10)
         propertyRepo.upsert(key, aRandomUniqueString(), ttl)
 
         sut.findEntry(key)
@@ -203,8 +203,8 @@ class PropertyJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `getEntry() Returns PropertyNotFound when entry is expired`() {
         val key = aRandomUniqueString()
         val ttl = aRandomTtl()
-        // upsert calls timeService.now() twice (createdAt + expiresAt), getEntry calls it once
-        every { timeService.now() } returns now andThen now andThen now.plusSeconds(ttl + 10)
+        // upsert calls timeProvider.now() once, getEntry calls it once
+        every { timeProvider.now() } returns now andThen now.plusSeconds(ttl + 10)
         propertyRepo.upsert(key, aRandomUniqueString(), ttl)
 
         sut.getEntry(key)

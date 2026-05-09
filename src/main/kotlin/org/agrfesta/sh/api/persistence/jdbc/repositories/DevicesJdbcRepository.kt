@@ -13,7 +13,7 @@ import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getProvider
 import org.agrfesta.sh.api.persistence.jdbc.utils.getStatus
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class DevicesJdbcRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
-    private val timeService: TimeService
+    private val timeProvider: TimeProvider
 ) {
 
     fun findDeviceById(uuid: UUID): DeviceEntity? =
@@ -47,7 +47,7 @@ class DevicesJdbcRepository(
             "status" to deviceStatus.name,
             "providerId" to device.deviceProviderId,
             "features" to device.features.map { it.name }.toTypedArray(),
-            "createdOn" to Timestamp.from(timeService.now()),
+            "createdOn" to Timestamp.from(timeProvider.now()),
             "updatedOn" to null
         )
         jdbcTemplate.update(sql, params)
@@ -62,7 +62,7 @@ class DevicesJdbcRepository(
         val params = mapOf(
             "name" to device.name,
             "status" to device.status.name,
-            "updatedOn" to Timestamp.from(timeService.now()),
+            "updatedOn" to Timestamp.from(timeProvider.now()),
             "provider" to device.provider.name,
             "providerId" to device.deviceProviderId
         )

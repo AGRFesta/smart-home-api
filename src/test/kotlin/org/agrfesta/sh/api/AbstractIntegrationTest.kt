@@ -5,7 +5,7 @@ import com.ninjasquad.springmockk.SpykBean
 import io.restassured.RestAssured
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -26,7 +26,7 @@ abstract class AbstractIntegrationTest {
     @SpykBean
     protected lateinit var randomGenerator: RandomGenerator
     @SpykBean
-    protected lateinit var timeService: TimeService
+    protected lateinit var timeProvider: TimeProvider
     @MockkBean
     protected lateinit var switchBotDevicesClient: SwitchBotDevicesClient
 

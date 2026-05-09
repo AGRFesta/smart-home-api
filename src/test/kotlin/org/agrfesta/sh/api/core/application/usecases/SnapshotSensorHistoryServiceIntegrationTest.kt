@@ -33,7 +33,7 @@ class SnapshotSensorHistoryServiceIntegrationTest(
 
     @BeforeEach
     fun init() {
-        every { timeService.now() } returns now
+        every { timeProvider.now() } returns now
     }
 
     @Test fun `execute() saves all cached sensor values as history records`() {

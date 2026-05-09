@@ -25,7 +25,7 @@ class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `assign() Returns AreaNotFound when area is missing`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val actuatorId = UUID.randomUUID()
         devicesRepo.persist(actuatorId, anActuatorProviderData())
         val missingAreaId = UUID.randomUUID()
@@ -38,7 +38,7 @@ class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `assign() Returns DeviceNotFound when device is missing`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val missingActuatorId = UUID.randomUUID()
 
@@ -50,7 +50,7 @@ class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `assign() Returns SameAreaAssignment when actuator is already assigned to that area`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val actuatorId = UUID.randomUUID()
         devicesRepo.persist(actuatorId, anActuatorProviderData())
@@ -74,7 +74,7 @@ class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `assign() Assigns actuator to area`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val actuatorId = UUID.randomUUID()
         devicesRepo.persist(actuatorId, anActuatorProviderData())

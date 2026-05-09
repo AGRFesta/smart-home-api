@@ -49,7 +49,7 @@ class DevicesIntegrationTest(
         netatmoIntegrationAsserter.clear()
         devicesRepository.deleteAll()
 
-        every { timeService.now() } returns now
+        every { timeProvider.now() } returns now
     }
 
     @Test

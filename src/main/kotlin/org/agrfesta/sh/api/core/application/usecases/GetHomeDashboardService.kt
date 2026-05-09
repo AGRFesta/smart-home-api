@@ -26,7 +26,7 @@ import org.agrfesta.sh.api.core.domain.home.HumidityDto
 import org.agrfesta.sh.api.core.domain.home.MeasurementsDto
 import org.agrfesta.sh.api.core.application.usecases.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.springframework.stereotype.Service
 
 @Service
@@ -35,11 +35,11 @@ class GetHomeDashboardService(
     private val areasWithDevicesRepository: AreasWithDevicesRepository,
     private val sensorsCurrentReadingsRepository: SensorsCurrentReadingsRepository,
     private val temperatureSettingsRepository: TemperatureSettingsRepository,
-    private val timeService: TimeService
+    private val timeProvider: TimeProvider
 ) : GetHomeDashboardUseCase {
 
     override fun execute(): Either<GetHomeDashboardFailure, HomeDashboardDto> {
-        val currentTime = timeService.currentLocalTime()
+        val currentTime = timeProvider.currentLocalTime()
         val heatingActive = resolveHeatingActive()
         return areasWithDevicesRepository.getAllAreasWithDevices().map { areas ->
             HomeDashboardDto(

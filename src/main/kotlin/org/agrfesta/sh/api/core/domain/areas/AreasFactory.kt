@@ -7,13 +7,11 @@ import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
-import org.agrfesta.sh.api.utils.TimeService
 import org.springframework.stereotype.Service
 
 @Service
 class AreasFactory(
-    private val temperatureSettingsRepository: TemperatureSettingsRepository,
-    private val timeService: TimeService
+    private val temperatureSettingsRepository: TemperatureSettingsRepository
 ) {
     private val logger by LoggerDelegate()
 
@@ -38,7 +36,7 @@ class AreasFactory(
                 if (heaters.size > 1) {
                     logger.warn("Area '${dto.uuid}' has multiple heaters assigned. Using the first one: '${heaters.first().uuid}'.")
                 }
-                HeatableAreaImpl(heaters.first(), mcArea, temperatureSettingsRepository, timeService)
+                HeatableAreaImpl(heaters.first(), mcArea, temperatureSettingsRepository)
             } else {
                 mcArea
             }

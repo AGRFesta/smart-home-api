@@ -10,6 +10,8 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import java.time.Instant
+import java.time.LocalTime
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
@@ -37,7 +39,6 @@ import org.agrfesta.sh.api.core.application.usecases.heating.NamedSharedHeatingA
 import org.agrfesta.sh.api.core.application.usecases.heating.toSensorMockk
 import org.agrfesta.sh.api.core.application.usecases.heating.toSharedHeaterMockk
 import org.agrfesta.sh.api.core.application.usecases.heating.SharedHeatingAreasStrategyService
-import org.agrfesta.sh.api.utils.TimeService
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 
@@ -51,7 +52,7 @@ class EvaluateHeatingStateServiceTest {
     private val areasWithDevicesRepository: AreasWithDevicesRepository = mockk()
     private val temperatureSettingsRepository: TemperatureSettingsRepository = mockk()
     private val propertyRepository: PropertyRepository = mockk()
-    private val timeService: TimeService = mockk()
+    private val timeProvider: TimeProvider = mockk()
     private val strategy: SharedHeatingAreasStrategyService = mockk(relaxed = true)
     private val economyStrategy: NamedSharedHeatingAreasStrategyService = mockk(relaxed = true) {
         every { strategy } returns ECONOMY
@@ -60,13 +61,13 @@ class EvaluateHeatingStateServiceTest {
         every { strategy } returns COMFORT
     }
 
-    private val areasFactory = AreasFactory(temperatureSettingsRepository, timeService)
+    private val areasFactory = AreasFactory(temperatureSettingsRepository)
 
     private val sut = EvaluateHeatingStateService(devicesRepository, listOf(factory),
-        areasWithDevicesRepository, areasFactory, strategy, propertyRepository)
+        areasWithDevicesRepository, areasFactory, strategy, propertyRepository, timeProvider)
 
     init {
-        every { timeService.now() } returns now
+        every { timeProvider.currentLocalTime() } returns LocalTime.now()
         every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PropertyEntry("true").right()
         every { devicesRepository.getAll() } returns emptyList<Device>().right()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns emptyList<AreaDtoWithDevices>().right()
@@ -83,7 +84,7 @@ class EvaluateHeatingStateServiceTest {
         // Then
         verify(exactly = 0) { devicesRepository.getAll() }
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any()) }
+        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -99,7 +100,7 @@ class EvaluateHeatingStateServiceTest {
         // Then
         verify(exactly = 0) { devicesRepository.getAll() }
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any()) }
+        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -113,7 +114,7 @@ class EvaluateHeatingStateServiceTest {
         // Then
         verify(exactly = 0) { devicesRepository.getAll() }
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any()) }
+        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -127,7 +128,7 @@ class EvaluateHeatingStateServiceTest {
         // Then
         verify(exactly = 0) { devicesRepository.getAll() }
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any()) }
+        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -140,7 +141,7 @@ class EvaluateHeatingStateServiceTest {
 
         // Then
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any()) }
+        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -154,7 +155,7 @@ class EvaluateHeatingStateServiceTest {
         sut.execute()
 
         // Then
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any()) }
+        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -170,7 +171,7 @@ class EvaluateHeatingStateServiceTest {
         sut.execute()
 
         // Then
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any()) }
+        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -179,15 +180,15 @@ class EvaluateHeatingStateServiceTest {
         every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(COMFORT.name).right()
         val emptyStrategy = DynamicSharedHeatingStrategyService(ECONOMY, emptyList(), propertyRepository)
         val sut = EvaluateHeatingStateService(devicesRepository, listOf(factory),
-            areasWithDevicesRepository, areasFactory, emptyStrategy, propertyRepository)
+            areasWithDevicesRepository, areasFactory, emptyStrategy, propertyRepository, timeProvider)
         givenHeatableArea()
 
         // When
         sut.execute()
 
         // Then
-        coVerify(exactly = 0) { economyStrategy.handleHeatingFor(any(), any()) }
-        coVerify(exactly = 0) { comfortStrategy.handleHeatingFor(any(), any()) }
+        coVerify(exactly = 0) { economyStrategy.handleHeatingFor(any(), any(), any()) }
+        coVerify(exactly = 0) { comfortStrategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -205,7 +206,7 @@ class EvaluateHeatingStateServiceTest {
         sut.execute()
 
         // Then
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any()) }
+        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -223,7 +224,7 @@ class EvaluateHeatingStateServiceTest {
         sut.execute()
 
         // Then
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any()) }
+        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -239,7 +240,7 @@ class EvaluateHeatingStateServiceTest {
         sut.execute()
 
         // Then
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any()) }
+        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -346,7 +347,7 @@ class EvaluateHeatingStateServiceTest {
 
     private fun sutWith(strategy: SharedHeatingAreasStrategyService) =
         EvaluateHeatingStateService(devicesRepository, listOf(factory),
-            areasWithDevicesRepository, areasFactory, strategy, propertyRepository)
+            areasWithDevicesRepository, areasFactory, strategy, propertyRepository, timeProvider)
 
     private fun sutWithBothStrategies() =
         sutWith(DynamicSharedHeatingStrategyService(ECONOMY,
@@ -368,7 +369,7 @@ class EvaluateHeatingStateServiceTest {
     ) {
         val heaterSlot = slot<Heater>()
         val areasSlot = slot<Collection<HeatableArea>>()
-        coVerify(exactly = 1) { namedStrategy.handleHeatingFor(capture(heaterSlot), capture(areasSlot)) }
+        coVerify(exactly = 1) { namedStrategy.handleHeatingFor(capture(heaterSlot), capture(areasSlot), any()) }
         heaterSlot.captured shouldBe second
         areasSlot.captured.map { it.uuid }.shouldContainExactlyInAnyOrder(first.uuid)
     }

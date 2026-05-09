@@ -42,7 +42,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `createSetting() Creates setting without intervals`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = emptySet())
 
@@ -56,7 +56,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `createSetting() Creates setting with intervals`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val interval1 = aTemperatureInterval()
         val interval2 = aTemperatureInterval()
@@ -70,7 +70,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `createSetting() Replaces existing setting for area`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val originalSetting = anAreaTemperatureSetting(
             areaId = area.uuid,
@@ -96,7 +96,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `findAreaSetting() Returns null when no setting exists for area`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
 
         sut.findAreaSetting(area.uuid)
@@ -106,7 +106,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `findAreaSetting() Returns setting with no intervals`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = emptySet())
         sut.createSetting(setting).shouldBeRight()
@@ -122,7 +122,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `findAreaSetting() Returns setting with intervals`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val interval1 = aTemperatureInterval()
         val interval2 = aTemperatureInterval()
@@ -151,7 +151,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `deleteAreaSetting() Deletes existing setting`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = setOf(aTemperatureInterval()))
         sut.createSetting(setting).shouldBeRight()
@@ -181,7 +181,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `existsByAreaId() Returns false when no setting exists for area`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
 
         sut.existsByAreaId(area.uuid)
@@ -191,7 +191,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `existsByAreaId() Returns true when setting exists for area`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = emptySet())
         sut.createSetting(setting).shouldBeRight()
@@ -224,7 +224,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `persistAreaTemperatureSetting() Persists setting root without intervals`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = emptySet())
 
@@ -238,7 +238,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `persistAreaTemperatureSetting() Persists setting root and intervals`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val interval1 = aTemperatureInterval()
         val interval2 = aTemperatureInterval()
@@ -265,7 +265,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `persistAreaTemperatureSetting() Returns PersistenceFailure on database error while persisting root`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = emptySet())
         every { tempSettingsRepo.save(any()) } throws object : DataAccessException("db error") {}
@@ -277,7 +277,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `persistAreaTemperatureSetting() Returns PersistenceFailure on database error while persisting an interval`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = setOf(aTemperatureInterval()))
         every { tempIntervalsRepo.save(any()) } throws object : DataAccessException("db error") {}

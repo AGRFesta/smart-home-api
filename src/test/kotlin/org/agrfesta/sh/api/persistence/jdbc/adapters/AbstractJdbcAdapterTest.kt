@@ -13,7 +13,7 @@ import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcR
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsHistoryDataJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureSettingRepository
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest
 import org.springframework.context.annotation.Import
@@ -55,6 +55,6 @@ abstract class AbstractJdbcAdapterTest {
     @SpykBean protected lateinit var propertyRepo: PropertyJdbcRepository
     @SpykBean protected lateinit var historyDataRepository: SensorsHistoryDataJdbcRepository
 
-    @MockkBean protected lateinit var timeService: TimeService
+    @MockkBean protected lateinit var timeProvider: TimeProvider
 
 }

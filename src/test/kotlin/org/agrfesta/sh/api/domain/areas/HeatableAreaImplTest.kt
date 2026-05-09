@@ -17,7 +17,6 @@ import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.utils.TimeService
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.Test
@@ -31,15 +30,14 @@ class HeatableAreaImplTest {
         every { uuid } returns areaId
     }
     private val temperatureSettingsRepository: TemperatureSettingsRepository = mockk()
-    private val timeService: TimeService = mockk()
 
-    private val sut = HeatableAreaImpl(heater, mcArea, temperatureSettingsRepository, timeService)
+    private val sut = HeatableAreaImpl(heater, mcArea, temperatureSettingsRepository)
 
     @Test
     fun `getCurrentTargetTemperature() return null when there is no setting`() {
         every { temperatureSettingsRepository.findAreaSetting(areaId) } returns null.right()
 
-        val result = sut.getCurrentTargetTemperature()
+        val result = sut.getCurrentTargetTemperature(LocalTime.now())
 
         result.shouldBeNull()
     }
@@ -49,7 +47,7 @@ class HeatableAreaImplTest {
         val failure = Exception("fetch failure")
         every { temperatureSettingsRepository.findAreaSetting(areaId) } returns PersistenceFailure(failure).left()
 
-        val result = sut.getCurrentTargetTemperature()
+        val result = sut.getCurrentTargetTemperature(LocalTime.now())
 
         result.shouldBeNull()
     }
@@ -84,9 +82,7 @@ class HeatableAreaImplTest {
             LocalTime.of(23, 0) to Temperature.of("17.0")  // End of second interval (exclusive)
         ).map { (time, expectedTemp) ->
             dynamicTest("at $time target should be $expectedTemp") {
-                every { timeService.currentLocalTime() } returns time
-
-                val result = sut.getCurrentTargetTemperature()
+                val result = sut.getCurrentTargetTemperature(time)
 
                 result.shouldNotBeNull().shouldBe(expectedTemp)
             }

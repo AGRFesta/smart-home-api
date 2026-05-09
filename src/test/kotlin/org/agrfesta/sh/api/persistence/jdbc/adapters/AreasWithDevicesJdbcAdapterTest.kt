@@ -25,7 +25,7 @@ class AreasWithDevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getAllAreasWithDevices() Returns empty collection when no areas exist`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
 
         sut.getAllAreasWithDevices()
             .shouldBeRight()
@@ -34,7 +34,7 @@ class AreasWithDevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getAllAreasWithDevices() Returns all areas without devices`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         areasRepo.persist(anAreaDto(name = aRandomUniqueString()))
         areasRepo.persist(anAreaDto(name = aRandomUniqueString()))
 
@@ -45,7 +45,7 @@ class AreasWithDevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getAllAreasWithDevices() Returns area with assigned sensor`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val sensorId = UUID.randomUUID()
         devicesRepo.persist(sensorId, aSensorProviderData())
@@ -64,7 +64,7 @@ class AreasWithDevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getAllAreasWithDevices() Returns area with assigned actuator`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val actuatorId = UUID.randomUUID()
         devicesRepo.persist(actuatorId, anActuatorProviderData())
@@ -83,7 +83,7 @@ class AreasWithDevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `getAllAreasWithDevices() Returns PersistenceFailure when fails to fetch`() {
-        every { timeService.now() } returns Instant.now()
+        every { timeProvider.now() } returns Instant.now()
         val failure = DataAccessResourceFailureException("areas with devices fetching failure")
         every { areasWithDevicesRepo.getAll() } throws failure
 

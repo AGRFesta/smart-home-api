@@ -8,7 +8,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
-import org.agrfesta.sh.api.utils.TimeService
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.test.mothers.aJsonNode
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.anUrl
@@ -25,7 +25,7 @@ class SwitchBotDevicesClientTest {
     private val nonce = aRandomUniqueString()
     private val time = Instant.parse("2024-08-10T12:34:56Z")
 
-    private val timeService: TimeService = mockk()
+    private val timeProvider: TimeProvider = mockk()
     private val randomGenerator: RandomGenerator = mockk()
 
     @Test fun `getDevices() test`() {
@@ -33,7 +33,7 @@ class SwitchBotDevicesClientTest {
             val response = aJsonNode()
 
             every { randomGenerator.string() } returns nonce
-            every { timeService.now() } returns time
+            every { timeProvider.now() } returns time
 
             val engine = MockEngine { request ->
                 request.method shouldBe HttpMethod.Get
@@ -50,7 +50,7 @@ class SwitchBotDevicesClientTest {
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
             }
-            val client = SwitchBotDevicesClient(config, mapper, timeService, randomGenerator, engine)
+            val client = SwitchBotDevicesClient(config, mapper, timeProvider, randomGenerator, engine)
 
             val devices = client.getDevices()
 
@@ -64,7 +64,7 @@ class SwitchBotDevicesClientTest {
             val response = aJsonNode()
 
             every { randomGenerator.string() } returns nonce
-            every { timeService.now() } returns time
+            every { timeProvider.now() } returns time
 
             val engine = MockEngine { request ->
                 request.method shouldBe HttpMethod.Get
@@ -81,7 +81,7 @@ class SwitchBotDevicesClientTest {
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
             }
-            val client = SwitchBotDevicesClient(config, mapper, timeService, randomGenerator, engine)
+            val client = SwitchBotDevicesClient(config, mapper, timeProvider, randomGenerator, engine)
 
             val devices = client.getDeviceStatus(deviceId)
 
