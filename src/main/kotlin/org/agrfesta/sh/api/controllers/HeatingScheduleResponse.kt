@@ -1,9 +1,7 @@
 package org.agrfesta.sh.api.controllers
 
-import com.fasterxml.jackson.annotation.JsonFormat
 import java.time.LocalTime
 import org.agrfesta.sh.api.core.domain.areas.HeatingScheduleDto
-import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 
 data class HeatingScheduleResponse(
@@ -13,9 +11,7 @@ data class HeatingScheduleResponse(
 
 data class IntervalResponse(
     val temperature: Temperature,
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = INTERVAL_TIME_FORMAT)
     val startTime: LocalTime,
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = INTERVAL_TIME_FORMAT)
     val endTime: LocalTime
 )
 
