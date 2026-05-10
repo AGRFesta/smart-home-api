@@ -1,6 +1,5 @@
 package org.agrfesta.sh.api.domain
 
-import org.agrfesta.sh.api.controllers.DeviceResponse
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
@@ -10,8 +9,6 @@ import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.test.mothers.aRandomUniqueString
 import java.util.*
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
-
-fun DeviceResponse.toDevice() = Device(uuid, status, deviceProviderId, provider, name, features)
 
 fun aDevice(
     uuid: UUID = UUID.randomUUID(),
