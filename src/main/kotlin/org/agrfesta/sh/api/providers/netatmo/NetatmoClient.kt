@@ -29,15 +29,16 @@ import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.JacksonConverter
 import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
+import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.domain.failures.Failure
 import org.agrfesta.sh.api.core.domain.failures.KtorRequestFailure
+import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_REFRESH_TOKEN_CACHE_KEY
-import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
-import org.agrfesta.sh.api.utils.onLeftLogOn
-import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.agrfesta.sh.api.utils.toDetailedString
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import kotlin.time.DurationUnit
@@ -190,3 +191,7 @@ class NetatmoClient(
 }
 
 object NetatmoInvalidAccessToken: Failure
+
+private fun Either<PersistenceFailure, Any>.onLeftLogOn(logger: Logger) = onLeft {
+    logger.error("persistence failure", it.exception)
+}
