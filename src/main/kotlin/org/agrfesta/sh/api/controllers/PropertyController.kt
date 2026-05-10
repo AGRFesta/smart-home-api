@@ -6,7 +6,7 @@ import arrow.core.left
 import arrow.core.right
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.PropertyEntryDto
+import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.NOT_FOUND
@@ -54,11 +54,11 @@ class PropertyController(
     /**
      * Inserts or updates a batch of property entries.
      *
-     * @param batch A collection of [PropertyEntryDto] objects to be persisted. The maximum batch size is [MAX_BATCH_SIZE].
+     * @param batch A collection of [PropertyUpsertEntry] objects to be persisted. The maximum batch size is [MAX_BATCH_SIZE].
      * @return A [ResponseEntity] containing a [MessageResponse] indicating success or failure.
      */
     @PostMapping("/batch")
-    fun postPropertyBatch(@RequestBody batch: List<PropertyEntryDto>): ResponseEntity<MessageResponse> =
+    fun postPropertyBatch(@RequestBody batch: List<PropertyUpsertEntry>): ResponseEntity<MessageResponse> =
         validateBatch(batch)
             .flatMap { validBatch ->
                 propertyRepository.upsertBatch(validBatch).mapLeft {
@@ -72,8 +72,8 @@ class PropertyController(
             )
 
     private fun validateBatch(
-        batch: List<PropertyEntryDto>
-    ): Either<ResponseEntity<MessageResponse>, List<PropertyEntryDto>> = when {
+        batch: List<PropertyUpsertEntry>
+    ): Either<ResponseEntity<MessageResponse>, List<PropertyUpsertEntry>> = when {
         batch.isEmpty() -> status(HttpStatus.BAD_REQUEST)
             .body(MessageResponse("There are no entries to persist")).left()
         batch.size > MAX_BATCH_SIZE -> status(HttpStatus.PAYLOAD_TOO_LARGE)
@@ -102,7 +102,7 @@ class PropertyController(
         ifRight = { entry -> ok(entry) }
     )
 
-    private fun hasDuplicateKeys(batch: List<PropertyEntryDto>): Boolean {
+    private fun hasDuplicateKeys(batch: List<PropertyUpsertEntry>): Boolean {
         return batch.map { it.key }.toSet().size < batch.size
     }
 

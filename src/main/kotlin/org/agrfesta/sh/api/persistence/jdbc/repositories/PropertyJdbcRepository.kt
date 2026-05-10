@@ -3,7 +3,7 @@ package org.agrfesta.sh.api.persistence.jdbc.repositories
 import java.sql.Timestamp
 import java.time.temporal.ChronoUnit
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
-import org.agrfesta.sh.api.persistence.PropertyEntryDto
+import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -56,9 +56,9 @@ class PropertyJdbcRepository(
      * Inserts or updates a batch of property entries.
      *
      * If an entry with the same key already exists, its value and expiration time are updated.
-     * @param entries A list of [PropertyEntryDto] objects to be inserted or updated.
+     * @param entries A list of [PropertyUpsertEntry] objects to be inserted or updated.
      */
-    fun upsertBatch(entries: List<PropertyEntryDto>) {
+    fun upsertBatch(entries: List<PropertyUpsertEntry>) {
         val sql = """
             INSERT INTO smart_home.property (key, value, created_at, expires_at)
             VALUES (:key, :value, :createdAt, :expiresAt)

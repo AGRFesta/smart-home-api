@@ -5,7 +5,7 @@ import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.failures.FindPropertyFailure
 import org.agrfesta.sh.api.core.domain.failures.GetPropertyFailure
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.PropertyEntryDto
+import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 
 /**
  * Outbound Port for property persistence operations.
@@ -26,11 +26,11 @@ interface PropertyRepository {
     /**
      * Inserts or updates multiple property entries in a single batch operation.
      *
-     * @param entries the list of [PropertyEntryDto] to persist.
+     * @param entries the list of [PropertyUpsertEntry] to persist.
      * @return [Either.Right] with [Unit] on success,
      * or [Either.Left] with [PersistenceFailure] if a database error occurs.
      */
-    fun upsertBatch(entries: List<PropertyEntryDto>): Either<PersistenceFailure, Unit>
+    fun upsertBatch(entries: List<PropertyUpsertEntry>): Either<PersistenceFailure, Unit>
 
     /**
      * Looks up a property entry by [key] without failing if it does not exist.

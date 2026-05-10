@@ -9,7 +9,7 @@ import org.agrfesta.sh.api.core.domain.failures.GetPropertyFailure
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
-import org.agrfesta.sh.api.persistence.PropertyEntryDto
+import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
 import org.springframework.dao.DataAccessException
 import org.springframework.stereotype.Service
@@ -25,7 +25,7 @@ class PropertyJdbcAdapter(
         PersistenceFailure(e).left()
     }
 
-    override fun upsertBatch(entries: List<PropertyEntryDto>): Either<PersistenceFailure, Unit> = try {
+    override fun upsertBatch(entries: List<PropertyUpsertEntry>): Either<PersistenceFailure, Unit> = try {
         propertyJdbcRepository.upsertBatch(entries).right()
     } catch (e: DataAccessException) {
         PersistenceFailure(e).left()

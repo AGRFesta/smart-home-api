@@ -11,7 +11,7 @@ import io.restassured.http.ContentType
 import org.agrfesta.sh.api.controllers.MessageResponse
 import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
-import org.agrfesta.sh.api.persistence.PropertyEntryDto
+import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
 import org.agrfesta.test.mothers.aRandomTtl
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -115,9 +115,9 @@ class PropertyIntegrationTest(
         val key3 = aRandomUniqueString()
         val value3 = aRandomUniqueString()
         val batchEntries = listOf(
-            PropertyEntryDto(key1, value1, ttl1),
-            PropertyEntryDto(key2, value2, ttl2),
-            PropertyEntryDto(key3, value3)
+            PropertyUpsertEntry(key1, value1, ttl1),
+            PropertyUpsertEntry(key2, value2, ttl2),
+            PropertyUpsertEntry(key3, value3)
         )
         propertyRepository.findEntry(key1).shouldBeNull()
         propertyRepository.upsert(key2, aRandomUniqueString(), aRandomTtl()) // key2 already exists
