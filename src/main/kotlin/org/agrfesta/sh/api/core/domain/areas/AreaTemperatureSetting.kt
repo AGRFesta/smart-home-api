@@ -1,6 +1,5 @@
 package org.agrfesta.sh.api.core.domain.areas
 
-import com.fasterxml.jackson.annotation.JsonFormat
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -51,8 +50,8 @@ data class AreaTemperatureSetting(
  */
 data class TemperatureInterval(
     val temperature: Temperature,
-    @param:JsonFormat(shape = JsonFormat.Shape.STRING, pattern = INTERVAL_TIME_FORMAT) val startTime: LocalTime,
-    @param:JsonFormat(shape = JsonFormat.Shape.STRING, pattern = INTERVAL_TIME_FORMAT) val endTime: LocalTime
+    val startTime: LocalTime,
+    val endTime: LocalTime
 ) {
     companion object {
         const val INTERVAL_TIME_FORMAT = "HH:mm"

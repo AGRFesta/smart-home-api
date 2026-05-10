@@ -14,6 +14,10 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.math.BigDecimal
 import java.time.Instant
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -22,6 +26,8 @@ val domainModule = SimpleModule().apply {
     addDeserializer(Temperature::class.java, TemperatureDeserializer())
     addSerializer(Temperature::class.java, TemperatureSerializer())
     addSerializer(Instant::class.java, InstantSerializer())
+    addDeserializer(LocalTime::class.java, LocalTimeDeserializer())
+    addSerializer(LocalTime::class.java, LocalTimeSerializer())
 }
 
 val SMART_HOME_OBJECT_MAPPER: ObjectMapper = jacksonObjectMapper().apply {
@@ -69,5 +75,25 @@ class InstantSerializer : StdSerializer<Instant>(Instant::class.java) {
     override fun serialize(value: Instant, gen: JsonGenerator, provider: SerializerProvider) {
         // Write as epoch seconds (whole number) - see KDoc for design rationale
         gen.writeNumber(value.epochSecond)
+    }
+}
+
+private val localTimeFormatter = DateTimeFormatter.ofPattern(INTERVAL_TIME_FORMAT)
+
+class LocalTimeSerializer : StdSerializer<LocalTime>(LocalTime::class.java) {
+    override fun serialize(value: LocalTime, gen: JsonGenerator, provider: SerializerProvider) {
+        gen.writeString(value.format(localTimeFormatter))
+    }
+}
+
+class LocalTimeDeserializer : StdDeserializer<LocalTime>(LocalTime::class.java) {
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): LocalTime {
+        val value = p.text
+            ?: throw ctxt.weirdStringException(null, LocalTime::class.java, "null value not allowed; expected format: $INTERVAL_TIME_FORMAT")
+        return try {
+            LocalTime.parse(value, localTimeFormatter)
+        } catch (e: DateTimeParseException) {
+            throw ctxt.weirdStringException(value, LocalTime::class.java, "expected format: $INTERVAL_TIME_FORMAT")
+        }
     }
 }

@@ -1,13 +1,11 @@
 package org.agrfesta.sh.api.controllers
 
-import com.fasterxml.jackson.annotation.JsonFormat
 import java.time.LocalTime
 import java.util.UUID
 import org.agrfesta.sh.api.core.application.ports.inbounds.DeleteHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
-import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
@@ -121,8 +119,6 @@ data class HeatingScheduleRequest(
 
 data class IntervalRequest(
     val temperature: Temperature,
-    @param:JsonFormat(shape = JsonFormat.Shape.STRING, pattern = INTERVAL_TIME_FORMAT)
     val startTime: LocalTime,
-    @param:JsonFormat(shape = JsonFormat.Shape.STRING, pattern = INTERVAL_TIME_FORMAT)
     val endTime: LocalTime
 )
