@@ -10,7 +10,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRep
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
-import org.agrfesta.sh.api.persistence.PropertyEntryDto
+import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.test.mothers.aRandomTtl
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -106,7 +106,7 @@ class PropertyControllerMvcSliceTest(
 
     @Test fun `postPropertyBatch() returns 413 when the list has too many entries`() {
         val tooManyEntries = (1..(PropertyController.MAX_BATCH_SIZE + 1)).map {
-            PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString())
+            PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString())
         }
         val responseBody: String = mockMvc.perform(
             post("/properties/batch")
@@ -123,9 +123,9 @@ class PropertyControllerMvcSliceTest(
     @Test fun `postPropertyBatch() returns 400 when the list has duplicates`() {
         val dupKey = aRandomUniqueString()
         val batchEntries = listOf(
-            PropertyEntryDto(dupKey, aRandomUniqueString(), aRandomTtl()),
-            PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
-            PropertyEntryDto(dupKey, aRandomUniqueString())
+            PropertyUpsertEntry(dupKey, aRandomUniqueString(), aRandomTtl()),
+            PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
+            PropertyUpsertEntry(dupKey, aRandomUniqueString())
         )
         val responseBody: String = mockMvc.perform(
             post("/properties/batch")
@@ -141,9 +141,9 @@ class PropertyControllerMvcSliceTest(
 
     @Test fun `postPropertyBatch() returns 500 when fails to persist batch entries`() {
         val batchEntries = listOf(
-            PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
-            PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
-            PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString())
+            PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
+            PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
+            PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString())
         )
         every { propertyRepository.upsertBatch(batchEntries) } returns
                 PersistenceFailure(Exception("batch persist failure")).left()
@@ -161,8 +161,8 @@ class PropertyControllerMvcSliceTest(
 
     @Test fun `postPropertyBatch() returns 200 on success`() {
         val batchEntries = listOf(
-            PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
-            PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString())
+            PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
+            PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString())
         )
         every { propertyRepository.upsertBatch(batchEntries) } returns Unit.right()
 

@@ -10,7 +10,7 @@ import io.mockk.every
 import org.agrfesta.sh.api.core.domain.failures.GetPropertyFailure
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.persistence.PropertyEntryDto
+import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.test.mothers.aRandomTtl
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.nowNoMills
@@ -92,8 +92,8 @@ class PropertyJdbcAdapterTest : AbstractJdbcAdapterTest() {
         val key2 = aRandomUniqueString()
         val value2 = aRandomUniqueString()
         val entries = listOf(
-            PropertyEntryDto(key1, value1),
-            PropertyEntryDto(key2, value2)
+            PropertyUpsertEntry(key1, value1),
+            PropertyUpsertEntry(key2, value2)
         )
 
         sut.upsertBatch(entries).shouldBeRight()
@@ -110,8 +110,8 @@ class PropertyJdbcAdapterTest : AbstractJdbcAdapterTest() {
         val newTtl = aRandomTtl()
         propertyRepo.upsert(existingKey, aRandomUniqueString(), aRandomTtl())
         val entries = listOf(
-            PropertyEntryDto(existingKey, newValueForExisting, newTtl),
-            PropertyEntryDto(newKey, aRandomUniqueString())
+            PropertyUpsertEntry(existingKey, newValueForExisting, newTtl),
+            PropertyUpsertEntry(newKey, aRandomUniqueString())
         )
 
         sut.upsertBatch(entries).shouldBeRight()
@@ -125,7 +125,7 @@ class PropertyJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     fun `upsertBatch() Returns PersistenceFailure when repository throws`() {
-        val entries = listOf(PropertyEntryDto(aRandomUniqueString(), aRandomUniqueString()))
+        val entries = listOf(PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString()))
         val failure = DataAccessResourceFailureException("batch upsert failure")
         every { propertyRepo.upsertBatch(entries) } throws failure
 
