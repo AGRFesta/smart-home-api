@@ -18,7 +18,7 @@ import org.agrfesta.sh.api.controllers.DevicesRefreshResponse
 import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aProviderDeviceData
-import org.agrfesta.sh.api.domain.toDevice
+import org.agrfesta.sh.api.controllers.toDevice
 import org.agrfesta.sh.api.controllers.toResponse
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.domain.devices.Device
