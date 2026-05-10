@@ -8,7 +8,6 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.throwable.shouldHaveMessage
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.ktor.http.HttpStatusCode
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -18,7 +17,6 @@ import org.agrfesta.sh.api.core.domain.areas.Area
 import org.agrfesta.sh.api.core.domain.areas.MonitoredClimateAreaImpl
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.Sensor
-import org.agrfesta.sh.api.core.domain.failures.KtorRequestFailure
 import org.agrfesta.sh.api.core.domain.failures.MessageFailure
 import org.agrfesta.test.mothers.aThermoHygroDataValue
 import org.junit.jupiter.api.DynamicTest
@@ -97,13 +95,9 @@ class MonitoredClimateAreaImplTest {
         val sensorSuccess2 = mockk<Sensor> {
             coEvery { fetchReadings() } returns aThermoHygroDataValue(temperature = Temperature.of("20")).right()
         }
-        // Setup Failure Sensor (KtorRequestFailure)
         val sensorFailure = mockk<Sensor> {
             every { uuid } returns UUID.randomUUID()
-            coEvery { fetchReadings() } returns KtorRequestFailure(
-                failureStatusCode = HttpStatusCode.InternalServerError,
-                body = "Connection Timeout"
-            ).left()
+            coEvery { fetchReadings() } returns MessageFailure("Connection Timeout").left()
         }
         val area = mockk<Area> {
             every { sensors } returns listOf(sensorSuccess1, sensorFailure, sensorSuccess2)
@@ -117,12 +111,8 @@ class MonitoredClimateAreaImplTest {
 
     @Test
     fun `getCurrentTemperature() fails when all sensors fail`() {
-        // All sensors return a Left (KtorRequestFailure)
         val areaId = UUID.randomUUID()
-        val failureResponse = KtorRequestFailure(
-            failureStatusCode = HttpStatusCode.ServiceUnavailable,
-            body = "Sensor Unreachable"
-        ).left()
+        val failureResponse = MessageFailure("Sensor Unreachable").left()
         val sensorA = mockk<Sensor> {
             every { uuid } returns UUID.randomUUID()
             coEvery { fetchReadings() } returns failureResponse
