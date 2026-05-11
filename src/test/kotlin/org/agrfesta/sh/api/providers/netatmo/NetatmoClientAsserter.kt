@@ -18,7 +18,7 @@ import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.Parameters
 import io.ktor.http.headersOf
-import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
+import org.agrfesta.sh.api.infrastructure.jackson.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.test.mothers.aRandomNonNegativeInt
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.anUrl

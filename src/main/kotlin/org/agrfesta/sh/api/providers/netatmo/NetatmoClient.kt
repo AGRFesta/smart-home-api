@@ -28,7 +28,7 @@ import io.ktor.http.Parameters
 import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.JacksonConverter
-import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
+import org.agrfesta.sh.api.infrastructure.jackson.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.domain.failures.Failure
