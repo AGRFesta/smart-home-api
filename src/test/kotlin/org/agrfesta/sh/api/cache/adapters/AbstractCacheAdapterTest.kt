@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.cache.adapters
 
 import org.agrfesta.sh.api.TestContainersConfig
-import org.agrfesta.sh.api.configuration.JacksonConfiguration
+import org.agrfesta.sh.api.infrastructure.jackson.JacksonConfiguration
 import org.agrfesta.sh.api.cache.adapters.RedisCache
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired

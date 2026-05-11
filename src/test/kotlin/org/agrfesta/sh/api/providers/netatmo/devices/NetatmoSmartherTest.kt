@@ -14,7 +14,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
+import org.agrfesta.sh.api.infrastructure.jackson.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.controllers.createMockEngine
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.OFF

@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.configuration
+package org.agrfesta.sh.api.infrastructure.jackson
 
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser

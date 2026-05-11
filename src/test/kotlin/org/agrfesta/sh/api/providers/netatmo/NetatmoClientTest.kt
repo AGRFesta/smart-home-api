@@ -7,7 +7,7 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode.Companion.Forbidden
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.configuration.SMART_HOME_OBJECT_MAPPER
+import org.agrfesta.sh.api.infrastructure.jackson.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.controllers.createMockEngine
 import org.agrfesta.sh.api.providers.netatmo.KtorRequestFailure
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
