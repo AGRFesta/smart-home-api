@@ -35,7 +35,7 @@ class EconomyAreasSharedHeatingStrategyService(
     private val logger by LoggerDelegate()
     override val strategy: SharedHeatingStrategy = SharedHeatingStrategy.ECONOMY
 
-    override suspend fun internalHandleHeatingFor(
+    override fun internalHandleHeatingFor(
         sharedHeater: Heater,
         areas: Collection<HeatableArea>,
         currentTime: LocalTime
@@ -68,7 +68,7 @@ class EconomyAreasSharedHeatingStrategyService(
         }
     }
 
-    private suspend fun HeatableArea.tempAboveTargetRange(targetTemp: Temperature): Boolean =
+    private fun HeatableArea.tempAboveTargetRange(targetTemp: Temperature): Boolean =
         getCurrentTemperature().fold(
             ifLeft = {
                 logger.error("Unable to fetch current temperature for Area '$uuid'.")

@@ -4,7 +4,6 @@ import arrow.core.left
 import arrow.core.right
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -85,7 +84,7 @@ class EvaluateHeatingStateServiceTest {
         // Then
         verify(exactly = 0) { devicesRepository.getAll() }
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
+        verify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -101,7 +100,7 @@ class EvaluateHeatingStateServiceTest {
         // Then
         verify(exactly = 0) { devicesRepository.getAll() }
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
+        verify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -115,7 +114,7 @@ class EvaluateHeatingStateServiceTest {
         // Then
         verify(exactly = 0) { devicesRepository.getAll() }
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
+        verify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -129,7 +128,7 @@ class EvaluateHeatingStateServiceTest {
         // Then
         verify(exactly = 0) { devicesRepository.getAll() }
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
+        verify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -142,7 +141,7 @@ class EvaluateHeatingStateServiceTest {
 
         // Then
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
+        verify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -156,7 +155,7 @@ class EvaluateHeatingStateServiceTest {
         sut.execute()
 
         // Then
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
+        verify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -172,7 +171,7 @@ class EvaluateHeatingStateServiceTest {
         sut.execute()
 
         // Then
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
+        verify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -188,8 +187,8 @@ class EvaluateHeatingStateServiceTest {
         sut.execute()
 
         // Then
-        coVerify(exactly = 0) { economyStrategy.handleHeatingFor(any(), any(), any()) }
-        coVerify(exactly = 0) { comfortStrategy.handleHeatingFor(any(), any(), any()) }
+        verify(exactly = 0) { economyStrategy.handleHeatingFor(any(), any(), any()) }
+        verify(exactly = 0) { comfortStrategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -207,7 +206,7 @@ class EvaluateHeatingStateServiceTest {
         sut.execute()
 
         // Then
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
+        verify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -225,7 +224,7 @@ class EvaluateHeatingStateServiceTest {
         sut.execute()
 
         // Then
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
+        verify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -241,7 +240,7 @@ class EvaluateHeatingStateServiceTest {
         sut.execute()
 
         // Then
-        coVerify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
+        verify(exactly = 0) { strategy.handleHeatingFor(any(), any(), any()) }
     }
 
     @Test
@@ -370,7 +369,7 @@ class EvaluateHeatingStateServiceTest {
     ) {
         val heaterSlot = slot<Heater>()
         val areasSlot = slot<Collection<HeatableArea>>()
-        coVerify(exactly = 1) { namedStrategy.handleHeatingFor(capture(heaterSlot), capture(areasSlot), any()) }
+        verify(exactly = 1) { namedStrategy.handleHeatingFor(capture(heaterSlot), capture(areasSlot), any()) }
         heaterSlot.captured shouldBe second
         areasSlot.captured.map { it.uuid }.shouldContainExactlyInAnyOrder(first.uuid)
     }

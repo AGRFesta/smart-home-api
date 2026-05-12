@@ -15,7 +15,7 @@ import org.agrfesta.sh.api.utils.LoggerDelegate
  * based on the state and requirements of the associated areas.
  */
 sealed interface SharedHeatingAreasStrategyService {
-    suspend fun handleHeatingFor(sharedHeater: Heater, areas: Collection<HeatableArea>, currentTime: LocalTime)
+    fun handleHeatingFor(sharedHeater: Heater, areas: Collection<HeatableArea>, currentTime: LocalTime)
 }
 
 /**
@@ -34,13 +34,13 @@ abstract class AbstractSharedHeatingAreasStrategyService: SharedHeatingAreasStra
         val HYSTERESIS: Temperature = Temperature.of(BigDecimal.ONE)
     }
 
-    protected abstract suspend fun internalHandleHeatingFor(
+    protected abstract fun internalHandleHeatingFor(
         sharedHeater: Heater,
         areas: Collection<HeatableArea>,
         currentTime: LocalTime
     )
 
-    override suspend fun handleHeatingFor(
+    override fun handleHeatingFor(
         sharedHeater: Heater,
         areas: Collection<HeatableArea>,
         currentTime: LocalTime
@@ -60,7 +60,7 @@ abstract class AbstractSharedHeatingAreasStrategyService: SharedHeatingAreasStra
         internalHandleHeatingFor(sharedHeater, areas, currentTime)
     }
 
-    suspend fun HeatableArea.requiresHeatingFor(targetTemp: Temperature): Boolean =
+    fun HeatableArea.requiresHeatingFor(targetTemp: Temperature): Boolean =
         getCurrentTemperature().fold(
             ifLeft = {
                 logger.error("Unable to fetch current temperature for Area '$uuid'.")
@@ -75,7 +75,7 @@ abstract class AbstractSharedHeatingAreasStrategyService: SharedHeatingAreasStra
             }
         )
 
-    private suspend fun HeatableArea.requiresHeatingInHysteresisRange(
+    private fun HeatableArea.requiresHeatingInHysteresisRange(
         temp: Temperature,
         targetTemp: Temperature
     ): Boolean = heater.getActuatorStatus().fold(

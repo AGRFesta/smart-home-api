@@ -5,7 +5,6 @@ import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -70,7 +69,7 @@ class FetchSensorReadingsServiceTest {
         val sensorDriver = mockk<Sensor>()
         every { devicesRepository.getAll() } returns listOf(deviceRecord).right()
         every { factory.createDevice(deviceRecord) } returns sensorDriver
-        coEvery { sensorDriver.fetchReadings() } returns batteryReading.right()
+        every { sensorDriver.fetchReadings() } returns batteryReading.right()
 
         val result = sut.execute()
 
@@ -83,7 +82,7 @@ class FetchSensorReadingsServiceTest {
         val sensorDriver = mockk<Sensor>()
         every { devicesRepository.getAll() } returns listOf(deviceRecord).right()
         every { factory.createDevice(deviceRecord) } returns sensorDriver
-        coEvery { sensorDriver.fetchReadings() } returns FailureByException(RuntimeException("provider error")).left()
+        every { sensorDriver.fetchReadings() } returns FailureByException(RuntimeException("provider error")).left()
 
         val result = sut.execute()
 
@@ -100,8 +99,8 @@ class FetchSensorReadingsServiceTest {
         every { devicesRepository.getAll() } returns listOf(failingRecord, successRecord).right()
         every { factory.createDevice(failingRecord) } returns failingDriver
         every { factory.createDevice(successRecord) } returns successDriver
-        coEvery { failingDriver.fetchReadings() } returns FailureByException(RuntimeException("provider error")).left()
-        coEvery { successDriver.fetchReadings() } returns thermoHygro.right()
+        every { failingDriver.fetchReadings() } returns FailureByException(RuntimeException("provider error")).left()
+        every { successDriver.fetchReadings() } returns thermoHygro.right()
         every { readingsRepository.save(successDriver, thermoHygro.thermoHygroData) } returns Unit.right()
 
         val result = sut.execute()
@@ -126,9 +125,9 @@ class FetchSensorReadingsServiceTest {
         every { factory.createDevice(thermoHygroRecord) } returns thermoHygroDriver
         every { factory.createDevice(batteryOnlyRecord) } returns batteryOnlyDriver
         every { factory.createDevice(failingRecord) } returns failingDriver
-        coEvery { thermoHygroDriver.fetchReadings() } returns thermoHygro.right()
-        coEvery { batteryOnlyDriver.fetchReadings() } returns batteryReading.right()
-        coEvery { failingDriver.fetchReadings() } returns FailureByException(RuntimeException()).left()
+        every { thermoHygroDriver.fetchReadings() } returns thermoHygro.right()
+        every { batteryOnlyDriver.fetchReadings() } returns batteryReading.right()
+        every { failingDriver.fetchReadings() } returns FailureByException(RuntimeException()).left()
         every { readingsRepository.save(thermoHygroDriver, thermoHygro.thermoHygroData) } returns Unit.right()
 
         val result = sut.execute()
@@ -148,8 +147,8 @@ class FetchSensorReadingsServiceTest {
         every { devicesRepository.getAll() } returns listOf(failingSaveRecord, successRecord).right()
         every { factory.createDevice(failingSaveRecord) } returns failingSaveDriver
         every { factory.createDevice(successRecord) } returns successDriver
-        coEvery { failingSaveDriver.fetchReadings() } returns thermoHygro1.right()
-        coEvery { successDriver.fetchReadings() } returns thermoHygro2.right()
+        every { failingSaveDriver.fetchReadings() } returns thermoHygro1.right()
+        every { successDriver.fetchReadings() } returns thermoHygro2.right()
         every { readingsRepository.save(failingSaveDriver, thermoHygro1.thermoHygroData) } returns
             SensorReadingsSaveError(RuntimeException("cache error")).left()
         every { readingsRepository.save(successDriver, thermoHygro2.thermoHygroData) } returns Unit.right()
@@ -167,7 +166,7 @@ class FetchSensorReadingsServiceTest {
         val thermoHygro = aThermoHygroDataValue()
         every { devicesRepository.getAll() } returns listOf(deviceRecord).right()
         every { factory.createDevice(deviceRecord) } returns sensorDriver
-        coEvery { sensorDriver.fetchReadings() } returns thermoHygro.right()
+        every { sensorDriver.fetchReadings() } returns thermoHygro.right()
         every { readingsRepository.save(sensorDriver, thermoHygro.thermoHygroData) } returns Unit.right()
 
         val result = sut.execute()

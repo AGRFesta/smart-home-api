@@ -38,7 +38,7 @@ class DynamicSharedHeatingStrategyService(
         const val HEATING_STRATEGY_KEY = "heating.strategy"
     }
 
-    override suspend fun handleHeatingFor(
+    override fun handleHeatingFor(
         sharedHeater: Heater,
         areas: Collection<HeatableArea>,
         currentTime: LocalTime

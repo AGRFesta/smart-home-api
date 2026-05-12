@@ -85,219 +85,197 @@ class NetatmoSmartherTest {
     ///// fetchReadings() //////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
-    fun `fetchReadings() Returns sensor data`() {
-        runBlocking {
-            val expectedData = aRandomThermoHygroData()
-            val homeStatus = aNetatmoHomeStatus(
-                rooms = listOf(aNetatmoRoomStatus(
-                    humidity = expectedData.relativeHumidity.value.movePointRight(2).stripTrailingZeros(),
-                    measuredTemperature = expectedData.temperature
-                ))
-            )
-            clientAsserter.givenHomeStatusFetchResponse(homeStatus)
+    fun `fetchReadings() Returns sensor data`() = runBlocking {
+        val expectedData = aRandomThermoHygroData()
+        val homeStatus = aNetatmoHomeStatus(
+            rooms = listOf(aNetatmoRoomStatus(
+                humidity = expectedData.relativeHumidity.value.movePointRight(2).stripTrailingZeros(),
+                measuredTemperature = expectedData.temperature
+            ))
+        )
+        clientAsserter.givenHomeStatusFetchResponse(homeStatus)
 
-            val data = sut.fetchReadings()
+        val data = sut.fetchReadings()
 
-            data.shouldBeRight().shouldBeInstanceOf<ThermoHygroDataValue>()
-                .thermoHygroData.apply {
-                    temperature shouldBe expectedData.temperature
-                    relativeHumidity shouldBe expectedData.relativeHumidity
-                }
-            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
-        }
+        data.shouldBeRight().shouldBeInstanceOf<ThermoHygroDataValue>()
+            .thermoHygroData.apply {
+                temperature shouldBe expectedData.temperature
+                relativeHumidity shouldBe expectedData.relativeHumidity
+            }
+        clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
 
     @Test
-    fun `fetchReadings() Returns failure when home status fetch fails`() {
-        runBlocking {
-            clientAsserter.givenHomeStatusFetchFailure()
+    fun `fetchReadings() Returns failure when home status fetch fails`() = runBlocking {
+        clientAsserter.givenHomeStatusFetchFailure()
 
-            sut.fetchReadings().shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
+        sut.fetchReadings().shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
 
-            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
-        }
+        clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
 
     @Test
-    fun `fetchReadings() Returns NetatmoContractBreak when home status has more than one room`() {
-        runBlocking {
-            val homeStatus = aNetatmoHomeStatus(
-                rooms = listOf(aNetatmoRoomStatus(), aNetatmoRoomStatus())
-            )
-            clientAsserter.givenHomeStatusFetchResponse(homeStatus)
+    fun `fetchReadings() Returns NetatmoContractBreak when home status has more than one room`() = runBlocking {
+        val homeStatus = aNetatmoHomeStatus(
+            rooms = listOf(aNetatmoRoomStatus(), aNetatmoRoomStatus())
+        )
+        clientAsserter.givenHomeStatusFetchResponse(homeStatus)
 
-            sut.fetchReadings().shouldBeLeft()
-                .shouldBeInstanceOf<NetatmoContractBreak>().apply {
-                    message shouldBe "Not expecting to have more than one room"
-                }
+        sut.fetchReadings().shouldBeLeft()
+            .shouldBeInstanceOf<NetatmoContractBreak>().apply {
+                message shouldBe "Not expecting to have more than one room"
+            }
 
-            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
-        }
+        clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
 
     @Test
-    fun `fetchReadings() Returns NetatmoContractBreak when home status has no rooms`() {
-        runBlocking {
-            val homeStatus = aNetatmoHomeStatus(rooms = listOf())
-            clientAsserter.givenHomeStatusFetchResponse(homeStatus)
+    fun `fetchReadings() Returns NetatmoContractBreak when home status has no rooms`() = runBlocking {
+        val homeStatus = aNetatmoHomeStatus(rooms = listOf())
+        clientAsserter.givenHomeStatusFetchResponse(homeStatus)
 
-            sut.fetchReadings().shouldBeLeft()
-                .shouldBeInstanceOf<NetatmoContractBreak>().apply {
-                    message shouldBe "Not expecting to have no rooms"
-                }
+        sut.fetchReadings().shouldBeLeft()
+            .shouldBeInstanceOf<NetatmoContractBreak>().apply {
+                message shouldBe "Not expecting to have no rooms"
+            }
 
-            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
-        }
+        clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
 
     @Test
-    fun `fetchReadings() Returns NetatmoContractBreak when home status response is empty`() {
-        runBlocking {
-            clientAsserter.givenHomeStatusFetchResponse("{}")
+    fun `fetchReadings() Returns NetatmoContractBreak when home status response is empty`() = runBlocking {
+        clientAsserter.givenHomeStatusFetchResponse("{}")
 
-            sut.fetchReadings().shouldBeLeft()
-                .shouldBeInstanceOf<NetatmoContractBreak>().apply {
-                    message shouldBe "Unexpected home status response"
-                    response shouldBe "{}"
-                }
+        sut.fetchReadings().shouldBeLeft()
+            .shouldBeInstanceOf<NetatmoContractBreak>().apply {
+                message shouldBe "Unexpected home status response"
+                response shouldBe "{}"
+            }
 
-            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
-        }
+        clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
 
     @Test
-    fun `fetchReadings() Returns NetatmoContractBreak when home status response is not valid`() {
-        runBlocking {
-            val response = """
-                {
-                  "status": "ok",
-                  "time_server": 1762282424,
-                  "body": {
-                    "home": {
-                      "id": "6759635b4f8cc3a6d8063736",
-                      "rooms": [{}]
-                    }
-                  }
+    fun `fetchReadings() Returns NetatmoContractBreak when home status response is not valid`() = runBlocking {
+        val response = """
+            {
+              "status": "ok",
+              "time_server": 1762282424,
+              "body": {
+                "home": {
+                  "id": "6759635b4f8cc3a6d8063736",
+                  "rooms": [{}]
                 }
-            """.trimIndent()
-            clientAsserter.givenHomeStatusFetchResponse(response)
+              }
+            }
+        """.trimIndent()
+        clientAsserter.givenHomeStatusFetchResponse(response)
 
-            sut.fetchReadings().shouldBeLeft()
-                .shouldBeInstanceOf<NetatmoContractBreak>().apply {
-                    message shouldBe "Unexpected home status response"
-                    response shouldBe response
-                }
+        sut.fetchReadings().shouldBeLeft()
+            .shouldBeInstanceOf<NetatmoContractBreak>().apply {
+                message shouldBe "Unexpected home status response"
+                response shouldBe response
+            }
 
-            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
-        }
+        clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     ///// getActuatorStatus() //////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
-    fun `getActuatorStatus() Returns ON when mode is 'manual' and target temperature is max`() {
-        runBlocking {
-            val homeStatus = aNetatmoHomeStatus(
-                rooms = listOf(
-                    aNetatmoRoomStatus(
-                        setpointMode = SET_POINT_MODE,
-                        setpointTemperature = MAX_SET_POINT_TEMPERATURE,
-                        setpointStartTime = now.minusSeconds(3600),
-                        setpointEndTime = now.plusSeconds(3600)
-                    )
+    fun `getActuatorStatus() Returns ON when mode is 'manual' and target temperature is max`() = runBlocking {
+        val homeStatus = aNetatmoHomeStatus(
+            rooms = listOf(
+                aNetatmoRoomStatus(
+                    setpointMode = SET_POINT_MODE,
+                    setpointTemperature = MAX_SET_POINT_TEMPERATURE,
+                    setpointStartTime = now.minusSeconds(3600),
+                    setpointEndTime = now.plusSeconds(3600)
                 )
             )
-            clientAsserter.givenHomeStatusFetchResponse(homeStatus)
+        )
+        clientAsserter.givenHomeStatusFetchResponse(homeStatus)
 
-            sut.getActuatorStatus().shouldBeRight() shouldBe ON
+        sut.getActuatorStatus().shouldBeRight() shouldBe ON
 
-            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
-        }
+        clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
 
     @Test
-    fun `getActuatorStatus() Returns OFF when mode is 'manual' and target temperature is min`() {
-        runBlocking {
-            val homeStatus = aNetatmoHomeStatus(
-                rooms = listOf(
-                    aNetatmoRoomStatus(
-                        setpointMode = SET_POINT_MODE,
-                        setpointTemperature = MIN_SET_POINT_TEMPERATURE,
-                        setpointStartTime = now.minusSeconds(3600),
-                        setpointEndTime = now.plusSeconds(3600)
-                    )
+    fun `getActuatorStatus() Returns OFF when mode is 'manual' and target temperature is min`() = runBlocking {
+        val homeStatus = aNetatmoHomeStatus(
+            rooms = listOf(
+                aNetatmoRoomStatus(
+                    setpointMode = SET_POINT_MODE,
+                    setpointTemperature = MIN_SET_POINT_TEMPERATURE,
+                    setpointStartTime = now.minusSeconds(3600),
+                    setpointEndTime = now.plusSeconds(3600)
                 )
             )
-            clientAsserter.givenHomeStatusFetchResponse(homeStatus)
+        )
+        clientAsserter.givenHomeStatusFetchResponse(homeStatus)
 
-            sut.getActuatorStatus().shouldBeRight() shouldBe OFF
+        sut.getActuatorStatus().shouldBeRight() shouldBe OFF
 
-            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
-        }
+        clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
 
     @Test
-    fun `getActuatorStatus() Returns UNDEFINED when temperature is not max nor min`() {
-        runBlocking {
-            val homeStatus = aNetatmoHomeStatus(
-                rooms = listOf(
-                    aNetatmoRoomStatus(
-                        setpointMode = SET_POINT_MODE,
-                        setpointTemperature = Temperature.of("18.0"),
-                        setpointStartTime = now.minusSeconds(3600),
-                        setpointEndTime = now.plusSeconds(3600)
-                    )
+    fun `getActuatorStatus() Returns UNDEFINED when temperature is not max nor min`() = runBlocking {
+        val homeStatus = aNetatmoHomeStatus(
+            rooms = listOf(
+                aNetatmoRoomStatus(
+                    setpointMode = SET_POINT_MODE,
+                    setpointTemperature = Temperature.of("18.0"),
+                    setpointStartTime = now.minusSeconds(3600),
+                    setpointEndTime = now.plusSeconds(3600)
                 )
             )
-            clientAsserter.givenHomeStatusFetchResponse(homeStatus)
+        )
+        clientAsserter.givenHomeStatusFetchResponse(homeStatus)
 
-            sut.getActuatorStatus().shouldBeRight() shouldBe UNDEFINED
+        sut.getActuatorStatus().shouldBeRight() shouldBe UNDEFINED
 
-            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
-        }
+        clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
 
     @Test
-    fun `getActuatorStatus() Returns UNDEFINED when mode is not 'manual'`() {
-        runBlocking {
-            val homeStatus = aNetatmoHomeStatus(
-                rooms = listOf(
-                    aNetatmoRoomStatus(
-                        setpointMode = aRandomUniqueString(),
-                        setpointTemperature = MIN_SET_POINT_TEMPERATURE,
-                        setpointStartTime = now.minusSeconds(3600),
-                        setpointEndTime = now.plusSeconds(3600)
-                    )
+    fun `getActuatorStatus() Returns UNDEFINED when mode is not 'manual'`() = runBlocking {
+        val homeStatus = aNetatmoHomeStatus(
+            rooms = listOf(
+                aNetatmoRoomStatus(
+                    setpointMode = aRandomUniqueString(),
+                    setpointTemperature = MIN_SET_POINT_TEMPERATURE,
+                    setpointStartTime = now.minusSeconds(3600),
+                    setpointEndTime = now.plusSeconds(3600)
                 )
             )
-            clientAsserter.givenHomeStatusFetchResponse(homeStatus)
+        )
+        clientAsserter.givenHomeStatusFetchResponse(homeStatus)
 
-            sut.getActuatorStatus().shouldBeRight() shouldBe UNDEFINED
+        sut.getActuatorStatus().shouldBeRight() shouldBe UNDEFINED
 
-            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
-        }
+        clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
 
     @Test
-    fun `getActuatorStatus() Returns UNDEFINED when is actually out of defined temporal range`() {
-        runBlocking {
-            val homeStatus = aNetatmoHomeStatus(
-                rooms = listOf(
-                    aNetatmoRoomStatus(
-                        setpointMode = SET_POINT_MODE,
-                        setpointTemperature = MAX_SET_POINT_TEMPERATURE,
-                        setpointStartTime = now.plusSeconds(3600),
-                        setpointEndTime = now.plusSeconds(7200)
-                    )
+    fun `getActuatorStatus() Returns UNDEFINED when is actually out of defined temporal range`() = runBlocking {
+        val homeStatus = aNetatmoHomeStatus(
+            rooms = listOf(
+                aNetatmoRoomStatus(
+                    setpointMode = SET_POINT_MODE,
+                    setpointTemperature = MAX_SET_POINT_TEMPERATURE,
+                    setpointStartTime = now.plusSeconds(3600),
+                    setpointEndTime = now.plusSeconds(7200)
                 )
             )
-            clientAsserter.givenHomeStatusFetchResponse(homeStatus)
+        )
+        clientAsserter.givenHomeStatusFetchResponse(homeStatus)
 
-            sut.getActuatorStatus().shouldBeRight() shouldBe UNDEFINED
+        sut.getActuatorStatus().shouldBeRight() shouldBe UNDEFINED
 
-            clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
-        }
+        clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -305,87 +283,79 @@ class NetatmoSmartherTest {
     ///// on() /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
-    fun `on() Sets setpoint with temperature of 30 degree for one hour`() {
-        runBlocking {
-            val expectedEndTime = now.plusSeconds(3600)
-            clientAsserter.givenSetStatusResponse(aJsonNode())
+    fun `on() Sets setpoint with temperature of 30 degree for one hour`() = runBlocking {
+        val expectedEndTime = now.plusSeconds(3600)
+        clientAsserter.givenSetStatusResponse(aJsonNode())
 
-            sut.on().shouldBeRight()
+        sut.on().shouldBeRight()
 
-            registry.verifyRequest(Post, "/api/setstate") { request ->
-                request.headers[Authorization] shouldBe "Bearer $accessToken"
-                val requestBody = request.body.toByteArray().decodeToString()
-                val expectedJson = """
-                    {
-                      "home": {
-                        "id": "${config.homeId}",
-                        "rooms": [
-                          {
-                            "id": "${config.roomId}",
-                            "therm_setpoint_temperature": 30, 
-                            "therm_setpoint_end_time": ${expectedEndTime.epochSecond},
-                            "therm_setpoint_mode": "manual"
-                          }
-                        ]
+        registry.verifyRequest(Post, "/api/setstate") { request ->
+            request.headers[Authorization] shouldBe "Bearer $accessToken"
+            val requestBody = request.body.toByteArray().decodeToString()
+            val expectedJson = """
+                {
+                  "home": {
+                    "id": "${config.homeId}",
+                    "rooms": [
+                      {
+                        "id": "${config.roomId}",
+                        "therm_setpoint_temperature": 30,
+                        "therm_setpoint_end_time": ${expectedEndTime.epochSecond},
+                        "therm_setpoint_mode": "manual"
                       }
-                    }
-                """
-                requestBody shouldEqualSpecifiedJson expectedJson
-            }
+                    ]
+                  }
+                }
+            """
+            requestBody shouldEqualSpecifiedJson expectedJson
         }
     }
 
     @Test
     fun `on() Returns a failure when fails to set setpoint`() {
-        runBlocking {
-            clientAsserter.givenSetStatusFailure()
+        clientAsserter.givenSetStatusFailure()
 
-            sut.on().shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
-        }
+        sut.on().shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// on() /////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///// off() ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
-    fun `off() Sets setpoint with temperature of 7 degree for one hour`() {
-        runBlocking {
-            val expectedEndTime = now.plusSeconds(3600)
-            clientAsserter.givenSetStatusResponse(aJsonNode())
+    fun `off() Sets setpoint with temperature of 7 degree for one hour`() = runBlocking {
+        val expectedEndTime = now.plusSeconds(3600)
+        clientAsserter.givenSetStatusResponse(aJsonNode())
 
-            sut.off().shouldBeRight()
+        sut.off().shouldBeRight()
 
-            registry.verifyRequest(Post, "/api/setstate") { request ->
-                request.headers[Authorization] shouldBe "Bearer $accessToken"
-                val requestBody = request.body.toByteArray().decodeToString()
-                val expectedJson = """
-                    {
-                      "home": {
-                        "id": "${config.homeId}",
-                        "rooms": [
-                          {
-                            "id": "${config.roomId}",
-                            "therm_setpoint_temperature": 7, 
-                            "therm_setpoint_end_time": ${expectedEndTime.epochSecond},
-                            "therm_setpoint_mode": "manual"
-                          }
-                        ]
+        registry.verifyRequest(Post, "/api/setstate") { request ->
+            request.headers[Authorization] shouldBe "Bearer $accessToken"
+            val requestBody = request.body.toByteArray().decodeToString()
+            val expectedJson = """
+                {
+                  "home": {
+                    "id": "${config.homeId}",
+                    "rooms": [
+                      {
+                        "id": "${config.roomId}",
+                        "therm_setpoint_temperature": 7,
+                        "therm_setpoint_end_time": ${expectedEndTime.epochSecond},
+                        "therm_setpoint_mode": "manual"
                       }
-                    }
-                """.trimIndent()
-                requestBody shouldEqualSpecifiedJson expectedJson
-            }
+                    ]
+                  }
+                }
+            """.trimIndent()
+            requestBody shouldEqualSpecifiedJson expectedJson
         }
     }
 
     @Test
     fun `off() Returns a failure when fails to set setpoint`() {
-        runBlocking {
-            clientAsserter.givenSetStatusFailure()
+        clientAsserter.givenSetStatusFailure()
 
-            sut.off().shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
-        }
+        sut.off().shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

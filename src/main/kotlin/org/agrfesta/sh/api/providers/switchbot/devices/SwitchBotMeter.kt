@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import java.util.*
+import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.FailureByException
 import org.agrfesta.sh.api.core.domain.devices.Provider
@@ -20,9 +21,9 @@ class SwitchBotMeter (
     private val client: SwitchBotDevicesClient
 ): Sensor {
 
-    override suspend fun fetchReadings(): Either<SensorReadingsFailure, SensorReadings> =
+    override fun fetchReadings(): Either<SensorReadingsFailure, SensorReadings> =
         try{
-            val jsonNode = client.getDeviceStatus(deviceProviderId)
+            val jsonNode = runBlocking { client.getDeviceStatus(deviceProviderId) }
             SwitchBotSensorReadings(
                 temperature = jsonNode.at("/body/temperature").asText().let { Temperature.of(it) },
                 humidityInt = jsonNode.at("/body/humidity").intValue(),
