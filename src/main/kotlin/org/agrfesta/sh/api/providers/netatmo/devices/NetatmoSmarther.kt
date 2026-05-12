@@ -7,6 +7,7 @@ import arrow.core.right
 import java.time.Duration
 import java.time.Instant
 import java.util.*
+import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.domain.commons.Temperature.Companion.of
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.OFF
@@ -41,8 +42,8 @@ class NetatmoSmarther(
         internal const val SET_POINT_MODE = "manual"
     }
 
-    override suspend fun fetchReadings(): Either<Failure, SensorReadings> {
-        return client.getHomeStatus(homeId).flatMap { status ->
+    override fun fetchReadings(): Either<Failure, SensorReadings> {
+        return runBlocking { client.getHomeStatus(homeId) }.flatMap { status ->
             when {
                 status.rooms.size > 1 ->
                     NetatmoContractBreak("Not expecting to have more than one room").left()
@@ -54,7 +55,7 @@ class NetatmoSmarther(
         }
     }
 
-    override suspend fun getActuatorStatus(): Either<Failure, ActuatorStatus> = client.getHomeStatus(homeId).map {
+    override fun getActuatorStatus(): Either<Failure, ActuatorStatus> = runBlocking { client.getHomeStatus(homeId) }.map {
         val room = it.rooms.first()
         val now = timeProvider.now()
         if (room.setPointMode == SET_POINT_MODE
@@ -76,7 +77,7 @@ class NetatmoSmarther(
 
     private fun Instant.lessEqualThan(other: Instant?) = other?.let { this <= it } ?: true
 
-    override suspend fun on(): Either<Failure, Unit> {
+    override fun on(): Either<Failure, Unit> {
         val status = NetatmoHomeStatusChange(
             id = homeId,
             rooms = listOf(
@@ -88,10 +89,10 @@ class NetatmoSmarther(
                 )
             )
         )
-        return client.setState(status).map {}
+        return runBlocking { client.setState(status) }.map {}
     }
 
-    override suspend fun off(): Either<Failure, Unit> {
+    override fun off(): Either<Failure, Unit> {
         val status = NetatmoHomeStatusChange(
             id = homeId,
             rooms = listOf(
@@ -103,7 +104,7 @@ class NetatmoSmarther(
                 )
             )
         )
-        return client.setState(status).map {}
+        return runBlocking { client.setState(status) }.map {}
     }
 
 }

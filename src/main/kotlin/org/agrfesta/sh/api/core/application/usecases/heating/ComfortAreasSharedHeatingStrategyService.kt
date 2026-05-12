@@ -21,7 +21,7 @@ class ComfortAreasSharedHeatingStrategyService: NamedSharedHeatingAreasStrategyS
     private val logger by LoggerDelegate()
     override val strategy: SharedHeatingStrategy = SharedHeatingStrategy.COMFORT
 
-    override suspend fun internalHandleHeatingFor(
+    override fun internalHandleHeatingFor(
         sharedHeater: Heater,
         areas: Collection<HeatableArea>,
         currentTime: LocalTime

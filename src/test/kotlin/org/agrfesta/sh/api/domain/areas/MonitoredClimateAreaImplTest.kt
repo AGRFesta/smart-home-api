@@ -8,11 +8,9 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.throwable.shouldHaveMessage
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import java.util.*
-import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.domain.areas.Area
 import org.agrfesta.sh.api.core.domain.areas.MonitoredClimateAreaImpl
 import org.agrfesta.sh.api.core.domain.commons.Temperature
@@ -66,23 +64,21 @@ class MonitoredClimateAreaImplTest {
 
         return testCases.map { case ->
             DynamicTest.dynamicTest(case.description) {
-                runBlocking {
-                    val mockedSensors = case.temperatures.map { temp ->
-                        mockk<Sensor> {
-                            coEvery { fetchReadings() } returns aThermoHygroDataValue(
-                                temperature = Temperature.of(temp)
-                            ).right()
-                        }
+                val mockedSensors = case.temperatures.map { temp ->
+                    mockk<Sensor> {
+                        every { fetchReadings() } returns aThermoHygroDataValue(
+                            temperature = Temperature.of(temp)
+                        ).right()
                     }
-                    val area = mockk<Area> {
-                        every { sensors } returns mockedSensors
-                    }
-                    val sut = MonitoredClimateAreaImpl(area)
-
-                    val result = sut.getCurrentTemperature()
-
-                    result.shouldBeRight().value.toPlainString() shouldBe case.expectedAverage
                 }
+                val area = mockk<Area> {
+                    every { sensors } returns mockedSensors
+                }
+                val sut = MonitoredClimateAreaImpl(area)
+
+                val result = sut.getCurrentTemperature()
+
+                result.shouldBeRight().value.toPlainString() shouldBe case.expectedAverage
             }
         }
     }
@@ -90,21 +86,21 @@ class MonitoredClimateAreaImplTest {
     @Test
     fun `getCurrentTemperature() returns average temperature among all sensors ignoring failing fetches`() {
         val sensorSuccess1 = mockk<Sensor> {
-            coEvery { fetchReadings() } returns aThermoHygroDataValue(temperature = Temperature.of("10")).right()
+            every { fetchReadings() } returns aThermoHygroDataValue(temperature = Temperature.of("10")).right()
         }
         val sensorSuccess2 = mockk<Sensor> {
-            coEvery { fetchReadings() } returns aThermoHygroDataValue(temperature = Temperature.of("20")).right()
+            every { fetchReadings() } returns aThermoHygroDataValue(temperature = Temperature.of("20")).right()
         }
         val sensorFailure = mockk<Sensor> {
             every { uuid } returns UUID.randomUUID()
-            coEvery { fetchReadings() } returns MessageFailure("Connection Timeout").left()
+            every { fetchReadings() } returns MessageFailure("Connection Timeout").left()
         }
         val area = mockk<Area> {
             every { sensors } returns listOf(sensorSuccess1, sensorFailure, sensorSuccess2)
         }
         val sut = MonitoredClimateAreaImpl(area)
 
-        val result = runBlocking { sut.getCurrentTemperature() }
+        val result = sut.getCurrentTemperature()
 
         result.shouldBeRight().value.toPlainString() shouldBe "15"
     }
@@ -115,11 +111,11 @@ class MonitoredClimateAreaImplTest {
         val failureResponse = MessageFailure("Sensor Unreachable").left()
         val sensorA = mockk<Sensor> {
             every { uuid } returns UUID.randomUUID()
-            coEvery { fetchReadings() } returns failureResponse
+            every { fetchReadings() } returns failureResponse
         }
         val sensorB = mockk<Sensor> {
             every { uuid } returns UUID.randomUUID()
-            coEvery { fetchReadings() } returns failureResponse
+            every { fetchReadings() } returns failureResponse
         }
         val area = mockk<Area> {
             every { uuid } returns areaId
@@ -128,7 +124,7 @@ class MonitoredClimateAreaImplTest {
 
         val sut = MonitoredClimateAreaImpl(area)
 
-        val result = runBlocking { sut.getCurrentTemperature() }
+        val result = sut.getCurrentTemperature()
         result.shouldBeLeft().let {
             it.shouldBeInstanceOf<MessageFailure>()
             it.message shouldBe "It was not possible to retrieve the current temperature for area '$areaId'"

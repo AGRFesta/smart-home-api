@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
-import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.application.ports.inbounds.FetchSensorReadingsUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
@@ -36,9 +35,7 @@ class FetchSensorReadingsService(
             .forEach { device ->
                 val driver = factories[device.provider]?.createDevice(device) ?: return@forEach
                 if (driver is Sensor) {
-                    // fetchReadings() is suspend; runBlocking bridges to the synchronous use case contract
-                    // so that callers (e.g. scheduler) remain unaware of coroutines.
-                    val readings = runBlocking { driver.fetchReadings() }
+                    val readings = driver.fetchReadings()
                         .getOrElse { failure ->
                             logger.error("Failed to fetch readings for device ${device.uuid}: $failure")
                             return@forEach

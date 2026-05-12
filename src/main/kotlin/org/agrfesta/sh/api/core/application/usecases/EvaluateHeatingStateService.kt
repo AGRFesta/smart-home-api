@@ -1,6 +1,5 @@
 package org.agrfesta.sh.api.core.application.usecases
 
-import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.application.ports.inbounds.EvaluateHeatingStateUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
@@ -50,13 +49,11 @@ class EvaluateHeatingStateService(
             logger.error("Area fetch failed, skipping heating evaluation.", failure.exception)
         }.getOrNull()?.map { areasFactory.createArea(it, devicesRegistry) } ?: return
         val currentTime = timeProvider.currentLocalTime()
-        runBlocking {
-            areas.filterIsInstance<HeatableArea>()
-                .groupBy { it.heater }
-                .forEach { (heater, areaList) ->
-                    strategy.handleHeatingFor(heater, areaList, currentTime)
-                }
-        }
+        areas.filterIsInstance<HeatableArea>()
+            .groupBy { it.heater }
+            .forEach { (heater, areaList) ->
+                strategy.handleHeatingFor(heater, areaList, currentTime)
+            }
     }
 
     private fun isEnabled(): Boolean = propertyRepository.findEntry(HEATING_ENABLED_KEY).fold(

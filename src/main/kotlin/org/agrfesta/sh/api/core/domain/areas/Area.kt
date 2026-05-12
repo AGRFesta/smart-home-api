@@ -50,7 +50,7 @@ interface MonitoredClimateArea: Area {
      *
      * @return [Either] a [Failure] if the temperature cannot be retrieved, or the [Temperature].
      */
-    suspend fun getCurrentTemperature(): Either<Failure, Temperature>
+    fun getCurrentTemperature(): Either<Failure, Temperature>
     //TODO humidity
 }
 
@@ -72,7 +72,7 @@ class MonitoredClimateAreaImpl(
         }
     }
 
-    override suspend fun getCurrentTemperature(): Either<Failure, Temperature> =
+    override fun getCurrentTemperature(): Either<Failure, Temperature> =
         sensors.mapNotNull {
             it.fetchReadings().fold(
                     ifLeft = { _ ->

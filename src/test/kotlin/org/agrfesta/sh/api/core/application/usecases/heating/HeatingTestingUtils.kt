@@ -2,7 +2,6 @@ package org.agrfesta.sh.api.core.application.usecases.heating
 
 import arrow.core.left
 import arrow.core.right
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import java.math.BigDecimal
@@ -40,7 +39,7 @@ fun HeatableArea.hasTempAsTarget(): Temperature {
 
 fun HeatableArea.hasUnavailableCurrentTemp() {
     val failure = MessageFailure("fetch failure")
-    coEvery { getCurrentTemperature() } returns failure.left()
+    every { getCurrentTemperature() } returns failure.left()
     every { getCurrentTargetTemperature(any()) } returns aRandomTemperature()
 }
 
@@ -77,6 +76,6 @@ fun HeatableArea.hasTempInTargetRangeBelowTarget(): Pair<Temperature, Temperatur
 }
 
 private fun HeatableArea.defineTempStatus(currentTemp: Temperature, targetTemp: Temperature) {
-    coEvery { getCurrentTemperature() } returns currentTemp.right()
+    every { getCurrentTemperature() } returns currentTemp.right()
     every { getCurrentTargetTemperature(any()) } returns targetTemp
 }

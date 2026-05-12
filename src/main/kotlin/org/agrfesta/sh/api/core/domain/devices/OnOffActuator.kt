@@ -6,9 +6,9 @@ import org.agrfesta.sh.api.core.domain.failures.Failure
 interface Actuator: DeviceDriver
 
 interface OnOffActuator: Actuator {
-    suspend fun getActuatorStatus(): Either<Failure, ActuatorStatus>
-    suspend fun on(): Either<Failure, Unit>
-    suspend fun off(): Either<Failure, Unit>
+    fun getActuatorStatus(): Either<Failure, ActuatorStatus>
+    fun on(): Either<Failure, Unit>
+    fun off(): Either<Failure, Unit>
 }
 
 enum class ActuatorStatus {ON, OFF, UNDEFINED}
