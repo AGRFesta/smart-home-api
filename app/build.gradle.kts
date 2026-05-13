@@ -61,7 +61,7 @@ docker {
     uri("agrfesta/smart-home-api:${version}")
     tag("name", "smart-home-api")
     buildArgs(mapOf("name" to "smart-home-api"))
-    copySpec.from("build").into("build")
+    copySpec.from("build/libs").into("build/libs")
     pull(true)
     setDockerfile(file("Dockerfile"))
 }
