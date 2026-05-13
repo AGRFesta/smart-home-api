@@ -15,16 +15,6 @@ repositories {
     mavenCentral()
 }
 
-// Without the Spring Boot Gradle plugin, the BOM doesn't pin kotlin.version to the project's
-// Kotlin version. Force it here to prevent transitive deps (e.g. MockK) from pulling in a
-// kotlin-stdlib compiled with a newer metadata version than the 1.9 compiler can read.
-configurations.all {
-    resolutionStrategy.force(
-        "org.jetbrains.kotlin:kotlin-stdlib:1.9.24",
-        "org.jetbrains.kotlin:kotlin-reflect:1.9.24"
-    )
-}
-
 dependencies {
     implementation(platform(libs.spring.boot.bom))
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -34,6 +24,8 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
+    testFixturesImplementation(platform(libs.spring.boot.bom))
+    testFixturesImplementation("org.springframework:spring-context")
     testFixturesImplementation(libs.arrow.core)
     testFixturesImplementation(libs.mockk)
     testFixturesImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")

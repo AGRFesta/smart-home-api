@@ -15,14 +15,6 @@ repositories {
     mavenCentral()
 }
 
-// Same reason as :core and :persistence — MockK pulls kotlin-stdlib:2.1.x without Boot plugin
-configurations.all {
-    resolutionStrategy.force(
-        "org.jetbrains.kotlin:kotlin-stdlib:1.9.24",
-        "org.jetbrains.kotlin:kotlin-reflect:1.9.24"
-    )
-}
-
 dependencies {
     implementation(platform(libs.spring.boot.bom))
     implementation(project(":core"))
@@ -37,6 +29,7 @@ dependencies {
     testFixturesImplementation(project(":core"))
     testFixturesImplementation(testFixtures(project(":core")))
     testFixturesImplementation("org.springframework:spring-context")
+    testFixturesImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     testFixturesImplementation(libs.ktor.client.mock)
     testFixturesImplementation(libs.mockk)
     testFixturesImplementation(libs.kotest.assertions.core)
