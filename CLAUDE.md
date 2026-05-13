@@ -6,9 +6,10 @@
 
 ## Commands
 ```bash
-./gradlew build        # Complete build
-./gradlew bootRun      # Local execution
-./gradlew test         # All tests
+./gradlew build              # Complete build (all modules)
+./gradlew :app:bootRun       # Local execution
+./gradlew test               # All tests (all modules)
+./gradlew :app:docker        # Build Docker image
 ./gradlew test --tests "ClassName" # Specific test class
 ```
 
