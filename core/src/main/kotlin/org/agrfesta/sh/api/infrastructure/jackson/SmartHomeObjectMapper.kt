@@ -20,7 +20,7 @@ import java.time.format.DateTimeParseException
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 
-val domainModule = SimpleModule().apply {
+internal val domainModule = SimpleModule().apply {
     addDeserializer(Temperature::class.java, TemperatureDeserializer())
     addSerializer(Temperature::class.java, TemperatureSerializer())
     addSerializer(Instant::class.java, InstantSerializer())
@@ -37,14 +37,14 @@ val SMART_HOME_OBJECT_MAPPER: ObjectMapper = jacksonObjectMapper().apply {
     registerModule(domainModule)
 }
 
-class TemperatureDeserializer : StdDeserializer<Temperature>(Temperature::class.java) {
+internal class TemperatureDeserializer : StdDeserializer<Temperature>(Temperature::class.java) {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Temperature {
         val numericValue: BigDecimal = p.decimalValue
         return Temperature.of(numericValue)
     }
 }
 
-class TemperatureSerializer : StdSerializer<Temperature>(Temperature::class.java) {
+internal class TemperatureSerializer : StdSerializer<Temperature>(Temperature::class.java) {
     override fun serialize(value: Temperature, gen: JsonGenerator, provider: SerializerProvider) {
         gen.writeNumber(value.value)
     }
@@ -61,7 +61,7 @@ class TemperatureSerializer : StdSerializer<Temperature>(Temperature::class.java
  * this to milliseconds would break existing API contracts and external integrations.
  * Any future changes to timestamp precision should be done via API versioning.
  */
-class InstantSerializer : StdSerializer<Instant>(Instant::class.java) {
+internal class InstantSerializer : StdSerializer<Instant>(Instant::class.java) {
     override fun serialize(value: Instant, gen: JsonGenerator, provider: SerializerProvider) {
         // Write as epoch seconds (whole number) - see KDoc for design rationale
         gen.writeNumber(value.epochSecond)
@@ -70,13 +70,13 @@ class InstantSerializer : StdSerializer<Instant>(Instant::class.java) {
 
 private val localTimeFormatter = DateTimeFormatter.ofPattern(INTERVAL_TIME_FORMAT)
 
-class LocalTimeSerializer : StdSerializer<LocalTime>(LocalTime::class.java) {
+internal class LocalTimeSerializer : StdSerializer<LocalTime>(LocalTime::class.java) {
     override fun serialize(value: LocalTime, gen: JsonGenerator, provider: SerializerProvider) {
         gen.writeString(value.format(localTimeFormatter))
     }
 }
 
-class LocalTimeDeserializer : StdDeserializer<LocalTime>(LocalTime::class.java) {
+internal class LocalTimeDeserializer : StdDeserializer<LocalTime>(LocalTime::class.java) {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): LocalTime {
         val value = p.text
             ?: throw ctxt.weirdStringException(null, LocalTime::class.java, "null value not allowed; expected format: $INTERVAL_TIME_FORMAT")
