@@ -21,6 +21,7 @@ repositories {
 }
 
 dependencies {
+	implementation(project(":core"))
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-jdbc")
@@ -37,6 +38,7 @@ dependencies {
 	implementation(libs.arrow.core)
 	runtimeOnly(libs.flyway.postgres)
 
+	testImplementation(testFixtures(project(":core")))
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(module = "junit")
 		exclude(module = "junit-vintage-engine")
