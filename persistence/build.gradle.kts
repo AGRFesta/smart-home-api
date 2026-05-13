@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.jvm)
     alias(libs.plugins.kotlin.spring)
-    alias(libs.plugins.springbootManagement)
 }
 
 kotlin {
@@ -16,6 +15,7 @@ repositories {
 }
 
 dependencies {
+    implementation(platform(libs.spring.boot.bom))
     implementation(project(":core"))
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
