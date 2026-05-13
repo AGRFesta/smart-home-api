@@ -15,14 +15,6 @@ repositories {
     mavenCentral()
 }
 
-// Same reason as :core — without the Spring Boot Gradle plugin, MockK pulls kotlin-stdlib:2.1.x
-configurations.all {
-    resolutionStrategy.force(
-        "org.jetbrains.kotlin:kotlin-stdlib:1.9.24",
-        "org.jetbrains.kotlin:kotlin-reflect:1.9.24"
-    )
-}
-
 dependencies {
     implementation(platform(libs.spring.boot.bom))
     implementation(project(":core"))
@@ -38,6 +30,7 @@ dependencies {
     testFixturesImplementation(platform(libs.spring.boot.bom))
     testFixturesImplementation(project(":core"))
     testFixturesImplementation(testFixtures(project(":core")))
+    testFixturesImplementation("org.springframework.boot:spring-boot-starter-jdbc")
     testFixturesImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(module = "junit")
         exclude(module = "junit-vintage-engine")
