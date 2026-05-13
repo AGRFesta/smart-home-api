@@ -66,6 +66,10 @@ docker {
     setDockerfile(file("Dockerfile"))
 }
 
+tasks.jar {
+    enabled = false
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
 }
