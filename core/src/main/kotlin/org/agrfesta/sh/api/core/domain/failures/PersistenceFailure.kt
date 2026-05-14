@@ -1,9 +1,8 @@
 package org.agrfesta.sh.api.core.domain.failures
 
 data class PersistenceFailure(
-    override val exception: Exception
-):  ExceptionFailure,
-    AreaFetchFailure,
+    val exception: Exception
+):  AreaFetchFailure,
     DeviceFetchFailure,
     AreaCreationFailure,
     AreaDeletionFailure,

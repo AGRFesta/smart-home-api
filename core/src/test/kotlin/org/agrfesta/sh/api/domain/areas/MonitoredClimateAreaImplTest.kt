@@ -13,9 +13,10 @@ import io.mockk.mockk
 import java.util.*
 import org.agrfesta.sh.api.core.domain.areas.Area
 import org.agrfesta.sh.api.core.domain.areas.MonitoredClimateAreaImpl
+import org.agrfesta.sh.api.core.domain.areas.TemperatureUnavailable
 import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.devices.FailureByException
 import org.agrfesta.sh.api.core.domain.devices.Sensor
-import org.agrfesta.sh.api.core.domain.failures.MessageFailure
 import org.agrfesta.test.mothers.aThermoHygroDataValue
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
@@ -93,7 +94,7 @@ class MonitoredClimateAreaImplTest {
         }
         val sensorFailure = mockk<Sensor> {
             every { uuid } returns UUID.randomUUID()
-            every { fetchReadings() } returns MessageFailure("Connection Timeout").left()
+            every { fetchReadings() } returns FailureByException(RuntimeException("Connection Timeout")).left()
         }
         val area = mockk<Area> {
             every { sensors } returns listOf(sensorSuccess1, sensorFailure, sensorSuccess2)
@@ -108,7 +109,7 @@ class MonitoredClimateAreaImplTest {
     @Test
     fun `getCurrentTemperature() fails when all sensors fail`() {
         val areaId = UUID.randomUUID()
-        val failureResponse = MessageFailure("Sensor Unreachable").left()
+        val failureResponse = FailureByException(RuntimeException("Sensor Unreachable")).left()
         val sensorA = mockk<Sensor> {
             every { uuid } returns UUID.randomUUID()
             every { fetchReadings() } returns failureResponse
@@ -125,10 +126,7 @@ class MonitoredClimateAreaImplTest {
         val sut = MonitoredClimateAreaImpl(area)
 
         val result = sut.getCurrentTemperature()
-        result.shouldBeLeft().let {
-            it.shouldBeInstanceOf<MessageFailure>()
-            it.message shouldBe "It was not possible to retrieve the current temperature for area '$areaId'"
-        }
+        result.shouldBeLeft().shouldBeInstanceOf<TemperatureUnavailable>()
     }
 
 }

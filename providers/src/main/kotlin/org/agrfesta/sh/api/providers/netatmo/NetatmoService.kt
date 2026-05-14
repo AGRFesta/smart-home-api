@@ -9,7 +9,8 @@ import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesProvider
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.Provider.NETATMO
-import org.agrfesta.sh.api.core.domain.failures.Failure
+import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError
+import org.agrfesta.sh.api.core.domain.failures.DevicesProviderFailure
 import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.stereotype.Service
@@ -28,19 +29,29 @@ class NetatmoService(
         const val NETATMO_REFRESH_TOKEN_CACHE_KEY = "provider.netatmo.refresh-token"
     }
 
-    override fun getAllDevices(): Either<Failure, Collection<ProviderDeviceData>> = runBlocking {
-        netatmoClient.getHomesData().map { data ->
-            data.at("/body/homes/0/modules")
-                .map { node -> objectMapper.treeToValue(node, NetatmoModuleData::class.java) }
-                .map { module ->
-                    ProviderDeviceData(
-                        deviceProviderId = module.id,
-                        provider = provider,
-                        name = module.name,
-                        features = setOf(SENSOR, ACTUATOR)
-                    )
-                }
-        }
+    override fun getAllDevices(): Either<DevicesProviderFailure, Collection<ProviderDeviceData>> = runBlocking {
+        netatmoClient.getHomesData()
+            .mapLeft { failure ->
+                DevicesProviderError(when (failure) {
+                    is NetatmoAuthFailure -> failure.exception
+                    is NetatmoPropertyError -> RuntimeException(failure.failure.toString())
+                    is NetatmoInvalidAccessToken -> RuntimeException("Netatmo access token is not valid")
+                    is NetatmoContractBreak -> RuntimeException("Netatmo contract break: ${failure.message}")
+                    is KtorRequestFailure -> RuntimeException("HTTP ${failure.failureStatusCode}: ${failure.body}")
+                })
+            }
+            .map { data ->
+                data.at("/body/homes/0/modules")
+                    .map { node -> objectMapper.treeToValue(node, NetatmoModuleData::class.java) }
+                    .map { module ->
+                        ProviderDeviceData(
+                            deviceProviderId = module.id,
+                            provider = provider,
+                            name = module.name,
+                            features = setOf(SENSOR, ACTUATOR)
+                        )
+                    }
+            }
     }
 
 }

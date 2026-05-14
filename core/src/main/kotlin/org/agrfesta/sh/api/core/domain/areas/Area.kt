@@ -11,8 +11,6 @@ import org.agrfesta.sh.api.core.domain.devices.Actuator
 import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
-import org.agrfesta.sh.api.core.domain.failures.Failure
-import org.agrfesta.sh.api.core.domain.failures.MessageFailure
 import org.agrfesta.sh.api.utils.LoggerDelegate
 
 /**
@@ -43,14 +41,16 @@ data class AreaImpl(
  * This implies that the area is equipped with at least one [Sensor] capable of monitoring climate conditions
  * (e.g., temperature, humidity).
  */
+data object TemperatureUnavailable
+
 interface MonitoredClimateArea: Area {
     /**
      * Retrieves the current temperature of the area.
      * This is typically an aggregate of readings from the sensors in the area.
      *
-     * @return [Either] a [Failure] if the temperature cannot be retrieved, or the [Temperature].
+     * @return [Either] a [TemperatureUnavailable] if the temperature cannot be retrieved, or the [Temperature].
      */
-    fun getCurrentTemperature(): Either<Failure, Temperature>
+    fun getCurrentTemperature(): Either<TemperatureUnavailable, Temperature>
     //TODO humidity
 }
 
@@ -72,7 +72,7 @@ class MonitoredClimateAreaImpl(
         }
     }
 
-    override fun getCurrentTemperature(): Either<Failure, Temperature> =
+    override fun getCurrentTemperature(): Either<TemperatureUnavailable, Temperature> =
         sensors.mapNotNull {
             it.fetchReadings().fold(
                     ifLeft = { _ ->
@@ -81,7 +81,7 @@ class MonitoredClimateAreaImpl(
                     ifRight = { r -> (r as? ThermoHygroDataValue)?.thermoHygroData?.temperature }
                 )
         }.average()?.right()
-            ?: MessageFailure("It was not possible to retrieve the current temperature for area '${area.uuid}'").left()
+            ?: TemperatureUnavailable.left()
 
 }
 

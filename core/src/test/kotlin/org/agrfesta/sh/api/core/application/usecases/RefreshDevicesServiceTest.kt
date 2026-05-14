@@ -18,7 +18,7 @@ import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
-import org.agrfesta.sh.api.core.domain.failures.MessageFailure
+import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aProviderDeviceData
@@ -72,7 +72,7 @@ class RefreshDevicesServiceTest {
     @Test
     fun `execute() returns empty result when no stored devices and provider fails`() {
         // Given
-        every { provider.getAllDevices() } returns MessageFailure("provider unavailable").left()
+        every { provider.getAllDevices() } returns DevicesProviderError(RuntimeException("provider unavailable")).left()
 
         // When
         val result = sut.execute().shouldBeRight()
