@@ -17,8 +17,8 @@ import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.SensorReadings
-import org.agrfesta.sh.api.core.domain.failures.Failure
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClient
+import org.agrfesta.sh.api.providers.netatmo.NetatmoClientFailure
 import org.agrfesta.sh.api.providers.netatmo.NetatmoContractBreak
 import org.agrfesta.sh.api.providers.netatmo.NetatmoHomeStatusChange
 import org.agrfesta.sh.api.providers.netatmo.NetatmoRoomStatusChange
@@ -42,7 +42,7 @@ class NetatmoSmarther(
         internal const val SET_POINT_MODE = "manual"
     }
 
-    override fun fetchReadings(): Either<Failure, SensorReadings> {
+    override fun fetchReadings(): Either<NetatmoClientFailure, SensorReadings> {
         return runBlocking { client.getHomeStatus(homeId) }.flatMap { status ->
             when {
                 status.rooms.size > 1 ->
@@ -55,7 +55,7 @@ class NetatmoSmarther(
         }
     }
 
-    override fun getActuatorStatus(): Either<Failure, ActuatorStatus> = runBlocking { client.getHomeStatus(homeId) }.map {
+    override fun getActuatorStatus(): Either<NetatmoClientFailure, ActuatorStatus> = runBlocking { client.getHomeStatus(homeId) }.map {
         val room = it.rooms.first()
         val now = timeProvider.now()
         if (room.setPointMode == SET_POINT_MODE
@@ -77,7 +77,7 @@ class NetatmoSmarther(
 
     private fun Instant.lessEqualThan(other: Instant?) = other?.let { this <= it } ?: true
 
-    override fun on(): Either<Failure, Unit> {
+    override fun on(): Either<NetatmoClientFailure, Unit> {
         val status = NetatmoHomeStatusChange(
             id = homeId,
             rooms = listOf(
@@ -92,7 +92,7 @@ class NetatmoSmarther(
         return runBlocking { client.setState(status) }.map {}
     }
 
-    override fun off(): Either<Failure, Unit> {
+    override fun off(): Either<NetatmoClientFailure, Unit> {
         val status = NetatmoHomeStatusChange(
             id = homeId,
             rooms = listOf(

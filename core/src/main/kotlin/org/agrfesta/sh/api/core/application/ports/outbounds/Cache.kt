@@ -1,7 +1,6 @@
 package org.agrfesta.sh.api.core.application.ports.outbounds
 
 import arrow.core.Either
-import org.agrfesta.sh.api.core.domain.failures.ExceptionFailure
 import kotlin.time.Duration
 
 interface Cache {
@@ -13,5 +12,5 @@ interface Cache {
 sealed interface CacheResponse
 data object CacheOkResponse : CacheResponse
 sealed interface CacheFailure
-class CacheError(override val exception: Exception) : CacheFailure, CacheResponse, ExceptionFailure
+class CacheError(val exception: Exception) : CacheFailure, CacheResponse
 data class CachedValueNotFound(val key: String) : CacheFailure

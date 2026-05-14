@@ -1,7 +1,6 @@
 package org.agrfesta.sh.api.core.domain.devices
 
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
-import org.agrfesta.sh.api.core.domain.failures.Failure
 
 sealed interface SensorReadings
 
@@ -13,6 +12,6 @@ interface ThermoHygroDataValue: SensorReadings {
     val thermoHygroData: ThermoHygroData
 }
 
-sealed interface SensorReadingsFailure: Failure
+interface SensorReadingsFailure
 
-class FailureByException(val reason: Throwable): SensorReadingsFailure
+data class FailureByException(val reason: Exception): SensorReadingsFailure

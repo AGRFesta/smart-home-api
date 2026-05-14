@@ -11,7 +11,7 @@ import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.SharedHeater
-import org.agrfesta.sh.api.core.domain.failures.MessageFailure
+import org.agrfesta.sh.api.core.domain.areas.TemperatureUnavailable
 import org.agrfesta.sh.api.core.application.usecases.heating.AbstractSharedHeatingAreasStrategyService.Companion.HYSTERESIS
 import org.agrfesta.test.mothers.aRandomTemperature
 
@@ -38,8 +38,7 @@ fun HeatableArea.hasTempAsTarget(): Temperature {
 }
 
 fun HeatableArea.hasUnavailableCurrentTemp() {
-    val failure = MessageFailure("fetch failure")
-    every { getCurrentTemperature() } returns failure.left()
+    every { getCurrentTemperature() } returns TemperatureUnavailable.left()
     every { getCurrentTargetTemperature(any()) } returns aRandomTemperature()
 }
 

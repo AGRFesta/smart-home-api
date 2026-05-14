@@ -7,19 +7,17 @@ import org.agrfesta.sh.api.core.domain.commons.Percentage
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
-import org.agrfesta.sh.api.core.domain.failures.ExceptionFailure
-import org.agrfesta.sh.api.core.domain.failures.Failure
 
 data class NetatmoRefreshTokenResponse(
     @field:JsonProperty("access_token") val accessToken: String,
     @field:JsonProperty("refresh_token") val refreshToken: String,
     @field:JsonProperty("expires_in") val expiresIn: Int
 )
-data class NetatmoAuthFailure(override val exception: Exception): ExceptionFailure
+data class NetatmoAuthFailure(val exception: Exception): NetatmoClientFailure
 
 object NetatmoSetStatusSuccess
 
-data class NetatmoContractBreak(val message: String, val response: String? = null): Failure
+data class NetatmoContractBreak(val message: String, val response: String? = null): NetatmoClientFailure
 
 data class NetatmoHomeStatus(
     @field:JsonProperty("id") val id: String,

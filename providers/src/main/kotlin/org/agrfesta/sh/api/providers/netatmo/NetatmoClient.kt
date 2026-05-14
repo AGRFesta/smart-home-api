@@ -31,7 +31,6 @@ import io.ktor.serialization.jackson.JacksonConverter
 import org.agrfesta.sh.api.core.serialization.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
-import org.agrfesta.sh.api.core.domain.failures.Failure
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_REFRESH_TOKEN_CACHE_KEY
@@ -89,7 +88,7 @@ class NetatmoClient(
      * This endpoint permits to retrieve the actual topology and static information of all devices present into a user
      * account. It is possible to specify a [homeId] to focus on one home.
      */
-    suspend fun getHomesData(homeId: String? = null): Either<Failure, JsonNode> {
+    suspend fun getHomesData(homeId: String? = null): Either<NetatmoClientFailure, JsonNode> {
         return getToken().flatMap { token ->
             try {
                 val content = client.get("${config.baseUrl}/api/homesdata") {
@@ -106,7 +105,7 @@ class NetatmoClient(
     /**
      * This endpoint permits to retrieve the actual status of all devices present into a specific home.
      */
-    suspend fun getHomeStatus(homeId: String): Either<Failure, NetatmoHomeStatus> =
+    suspend fun getHomeStatus(homeId: String): Either<NetatmoClientFailure, NetatmoHomeStatus> =
         getToken().flatMap { token ->
             try {
                 val content = client.get("${config.baseUrl}/api/homestatus") {
@@ -132,7 +131,7 @@ class NetatmoClient(
      * For heating modules, the state can be controlled at the room level.
      * For other modules, the state is controlled at the module level.
      */
-    suspend fun setState(newState: NetatmoHomeStatusChange): Either<Failure, NetatmoSetStatusSuccess> {
+    suspend fun setState(newState: NetatmoHomeStatusChange): Either<NetatmoClientFailure, NetatmoSetStatusSuccess> {
         return getToken().flatMap { token ->
             try {
                 val json = mapper.writeValueAsString(NetatmoStatusChangeRequest(newState))
@@ -150,7 +149,7 @@ class NetatmoClient(
         }
     }
 
-    private suspend fun handleClientRequestException(e: ClientRequestException): Failure {
+    private suspend fun handleClientRequestException(e: ClientRequestException): NetatmoClientFailure {
         val body = e.response.body<JsonNode>()
         val status = e.response.status
         val errorMessage: String? = body.at("/error/message").asText()
@@ -163,15 +162,16 @@ class NetatmoClient(
         }
     }
 
-    private suspend fun getToken(): Either<Failure, String> =
+    private suspend fun getToken(): Either<NetatmoClientFailure, String> =
         cache.get(NETATMO_ACCESS_TOKEN_CACHE_KEY).fold(
             ifLeft = { fetchAndCacheNewToken() },
             ifRight = { it.right() }
         )
 
-    private suspend fun fetchAndCacheNewToken(): Either<Failure, String> =
+    private suspend fun fetchAndCacheNewToken(): Either<NetatmoClientFailure, String> =
         propertyRepository.getEntry(NETATMO_REFRESH_TOKEN_CACHE_KEY)
-            .flatMap { refreshToken(it.value) }
+            .mapLeft { NetatmoPropertyError(it) }
+            .flatMap { entry -> refreshToken(entry.value) }
             .map { refreshResp ->
                 try {
                     cache.set(
@@ -189,7 +189,7 @@ class NetatmoClient(
 
 }
 
-object NetatmoInvalidAccessToken: Failure
+object NetatmoInvalidAccessToken: NetatmoClientFailure
 
 private fun Either<PersistenceFailure, Any>.onLeftLogOn(logger: Logger) = onLeft {
     logger.error("persistence failure", it.exception)

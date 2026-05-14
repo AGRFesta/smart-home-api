@@ -9,7 +9,8 @@ import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesProvider
 import org.agrfesta.sh.api.core.domain.devices.Provider
-import org.agrfesta.sh.api.core.domain.failures.ProviderFailure
+import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError
+import org.agrfesta.sh.api.core.domain.failures.DevicesProviderFailure
 import org.springframework.stereotype.Service
 
 @Service
@@ -19,7 +20,7 @@ class SwitchBotService(
 ): DevicesProvider {
     override val provider: Provider = Provider.SWITCHBOT
 
-    override fun getAllDevices(): Either<ProviderFailure, Collection<ProviderDeviceData>> = runBlocking {
+    override fun getAllDevices(): Either<DevicesProviderFailure, Collection<ProviderDeviceData>> = runBlocking {
             try {
                 (devicesClient.getDevices().at("/body/deviceList") as ArrayNode)
                     .map { mapper.treeToValue(it, SwitchBotDevice::class.java) }
@@ -32,7 +33,7 @@ class SwitchBotService(
                         )
                     }.right()
             } catch (e: Exception) {
-                ProviderFailure(e).left()
+                DevicesProviderError(e).left()
             }
         }
 

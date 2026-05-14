@@ -10,7 +10,7 @@ import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.serialization.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.providers.createMockEngine
 import org.agrfesta.sh.api.providers.netatmo.KtorRequestFailure
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.providers.netatmo.NetatmoPropertyError
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_REFRESH_TOKEN_CACHE_KEY
@@ -237,7 +237,7 @@ class NetatmoClientTest {
         runBlocking {
             val result = sut.getHomesData(homeId)
 
-            result.shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
+            result.shouldBeLeft().shouldBeInstanceOf<NetatmoPropertyError>()
             clientAsserter.verifyNoHomeStatusFetchRequest()
         }
     }
@@ -383,7 +383,7 @@ class NetatmoClientTest {
         runBlocking {
             val result = sut.getHomeStatus(homeId)
 
-            result.shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
+            result.shouldBeLeft().shouldBeInstanceOf<NetatmoPropertyError>()
             clientAsserter.verifyNoHomeStatusFetchRequest()
         }
     }
@@ -529,7 +529,7 @@ class NetatmoClientTest {
         runBlocking {
             val result = sut.setState(newStatus)
 
-            result.shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
+            result.shouldBeLeft().shouldBeInstanceOf<NetatmoPropertyError>()
             clientAsserter.verifyNoSetStatusRequest()
         }
     }
