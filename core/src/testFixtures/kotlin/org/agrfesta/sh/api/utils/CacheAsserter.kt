@@ -9,7 +9,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.core.application.ports.outbounds.CacheError
 import org.agrfesta.sh.api.core.application.ports.outbounds.CachedValueNotFound
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.springframework.stereotype.Service
 import kotlin.time.Duration
@@ -42,10 +42,10 @@ class CacheAsserter(
         every { propertyRepository.getEntry(key) } returns PropertyEntry(value).right()
     }
     fun givenPropertyFetchFailure() {
-        every { propertyRepository.getEntry(any()) } returns PersistenceFailure(Exception("property fetch failure")).left()
+        every { propertyRepository.getEntry(any()) } returns PropertyRepositoryError.left()
     }
     fun givenPropertyUpsertFailure() {
-        every { propertyRepository.upsert(any(), any()) } returns PersistenceFailure(Exception("property set failure")).left()
+        every { propertyRepository.upsert(any(), any()) } returns PropertyRepositoryError.left()
     }
 
     fun verifyPropertyUpsert(key: String, value: String) {

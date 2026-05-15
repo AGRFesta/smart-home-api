@@ -1,13 +1,17 @@
 package org.agrfesta.sh.api.core.application.usecases
 
 import arrow.core.Either
-import arrow.core.left
+import arrow.core.flatMap
 import java.util.UUID
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.areas.HeatingScheduleDto
 import org.agrfesta.sh.api.core.domain.areas.IntervalDto
+import org.agrfesta.sh.api.core.domain.failures.AreaFetchFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.TemperatureSettingRetrievalFailure
 import org.springframework.stereotype.Service
 
@@ -18,9 +22,9 @@ class GetHeatingScheduleService(
 ) : GetHeatingScheduleUseCase {
 
     override fun execute(areaId: UUID): Either<TemperatureSettingRetrievalFailure, HeatingScheduleDto?> =
-        areasRepository.getAreaById(areaId).fold(
-            { it.left() },
-            { _ ->
+        areasRepository.getAreaById(areaId)
+            .mapLeft { it.toRetrievalFailure() }
+            .flatMap { _ ->
                 temperatureSettingsRepository.findAreaSetting(areaId).map { setting ->
                     setting?.let {
                         HeatingScheduleDto(
@@ -36,6 +40,10 @@ class GetHeatingScheduleService(
                     }
                 }
             }
-        )
+
+    private fun AreaFetchFailure.toRetrievalFailure(): TemperatureSettingRetrievalFailure = when (this) {
+        is AreaNotFound -> this
+        AreaRepositoryError -> HeatingScheduleRepositoryError
+    }
 
 }

@@ -22,7 +22,8 @@ import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.commons.average
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupError
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 import org.agrfesta.sh.api.domain.anAreaDtoWithDevices
@@ -93,7 +94,7 @@ class GetHomeDashboardServiceTest {
     @Test fun `execute() heatingActive is a field failure when heating_enabled lookup fails`() {
         every {
             propertyRepository.findEntry(HEATING_ENABLED_KEY)
-        } returns PersistenceFailure(Exception("db error")).left()
+        } returns PropertyRepositoryError.left()
 
         val result = sut.execute().shouldBeRight()
 
@@ -137,7 +138,7 @@ class GetHomeDashboardServiceTest {
     @Test fun `execute() strategy is a field failure when heating_strategy lookup fails`() {
         every {
             propertyRepository.findEntry(HEATING_STRATEGY_KEY)
-        } returns PersistenceFailure(Exception("db error")).left()
+        } returns PropertyRepositoryError.left()
 
         val result = sut.execute().shouldBeRight()
 
@@ -358,7 +359,7 @@ class GetHomeDashboardServiceTest {
         val area = anAreaDtoWithDevices()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { temperatureSettingsRepository.findAreaSetting(area.uuid) } returns
-            PersistenceFailure(Exception("db error")).left()
+            HeatingScheduleRepositoryError.left()
         every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PropertyEntry("true").right()
 
         val result = sut.execute().shouldBeRight()
@@ -393,7 +394,7 @@ class GetHomeDashboardServiceTest {
         every { temperatureSettingsRepository.findAreaSetting(area.uuid) } returns setting.right()
         every {
             propertyRepository.findEntry(HEATING_ENABLED_KEY)
-        } returns PersistenceFailure(Exception("db error")).left()
+        } returns PropertyRepositoryError.left()
 
         val result = sut.execute().shouldBeRight()
 

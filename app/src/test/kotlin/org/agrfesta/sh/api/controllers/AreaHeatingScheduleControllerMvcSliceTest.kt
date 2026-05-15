@@ -15,8 +15,8 @@ import org.agrfesta.sh.api.core.domain.areas.HeatingScheduleDto
 import org.agrfesta.sh.api.core.domain.areas.IntervalDto
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.test.mothers.aDailyTime
 import org.agrfesta.test.mothers.aRandomTemperature
@@ -110,7 +110,7 @@ class AreaHeatingScheduleControllerMvcSliceTest(
     @Test fun `getHeatingSchedule() returns 500 when persistence fails`() {
         val areaId = UUID.randomUUID()
         every { getHeatingScheduleUseCase.execute(areaId) } returns
-            PersistenceFailure(Exception("db error")).left()
+            HeatingScheduleRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
             get("/areas/$areaId/heating-schedule").authenticated())
@@ -169,7 +169,7 @@ class AreaHeatingScheduleControllerMvcSliceTest(
         val areaId = UUID.randomUUID()
         val temp = aRandomTemperature().value
         every { replaceHeatingScheduleUseCase.execute(any(), any(), any()) } returns
-            PersistenceFailure(Exception("db error")).left()
+            HeatingScheduleRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
             put("/areas/$areaId/heating-schedule")
@@ -250,7 +250,7 @@ class AreaHeatingScheduleControllerMvcSliceTest(
     @Test fun `deleteHeatingSchedule() returns 500 when persistence fails`() {
         val areaId = UUID.randomUUID()
         every { deleteHeatingScheduleUseCase.execute(areaId) } returns
-            PersistenceFailure(Exception("db error")).left()
+            HeatingScheduleRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
             delete("/areas/$areaId/heating-schedule").authenticated())

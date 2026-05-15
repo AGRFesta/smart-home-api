@@ -5,7 +5,7 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.springframework.http.HttpStatus
@@ -95,7 +95,7 @@ class PropertyController(
         ifLeft = { failure ->
             when (failure) {
                 PropertyNotFound -> status(NOT_FOUND).body(MessageResponse("Key '$key' is missing"))
-                is PersistenceFailure -> status(HttpStatus.INTERNAL_SERVER_ERROR)
+                PropertyRepositoryError -> status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(MessageResponse("Failed to get property entry"))
             }
         },

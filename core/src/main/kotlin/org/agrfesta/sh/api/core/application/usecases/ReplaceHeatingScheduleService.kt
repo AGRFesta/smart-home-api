@@ -13,6 +13,10 @@ import org.agrfesta.sh.api.core.domain.areas.IntervalDto
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.core.domain.areas.hasOverlap
 import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.failures.AreaFetchFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
 import org.agrfesta.sh.api.core.domain.failures.TemperatureSettingCreationFailure
 import org.springframework.stereotype.Service
@@ -30,8 +34,9 @@ class ReplaceHeatingScheduleService(
     ): Either<TemperatureSettingCreationFailure, HeatingScheduleDto> {
         if (intervals.hasOverlap()) return OverlappingIntervals.left()
 
-        val areaResult: Either<TemperatureSettingCreationFailure, Unit> =
-            areasRepository.getAreaById(areaId).flatMap { _ ->
+        return areasRepository.getAreaById(areaId)
+            .mapLeft { it.toCreationFailure() }
+            .flatMap { _ ->
                 temperatureSettingsRepository.createSetting(
                     AreaTemperatureSetting(
                         areaId = areaId,
@@ -40,19 +45,23 @@ class ReplaceHeatingScheduleService(
                     )
                 )
             }
+            .map {
+                HeatingScheduleDto(
+                    defaultTemperature = defaultTemperature,
+                    intervals = intervals.sortedBy { it.startTime }.map { interval ->
+                        IntervalDto(
+                            temperature = interval.temperature,
+                            startTime = interval.startTime,
+                            endTime = interval.endTime
+                        )
+                    }
+                )
+            }
+    }
 
-        return areaResult.map {
-            HeatingScheduleDto(
-                defaultTemperature = defaultTemperature,
-                intervals = intervals.sortedBy { it.startTime }.map { interval ->
-                    IntervalDto(
-                        temperature = interval.temperature,
-                        startTime = interval.startTime,
-                        endTime = interval.endTime
-                    )
-                }
-            )
-        }
+    private fun AreaFetchFailure.toCreationFailure(): TemperatureSettingCreationFailure = when (this) {
+        is AreaNotFound -> this
+        AreaRepositoryError -> HeatingScheduleRepositoryError
     }
 
 }

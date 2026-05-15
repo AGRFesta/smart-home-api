@@ -5,7 +5,6 @@ import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -14,7 +13,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepositor
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.junit.jupiter.api.Test
 
@@ -38,26 +37,26 @@ class DeleteHeatingScheduleServiceTest {
     }
 
     @Test
-    fun `execute() returns AreaRepositoryError when area fetch fails`() {
+    fun `execute() returns HeatingScheduleRepositoryError when area fetch fails with AreaRepositoryError`() {
         val areaId = UUID.randomUUID()
         every { areasRepository.getAreaById(areaId) } returns AreaRepositoryError.left()
 
         sut.execute(areaId)
             .shouldBeLeft()
-            .shouldBe(AreaRepositoryError)
+            .shouldBe(HeatingScheduleRepositoryError)
 
         verify(exactly = 0) { temperatureSettingsRepository.deleteAreaSetting(any()) }
     }
 
     @Test
-    fun `execute() returns PersistenceFailure when deleteAreaSetting fails`() {
+    fun `execute() returns HeatingScheduleRepositoryError when deleteAreaSetting fails`() {
         val areaId = UUID.randomUUID()
         every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
-        every { temperatureSettingsRepository.deleteAreaSetting(areaId) } returns PersistenceFailure(Exception()).left()
+        every { temperatureSettingsRepository.deleteAreaSetting(areaId) } returns HeatingScheduleRepositoryError.left()
 
         sut.execute(areaId)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(HeatingScheduleRepositoryError)
     }
 
     @Test

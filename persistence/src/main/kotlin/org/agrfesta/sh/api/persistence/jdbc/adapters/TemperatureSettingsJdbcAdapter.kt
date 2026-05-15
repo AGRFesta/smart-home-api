@@ -8,7 +8,7 @@ import org.agrfesta.sh.api.core.domain.areas.AreaTemperatureSetting
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.TemperatureSettingCreationFailure
 import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
@@ -29,19 +29,18 @@ class TemperatureSettingsJdbcAdapter(
 ): TemperatureSettingsRepository {
     private val logger by LoggerDelegate()
 
-    override fun existsByAreaId(areaId: UUID): Either<PersistenceFailure, Boolean> = try {
+    override fun existsByAreaId(areaId: UUID): Either<HeatingScheduleRepositoryError, Boolean> = try {
         tempSettingsRepository.existsSettingByAreaId(areaId).right()
     } catch (e: DataAccessException) {
-        PersistenceFailure(e).left()
+        logger.error("Failed to check temperature setting existence for area '$areaId'", e)
+        HeatingScheduleRepositoryError.left()
     }
 
     override fun persistAreaTemperatureSetting(setting: AreaTemperatureSetting):
             Either<TemperatureSettingCreationFailure, Unit> {
-        // Programmatic transactional guard: this method must be called within an active transaction
         if (!TransactionSynchronizationManager.isActualTransactionActive()) {
-            return PersistenceFailure(
-                IllegalStateException(
-                    "persistAreaTemperatureSetting must be called within an active transaction")).left()
+            logger.error("persistAreaTemperatureSetting must be called within an active transaction")
+            return HeatingScheduleRepositoryError.left()
         }
         return try {
             tempSettingsRepository.save(TemperatureSettingEntity(
@@ -61,7 +60,8 @@ class TemperatureSettingsJdbcAdapter(
         } catch (_: AreaNotFoundException) {
             AreaNotFound(setting.areaId).left()
         } catch (e: DataAccessException) {
-            PersistenceFailure(e).left()
+            logger.error("Failed to persist temperature setting for area '${setting.areaId}'", e)
+            HeatingScheduleRepositoryError.left()
         }
     }
 
@@ -87,10 +87,11 @@ class TemperatureSettingsJdbcAdapter(
     } catch (_: AreaNotFoundException) {
         AreaNotFound(setting.areaId).left()
     } catch (e: DataAccessException) {
-        PersistenceFailure(e).left()
+        logger.error("Failed to create temperature setting for area '${setting.areaId}'", e)
+        HeatingScheduleRepositoryError.left()
     }
 
-    override fun findAreaSetting(areaId: UUID): Either<PersistenceFailure, AreaTemperatureSetting?> = try {
+    override fun findAreaSetting(areaId: UUID): Either<HeatingScheduleRepositoryError, AreaTemperatureSetting?> = try {
         tempSettingsRepository.findSettingByAreaId(areaId)?.let { setting ->
             val intervals = tempIntervalsRepo.findAllByArea(setting.areaUuid)
             AreaTemperatureSetting(
@@ -106,13 +107,15 @@ class TemperatureSettingsJdbcAdapter(
             )
         }.right()
     } catch (e: DataAccessException) {
-        PersistenceFailure(e).left()
+        logger.error("Failed to find temperature setting for area '$areaId'", e)
+        HeatingScheduleRepositoryError.left()
     }
 
-    override fun deleteAreaSetting(areaId: UUID): Either<PersistenceFailure, Unit> = try {
+    override fun deleteAreaSetting(areaId: UUID): Either<HeatingScheduleRepositoryError, Unit> = try {
         tempSettingsRepository.deleteByByAreaId(areaId).right()
     } catch (e: DataAccessException) {
-        PersistenceFailure(e).left()
+        logger.error("Failed to delete temperature setting for area '$areaId'", e)
+        HeatingScheduleRepositoryError.left()
     }
 
     private fun areaTempSettingAlreadyExist(areaId: UUID): Boolean = try {
