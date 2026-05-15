@@ -4,9 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import java.util.UUID
-import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
 import org.agrfesta.sh.api.core.domain.failures.SensorAssignmentFailure
@@ -14,6 +12,7 @@ import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignmentsRepository
 import org.agrfesta.sh.api.persistence.DeviceNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcRepository
+import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.dao.DataAccessException
 import org.springframework.stereotype.Service
 
@@ -21,6 +20,8 @@ import org.springframework.stereotype.Service
 class SensorsAssignmentsJdbcAdapter(
     private val sensorsAssignmentsJdbcRepository: SensorsAssignmentsJdbcRepository
 ): SensorsAssignmentsRepository {
+
+    private val logger by LoggerDelegate()
 
     override fun assign(areaId: UUID, sensorId: UUID): Either<SensorAssignmentFailure, Unit> = try {
         val activeAssignments = sensorsAssignmentsJdbcRepository.findByDevice(sensorId)
@@ -32,12 +33,15 @@ class SensorsAssignmentsJdbcAdapter(
         } else {
             sensorsAssignmentsJdbcRepository.persistAssignment(areaId, sensorId).right()
         }
-    } catch (_: DeviceNotFoundException) {
-        DeviceNotFound(sensorId).left()
-    } catch (_: AreaNotFoundException) {
-        AreaNotFound(areaId).left()
+    } catch (e: DeviceNotFoundException) {
+        logger.error("Unexpected FK violation: device '$sensorId' not found during assignment", e)
+        AssignmentRepositoryError.left()
+    } catch (e: AreaNotFoundException) {
+        logger.error("Unexpected FK violation: area '$areaId' not found during assignment", e)
+        AssignmentRepositoryError.left()
     } catch (e: DataAccessException) {
-        PersistenceFailure(e).left()
+        logger.error("Unexpected persistence error during sensor assignment", e)
+        AssignmentRepositoryError.left()
     }
 
 }

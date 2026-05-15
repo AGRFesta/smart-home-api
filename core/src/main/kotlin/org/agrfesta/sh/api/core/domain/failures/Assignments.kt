@@ -13,6 +13,8 @@ data class NotAnActuator(
     val features: Set<DeviceFeature>
 ): ActuatorAssignmentFailure
 
+data object AssignmentRepositoryError : SensorAssignmentFailure, ActuatorAssignmentFailure
+
 data object SameAreaAssignment: SensorAssignmentFailure, ActuatorAssignmentFailure
 
 data class NotASensor(

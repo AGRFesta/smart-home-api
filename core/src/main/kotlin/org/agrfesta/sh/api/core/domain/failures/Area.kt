@@ -9,12 +9,13 @@ sealed interface GetAreasFailure
 
 data object AreaNameConflict: AreaCreationFailure, AreaUpdateFailure
 
-sealed interface AreaFetchFailure: SensorAssignmentFailure, ActuatorAssignmentFailure,
+sealed interface AreaFetchFailure:
     TemperatureSettingCreationFailure, TemperatureSettingDeletionFailure, TemperatureSettingRetrievalFailure
 
 data class AreaNotFound(
     val missingAreaId: UUID
-): AreaFetchFailure, AreaDeletionFailure, AreaUpdateFailure, TemperatureSettingCreationFailure
+): AreaFetchFailure, AreaDeletionFailure, AreaUpdateFailure, TemperatureSettingCreationFailure,
+    SensorAssignmentFailure, ActuatorAssignmentFailure
 
 data object AreaRepositoryError:
     AreaCreationFailure,

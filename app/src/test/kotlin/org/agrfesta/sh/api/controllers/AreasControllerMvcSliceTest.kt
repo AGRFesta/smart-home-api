@@ -23,7 +23,7 @@ import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.NotASensor
 import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
 import org.agrfesta.sh.api.domain.aSensor
@@ -449,11 +449,10 @@ class AreasControllerMvcSliceTest(
         response.message shouldBe "Area with id '$areaId' is missing!"
     }
 
-    @Test fun `assignSensorToArea() returns 500 on PersistenceFailure`() {
+    @Test fun `assignSensorToArea() returns 500 on AssignmentRepositoryError`() {
         val areaId = UUID.randomUUID()
         val deviceId = UUID.randomUUID()
-        every { assignSensorToAreaUseCase.execute(areaId, deviceId) } returns
-                PersistenceFailure(RuntimeException("db error")).left()
+        every { assignSensorToAreaUseCase.execute(areaId, deviceId) } returns AssignmentRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
             put("/areas/$areaId/sensors/$deviceId").authenticated())
@@ -535,11 +534,10 @@ class AreasControllerMvcSliceTest(
         response.message shouldBe "Area with id '$areaId' is missing!"
     }
 
-    @Test fun `assignActuatorToArea() returns 500 on PersistenceFailure`() {
+    @Test fun `assignActuatorToArea() returns 500 on AssignmentRepositoryError`() {
         val areaId = UUID.randomUUID()
         val deviceId = UUID.randomUUID()
-        every { assignActuatorToAreaUseCase.execute(areaId, deviceId) } returns
-                PersistenceFailure(RuntimeException("db error")).left()
+        every { assignActuatorToAreaUseCase.execute(areaId, deviceId) } returns AssignmentRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
             put("/areas/$areaId/actuators/$deviceId").authenticated())

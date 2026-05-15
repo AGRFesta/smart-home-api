@@ -8,6 +8,13 @@ import org.agrfesta.sh.api.core.application.ports.inbounds.AssignSensorToAreaUse
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignmentsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.domain.failures.AreaFetchFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.DeviceFetchFailure
+import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
+import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.NotASensor
 import org.agrfesta.sh.api.core.domain.failures.SensorAssignmentFailure
 import org.springframework.stereotype.Service
@@ -20,14 +27,25 @@ class AssignSensorToAreaService(
 ) : AssignSensorToAreaUseCase {
 
     override fun execute(areaId: UUID, deviceId: UUID): Either<SensorAssignmentFailure, Unit> =
-        areasRepository.getAreaById(areaId).flatMap { _ ->
-            devicesRepository.getDeviceById(deviceId).flatMap { device ->
-                if (device.isSensor()) {
-                    sensorsAssignmentsRepository.assign(areaId, deviceId)
-                } else {
-                    NotASensor(device.uuid, device.features).left()
-                }
+        areasRepository.getAreaById(areaId)
+            .mapLeft { it.toSensorFailure() }
+            .flatMap { _ ->
+                devicesRepository.getDeviceById(deviceId)
+                    .mapLeft { it.toSensorFailure() }
+                    .flatMap { device ->
+                        if (device.isSensor()) sensorsAssignmentsRepository.assign(areaId, deviceId)
+                        else NotASensor(device.uuid, device.features).left()
+                    }
             }
-        }
+
+    private fun AreaFetchFailure.toSensorFailure(): SensorAssignmentFailure = when (this) {
+        is AreaNotFound -> this
+        AreaRepositoryError -> AssignmentRepositoryError
+    }
+
+    private fun DeviceFetchFailure.toSensorFailure(): SensorAssignmentFailure = when (this) {
+        is DeviceNotFound -> this
+        DeviceRepositoryError -> AssignmentRepositoryError
+    }
 
 }
