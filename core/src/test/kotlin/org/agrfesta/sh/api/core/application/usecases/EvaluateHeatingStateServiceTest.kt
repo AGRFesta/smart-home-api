@@ -25,6 +25,7 @@ import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.SharedHeater
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.domain.anAreaDtoWithDevices
@@ -149,7 +150,7 @@ class EvaluateHeatingStateServiceTest {
         // Given
         every {
             areasWithDevicesRepository.getAllAreasWithDevices()
-        } returns PersistenceFailure(Exception("db failure")).left()
+        } returns AreaRepositoryError.left()
 
         // When
         sut.execute()

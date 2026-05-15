@@ -4,14 +4,13 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import java.time.Instant
 import java.util.UUID
 import org.agrfesta.sh.api.domain.anActuatorProviderData
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.aSensorProviderData
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -82,14 +81,14 @@ class AreasWithDevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `getAllAreasWithDevices() Returns PersistenceFailure when fails to fetch`() {
+    fun `getAllAreasWithDevices() Returns AreaRepositoryError when fails to fetch`() {
         every { timeProvider.now() } returns Instant.now()
         val failure = DataAccessResourceFailureException("areas with devices fetching failure")
         every { areasWithDevicesRepo.getAll() } throws failure
 
         sut.getAllAreasWithDevices()
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(AreaRepositoryError)
     }
 
 }

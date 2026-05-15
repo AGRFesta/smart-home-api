@@ -8,6 +8,7 @@ import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingSchedul
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.utils.LoggerDelegate
@@ -47,6 +48,11 @@ class AreaHeatingScheduleController(
                 when (failure) {
                     is AreaNotFound -> status(NOT_FOUND)
                         .body(MessageResponse("Area with id '$areaId' is missing!"))
+                    AreaRepositoryError -> {
+                        logger.error("heating schedule retrieval failure: area repository error")
+                        status(INTERNAL_SERVER_ERROR)
+                            .body(MessageResponse("Internal server error while retrieving heating schedule."))
+                    }
                     is PersistenceFailure -> {
                         logger.error("heating schedule retrieval failure", failure.exception)
                         status(INTERNAL_SERVER_ERROR)
@@ -70,6 +76,11 @@ class AreaHeatingScheduleController(
                 when (failure) {
                     is AreaNotFound -> status(NOT_FOUND)
                         .body(MessageResponse("Area with id '$areaId' is missing!"))
+                    AreaRepositoryError -> {
+                        logger.error("heating schedule delete failure: area repository error")
+                        status(INTERNAL_SERVER_ERROR)
+                            .body(MessageResponse("Internal server error while deleting heating schedule."))
+                    }
                     is PersistenceFailure -> {
                         logger.error("heating schedule delete failure", failure.exception)
                         status(INTERNAL_SERVER_ERROR)
@@ -100,6 +111,11 @@ class AreaHeatingScheduleController(
                 }
                 is AreaNotFound -> status(NOT_FOUND)
                     .body(MessageResponse("Area with id '$areaId' is missing!"))
+                AreaRepositoryError -> {
+                    logger.error("heating schedule save failure: area repository error")
+                    status(INTERNAL_SERVER_ERROR)
+                        .body(MessageResponse("Internal server error while saving heating schedule."))
+                }
                 is PersistenceFailure -> {
                     logger.error("heating schedule save failure", failure.exception)
                     status(INTERNAL_SERVER_ERROR)

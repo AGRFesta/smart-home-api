@@ -6,12 +6,12 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
-import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.domain.areas.AreaDto
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.junit.jupiter.api.Test
 
@@ -47,15 +47,15 @@ class GetAreasServiceTest {
     }
 
     @Test
-    fun `execute() Returns PersistenceFailure when repository fails`() {
+    fun `execute() Returns AreaRepositoryError when repository fails`() {
         // Given
-        every { areasRepository.getAll() } returns PersistenceFailure(RuntimeException("db error")).left()
+        every { areasRepository.getAll() } returns AreaRepositoryError.left()
 
         // When
         val result = sut.execute()
 
         // Then
-        result.shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
+        result.shouldBeLeft().shouldBe(AreaRepositoryError)
     }
 
 }

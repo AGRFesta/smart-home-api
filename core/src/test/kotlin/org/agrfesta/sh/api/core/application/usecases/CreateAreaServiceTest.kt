@@ -11,7 +11,7 @@ import io.mockk.mockk
 import java.util.*
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
@@ -63,13 +63,13 @@ class CreateAreaServiceTest {
     }
 
     @Test
-    fun `execute() Returns PersistenceFailure when repository fails`() {
+    fun `execute() Returns AreaRepositoryError when repository fails`() {
         every { randomGenerator.uuid() } returns UUID.randomUUID()
-        every { areasRepository.save(any()) } returns PersistenceFailure(Exception("db error")).left()
+        every { areasRepository.save(any()) } returns AreaRepositoryError.left()
 
         sut.execute(aRandomUniqueString())
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(AreaRepositoryError)
     }
 
 }

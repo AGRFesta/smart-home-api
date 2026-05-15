@@ -12,6 +12,7 @@ import org.agrfesta.sh.api.core.application.ports.inbounds.GetAreasUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.UpdateAreaUseCase
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.NotASensor
 import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
@@ -56,7 +57,7 @@ class AreasController(
                     resourceId = result.value.uuid.toString() ))
             is Left -> when (result.value) {
                 AreaNameConflict -> badRequest().body(MessageResponse("An Area '${request.name}' already exists!"))
-                is PersistenceFailure -> internalServerError()
+                AreaRepositoryError -> internalServerError()
                     .body(MessageResponse("Unable to create Area '${request.name}'!"))
             }
         }
@@ -67,7 +68,7 @@ class AreasController(
             is Right -> ok(result.value)
             is Left -> when (result.value) {
                 is AreaNotFound -> ResponseEntity.notFound().build()
-                is PersistenceFailure -> internalServerError()
+                AreaRepositoryError -> internalServerError()
                     .body(MessageResponse("Unable to retrieve area '$id'!"))
             }
         }
@@ -80,7 +81,7 @@ class AreasController(
                 is AreaNotFound -> ResponseEntity.notFound().build()
                 AreaNameConflict -> badRequest()
                     .body(MessageResponse("An Area '${request.name}' already exists!"))
-                is PersistenceFailure -> internalServerError()
+                AreaRepositoryError -> internalServerError()
                     .body(MessageResponse("Unable to update area '$id'!"))
             }
         }
@@ -91,7 +92,7 @@ class AreasController(
             is Right -> noContent().build()
             is Left -> when (result.value) {
                 is AreaNotFound -> ResponseEntity.notFound().build()
-                is PersistenceFailure -> internalServerError()
+                AreaRepositoryError -> internalServerError()
                     .body(MessageResponse("Unable to delete area '$id'!"))
             }
         }
@@ -123,6 +124,8 @@ class AreasController(
                 SameAreaAssignment -> noContent().build()
                 is PersistenceFailure -> internalServerError()
                     .body(MessageResponse("Unable to assign sensor '$deviceId' to area '$areaId'!"))
+                AreaRepositoryError -> internalServerError()
+                    .body(MessageResponse("Unable to assign sensor '$deviceId' to area '$areaId'!"))
             }
         }
 
@@ -142,6 +145,8 @@ class AreasController(
                     .body(MessageResponse("Device with id '$deviceId' is not an actuator!"))
                 SameAreaAssignment -> noContent().build()
                 is PersistenceFailure -> internalServerError()
+                    .body(MessageResponse("Unable to assign actuator '$deviceId' to area '$areaId'!"))
+                AreaRepositoryError -> internalServerError()
                     .body(MessageResponse("Unable to assign actuator '$deviceId' to area '$areaId'!"))
             }
         }

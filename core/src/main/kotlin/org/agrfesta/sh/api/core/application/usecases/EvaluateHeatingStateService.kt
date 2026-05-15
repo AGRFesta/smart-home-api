@@ -45,8 +45,8 @@ class EvaluateHeatingStateService(
                 factory.createDevice(record)
             }
         }.associateBy { it.uuid }
-        val areas = areasWithDevicesRepository.getAllAreasWithDevices().onLeft { failure ->
-            logger.error("Area fetch failed, skipping heating evaluation.", failure.exception)
+        val areas = areasWithDevicesRepository.getAllAreasWithDevices().onLeft {
+            logger.error("Area fetch failed, skipping heating evaluation.")
         }.getOrNull()?.map { areasFactory.createArea(it, devicesRegistry) } ?: return
         val currentTime = timeProvider.currentLocalTime()
         areas.filterIsInstance<HeatableArea>()
