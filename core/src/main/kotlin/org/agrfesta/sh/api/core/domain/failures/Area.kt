@@ -22,5 +22,4 @@ data object AreaRepositoryError:
     AreaFetchFailure,
     AreaUpdateFailure,
     AreaDeletionFailure,
-    GetAreasFailure,
-    GetHomeDashboardFailure
+    GetAreasFailure

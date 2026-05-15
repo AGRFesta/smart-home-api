@@ -26,7 +26,7 @@ import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.SharedHeater
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.domain.anAreaDtoWithDevices
@@ -136,7 +136,7 @@ class EvaluateHeatingStateServiceTest {
     @Test
     fun `execute() does nothing when device fetch fails`() {
         // Given
-        every { devicesRepository.getAll() } returns PersistenceFailure(Exception("db failure")).left()
+        every { devicesRepository.getAll() } returns DeviceRepositoryError.left()
 
         // When
         sut.execute()

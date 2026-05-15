@@ -7,8 +7,8 @@ import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.failures.DeviceCreationFailure
 import org.agrfesta.sh.api.core.domain.failures.DeviceFetchFailure
+import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.DeviceUpdateFailure
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 
 /**
  * Outbound Port for [Device] persistence operations.
@@ -32,9 +32,9 @@ interface DevicesRepository {
      * Retrieves all persisted devices.
      *
      * @return [Either.Right] with a collection of all [Device] instances,
-     * or [Either.Left] with [PersistenceFailure] if a database error occurs.
+     * or [Either.Left] with [DeviceRepositoryError] if a database error occurs.
      */
-    fun getAll(): Either<PersistenceFailure, Collection<Device>>
+    fun getAll(): Either<DeviceRepositoryError, Collection<Device>>
 
     /**
      * Persists a new device with the given [id].

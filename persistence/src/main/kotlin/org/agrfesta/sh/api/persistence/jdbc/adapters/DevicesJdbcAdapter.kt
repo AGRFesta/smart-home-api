@@ -12,7 +12,6 @@ import org.agrfesta.sh.api.core.domain.failures.DeviceFetchFailure
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.DeviceUpdateFailure
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
@@ -34,17 +33,19 @@ class DevicesJdbcAdapter(
         DeviceRepositoryError.left()
     }
 
-    override fun getAll(): Either<PersistenceFailure, Collection<Device>> = try {
+    override fun getAll(): Either<DeviceRepositoryError, Collection<Device>> = try {
         devicesRepo.getAll().map { it.toDevice() }.right()
     } catch (e: DataAccessException) {
-        PersistenceFailure(e).left()
+        logger.error("Unexpected persistence error fetching all devices", e)
+        DeviceRepositoryError.left()
     }
 
     override fun create(id: UUID, device: ProviderDeviceData, initialStatus: DeviceStatus): Either<DeviceCreationFailure, Unit> =
         try {
             devicesRepo.persist(id, device, initialStatus).right()
         } catch (e: DataAccessException) {
-            PersistenceFailure(e).left()
+            logger.error("Unexpected persistence error creating device '$id'", e)
+            DeviceRepositoryError.left()
         }
 
     override fun update(device: Device): Either<DeviceUpdateFailure, Unit> = try {
@@ -52,7 +53,8 @@ class DevicesJdbcAdapter(
             devicesRepo.update(device).right()
         } ?: DeviceNotFound(missingDeviceId = device.uuid).left()
     } catch (e: DataAccessException) {
-        PersistenceFailure(e).left()
+        logger.error("Unexpected persistence error updating device '${device.uuid}'", e)
+        DeviceRepositoryError.left()
     }
 
 }

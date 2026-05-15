@@ -22,9 +22,9 @@ class SnapshotSensorHistoryService(
 ) : SnapshotSensorHistoryUseCase {
 
     override fun execute(): Either<SnapshotSensorHistoryFailure, Unit> {
-        val devices = devicesRepository.getAll().getOrElse { failure ->
-            return SnapshotSensorHistoryError(failure.exception).left()
-        }
+        val devices = devicesRepository.getAll()
+            .mapLeft { SnapshotSensorHistoryError }
+            .getOrElse { return it.left() }
         val now by lazy { timeProvider.now() }
         devices
             .filter { it.isSensor() }

@@ -10,7 +10,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import org.agrfesta.sh.api.core.application.ports.inbounds.RefreshDevicesUseCase
 import org.agrfesta.sh.api.core.domain.devices.RefreshDevicesResult
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.RefreshDevicesError
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.junit.jupiter.api.Test
@@ -111,7 +111,7 @@ class DevicesSynchronizeControllerMvcSliceTest(
 
     @Test fun `synchronize() returns 500 with error message when use case returns Left`() {
         // Given
-        every { refreshDevicesUseCase.execute() } returns PersistenceFailure(Exception("db failure")).left()
+        every { refreshDevicesUseCase.execute() } returns RefreshDevicesError.left()
 
         // When
         val responseBody = mockMvc.perform(

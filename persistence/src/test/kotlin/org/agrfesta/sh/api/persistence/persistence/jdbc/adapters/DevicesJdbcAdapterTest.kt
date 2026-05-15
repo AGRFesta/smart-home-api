@@ -12,7 +12,6 @@ import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.test.mothers.aProvider
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
@@ -90,14 +89,14 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `getAll() Returns PersistenceFailure when fails to fetch devices`() {
+    fun `getAll() Returns DeviceRepositoryError when fails to fetch devices`() {
         every { timeProvider.now() } returns Instant.now()
         val failure = DataAccessResourceFailureException("devices fetching failure")
         every { devicesRepo.getAll() } throws failure
 
         sut.getAll()
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(DeviceRepositoryError)
     }
 
     // create()
@@ -120,7 +119,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `create() Returns PersistenceFailure when fails to persist device`() {
+    fun `create() Returns DeviceRepositoryError when fails to persist device`() {
         every { timeProvider.now() } returns Instant.now()
         val device = aProviderDeviceData()
         val failure = DataAccessResourceFailureException("device creation failure")
@@ -128,7 +127,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
         sut.create(UUID.randomUUID(), device)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(DeviceRepositoryError)
     }
 
     // update()
@@ -162,7 +161,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `update() Returns PersistenceFailure when fails to update device`() {
+    fun `update() Returns DeviceRepositoryError when fails to update device`() {
         every { timeProvider.now() } returns Instant.now()
         val data = aProviderDeviceData()
         val deviceId = UUID.randomUUID()
@@ -173,6 +172,6 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
         sut.update(device)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(DeviceRepositoryError)
     }
 }

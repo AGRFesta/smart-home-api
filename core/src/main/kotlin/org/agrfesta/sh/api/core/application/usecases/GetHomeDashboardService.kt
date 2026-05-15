@@ -15,6 +15,7 @@ import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.core.domain.commons.average
+import org.agrfesta.sh.api.core.domain.failures.DashboardRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.GetHomeDashboardFailure
 import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupFailure
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
@@ -41,7 +42,9 @@ class GetHomeDashboardService(
     override fun execute(): Either<GetHomeDashboardFailure, HomeDashboardDto> {
         val currentTime = timeProvider.currentLocalTime()
         val heatingActive = resolveHeatingActive()
-        return areasWithDevicesRepository.getAllAreasWithDevices().map { areas ->
+        return areasWithDevicesRepository.getAllAreasWithDevices()
+            .mapLeft { DashboardRepositoryError }
+            .map { areas ->
             HomeDashboardDto(
                 globalState = GlobalStateDto(
                     heatingActive = heatingActive,

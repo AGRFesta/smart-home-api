@@ -27,9 +27,9 @@ class FetchSensorReadingsService(
     private val factories = providerDevicesFactories.associateBy { it.provider }
 
     override fun execute(): Either<FetchSensorReadingsFailure, Unit> {
-        val devices = devicesRepository.getAll().getOrElse { failure ->
-            return FetchSensorReadingsError(failure.exception).left()
-        }
+        val devices = devicesRepository.getAll()
+            .mapLeft { FetchSensorReadingsError }
+            .getOrElse { return it.left() }
         devices
             .filter { it.features.contains(DeviceFeature.SENSOR) }
             .forEach { device ->
