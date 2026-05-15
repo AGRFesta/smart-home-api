@@ -23,7 +23,7 @@ interface SensorsAssignmentsRepository {
      *  to [areaId].
      * - [org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned] if the sensor is already actively assigned to a
      * different area.
-     * - [org.agrfesta.sh.api.core.domain.failures.PersistenceFailure] if a database error occurs.
+     * - [org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError] if a database error occurs.
      */
     fun assign(areaId: UUID, sensorId: UUID): Either<SensorAssignmentFailure, Unit>
 

@@ -68,7 +68,7 @@ Interfaces defined in the Core used by the domain to communicate with the extern
 Technological implementations of the Outbound Ports.
 - **Persistence:** We use **JdbcTemplate / Spring Data JDBC**. Implementations live in `persistence/jdbc/adapters/` and should ideally be `internal` to prevent direct coupling.
 - **Mapping:** Must translate between Domain Entities and Infrastructure Models (e.g., Database Rows) before saving or retrieving.
-- **Exception Boundary:** Must catch infrastructure/technical exceptions (e.g., `DataAccessException`, `RestClientException`) and map them to the expected Domain Errors (e.g., `Left(PersistenceFailure)`).
+- **Exception Boundary:** Must catch infrastructure/technical exceptions (e.g., `DataAccessException`, `RestClientException`) and map them to the expected Domain Errors (e.g., `Left(AreaRepositoryError)`).
 
 ---
 
