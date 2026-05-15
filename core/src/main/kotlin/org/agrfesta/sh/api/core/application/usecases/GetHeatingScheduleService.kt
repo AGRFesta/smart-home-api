@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.core.application.usecases
 
 import arrow.core.Either
-import arrow.core.flatMap
+import arrow.core.left
 import java.util.UUID
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
@@ -17,9 +17,10 @@ class GetHeatingScheduleService(
     private val temperatureSettingsRepository: TemperatureSettingsRepository
 ) : GetHeatingScheduleUseCase {
 
-    override fun execute(areaId: UUID): Either<TemperatureSettingRetrievalFailure, HeatingScheduleDto?> {
-        val result: Either<TemperatureSettingRetrievalFailure, HeatingScheduleDto?> =
-            areasRepository.getAreaById(areaId).flatMap { _ ->
+    override fun execute(areaId: UUID): Either<TemperatureSettingRetrievalFailure, HeatingScheduleDto?> =
+        areasRepository.getAreaById(areaId).fold(
+            { it.left() },
+            { _ ->
                 temperatureSettingsRepository.findAreaSetting(areaId).map { setting ->
                     setting?.let {
                         HeatingScheduleDto(
@@ -35,7 +36,6 @@ class GetHeatingScheduleService(
                     }
                 }
             }
-        return result
-    }
+        )
 
 }

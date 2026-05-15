@@ -22,6 +22,7 @@ import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.NotASensor
 import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
@@ -84,10 +85,9 @@ class AreasControllerMvcSliceTest(
         response.message shouldBe "An Area '$name' already exists!"
     }
 
-    @Test fun `create() returns 500 when persistence fails`() {
+    @Test fun `create() returns 500 when repository error occurs`() {
         val name = aRandomUniqueString()
-        every { createAreaUseCase.execute(name, null) } returns
-                PersistenceFailure(RuntimeException("db error")).left()
+        every { createAreaUseCase.execute(name, null) } returns AreaRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
             post("/areas")
@@ -174,10 +174,9 @@ class AreasControllerMvcSliceTest(
             .content("""{"name": "test", "isIndoor": true}""")
     }
 
-    @Test fun `update() returns 500 on PersistenceFailure`() {
+    @Test fun `update() returns 500 on AreaRepositoryError`() {
         val id = UUID.randomUUID()
-        every { updateAreaUseCase.execute(id, any(), any()) } returns
-                PersistenceFailure(RuntimeException("db error")).left()
+        every { updateAreaUseCase.execute(id, any(), any()) } returns AreaRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
             put("/areas/$id")
@@ -248,10 +247,9 @@ class AreasControllerMvcSliceTest(
         delete("/areas/${UUID.randomUUID()}")
     }
 
-    @Test fun `delete() returns 500 on PersistenceFailure`() {
+    @Test fun `delete() returns 500 on AreaRepositoryError`() {
         val id = UUID.randomUUID()
-        every { deleteAreaUseCase.execute(id) } returns
-                PersistenceFailure(RuntimeException("db error")).left()
+        every { deleteAreaUseCase.execute(id) } returns AreaRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
             delete("/areas/$id").authenticated())
@@ -288,10 +286,9 @@ class AreasControllerMvcSliceTest(
         get("/areas/${UUID.randomUUID()}")
     }
 
-    @Test fun `getById() returns 500 on PersistenceFailure`() {
+    @Test fun `getById() returns 500 on AreaRepositoryError`() {
         val id = UUID.randomUUID()
-        every { getAreaByIdUseCase.execute(id) } returns
-                PersistenceFailure(RuntimeException("db error")).left()
+        every { getAreaByIdUseCase.execute(id) } returns AreaRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
             get("/areas/$id").authenticated())
@@ -346,9 +343,8 @@ class AreasControllerMvcSliceTest(
         response shouldBe emptyList<Any>()
     }
 
-    @Test fun `getAll() returns 500 on PersistenceFailure`() {
-        every { getAreasUseCase.execute() } returns
-                PersistenceFailure(RuntimeException("db error")).left()
+    @Test fun `getAll() returns 500 on AreaRepositoryError`() {
+        every { getAreasUseCase.execute() } returns AreaRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
             get("/areas").authenticated())

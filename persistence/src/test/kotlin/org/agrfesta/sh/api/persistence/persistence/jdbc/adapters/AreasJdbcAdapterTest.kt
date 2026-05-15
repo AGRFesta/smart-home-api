@@ -13,7 +13,7 @@ import java.util.*
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,7 +52,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `getAreaById() Returns PersistenceFailure when fails to fetch area`() {
+    fun `getAreaById() Returns AreaRepositoryError when fails to fetch area`() {
         every { timeProvider.now() } returns Instant.now()
         val areaId = UUID.randomUUID()
         val failure = DataAccessResourceFailureException("are fetching failure")
@@ -60,7 +60,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
         sut.getAreaById(areaId)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(AreaRepositoryError)
     }
 
     // findAreaByName()
@@ -86,7 +86,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `findAreaByName() Returns PersistenceFailure when fails to fetch area`() {
+    fun `findAreaByName() Returns AreaRepositoryError when fails to fetch area`() {
         every { timeProvider.now() } returns Instant.now()
         val name = aRandomUniqueString()
         val failure = DataAccessResourceFailureException("area by name fetching failure")
@@ -94,7 +94,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
         sut.findAreaByName(name)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(AreaRepositoryError)
     }
 
     // save()
@@ -124,14 +124,14 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `save() Returns PersistenceFailure when fails to persist area`() {
+    fun `save() Returns AreaRepositoryError when fails to persist area`() {
         every { timeProvider.now() } returns Instant.now()
         val failure = DataAccessResourceFailureException("area creation failure")
         every { areasRepo.persist(any()) } throws failure
 
         sut.save(anAreaDto())
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(AreaRepositoryError)
     }
 
     // getAll()
@@ -157,20 +157,20 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `getAll() Returns PersistenceFailure when fails to fetch areas`() {
+    fun `getAll() Returns AreaRepositoryError when fails to fetch areas`() {
         every { timeProvider.now() } returns Instant.now()
         val failure = DataAccessResourceFailureException("areas fetching failure")
         every { areasRepo.getAll() } throws failure
 
         sut.getAll()
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(AreaRepositoryError)
     }
 
     // update()
 
     @Test
-    fun `update() Returns PersistenceFailure when repository throws DataAccessException`() {
+    fun `update() Returns AreaRepositoryError when repository throws DataAccessException`() {
         every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString())
         val failure = DataAccessResourceFailureException("update failure")
@@ -178,7 +178,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
         sut.update(area)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(AreaRepositoryError)
     }
 
     @Test
@@ -248,7 +248,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `deleteAreaById() Returns PersistenceFailure when fails to delete area`() {
+    fun `deleteAreaById() Returns AreaRepositoryError when fails to delete area`() {
         every { timeProvider.now() } returns Instant.now()
         val areaId = UUID.randomUUID()
         val failure = DataAccessResourceFailureException("area deletion failure")
@@ -256,7 +256,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
         sut.deleteAreaById(areaId)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(AreaRepositoryError)
     }
 
 }

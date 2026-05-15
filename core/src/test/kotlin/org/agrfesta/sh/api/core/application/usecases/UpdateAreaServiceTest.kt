@@ -12,7 +12,7 @@ import java.util.*
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
@@ -63,15 +63,15 @@ class UpdateAreaServiceTest {
     }
 
     @Test
-    fun `execute() Returns PersistenceFailure when repository fails`() {
+    fun `execute() Returns AreaRepositoryError when repository fails`() {
         // Given
-        every { areasRepository.update(any()) } returns PersistenceFailure(RuntimeException("db error")).left()
+        every { areasRepository.update(any()) } returns AreaRepositoryError.left()
 
         // When
         val result = sut.execute(UUID.randomUUID(), aRandomUniqueString(), true)
 
         // Then
-        result.shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
+        result.shouldBeLeft().shouldBe(AreaRepositoryError)
     }
 
 }

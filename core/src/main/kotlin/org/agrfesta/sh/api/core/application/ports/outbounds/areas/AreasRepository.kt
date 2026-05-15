@@ -6,8 +6,9 @@ import org.agrfesta.sh.api.core.domain.areas.AreaDto
 import org.agrfesta.sh.api.core.domain.failures.AreaCreationFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaDeletionFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaFetchFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.AreaUpdateFailure
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.GetAreasFailure
 
 /**
  * Outbound Port for [AreaDto] persistence operations.
@@ -32,9 +33,9 @@ interface AreasRepository {
      *
      * @param name the name of the area to search for.
      * @return [Either.Right] with the [AreaDto] if found, or `null` if no area with that name exists,
-     * or [Either.Left] with [PersistenceFailure] if a database error occurs.
+     * or [Either.Left] with [AreaRepositoryError] if a database error occurs.
      */
-    fun findAreaByName(name: String): Either<PersistenceFailure, AreaDto?>
+    fun findAreaByName(name: String): Either<AreaRepositoryError, AreaDto?>
 
     /**
      * Persists a new [AreaDto].
@@ -50,9 +51,9 @@ interface AreasRepository {
      * Retrieves all persisted areas.
      *
      * @return [Either.Right] with a collection of all [AreaDto] instances,
-     * or [Either.Left] with [PersistenceFailure] if a database error occurs.
+     * or [Either.Left] with [GetAreasFailure] if a database error occurs.
      */
-    fun getAll(): Either<PersistenceFailure, Collection<AreaDto>>
+    fun getAll(): Either<GetAreasFailure, Collection<AreaDto>>
 
     /**
      * Updates an existing [AreaDto].

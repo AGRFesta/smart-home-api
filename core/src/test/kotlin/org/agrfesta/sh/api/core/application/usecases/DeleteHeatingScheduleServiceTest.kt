@@ -13,6 +13,7 @@ import java.util.UUID
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.junit.jupiter.api.Test
@@ -37,13 +38,13 @@ class DeleteHeatingScheduleServiceTest {
     }
 
     @Test
-    fun `execute() returns PersistenceFailure when area fetch fails`() {
+    fun `execute() returns AreaRepositoryError when area fetch fails`() {
         val areaId = UUID.randomUUID()
-        every { areasRepository.getAreaById(areaId) } returns PersistenceFailure(Exception()).left()
+        every { areasRepository.getAreaById(areaId) } returns AreaRepositoryError.left()
 
         sut.execute(areaId)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(AreaRepositoryError)
 
         verify(exactly = 0) { temperatureSettingsRepository.deleteAreaSetting(any()) }
     }

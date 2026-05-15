@@ -10,7 +10,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -48,16 +48,16 @@ class GetAreaByIdServiceTest {
     }
 
     @Test
-    fun `execute() Returns PersistenceFailure when repository fails`() {
+    fun `execute() Returns AreaRepositoryError when repository fails`() {
         // Given
         val areaId = UUID.randomUUID()
-        every { areasRepository.getAreaById(areaId) } returns PersistenceFailure(RuntimeException("db error")).left()
+        every { areasRepository.getAreaById(areaId) } returns AreaRepositoryError.left()
 
         // When
         val result = sut.execute(areaId)
 
         // Then
-        result.shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
+        result.shouldBeLeft().shouldBe(AreaRepositoryError)
     }
 
 }
