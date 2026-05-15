@@ -9,6 +9,9 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.CacheError
 import org.agrfesta.sh.api.core.application.ports.outbounds.CachedValueNotFound
 import org.agrfesta.sh.api.core.application.ports.outbounds.CacheOkResponse
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
+import org.agrfesta.sh.api.cache.dto.ThermoHygroDataCacheDto
+import org.agrfesta.sh.api.cache.dto.toCacheDto
+import org.agrfesta.sh.api.cache.dto.toDomain
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.core.domain.devices.DeviceProviderIdentity
 import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupError
@@ -37,7 +40,7 @@ class SensorsCurrentReadingsCacheAdapter(
 
     override fun save(sensor: DeviceProviderIdentity, data: ThermoHygroData): Either<SensorReadingsSaveFailure, Unit> {
         val json = try {
-            objectMapper.writeValueAsString(data)
+            objectMapper.writeValueAsString(data.toCacheDto())
         } catch (e: Exception) {
             return SensorReadingsSaveError(e).left()
         }
@@ -49,7 +52,7 @@ class SensorsCurrentReadingsCacheAdapter(
 
     private fun deserialize(json: String): Either<ReadingsLookupFailure, ThermoHygroData?> =
         try {
-            objectMapper.readValue(json, ThermoHygroData::class.java).right()
+            objectMapper.readValue(json, ThermoHygroDataCacheDto::class.java).toDomain().right()
         } catch (e: Exception) {
             ReadingsLookupError(e).left()
         }

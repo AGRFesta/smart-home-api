@@ -6,6 +6,7 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import org.agrfesta.sh.api.cache.dto.toCacheDto
 import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupError
 import org.agrfesta.sh.api.domain.aSensor
@@ -28,7 +29,7 @@ class SensorsCurrentReadingsCacheAdapterTest : AbstractCacheAdapterTest() {
     @Test fun `findBy() returns the cached ThermoHygroData for the sensor`() {
         val sensor = aSensor()
         val data = aRandomThermoHygroData()
-        cache.set(sensor.getThermoHygroKey(), objectMapper.writeValueAsString(data))
+        cache.set(sensor.getThermoHygroKey(), objectMapper.writeValueAsString(data.toCacheDto()))
 
         sut.findBy(sensor).shouldBeRight() shouldBe data
     }
@@ -37,7 +38,7 @@ class SensorsCurrentReadingsCacheAdapterTest : AbstractCacheAdapterTest() {
         val sensor = aSensor()
         val otherSensor = aSensor()
         val data = aRandomThermoHygroData()
-        cache.set(otherSensor.getThermoHygroKey(), objectMapper.writeValueAsString(data))
+        cache.set(otherSensor.getThermoHygroKey(), objectMapper.writeValueAsString(data.toCacheDto()))
 
         sut.findBy(sensor).shouldBeRight().shouldBeNull()
     }
@@ -51,13 +52,13 @@ class SensorsCurrentReadingsCacheAdapterTest : AbstractCacheAdapterTest() {
             .shouldBeInstanceOf<ReadingsLookupError>()
     }
 
-    @Test fun `save() stores serialized ThermoHygroData at the sensor's cache key`() {
+    @Test fun `save() stores serialized ThermoHygroDataCacheDto at the sensor's cache key`() {
         val sensor = aSensor()
         val data = aRandomThermoHygroData()
 
         sut.save(sensor, data).shouldBeRight()
 
-        cache.get(sensor.getThermoHygroKey()).shouldBeRight() shouldBe objectMapper.writeValueAsString(data)
+        cache.get(sensor.getThermoHygroKey()).shouldBeRight() shouldBe objectMapper.writeValueAsString(data.toCacheDto())
     }
 
     @Test fun `save() overwrites previously stored data for the same sensor`() {
@@ -68,7 +69,7 @@ class SensorsCurrentReadingsCacheAdapterTest : AbstractCacheAdapterTest() {
 
         sut.save(sensor, second).shouldBeRight()
 
-        cache.get(sensor.getThermoHygroKey()).shouldBeRight() shouldBe objectMapper.writeValueAsString(second)
+        cache.get(sensor.getThermoHygroKey()).shouldBeRight() shouldBe objectMapper.writeValueAsString(second.toCacheDto())
     }
 
 }

@@ -1,23 +1,30 @@
 package org.agrfesta.sh.api.controllers
 
-import java.time.LocalTime
+import java.math.BigDecimal
+import java.time.format.DateTimeFormatter
+import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT
 import org.agrfesta.sh.api.core.domain.areas.HeatingScheduleDto
-import org.agrfesta.sh.api.core.domain.commons.Temperature
+
+private val timeFormatter = DateTimeFormatter.ofPattern(INTERVAL_TIME_FORMAT)
 
 data class HeatingScheduleResponse(
-    val defaultTemperature: Temperature,
+    val defaultTemperature: BigDecimal,
     val intervals: List<IntervalResponse>
 )
 
 data class IntervalResponse(
-    val temperature: Temperature,
-    val startTime: LocalTime,
-    val endTime: LocalTime
+    val temperature: BigDecimal,
+    val startTime: String,
+    val endTime: String
 )
 
 fun HeatingScheduleDto.toResponse() = HeatingScheduleResponse(
-    defaultTemperature = defaultTemperature,
+    defaultTemperature = defaultTemperature.value,
     intervals = intervals.map {
-        IntervalResponse(temperature = it.temperature, startTime = it.startTime, endTime = it.endTime)
+        IntervalResponse(
+            temperature = it.temperature.value,
+            startTime = it.startTime.format(timeFormatter),
+            endTime = it.endTime.format(timeFormatter)
+        )
     }
 )

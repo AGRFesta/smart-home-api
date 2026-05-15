@@ -1,7 +1,6 @@
 package org.agrfesta.sh.api.providers.netatmo
 
 import arrow.core.Either
-import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
@@ -18,9 +17,9 @@ import org.springframework.stereotype.Service
 @Service
 class NetatmoService(
     private val cache: Cache,
-    private val netatmoClient: NetatmoClient,
-    private val objectMapper: ObjectMapper
+    private val netatmoClient: NetatmoClient
 ): DevicesProvider {
+    private val objectMapper = NETATMO_OBJECT_MAPPER
     private val logger by LoggerDelegate()
     override val provider: Provider = NETATMO
 

@@ -31,7 +31,7 @@ class NetatmoIntegrationAsserter(
             val homeStatus = aNetatmoHomeStatus(
                 rooms = listOf(aNetatmoRoomStatus(
                     humidity = relativeHumidity.value.movePointRight(2).stripTrailingZeros(),
-                    measuredTemperature = temperature
+                    measuredTemperature = temperature.value
                 ))
             )
             asserter.givenHomeStatusFetchResponse(homeStatus)

@@ -13,7 +13,7 @@ import org.agrfesta.sh.api.core.application.ports.inbounds.GetHeatingScheduleUse
 import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.domain.areas.HeatingScheduleDto
 import org.agrfesta.sh.api.core.domain.areas.IntervalDto
-import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
@@ -70,13 +70,14 @@ class AreaHeatingScheduleControllerMvcSliceTest(
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
+        val formatter = java.time.format.DateTimeFormatter.ofPattern(INTERVAL_TIME_FORMAT)
         val response: HeatingScheduleResponse = objectMapper
             .readValue(responseBody, HeatingScheduleResponse::class.java)
-        response.defaultTemperature shouldBe returnedSchedule.defaultTemperature
+        response.defaultTemperature shouldBe returnedSchedule.defaultTemperature.value
         response.intervals shouldHaveSize 1
-        response.intervals[0].temperature shouldBe returnedInterval.temperature
-        response.intervals[0].startTime shouldBe returnedInterval.startTime
-        response.intervals[0].endTime shouldBe returnedInterval.endTime
+        response.intervals[0].temperature shouldBe returnedInterval.temperature.value
+        response.intervals[0].startTime shouldBe returnedInterval.startTime.format(formatter)
+        response.intervals[0].endTime shouldBe returnedInterval.endTime.format(formatter)
     }
 
     @Test fun `getHeatingSchedule() returns 200 with empty default structure when area has no schedule`() {
@@ -90,7 +91,7 @@ class AreaHeatingScheduleControllerMvcSliceTest(
 
         val response: HeatingScheduleResponse = objectMapper
             .readValue(responseBody, HeatingScheduleResponse::class.java)
-        response.defaultTemperature shouldBe Temperature.of("20.0")
+        response.defaultTemperature shouldBe AreaHeatingScheduleController.DEFAULT_TEMPERATURE
         response.intervals shouldHaveSize 0
     }
 
@@ -210,13 +211,14 @@ class AreaHeatingScheduleControllerMvcSliceTest(
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
+        val formatter = java.time.format.DateTimeFormatter.ofPattern(INTERVAL_TIME_FORMAT)
         val response: HeatingScheduleResponse = objectMapper
             .readValue(responseBody, HeatingScheduleResponse::class.java)
-        response.defaultTemperature shouldBe returnedSchedule.defaultTemperature
+        response.defaultTemperature shouldBe returnedSchedule.defaultTemperature.value
         response.intervals shouldHaveSize 1
-        response.intervals[0].temperature shouldBe returnedInterval.temperature
-        response.intervals[0].startTime shouldBe returnedInterval.startTime
-        response.intervals[0].endTime shouldBe returnedInterval.endTime
+        response.intervals[0].temperature shouldBe returnedInterval.temperature.value
+        response.intervals[0].startTime shouldBe returnedInterval.startTime.format(formatter)
+        response.intervals[0].endTime shouldBe returnedInterval.endTime.format(formatter)
     }
 
     ///// deleteHeatingSchedule ///////////////////////////////////////////////////////////////////////////////////////
