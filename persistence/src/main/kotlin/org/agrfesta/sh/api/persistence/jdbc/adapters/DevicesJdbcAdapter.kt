@@ -10,10 +10,12 @@ import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.failures.DeviceCreationFailure
 import org.agrfesta.sh.api.core.domain.failures.DeviceFetchFailure
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
+import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.DeviceUpdateFailure
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
+import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.dao.DataAccessException
 import org.springframework.stereotype.Service
 
@@ -22,11 +24,14 @@ class DevicesJdbcAdapter(
     private val devicesRepo: DevicesJdbcRepository
 ): DevicesRepository {
 
+    private val logger by LoggerDelegate()
+
     override fun getDeviceById(deviceId: UUID): Either<DeviceFetchFailure, Device> = try {
         devicesRepo.findDeviceById(deviceId)?.toDevice()?.right()
             ?: DeviceNotFound(missingDeviceId = deviceId).left()
     } catch (e: DataAccessException) {
-        PersistenceFailure(e).left()
+        logger.error("Unexpected persistence error fetching device '$deviceId'", e)
+        DeviceRepositoryError.left()
     }
 
     override fun getAll(): Either<PersistenceFailure, Collection<Device>> = try {

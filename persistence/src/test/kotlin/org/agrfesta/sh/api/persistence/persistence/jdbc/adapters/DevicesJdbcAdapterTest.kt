@@ -11,6 +11,7 @@ import java.util.*
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
+import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.test.mothers.aProvider
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -55,7 +56,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `getDeviceById() Returns PersistenceFailure when fails to fetch device`() {
+    fun `getDeviceById() Returns DeviceRepositoryError when fails to fetch device`() {
         every { timeProvider.now() } returns Instant.now()
         val deviceId = UUID.randomUUID()
         val failure = DataAccessResourceFailureException("device fetching failure")
@@ -63,7 +64,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
         sut.getDeviceById(deviceId)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(DeviceRepositoryError)
     }
 
     // getAll()

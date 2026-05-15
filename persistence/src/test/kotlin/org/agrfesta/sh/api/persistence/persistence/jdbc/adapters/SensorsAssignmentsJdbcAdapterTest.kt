@@ -5,7 +5,6 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -13,9 +12,7 @@ import java.util.*
 import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.domain.anAreaDto
-import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
 import org.agrfesta.test.mothers.aProvider
@@ -29,7 +26,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Autowired private lateinit var sut: SensorsAssignmentsJdbcAdapter
 
     @Test
-    fun `assign() Returns AreaNotFound when area is missing`() {
+    fun `assign() Returns AssignmentRepositoryError when area is missing`() {
         every { timeProvider.now() } returns Instant.now()
         val device = aProviderDeviceData(
             providerId = aRandomUniqueString(),
@@ -43,12 +40,11 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
         sut.assign(missingAreaId, deviceId)
             .shouldBeLeft()
-            .shouldBeInstanceOf<AreaNotFound>()
-            .missingAreaId shouldBe missingAreaId
+            .shouldBe(AssignmentRepositoryError)
     }
 
     @Test
-    fun `assign() Returns DeviceNotFound when area is missing`() {
+    fun `assign() Returns AssignmentRepositoryError when device is missing`() {
         every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(
             name = aRandomUniqueString(),
@@ -58,8 +54,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
         sut.assign(area.uuid, missingDeviceId)
             .shouldBeLeft()
-            .shouldBeInstanceOf<DeviceNotFound>()
-            .missingDeviceId shouldBe missingDeviceId
+            .shouldBe(AssignmentRepositoryError)
     }
 
     @Test
@@ -90,14 +85,14 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `assign() Returns PersistenceFailure when findByDevice throws a DataAccessException`() {
+    fun `assign() Returns AssignmentRepositoryError when findByDevice throws a DataAccessException`() {
         val areaId = UUID.randomUUID()
         val sensorId = UUID.randomUUID()
         every { sensorsAssignmentsRepo.findByDevice(sensorId) } throws object : DataAccessException("DB failure") {}
 
         sut.assign(areaId, sensorId)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(AssignmentRepositoryError)
     }
 
     @Test

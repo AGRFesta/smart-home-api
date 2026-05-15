@@ -13,10 +13,10 @@ import org.agrfesta.sh.api.core.application.ports.inbounds.UpdateAreaUseCase
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.NotASensor
 import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
 import org.springframework.http.HttpStatus.CREATED
@@ -122,9 +122,7 @@ class AreasController(
                 SensorAlreadyAssigned -> badRequest()
                     .body(MessageResponse("Device with id '$deviceId' is already assigned to another area!"))
                 SameAreaAssignment -> noContent().build()
-                is PersistenceFailure -> internalServerError()
-                    .body(MessageResponse("Unable to assign sensor '$deviceId' to area '$areaId'!"))
-                AreaRepositoryError -> internalServerError()
+                AssignmentRepositoryError -> internalServerError()
                     .body(MessageResponse("Unable to assign sensor '$deviceId' to area '$areaId'!"))
             }
         }
@@ -144,9 +142,7 @@ class AreasController(
                 is NotAnActuator -> badRequest()
                     .body(MessageResponse("Device with id '$deviceId' is not an actuator!"))
                 SameAreaAssignment -> noContent().build()
-                is PersistenceFailure -> internalServerError()
-                    .body(MessageResponse("Unable to assign actuator '$deviceId' to area '$areaId'!"))
-                AreaRepositoryError -> internalServerError()
+                AssignmentRepositoryError -> internalServerError()
                     .body(MessageResponse("Unable to assign actuator '$deviceId' to area '$areaId'!"))
             }
         }
