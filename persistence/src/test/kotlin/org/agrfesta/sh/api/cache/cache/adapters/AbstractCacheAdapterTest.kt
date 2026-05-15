@@ -1,9 +1,10 @@
 package org.agrfesta.sh.api.cache.adapters
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.agrfesta.sh.api.TestContainersConfig
 import org.agrfesta.sh.api.cache.adapters.RedisCache
-import org.agrfesta.sh.api.core.serialization.SMART_HOME_OBJECT_MAPPER
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.redis.DataRedisTest
@@ -23,7 +24,9 @@ abstract class AbstractCacheAdapterTest {
 
     @TestConfiguration
     class JacksonTestConfig {
-        @Bean fun objectMapper(): ObjectMapper = SMART_HOME_OBJECT_MAPPER
+        @Bean fun objectMapper(): ObjectMapper = jacksonObjectMapper().apply {
+            configure(SerializationFeature.WRITE_BIGDECIMAL_AS_PLAIN, true)
+        }
     }
 
     @Autowired
