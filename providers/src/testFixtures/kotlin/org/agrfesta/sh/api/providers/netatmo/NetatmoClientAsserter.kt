@@ -18,7 +18,6 @@ import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.Parameters
 import io.ktor.http.headersOf
-import org.agrfesta.sh.api.core.serialization.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.test.mothers.aRandomNonNegativeInt
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.anUrl
@@ -34,7 +33,7 @@ class NetatmoClientAsserter(
         roomId = aRandomUniqueString()
     ),
     private val registry: BehaviorRegistry = BehaviorRegistry(),
-    private val mapper: ObjectMapper = SMART_HOME_OBJECT_MAPPER
+    private val mapper: ObjectMapper = NETATMO_OBJECT_MAPPER
 ) {
 
     fun clear() { registry.clear() }

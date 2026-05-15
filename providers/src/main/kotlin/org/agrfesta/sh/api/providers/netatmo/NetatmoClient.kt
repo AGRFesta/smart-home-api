@@ -5,7 +5,6 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -28,7 +27,6 @@ import io.ktor.http.Parameters
 import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.JacksonConverter
-import org.agrfesta.sh.api.core.serialization.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
@@ -46,17 +44,17 @@ class NetatmoClient(
     private val config: NetatmoConfiguration,
     private val cache: Cache,
     private val propertyRepository: PropertyRepository,
-    private val mapper: ObjectMapper,
     @Autowired(required = false) netatmoClientEngine: HttpClientEngine = OkHttpEngine(OkHttpConfig())
 ) {
     private val logger by LoggerDelegate()
+    private val mapper = NETATMO_OBJECT_MAPPER
     private val client = HttpClient(netatmoClientEngine) {
         expectSuccess = true
         install(HttpTimeout) {
             requestTimeoutMillis = 60_000
         }
         install(ContentNegotiation) {
-            register(ContentType.Application.Json, JacksonConverter(SMART_HOME_OBJECT_MAPPER))
+            register(ContentType.Application.Json, JacksonConverter(NETATMO_OBJECT_MAPPER))
         }
     }
 

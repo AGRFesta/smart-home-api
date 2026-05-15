@@ -1,15 +1,20 @@
 package org.agrfesta.sh.api.controllers
 
+import java.math.BigDecimal
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.util.UUID
 import org.agrfesta.sh.api.core.application.ports.inbounds.DeleteHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingScheduleUseCase
+import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
+import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.HttpStatus.NO_CONTENT
@@ -26,6 +31,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
+private val timeFormatter = DateTimeFormatter.ofPattern(INTERVAL_TIME_FORMAT)
+
 @RestController
 @RequestMapping("/areas")
 class AreaHeatingScheduleController(
@@ -34,7 +41,7 @@ class AreaHeatingScheduleController(
     private val getHeatingScheduleUseCase: GetHeatingScheduleUseCase
 ) {
     companion object {
-        val DEFAULT_TEMPERATURE: Temperature = Temperature.of("20.0")
+        val DEFAULT_TEMPERATURE: BigDecimal = Temperature.of("20.0").value
     }
 
     @GetMapping("/{areaId}/heating-schedule")
@@ -75,38 +82,59 @@ class AreaHeatingScheduleController(
     fun replaceHeatingSchedule(
         @PathVariable areaId: UUID,
         @RequestBody request: HeatingScheduleRequest
-    ): ResponseEntity<Any> = replaceHeatingScheduleUseCase.execute(
-        areaId = areaId,
-        defaultTemperature = request.defaultTemperature,
-        intervals = request.intervals.map { TemperatureInterval(it.temperature, it.startTime, it.endTime) }
-    ).fold(
-        { failure ->
-            when (failure) {
-                OverlappingIntervals -> {
-                    val problem = ProblemDetail.forStatusAndDetail(
-                        UNPROCESSABLE_ENTITY, "The provided heating intervals overlap."
-                    )
-                    problem.title = "Overlapping Intervals"
-                    status(UNPROCESSABLE_ENTITY).body(problem)
-                }
-                is AreaNotFound -> status(NOT_FOUND)
-                    .body(MessageResponse("Area with id '$areaId' is missing!"))
-                HeatingScheduleRepositoryError -> status(INTERNAL_SERVER_ERROR)
-                    .body(MessageResponse("Internal server error while saving heating schedule."))
+    ): ResponseEntity<Any> {
+        val (intervals, defaultTemperature) = try {
+            val domainIntervals = request.intervals.map {
+                TemperatureInterval(
+                    temperature = Temperature.of(it.temperature),
+                    startTime = parseTime(it.startTime),
+                    endTime = parseTime(it.endTime)
+                )
             }
-        },
-        { schedule -> status(OK).body(schedule.toResponse()) }
-    )
+            domainIntervals to Temperature.of(request.defaultTemperature)
+        } catch (e: IllegalArgumentException) {
+            return status(BAD_REQUEST).body(MessageResponse(e.message ?: "Invalid request body"))
+        }
+        return replaceHeatingScheduleUseCase.execute(
+            areaId = areaId,
+            defaultTemperature = defaultTemperature,
+            intervals = intervals
+        ).fold(
+            { failure ->
+                when (failure) {
+                    OverlappingIntervals -> {
+                        val problem = ProblemDetail.forStatusAndDetail(
+                            UNPROCESSABLE_ENTITY, "The provided heating intervals overlap."
+                        )
+                        problem.title = "Overlapping Intervals"
+                        status(UNPROCESSABLE_ENTITY).body(problem)
+                    }
+                    is AreaNotFound -> status(NOT_FOUND)
+                        .body(MessageResponse("Area with id '$areaId' is missing!"))
+                    HeatingScheduleRepositoryError -> status(INTERNAL_SERVER_ERROR)
+                        .body(MessageResponse("Internal server error while saving heating schedule."))
+                }
+            },
+            { schedule -> status(OK).body(schedule.toResponse()) }
+        )
+    }
 
 }
 
+private fun parseTime(value: String): LocalTime =
+    try {
+        LocalTime.parse(value, timeFormatter)
+    } catch (e: DateTimeParseException) {
+        throw IllegalArgumentException("Invalid time format '$value', expected $INTERVAL_TIME_FORMAT")
+    }
+
 data class HeatingScheduleRequest(
-    val defaultTemperature: Temperature,
+    val defaultTemperature: BigDecimal,
     val intervals: List<IntervalRequest>
 )
 
 data class IntervalRequest(
-    val temperature: Temperature,
-    val startTime: LocalTime,
-    val endTime: LocalTime
+    val temperature: BigDecimal,
+    val startTime: String,
+    val endTime: String
 )

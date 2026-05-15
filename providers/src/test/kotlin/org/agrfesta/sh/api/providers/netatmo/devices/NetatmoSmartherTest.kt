@@ -10,13 +10,12 @@ import io.ktor.http.HttpHeaders.Authorization
 import io.ktor.http.HttpMethod.Companion.Post
 import io.mockk.every
 import io.mockk.mockk
+import java.math.BigDecimal
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.core.serialization.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.providers.createMockEngine
-import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.OFF
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.ON
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.UNDEFINED
@@ -47,7 +46,6 @@ class NetatmoSmartherTest {
     private val accessToken = aRandomUniqueString()
     private val uuid: UUID = UUID.randomUUID()
     private val deviceProviderId: String = aRandomUniqueString()
-    private val mapper = SMART_HOME_OBJECT_MAPPER
     private val config = NetatmoConfiguration(
         baseUrl = anUrl(),
         clientSecret = aRandomUniqueString(),
@@ -66,7 +64,7 @@ class NetatmoSmartherTest {
     private val cacheAsserter = CacheAsserter(cache, propertyRepository)
     private val clientAsserter = NetatmoClientAsserter(config = config, registry = registry)
 
-    private val client = NetatmoClient(config, cache, propertyRepository, mapper, engine)
+    private val client = NetatmoClient(config, cache, propertyRepository, engine)
     private val sut = NetatmoSmarther(
         uuid = uuid,
         deviceProviderId = deviceProviderId,
@@ -90,7 +88,7 @@ class NetatmoSmartherTest {
         val homeStatus = aNetatmoHomeStatus(
             rooms = listOf(aNetatmoRoomStatus(
                 humidity = expectedData.relativeHumidity.value.movePointRight(2).stripTrailingZeros(),
-                measuredTemperature = expectedData.temperature
+                measuredTemperature = expectedData.temperature.value
             ))
         )
         clientAsserter.givenHomeStatusFetchResponse(homeStatus)
@@ -190,8 +188,8 @@ class NetatmoSmartherTest {
                 aNetatmoRoomStatus(
                     setpointMode = SET_POINT_MODE,
                     setpointTemperature = MAX_SET_POINT_TEMPERATURE,
-                    setpointStartTime = now.minusSeconds(3600),
-                    setpointEndTime = now.plusSeconds(3600)
+                    setpointStartTime = now.minusSeconds(3600).epochSecond,
+                    setpointEndTime = now.plusSeconds(3600).epochSecond
                 )
             )
         )
@@ -209,8 +207,8 @@ class NetatmoSmartherTest {
                 aNetatmoRoomStatus(
                     setpointMode = SET_POINT_MODE,
                     setpointTemperature = MIN_SET_POINT_TEMPERATURE,
-                    setpointStartTime = now.minusSeconds(3600),
-                    setpointEndTime = now.plusSeconds(3600)
+                    setpointStartTime = now.minusSeconds(3600).epochSecond,
+                    setpointEndTime = now.plusSeconds(3600).epochSecond
                 )
             )
         )
@@ -227,9 +225,9 @@ class NetatmoSmartherTest {
             rooms = listOf(
                 aNetatmoRoomStatus(
                     setpointMode = SET_POINT_MODE,
-                    setpointTemperature = Temperature.of("18.0"),
-                    setpointStartTime = now.minusSeconds(3600),
-                    setpointEndTime = now.plusSeconds(3600)
+                    setpointTemperature = BigDecimal("18.0"),
+                    setpointStartTime = now.minusSeconds(3600).epochSecond,
+                    setpointEndTime = now.plusSeconds(3600).epochSecond
                 )
             )
         )
@@ -247,8 +245,8 @@ class NetatmoSmartherTest {
                 aNetatmoRoomStatus(
                     setpointMode = aRandomUniqueString(),
                     setpointTemperature = MIN_SET_POINT_TEMPERATURE,
-                    setpointStartTime = now.minusSeconds(3600),
-                    setpointEndTime = now.plusSeconds(3600)
+                    setpointStartTime = now.minusSeconds(3600).epochSecond,
+                    setpointEndTime = now.plusSeconds(3600).epochSecond
                 )
             )
         )
@@ -266,8 +264,8 @@ class NetatmoSmartherTest {
                 aNetatmoRoomStatus(
                     setpointMode = SET_POINT_MODE,
                     setpointTemperature = MAX_SET_POINT_TEMPERATURE,
-                    setpointStartTime = now.plusSeconds(3600),
-                    setpointEndTime = now.plusSeconds(7200)
+                    setpointStartTime = now.plusSeconds(3600).epochSecond,
+                    setpointEndTime = now.plusSeconds(7200).epochSecond
                 )
             )
         )

@@ -3,7 +3,6 @@ package org.agrfesta.sh.api.providers.netatmo
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
-import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.test.mothers.aRandomBoolean
 import org.agrfesta.test.mothers.aRandomHumidity
 import org.agrfesta.test.mothers.aRandomTemperature
@@ -20,19 +19,19 @@ fun aNetatmoRoomStatus(
     id: String = aRandomUniqueString(),
     humidity: BigDecimal = aRandomHumidity().value.movePointRight(2).stripTrailingZeros(),
     openWindow: Boolean = aRandomBoolean(),
-    measuredTemperature: Temperature = aRandomTemperature(),
-    setpointTemperature: Temperature = aRandomTemperature(),
+    measuredTemperature: BigDecimal = aRandomTemperature().value,
+    setpointTemperature: BigDecimal = aRandomTemperature().value,
     setpointMode: String = "home",
-    setpointStartTime: Instant? = null,
-    setpointEndTime: Instant? = null
+    setpointStartTime: Long? = null,
+    setpointEndTime: Long? = null
 ) = NetatmoRoomStatus(id, humidity, openWindow, measuredTemperature, setpointTemperature, setpointMode,
     setpointStartTime, setpointEndTime)
 
 fun aNetatmoRoomStatusChange(
     id: String = aRandomUniqueString(),
-    setPointTemperature: Temperature = aRandomTemperature(),
+    setPointTemperature: BigDecimal = aRandomTemperature().value,
     setPointMode: String = "home",
-    setPointEndTime: Instant = Instant.now().plus(Duration.ofHours(3))
+    setPointEndTime: Long = Instant.now().plus(Duration.ofHours(3)).epochSecond
 ) = NetatmoRoomStatusChange(id, setPointTemperature, setPointMode, setPointEndTime)
 
 fun aNetatmoHomeStatus(
