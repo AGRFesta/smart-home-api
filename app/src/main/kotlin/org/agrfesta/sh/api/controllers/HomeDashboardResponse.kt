@@ -27,8 +27,8 @@ sealed class FieldResultResponse<out T> {
 }
 
 data class HeatingResponse(
-    val currentTemperature: FieldResultResponse<Temperature?>,
-    val targetTemperature: FieldResultResponse<Temperature?>
+    val currentTemperature: FieldResultResponse<BigDecimal?>,
+    val targetTemperature: FieldResultResponse<BigDecimal?>
 )
 
 data class HumidityResponse(
@@ -63,6 +63,11 @@ fun <T> FieldResult<T>.toResponse(): FieldResultResponse<T> = when (this) {
     is FieldFailure -> FieldResultResponse.Failure(error)
 }
 
+private fun FieldResult<Temperature?>.toTemperatureResponse(): FieldResultResponse<BigDecimal?> = when (this) {
+    is FieldSuccess -> FieldResultResponse.Success(value?.value)
+    is FieldFailure -> FieldResultResponse.Failure(error)
+}
+
 fun HomeDashboardDto.toResponse() = HomeDashboardResponse(
     globalState = globalState.toResponse(),
     areas = areas.map { it.toResponse() }
@@ -85,8 +90,8 @@ private fun MeasurementsDto.toResponse() = MeasurementsResponse(
 )
 
 private fun HeatingDto.toResponse() = HeatingResponse(
-    currentTemperature = currentTemperature.toResponse(),
-    targetTemperature = targetTemperature.toResponse()
+    currentTemperature = currentTemperature.toTemperatureResponse(),
+    targetTemperature = targetTemperature.toTemperatureResponse()
 )
 
 private fun HumidityDto.toResponse() = HumidityResponse(

@@ -47,7 +47,7 @@ class AreaHeatingScheduleIntegrationTest(
             .extract()
             .`as`(HeatingScheduleResponse::class.java)
 
-        response.defaultTemperature shouldBe defaultTemperature
+        response.defaultTemperature shouldBe defaultTemperature.value
         response.intervals shouldHaveSize 2
     }
 
@@ -96,7 +96,7 @@ class AreaHeatingScheduleIntegrationTest(
             .extract()
             .`as`(HeatingScheduleResponse::class.java)
 
-        response.defaultTemperature shouldBe defaultTemperature
+        response.defaultTemperature shouldBe defaultTemperature.value
         response.intervals shouldHaveSize 2
 
         val saved = temperatureSettingsRepository.findAreaSetting(area.uuid).getOrNull().shouldNotBeNull()
@@ -132,7 +132,7 @@ class AreaHeatingScheduleIntegrationTest(
             .extract()
             .`as`(HeatingScheduleResponse::class.java)
 
-        response.defaultTemperature shouldBe newDefaultTemperature
+        response.defaultTemperature shouldBe newDefaultTemperature.value
         response.intervals shouldHaveSize 0
 
         val saved = temperatureSettingsRepository.findAreaSetting(area.uuid).getOrNull().shouldNotBeNull()

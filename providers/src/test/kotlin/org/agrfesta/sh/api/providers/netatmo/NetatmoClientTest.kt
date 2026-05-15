@@ -7,7 +7,6 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode.Companion.Forbidden
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.core.serialization.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.providers.createMockEngine
 import org.agrfesta.sh.api.providers.netatmo.KtorRequestFailure
 import org.agrfesta.sh.api.providers.netatmo.NetatmoPropertyError
@@ -27,7 +26,6 @@ import kotlin.time.toDuration
 class NetatmoClientTest {
     private val accessToken = aRandomUniqueString()
     private val expiresSeconds = aRandomNonNegativeInt()
-    private val mapper = SMART_HOME_OBJECT_MAPPER
     private val config = NetatmoConfiguration(
         baseUrl = anUrl(),
         clientSecret = aRandomUniqueString(),
@@ -42,9 +40,9 @@ class NetatmoClientTest {
     private val engine = createMockEngine(registry)
 
     private val cacheAsserter = CacheAsserter(cache, propertyRepository)
-    private val clientAsserter = NetatmoClientAsserter(config, registry, mapper)
+    private val clientAsserter = NetatmoClientAsserter(config, registry)
 
-    private val sut = NetatmoClient(config, cache, propertyRepository, mapper, engine)
+    private val sut = NetatmoClient(config, cache, propertyRepository, engine)
 
     init {
         // Default behaviour

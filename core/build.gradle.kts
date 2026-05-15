@@ -21,8 +21,6 @@ dependencies {
     implementation("org.springframework:spring-context")
     implementation("org.slf4j:slf4j-api")
     implementation(libs.arrow.core)
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     testFixturesImplementation(platform(libs.spring.boot.bom))
     testFixturesImplementation("org.springframework:spring-context")

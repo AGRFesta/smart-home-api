@@ -68,7 +68,7 @@ Interfaces defined in the Core used by the domain to communicate with the extern
 Technological implementations of the Outbound Ports.
 - **Persistence:** We use **JdbcTemplate / Spring Data JDBC**. Implementations live in `persistence/jdbc/adapters/` and should ideally be `internal` to prevent direct coupling.
 - **Mapping:** Must translate between Domain Entities and Infrastructure Models (e.g., Database Rows) before saving or retrieving.
-- **Exception Boundary:** Must catch infrastructure/technical exceptions (e.g., `DataAccessException`, `RestClientException`) and map them to the expected Domain Errors (e.g., `Left(PersistenceFailure)`).
+- **Exception Boundary:** Must catch infrastructure/technical exceptions (e.g., `DataAccessException`, `RestClientException`) and map them to the expected Domain Errors (e.g., `Left(AreaRepositoryError)`).
 
 ---
 
@@ -110,7 +110,7 @@ This keeps the domain completely clean of `@Transactional` annotations.
 - **DO** use Arrow operators (`flatMap`, `map`, `recover`, or `either { }` blocks with `bind()`) to chain `Either` results.
 
 ### DON'T
-- **DON'T** annotate service methods with `@Transactional`. Transaction boundaries belong to `UnitOfWork`.
+- **DON'T** annotate core service classes (`core/application/usecases/`) with `@Transactional`. Transaction boundaries in the core belong exclusively to `UnitOfWork`. Outbound adapters (`persistence/`) may use `@Transactional` for self-contained atomic operations, but whenever a **service-level operation** must coordinate writes across multiple repositories atomically, it must use `UnitOfWork.execute {}` instead.
 - **DON'T** let exceptions propagate beyond the Adapter layer.
 - **DON'T** put business logic in controllers (Inbound Adapters).
 - **DON'T** use `Either.getOrElse` or force-unwrap results in the service layer to avoid handling errors.

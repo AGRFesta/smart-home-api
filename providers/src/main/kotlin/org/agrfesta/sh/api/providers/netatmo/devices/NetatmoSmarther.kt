@@ -4,11 +4,11 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
+import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
 import java.util.*
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.core.domain.commons.Temperature.Companion.of
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.OFF
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.ON
@@ -37,8 +37,8 @@ class NetatmoSmarther(
     override val provider = Provider.NETATMO
 
     companion object {
-        internal val MIN_SET_POINT_TEMPERATURE = of("7")
-        internal val MAX_SET_POINT_TEMPERATURE = of("30")
+        internal val MIN_SET_POINT_TEMPERATURE: BigDecimal = BigDecimal("7")
+        internal val MAX_SET_POINT_TEMPERATURE: BigDecimal = BigDecimal("30")
         internal const val SET_POINT_MODE = "manual"
     }
 
@@ -60,9 +60,9 @@ class NetatmoSmarther(
         val now = timeProvider.now()
         if (room.setPointMode == SET_POINT_MODE
             && now.greaterEqualThan(room.setPointStartTime) && now.lessEqualThan(room.setPointEndTime)) {
-            when(room.setPointTemperature) {
-                MAX_SET_POINT_TEMPERATURE -> ON
-                MIN_SET_POINT_TEMPERATURE -> OFF
+            when {
+                room.setPointTemperature.compareTo(MAX_SET_POINT_TEMPERATURE) == 0 -> ON
+                room.setPointTemperature.compareTo(MIN_SET_POINT_TEMPERATURE) == 0 -> OFF
                 else -> UNDEFINED
             }
         } else UNDEFINED
@@ -73,9 +73,9 @@ class NetatmoSmarther(
         )
     }
 
-    private fun Instant.greaterEqualThan(other: Instant?) = other?.let { this >= it } ?: true
+    private fun Instant.greaterEqualThan(other: Long?) = other?.let { this.epochSecond >= it } ?: true
 
-    private fun Instant.lessEqualThan(other: Instant?) = other?.let { this <= it } ?: true
+    private fun Instant.lessEqualThan(other: Long?) = other?.let { this.epochSecond <= it } ?: true
 
     override fun on(): Either<NetatmoClientFailure, Unit> {
         val status = NetatmoHomeStatusChange(
@@ -85,7 +85,7 @@ class NetatmoSmarther(
                     id = roomId,
                     setPointTemperature = MAX_SET_POINT_TEMPERATURE,
                     setPointMode = SET_POINT_MODE,
-                    setPointEndTime = timeProvider.now().plus(Duration.ofHours(1))
+                    setPointEndTime = timeProvider.now().plus(Duration.ofHours(1)).epochSecond
                 )
             )
         )
@@ -100,7 +100,7 @@ class NetatmoSmarther(
                     id = roomId,
                     setPointTemperature = MIN_SET_POINT_TEMPERATURE,
                     setPointMode = SET_POINT_MODE,
-                    setPointEndTime = timeProvider.now().plus(Duration.ofHours(1))
+                    setPointEndTime = timeProvider.now().plus(Duration.ofHours(1)).epochSecond
                 )
             )
         )
