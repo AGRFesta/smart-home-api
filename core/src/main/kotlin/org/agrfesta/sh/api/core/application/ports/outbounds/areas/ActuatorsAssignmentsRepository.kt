@@ -20,7 +20,7 @@ interface ActuatorsAssignmentsRepository {
      * @return [arrow.core.Either.Right] with [Unit] on success, or [arrow.core.Either.Left]
      * containing an [ActuatorAssignmentFailure]:
      * - [org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment] if the actuator is already assigned to [areaId].
-     * - [org.agrfesta.sh.api.core.domain.failures.PersistenceFailure] if a database error occurs.
+     * - [org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError] if a database error occurs.
      */
     fun assign(areaId: UUID, actuatorId: UUID): Either<ActuatorAssignmentFailure, Unit>
 
