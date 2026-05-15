@@ -5,11 +5,9 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
-import org.agrfesta.sh.api.core.domain.failures.GetPropertyFailure
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.test.mothers.aRandomTtl
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -73,14 +71,14 @@ class PropertyJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `upsert() Returns PersistenceFailure when repository throws`() {
+    fun `upsert() Returns PropertyRepositoryError when repository throws`() {
         val key = aRandomUniqueString()
         val failure = DataAccessResourceFailureException("upsert failure")
         every { propertyRepo.upsert(key, any(), any()) } throws failure
 
         sut.upsert(key, aRandomUniqueString(), aRandomTtl())
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(PropertyRepositoryError)
     }
 
     // upsertBatch() //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,14 +122,14 @@ class PropertyJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `upsertBatch() Returns PersistenceFailure when repository throws`() {
+    fun `upsertBatch() Returns PropertyRepositoryError when repository throws`() {
         val entries = listOf(PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString()))
         val failure = DataAccessResourceFailureException("batch upsert failure")
         every { propertyRepo.upsertBatch(entries) } throws failure
 
         sut.upsertBatch(entries)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(PropertyRepositoryError)
     }
 
     // findEntry() ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -169,14 +167,14 @@ class PropertyJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `findEntry() Returns PersistenceFailure when repository throws`() {
+    fun `findEntry() Returns PropertyRepositoryError when repository throws`() {
         val key = aRandomUniqueString()
         val failure = DataAccessResourceFailureException("find entry failure")
         every { propertyRepo.findEntry(key) } throws failure
 
         sut.findEntry(key)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(PropertyRepositoryError)
     }
 
     // getEntry() /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +194,7 @@ class PropertyJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `getEntry() Returns PropertyNotFound when key is missing`() {
         sut.getEntry(aRandomUniqueString())
             .shouldBeLeft()
-            .shouldBeInstanceOf<PropertyNotFound>()
+            .shouldBe(PropertyNotFound)
     }
 
     @Test
@@ -209,19 +207,18 @@ class PropertyJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
         sut.getEntry(key)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PropertyNotFound>()
+            .shouldBe(PropertyNotFound)
     }
 
     @Test
-    fun `getEntry() Returns PersistenceFailure when repository throws`() {
+    fun `getEntry() Returns PropertyRepositoryError when repository throws`() {
         val key = aRandomUniqueString()
         val failure = DataAccessResourceFailureException("get entry failure")
         every { propertyRepo.findEntry(key) } throws failure
 
         sut.getEntry(key)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
-            .shouldBeInstanceOf<GetPropertyFailure>()
+            .shouldBe(PropertyRepositoryError)
     }
 
 }

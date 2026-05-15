@@ -31,7 +31,6 @@ import io.ktor.serialization.jackson.JacksonConverter
 import org.agrfesta.sh.api.core.serialization.SMART_HOME_OBJECT_MAPPER
 import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_REFRESH_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.utils.LoggerDelegate
@@ -183,14 +182,10 @@ class NetatmoClient(
                     logger.error("Unable to refresh Netatmo token in cache. ${e.toDetailedString()}")
                 }
                 this@NetatmoClient.propertyRepository.upsert(NETATMO_REFRESH_TOKEN_CACHE_KEY, refreshResp.refreshToken)
-                    .onLeftLogOn(logger)
+                    .onLeft { logger.error("Failed to persist Netatmo refresh token") }
                 refreshResp.accessToken
             }
 
 }
 
 object NetatmoInvalidAccessToken: NetatmoClientFailure
-
-private fun Either<PersistenceFailure, Any>.onLeftLogOn(logger: Logger) = onLeft {
-    logger.error("persistence failure", it.exception)
-}

@@ -4,7 +4,7 @@ import arrow.core.Either
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.failures.FindPropertyFailure
 import org.agrfesta.sh.api.core.domain.failures.GetPropertyFailure
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 
 /**
@@ -19,18 +19,18 @@ interface PropertyRepository {
      * @param value the value to store.
      * @param ttl optional time-to-live in seconds; `null` means no expiry.
      * @return [arrow.core.Either.Right] with [Unit] on success,
-     * or [Either.Left] with [PersistenceFailure] if a database error occurs.
+     * or [Either.Left] with [PropertyRepositoryError] if a database error occurs.
      */
-    fun upsert(key: String, value: String, ttl: Long? = null): Either<PersistenceFailure, Unit>
+    fun upsert(key: String, value: String, ttl: Long? = null): Either<PropertyRepositoryError, Unit>
 
     /**
      * Inserts or updates multiple property entries in a single batch operation.
      *
      * @param entries the list of [PropertyUpsertEntry] to persist.
      * @return [Either.Right] with [Unit] on success,
-     * or [Either.Left] with [PersistenceFailure] if a database error occurs.
+     * or [Either.Left] with [PropertyRepositoryError] if a database error occurs.
      */
-    fun upsertBatch(entries: List<PropertyUpsertEntry>): Either<PersistenceFailure, Unit>
+    fun upsertBatch(entries: List<PropertyUpsertEntry>): Either<PropertyRepositoryError, Unit>
 
     /**
      * Looks up a property entry by [key] without failing if it does not exist.

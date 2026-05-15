@@ -8,7 +8,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevi
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.application.areas.AreasFactory
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.application.usecases.heating.SharedHeatingAreasStrategyService
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.stereotype.Service
@@ -59,8 +59,8 @@ class EvaluateHeatingStateService(
     private fun isEnabled(): Boolean = propertyRepository.findEntry(HEATING_ENABLED_KEY).fold(
         ifLeft = {
             when (it) {
-                is PersistenceFailure ->
-                    logger.error("Failed to fetch $HEATING_ENABLED_KEY. Considered disabled.", it.exception)
+                PropertyRepositoryError ->
+                    logger.error("Failed to fetch $HEATING_ENABLED_KEY. Considered disabled.")
             }
             false
         },

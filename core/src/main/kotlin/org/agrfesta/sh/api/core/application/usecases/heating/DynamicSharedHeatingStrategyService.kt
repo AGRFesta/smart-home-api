@@ -4,7 +4,7 @@ import java.time.LocalTime
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
@@ -66,9 +66,9 @@ class DynamicSharedHeatingStrategyService(
                 is PropertyNotFound ->
                     logger.error("$HEATING_STRATEGY_KEY cache entry is missing. " +
                             "Falling back to ${defaultStrategy.name}")
-                is PersistenceFailure ->
+                PropertyRepositoryError ->
                     logger.error("Unable to fetch $HEATING_STRATEGY_KEY cache entry. " +
-                            "Falling back to ${defaultStrategy.name}", it.exception)
+                            "Falling back to ${defaultStrategy.name}")
             }
             defaultStrategy
         },

@@ -8,10 +8,8 @@ import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingSchedul
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
-import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.HttpStatus.NO_CONTENT
@@ -35,8 +33,6 @@ class AreaHeatingScheduleController(
     private val replaceHeatingScheduleUseCase: ReplaceHeatingScheduleUseCase,
     private val getHeatingScheduleUseCase: GetHeatingScheduleUseCase
 ) {
-    private val logger by LoggerDelegate()
-
     companion object {
         val DEFAULT_TEMPERATURE: Temperature = Temperature.of("20.0")
     }
@@ -48,16 +44,8 @@ class AreaHeatingScheduleController(
                 when (failure) {
                     is AreaNotFound -> status(NOT_FOUND)
                         .body(MessageResponse("Area with id '$areaId' is missing!"))
-                    AreaRepositoryError -> {
-                        logger.error("heating schedule retrieval failure: area repository error")
-                        status(INTERNAL_SERVER_ERROR)
-                            .body(MessageResponse("Internal server error while retrieving heating schedule."))
-                    }
-                    is PersistenceFailure -> {
-                        logger.error("heating schedule retrieval failure", failure.exception)
-                        status(INTERNAL_SERVER_ERROR)
-                            .body(MessageResponse("Internal server error while retrieving heating schedule."))
-                    }
+                    HeatingScheduleRepositoryError -> status(INTERNAL_SERVER_ERROR)
+                        .body(MessageResponse("Internal server error while retrieving heating schedule."))
                 }
             },
             { schedule ->
@@ -76,16 +64,8 @@ class AreaHeatingScheduleController(
                 when (failure) {
                     is AreaNotFound -> status(NOT_FOUND)
                         .body(MessageResponse("Area with id '$areaId' is missing!"))
-                    AreaRepositoryError -> {
-                        logger.error("heating schedule delete failure: area repository error")
-                        status(INTERNAL_SERVER_ERROR)
-                            .body(MessageResponse("Internal server error while deleting heating schedule."))
-                    }
-                    is PersistenceFailure -> {
-                        logger.error("heating schedule delete failure", failure.exception)
-                        status(INTERNAL_SERVER_ERROR)
-                            .body(MessageResponse("Internal server error while deleting heating schedule."))
-                    }
+                    HeatingScheduleRepositoryError -> status(INTERNAL_SERVER_ERROR)
+                        .body(MessageResponse("Internal server error while deleting heating schedule."))
                 }
             },
             { status(NO_CONTENT).build() }
@@ -111,16 +91,8 @@ class AreaHeatingScheduleController(
                 }
                 is AreaNotFound -> status(NOT_FOUND)
                     .body(MessageResponse("Area with id '$areaId' is missing!"))
-                AreaRepositoryError -> {
-                    logger.error("heating schedule save failure: area repository error")
-                    status(INTERNAL_SERVER_ERROR)
-                        .body(MessageResponse("Internal server error while saving heating schedule."))
-                }
-                is PersistenceFailure -> {
-                    logger.error("heating schedule save failure", failure.exception)
-                    status(INTERNAL_SERVER_ERROR)
-                        .body(MessageResponse("Internal server error while saving heating schedule."))
-                }
+                HeatingScheduleRepositoryError -> status(INTERNAL_SERVER_ERROR)
+                    .body(MessageResponse("Internal server error while saving heating schedule."))
             }
         },
         { schedule -> status(OK).body(schedule.toResponse()) }

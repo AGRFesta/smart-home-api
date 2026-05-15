@@ -8,8 +8,8 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
+import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.test.mothers.aRandomTtl
@@ -49,7 +49,7 @@ class PropertyControllerMvcSliceTest(
         val key = aRandomUniqueString()
         val value = aRandomUniqueString()
         val ttl = aRandomTtl()
-        every { propertyRepository.upsert(key, value, ttl) } returns PersistenceFailure(Exception()).left()
+        every { propertyRepository.upsert(key, value, ttl) } returns PropertyRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
             put("/properties/$key")
@@ -146,7 +146,7 @@ class PropertyControllerMvcSliceTest(
             PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString())
         )
         every { propertyRepository.upsertBatch(batchEntries) } returns
-                PersistenceFailure(Exception("batch persist failure")).left()
+                PropertyRepositoryError.left()
         val responseBody: String = mockMvc.perform(
             post("/properties/batch")
                 .contentType("application/json")
@@ -188,7 +188,7 @@ class PropertyControllerMvcSliceTest(
 
     @Test fun `getPropertyEntry() returns 500 when fails to get entry`() {
         val key = aRandomUniqueString()
-        every { propertyRepository.getEntry(key) } returns PersistenceFailure(Exception()).left()
+        every { propertyRepository.getEntry(key) } returns PropertyRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
             get("/properties/$key")

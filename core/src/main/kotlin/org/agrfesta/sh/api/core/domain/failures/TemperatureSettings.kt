@@ -7,3 +7,8 @@ data object OverlappingIntervals : TemperatureSettingCreationFailure
 sealed interface TemperatureSettingDeletionFailure
 
 sealed interface TemperatureSettingRetrievalFailure
+
+data object HeatingScheduleRepositoryError :
+    TemperatureSettingCreationFailure,
+    TemperatureSettingDeletionFailure,
+    TemperatureSettingRetrievalFailure

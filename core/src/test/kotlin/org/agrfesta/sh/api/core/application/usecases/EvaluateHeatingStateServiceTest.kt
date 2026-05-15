@@ -28,6 +28,7 @@ import org.agrfesta.sh.api.core.domain.devices.SharedHeater
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
+import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.domain.anAreaDtoWithDevices
 import org.agrfesta.sh.api.domain.anActuator
 import org.agrfesta.sh.api.domain.aSensor
@@ -93,7 +94,7 @@ class EvaluateHeatingStateServiceTest {
         // Given
         every {
             propertyRepository.findEntry(HEATING_ENABLED_KEY)
-        } returns PersistenceFailure(Exception("cache error")).left()
+        } returns PropertyRepositoryError.left()
 
         // When
         sut.execute()
@@ -321,7 +322,7 @@ class EvaluateHeatingStateServiceTest {
         // Given
         every {
             propertyRepository.getEntry(HEATING_STRATEGY_KEY)
-        } returns PersistenceFailure(Exception("cache failure")).left()
+        } returns PropertyRepositoryError.left()
         val sut = sutWithBothStrategies()
         val testData = givenHeatableArea()
 

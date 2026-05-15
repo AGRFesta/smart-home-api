@@ -15,7 +15,7 @@ import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
@@ -141,12 +141,12 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     // deleteAreaSetting
 
     @Test
-    fun `deleteAreaSetting() Returns PersistenceFailure on database error`() {
+    fun `deleteAreaSetting() Returns HeatingScheduleRepositoryError on database error`() {
         every { tempSettingsRepo.deleteByByAreaId(any()) } throws object : DataAccessException("db error") {}
 
         sut.deleteAreaSetting(UUID.randomUUID())
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(HeatingScheduleRepositoryError)
     }
 
     @Test
@@ -171,12 +171,12 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     // existsByAreaId
 
     @Test
-    fun `existsByAreaId() Returns PersistenceFailure on database error`() {
+    fun `existsByAreaId() Returns HeatingScheduleRepositoryError on database error`() {
         every { tempSettingsRepo.existsSettingByAreaId(any()) } throws object : DataAccessException("db error") {}
 
         sut.existsByAreaId(UUID.randomUUID())
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(HeatingScheduleRepositoryError)
     }
 
     @Test
@@ -214,12 +214,12 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    fun `persistAreaTemperatureSetting() Returns PersistenceFailure when called outside active transaction`() {
+    fun `persistAreaTemperatureSetting() Returns HeatingScheduleRepositoryError when called outside active transaction`() {
         val setting = anAreaTemperatureSetting(areaId = UUID.randomUUID())
 
         sut.persistAreaTemperatureSetting(setting)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(HeatingScheduleRepositoryError)
     }
 
     @Test
@@ -264,7 +264,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `persistAreaTemperatureSetting() Returns PersistenceFailure on database error while persisting root`() {
+    fun `persistAreaTemperatureSetting() Returns HeatingScheduleRepositoryError on database error while persisting root`() {
         every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = emptySet())
@@ -272,11 +272,11 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
         sut.persistAreaTemperatureSetting(setting)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(HeatingScheduleRepositoryError)
     }
 
     @Test
-    fun `persistAreaTemperatureSetting() Returns PersistenceFailure on database error while persisting an interval`() {
+    fun `persistAreaTemperatureSetting() Returns HeatingScheduleRepositoryError on database error while persisting an interval`() {
         every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = setOf(aTemperatureInterval()))
@@ -284,6 +284,6 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
         sut.persistAreaTemperatureSetting(setting)
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(HeatingScheduleRepositoryError)
     }
 }

@@ -6,7 +6,6 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -16,8 +15,8 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepositor
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.junit.jupiter.api.Test
@@ -57,14 +56,14 @@ class ReplaceHeatingScheduleServiceTest {
     }
 
     @Test
-    fun `execute() Returns PersistenceFailure when createSetting fails`() {
+    fun `execute() Returns HeatingScheduleRepositoryError when createSetting fails`() {
         val areaId = UUID.randomUUID()
         every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
-        every { temperatureSettingsRepository.createSetting(any()) } returns PersistenceFailure(Exception()).left()
+        every { temperatureSettingsRepository.createSetting(any()) } returns HeatingScheduleRepositoryError.left()
 
         sut.execute(areaId, aRandomTemperature(), emptyList())
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(HeatingScheduleRepositoryError)
     }
 
     @Test
