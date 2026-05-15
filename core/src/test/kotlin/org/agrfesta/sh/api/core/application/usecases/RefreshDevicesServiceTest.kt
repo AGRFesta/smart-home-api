@@ -18,8 +18,9 @@ import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
+import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.RefreshDevicesError
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
@@ -43,15 +44,15 @@ class RefreshDevicesServiceTest {
     }
 
     @Test
-    fun `execute() returns PersistenceFailure when DevicesRepository getAll() fails`() {
+    fun `execute() returns RefreshDevicesError when DevicesRepository getAll() fails`() {
         // Given
-        every { devicesRepository.getAll() } returns PersistenceFailure(Exception("db failure")).left()
+        every { devicesRepository.getAll() } returns DeviceRepositoryError.left()
 
         // When
         val result = sut.execute()
 
         // Then
-        result.shouldBeLeft().shouldBeInstanceOf<PersistenceFailure>()
+        result.shouldBeLeft().shouldBeInstanceOf<RefreshDevicesError>()
     }
 
     @Test
@@ -214,7 +215,7 @@ class RefreshDevicesServiceTest {
         // Given
         val newDeviceData = aProviderDeviceData()
         every { provider.getAllDevices() } returns listOf(newDeviceData).right()
-        every { devicesRepository.create(any(), newDeviceData, any()) } returns PersistenceFailure(Exception("insert failure")).left()
+        every { devicesRepository.create(any(), newDeviceData, any()) } returns DeviceRepositoryError.left()
 
         // When
         val result = sut.execute().shouldBeRight()
@@ -233,7 +234,7 @@ class RefreshDevicesServiceTest {
         val successUuid = UUID.randomUUID()
         every { provider.getAllDevices() } returns listOf(failingDeviceData, successDeviceData).right()
         every { randomGenerator.uuid() } returnsMany listOf(UUID.randomUUID(), successUuid)
-        every { devicesRepository.create(any(), failingDeviceData, any()) } returns PersistenceFailure(Exception("insert failure")).left()
+        every { devicesRepository.create(any(), failingDeviceData, any()) } returns DeviceRepositoryError.left()
         every { devicesRepository.create(successUuid, successDeviceData, any()) } returns Unit.right()
 
         // When
@@ -252,7 +253,7 @@ class RefreshDevicesServiceTest {
         val expectedDetachedDevice = storedDevice.copy(status = DeviceStatus.DETACHED)
         every { devicesRepository.getAll() } returns listOf(storedDevice).right()
         every { provider.getAllDevices() } returns emptyList<ProviderDeviceData>().right()
-        every { devicesRepository.update(expectedDetachedDevice) } returns PersistenceFailure(Exception("update failure")).left()
+        every { devicesRepository.update(expectedDetachedDevice) } returns DeviceRepositoryError.left()
 
         // When
         val result = sut.execute().shouldBeRight()
@@ -333,7 +334,7 @@ class RefreshDevicesServiceTest {
         val expectedUpdatedDevice = storedDevice.copy(name = providerDeviceData.name, status = DeviceStatus.PAIRED)
         every { devicesRepository.getAll() } returns listOf(storedDevice).right()
         every { provider.getAllDevices() } returns listOf(providerDeviceData).right()
-        every { devicesRepository.update(expectedUpdatedDevice) } returns PersistenceFailure(Exception("update failure")).left()
+        every { devicesRepository.update(expectedUpdatedDevice) } returns DeviceRepositoryError.left()
 
         // When
         val result = sut.execute().shouldBeRight()

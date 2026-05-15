@@ -22,6 +22,7 @@ import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.commons.average
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.DashboardRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupError
@@ -154,7 +155,7 @@ class GetHomeDashboardServiceTest {
 
         val result = sut.execute().shouldBeLeft()
 
-        result shouldBe AreaRepositoryError
+        result shouldBe DashboardRepositoryError
     }
 
     @Test fun `execute() areas is empty when no areas exist`() {

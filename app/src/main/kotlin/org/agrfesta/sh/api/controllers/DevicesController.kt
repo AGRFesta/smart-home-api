@@ -3,7 +3,7 @@ package org.agrfesta.sh.api.controllers
 import arrow.core.Either
 import org.agrfesta.sh.api.core.application.ports.inbounds.RefreshDevicesUseCase
 import org.agrfesta.sh.api.core.domain.devices.RefreshDevicesResult
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.RefreshDevicesError
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.internalServerError
@@ -22,11 +22,8 @@ class DevicesController(
     @PostMapping("/synchronizations")
     fun synchronize(): ResponseEntity<Any> =
         when (val result = refreshDevicesUseCase.execute()) {
-            is Either.Left -> when (val failure = result.value) {
-                is PersistenceFailure -> {
-                    logger.error("device synchronization failure", failure.exception)
-                    internalServerError().body(MessageResponse("Device synchronization failed!"))
-                }
+            is Either.Left -> when (result.value) {
+                RefreshDevicesError -> internalServerError().body(MessageResponse("Device synchronization failed!"))
             }
             is Either.Right -> ok(result.value.toResponse())
         }

@@ -15,4 +15,4 @@ data class DeviceNotFound(
 ): DeviceFetchFailure, DeviceUpdateFailure,
     SensorAssignmentFailure, ActuatorAssignmentFailure
 
-data object DeviceRepositoryError : DeviceFetchFailure
+data object DeviceRepositoryError : DeviceFetchFailure, DeviceCreationFailure, DeviceUpdateFailure

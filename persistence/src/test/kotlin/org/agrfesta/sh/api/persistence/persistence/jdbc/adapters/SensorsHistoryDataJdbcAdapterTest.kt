@@ -12,7 +12,7 @@ import java.util.*
 import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.core.domain.devices.SensorDataType.HUMIDITY
 import org.agrfesta.sh.api.core.domain.devices.SensorDataType.TEMPERATURE
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.SensorHistoryRepositoryError
 import org.agrfesta.test.mothers.aRandomHumidity
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.agrfesta.test.mothers.nowNoMills
@@ -47,13 +47,13 @@ class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `persistTemperature() Returns PersistenceFailure on database error`() {
+    fun `persistTemperature() Returns SensorHistoryRepositoryError on database error`() {
         every { historyDataRepository.persist(any(), any(), any(), any()) } throws
                 object : DataAccessException("db error") {}
 
         sut.persistTemperature(UUID.randomUUID(), Instant.now(), aRandomTemperature())
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(SensorHistoryRepositoryError)
     }
 
     // persistHumidity
@@ -79,13 +79,13 @@ class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `persistHumidity() Returns PersistenceFailure on database error`() {
+    fun `persistHumidity() Returns SensorHistoryRepositoryError on database error`() {
         every { historyDataRepository.persist(any(), any(), any(), any()) } throws
                 object : DataAccessException("db error") {}
 
         sut.persistHumidity(UUID.randomUUID(), Instant.now(), aRandomHumidity())
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(SensorHistoryRepositoryError)
     }
 
     // findBySensor
@@ -116,12 +116,12 @@ class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `findBySensor() Returns PersistenceFailure on database error`() {
+    fun `findBySensor() Returns SensorHistoryRepositoryError on database error`() {
         every { historyDataRepository.findAllBySensorUuid(any()) } throws
                 object : DataAccessException("db error") {}
 
         sut.findBySensor(UUID.randomUUID())
             .shouldBeLeft()
-            .shouldBeInstanceOf<PersistenceFailure>()
+            .shouldBe(SensorHistoryRepositoryError)
     }
 }

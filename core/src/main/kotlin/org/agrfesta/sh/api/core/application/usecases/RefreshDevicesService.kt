@@ -11,6 +11,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.RefreshDevicesResult
+import org.agrfesta.sh.api.core.domain.failures.RefreshDevicesError
 import org.agrfesta.sh.api.core.domain.failures.RefreshDevicesFailure
 import org.springframework.stereotype.Service
 
@@ -22,7 +23,9 @@ class RefreshDevicesService(
 ) : RefreshDevicesUseCase {
 
     override fun execute(): Either<RefreshDevicesFailure, RefreshDevicesResult> {
-        val devices = devicesRepository.getAll().getOrElse { return it.left() }
+        val devices = devicesRepository.getAll()
+            .mapLeft { RefreshDevicesError }
+            .getOrElse { return it.left() }
         val providerDevices = devicesProviders.flatMap { provider ->
             provider.getAllDevices().getOrElse { emptyList() }
         }

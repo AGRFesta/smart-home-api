@@ -33,8 +33,8 @@ class EvaluateHeatingStateService(
 
     override fun execute() {
         if (!isEnabled()) return
-        val deviceRecords = devicesRepository.getAll().onLeft { failure ->
-            logger.error("Device fetch failed, skipping heating evaluation.", failure.exception)
+        val deviceRecords = devicesRepository.getAll().onLeft { _ ->
+            logger.error("Device fetch failed, skipping heating evaluation.")
         }.getOrNull() ?: return
         val devicesRegistry = deviceRecords.mapNotNull { record ->
             val factory = mappedDevicesFactories[record.provider]

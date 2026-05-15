@@ -16,8 +16,8 @@ import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.FailureByException
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.Sensor
+import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.FetchSensorReadingsError
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
 import org.agrfesta.sh.api.core.domain.failures.SensorReadingsSaveError
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.anActuator
@@ -35,7 +35,7 @@ class FetchSensorReadingsServiceTest {
     private val sut = FetchSensorReadingsService(devicesRepository, listOf(factory), readingsRepository)
 
     @Test fun `execute() returns Left(FetchSensorReadingsError) and does not interact with readings repository when getAll() fails`() {
-        every { devicesRepository.getAll() } returns PersistenceFailure(Exception("db error")).left()
+        every { devicesRepository.getAll() } returns DeviceRepositoryError.left()
 
         val result = sut.execute()
 

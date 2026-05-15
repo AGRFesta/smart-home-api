@@ -12,8 +12,9 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepos
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsHistoryDataRepository
 import org.agrfesta.sh.api.core.domain.devices.Device
-import org.agrfesta.sh.api.core.domain.failures.PersistenceFailure
+import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupError
+import org.agrfesta.sh.api.core.domain.failures.SensorHistoryRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.SnapshotSensorHistoryError
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.anActuator
@@ -33,7 +34,7 @@ class SnapshotSensorHistoryServiceTest {
 
     @Test fun `execute() returns Left(SnapshotSensorHistoryError) when device repository getAll() fails`() {
         // Given
-        every { devicesRepository.getAll() } returns PersistenceFailure(Exception("db error")).left()
+        every { devicesRepository.getAll() } returns DeviceRepositoryError.left()
 
         // When
         val result = sut.execute()
@@ -199,7 +200,7 @@ class SnapshotSensorHistoryServiceTest {
         every { readingsRepository.findBy(sensor) } returns readings.right()
         every { timeProvider.now() } returns now
         every { historyRepository.persistTemperature(sensor.uuid, now, readings.temperature) } returns
-            PersistenceFailure(Exception("db error")).left()
+            SensorHistoryRepositoryError.left()
         every { historyRepository.persistHumidity(sensor.uuid, now, readings.relativeHumidity) } returns Unit.right()
 
         // When
@@ -221,7 +222,7 @@ class SnapshotSensorHistoryServiceTest {
         every { timeProvider.now() } returns now
         every { historyRepository.persistTemperature(sensor.uuid, now, readings.temperature) } returns Unit.right()
         every { historyRepository.persistHumidity(sensor.uuid, now, readings.relativeHumidity) } returns
-            PersistenceFailure(Exception("db error")).left()
+            SensorHistoryRepositoryError.left()
 
         // When
         val result = sut.execute()
