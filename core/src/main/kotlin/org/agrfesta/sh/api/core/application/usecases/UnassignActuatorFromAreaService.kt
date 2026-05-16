@@ -27,11 +27,8 @@ class UnassignActuatorFromAreaService(
     override fun execute(areaId: UUID, deviceId: UUID): Either<ActuatorUnassignFailure, Unit> =
         areasRepository.getAreaById(areaId)
             .mapLeft { it.toActuatorUnassignFailure() }
-            .flatMap { _ ->
-                devicesRepository.getDeviceById(deviceId)
-                    .mapLeft { it.toActuatorUnassignFailure() }
-                    .flatMap { _ -> actuatorsAssignmentsRepository.unassign(areaId, deviceId) }
-            }
+            .flatMap { _ -> devicesRepository.getDeviceById(deviceId).mapLeft { it.toActuatorUnassignFailure() } }
+            .flatMap { _ -> actuatorsAssignmentsRepository.unassign(areaId, deviceId) }
 
     private fun AreaFetchFailure.toActuatorUnassignFailure(): ActuatorUnassignFailure = when (this) {
         is AreaNotFound -> this
