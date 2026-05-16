@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.jvm)
     alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.pitest)
     `java-test-fixtures`
 }
 
@@ -34,6 +35,20 @@ dependencies {
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.kotest.assertions.arrow)
     testImplementation(libs.mockk)
+}
+
+pitest {
+    pitestVersion = libs.versions.pitest.engine.get()
+    junit5PluginVersion = libs.versions.pitest.junit5.get()
+    targetClasses = listOf("org.agrfesta.sh.*")
+    excludedClasses = listOf("org.agrfesta.sh.*Test*", "org.agrfesta.sh.*Fixtures*")
+    avoidCallsTo = setOf("kotlin.jvm.internal")
+    mutators = listOf("STRONGER")
+    outputFormats = listOf("HTML", "XML")
+    timestampedReports = false
+    threads = 4
+    useClasspathFile = true
+    mutationThreshold = 70
 }
 
 tasks.withType<Test> {
