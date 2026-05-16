@@ -6,8 +6,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
+import org.agrfesta.sh.api.core.application.ports.inbounds.GetPropertyUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.UpsertPropertyBatchUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.UpsertPropertyUseCase
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
+import org.agrfesta.sh.api.core.domain.failures.DuplicatePropertyKeys
+import org.agrfesta.sh.api.core.domain.failures.EmptyPropertyBatch
+import org.agrfesta.sh.api.core.domain.failures.PropertyBatchTooLarge
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
@@ -33,7 +38,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 class PropertyControllerMvcSliceTest(
     private val mockMvc: MockMvc,
     private val objectMapper: ObjectMapper,
-    @MockkBean private val propertyRepository: PropertyRepository
+    @MockkBean private val upsertPropertyUseCase: UpsertPropertyUseCase,
+    @MockkBean private val upsertPropertyBatchUseCase: UpsertPropertyBatchUseCase,
+    @MockkBean private val getPropertyUseCase: GetPropertyUseCase
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
@@ -49,7 +56,7 @@ class PropertyControllerMvcSliceTest(
         val key = aRandomUniqueString()
         val value = aRandomUniqueString()
         val ttl = aRandomTtl()
-        every { propertyRepository.upsert(key, value, ttl) } returns PropertyRepositoryError.left()
+        every { upsertPropertyUseCase.execute(key, value, ttl) } returns PropertyRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
             put("/properties/$key")
@@ -67,7 +74,7 @@ class PropertyControllerMvcSliceTest(
         val key = aRandomUniqueString()
         val value = aRandomUniqueString()
         val ttl = aRandomTtl()
-        every { propertyRepository.upsert(key, value, ttl) } returns Unit.right()
+        every { upsertPropertyUseCase.execute(key, value, ttl) } returns Unit.right()
 
         val responseBody: String = mockMvc.perform(
             put("/properties/$key")
@@ -92,6 +99,8 @@ class PropertyControllerMvcSliceTest(
     }
 
     @Test fun `postPropertyBatch() returns 400 when entries list is empty`() {
+        every { upsertPropertyBatchUseCase.execute(emptyList()) } returns EmptyPropertyBatch.left()
+
         val responseBody: String = mockMvc.perform(
             post("/properties/batch")
                 .contentType("application/json")
@@ -105,33 +114,29 @@ class PropertyControllerMvcSliceTest(
     }
 
     @Test fun `postPropertyBatch() returns 413 when the list has too many entries`() {
-        val tooManyEntries = (1..(PropertyController.MAX_BATCH_SIZE + 1)).map {
-            PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString())
-        }
+        val maxSize = UpsertPropertyBatchUseCase.MAX_BATCH_SIZE
+        every { upsertPropertyBatchUseCase.execute(any()) } returns PropertyBatchTooLarge(maxSize).left()
+
         val responseBody: String = mockMvc.perform(
             post("/properties/batch")
                 .contentType("application/json")
                 .authenticated()
-                .content(objectMapper.writeValueAsString(tooManyEntries)))
+                .content(objectMapper.writeValueAsString(listOf(PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString())))))
             .andExpect(status().isPayloadTooLarge)
             .andReturn().response.contentAsString
 
         val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
-        response.message shouldBe "Batch size exceeds the maximum of ${PropertyController.MAX_BATCH_SIZE} entries"
+        response.message shouldBe "Batch size exceeds the maximum of $maxSize entries"
     }
 
     @Test fun `postPropertyBatch() returns 400 when the list has duplicates`() {
-        val dupKey = aRandomUniqueString()
-        val batchEntries = listOf(
-            PropertyUpsertEntry(dupKey, aRandomUniqueString(), aRandomTtl()),
-            PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
-            PropertyUpsertEntry(dupKey, aRandomUniqueString())
-        )
+        every { upsertPropertyBatchUseCase.execute(any()) } returns DuplicatePropertyKeys.left()
+
         val responseBody: String = mockMvc.perform(
             post("/properties/batch")
                 .contentType("application/json")
                 .authenticated()
-                .content(objectMapper.writeValueAsString(batchEntries)))
+                .content(objectMapper.writeValueAsString(listOf(PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString())))))
             .andExpect(status().isBadRequest)
             .andReturn().response.contentAsString
 
@@ -145,8 +150,8 @@ class PropertyControllerMvcSliceTest(
             PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
             PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString())
         )
-        every { propertyRepository.upsertBatch(batchEntries) } returns
-                PropertyRepositoryError.left()
+        every { upsertPropertyBatchUseCase.execute(batchEntries) } returns PropertyRepositoryError.left()
+
         val responseBody: String = mockMvc.perform(
             post("/properties/batch")
                 .contentType("application/json")
@@ -164,7 +169,7 @@ class PropertyControllerMvcSliceTest(
             PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString(), aRandomTtl()),
             PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString())
         )
-        every { propertyRepository.upsertBatch(batchEntries) } returns Unit.right()
+        every { upsertPropertyBatchUseCase.execute(batchEntries) } returns Unit.right()
 
         val responseBody: String = mockMvc.perform(
             post("/properties/batch")
@@ -188,7 +193,7 @@ class PropertyControllerMvcSliceTest(
 
     @Test fun `getPropertyEntry() returns 500 when fails to get entry`() {
         val key = aRandomUniqueString()
-        every { propertyRepository.getEntry(key) } returns PropertyRepositoryError.left()
+        every { getPropertyUseCase.execute(key) } returns PropertyRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
             get("/properties/$key")
@@ -202,7 +207,7 @@ class PropertyControllerMvcSliceTest(
 
     @Test fun `getPropertyEntry() returns 404 when key is not found`() {
         val key = aRandomUniqueString()
-        every { propertyRepository.getEntry(key) } returns PropertyNotFound.left()
+        every { getPropertyUseCase.execute(key) } returns PropertyNotFound.left()
 
         val responseBody: String = mockMvc.perform(
             get("/properties/$key")
@@ -217,7 +222,7 @@ class PropertyControllerMvcSliceTest(
     @Test fun `getPropertyEntry() returns 200 with entry on success`() {
         val key = aRandomUniqueString()
         val entry = PropertyEntry(value = aRandomUniqueString())
-        every { propertyRepository.getEntry(key) } returns entry.right()
+        every { getPropertyUseCase.execute(key) } returns entry.right()
 
         val responseBody: String = mockMvc.perform(
             get("/properties/$key")
