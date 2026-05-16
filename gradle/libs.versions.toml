@@ -13,6 +13,9 @@ mockk = "1.13.10"
 springmockk = "4.0.2"
 testcontainers-redis = "2.2.2"
 palantir = "0.35.0"
+pitest-gradle-plugin = "1.15.0"
+pitest-engine = "1.17.3"
+pitest-junit5 = "1.2.1"
 
 [libraries]
 ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
@@ -37,3 +40,4 @@ kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotl
 springboot = { id = "org.springframework.boot", version.ref = "springboot" }
 springbootManagement = { id = "io.spring.dependency-management", version.ref = "springboot-dependency-management" }
 palantir = { id = "com.palantir.docker", version.ref = "palantir" }
+pitest = { id = "info.solidsoft.pitest", version.ref = "pitest-gradle-plugin" }
