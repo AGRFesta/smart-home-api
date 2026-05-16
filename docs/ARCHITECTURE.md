@@ -78,6 +78,12 @@ Technological implementations of the Outbound Ports.
 Every operation that can fail returns `Either<DomainError, Success>`.
 - Exceptions are **never** allowed to propagate into the service or domain layers. They are caught at infrastructure boundaries and converted into typed errors (sealed interfaces organized by domain concern, like `AreaCreationFailure`).
 
+#### Two kinds of failure interfaces in `:core`
+Not all failure interfaces in `:core` are `sealed`, and this is intentional:
+
+- **Use case failure contracts** (`sealed interface`) — one per use case operation (e.g. `DeviceFetchFailure`, `AreaCreationFailure`). Sealed so that callers can write exhaustive `when` expressions and the compiler enforces completeness. Cannot be implemented outside `:core`.
+- **Outbound port failure contracts** (`interface`) — failure types that belong to a device/sensor port (e.g. `SensorReadingsFailure`, `ActuatorOperationFailure`). Deliberately non-sealed because outbound adapters in other modules (e.g. `:providers`) must be able to implement them. Callers handle these generically; the module dependency boundary prevents provider-specific subtypes from being referenced outside `:providers`.
+
 ### Value Objects
 Never use raw `Double` or `Float` for domain quantities. Use **inline value classes**:
 - `Temperature`, `Percentage`, `RelativeHumidity` (based on `BigDecimal` with `HALF_UP` rounding).
