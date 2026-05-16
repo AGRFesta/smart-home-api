@@ -1,13 +1,14 @@
 package org.agrfesta.sh.api.controllers
 
-import arrow.core.Either
-import arrow.core.flatMap
-import arrow.core.left
-import arrow.core.right
+import org.agrfesta.sh.api.core.application.ports.inbounds.GetPropertyUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.UpsertPropertyBatchUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.UpsertPropertyUseCase
+import org.agrfesta.sh.api.core.domain.failures.DuplicatePropertyKeys
+import org.agrfesta.sh.api.core.domain.failures.EmptyPropertyBatch
+import org.agrfesta.sh.api.core.domain.failures.PropertyBatchTooLarge
+import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
-import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
-import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.ResponseEntity
@@ -29,12 +30,10 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/properties")
 class PropertyController(
-    private val propertyRepository: PropertyRepository
+    private val upsertPropertyUseCase: UpsertPropertyUseCase,
+    private val upsertPropertyBatchUseCase: UpsertPropertyBatchUseCase,
+    private val getPropertyUseCase: GetPropertyUseCase
 ) {
-
-    companion object {
-        const val MAX_BATCH_SIZE = 1000
-    }
 
     /**
      * Inserts or updates a single property entry.
@@ -45,43 +44,34 @@ class PropertyController(
      */
     @PutMapping("/{key}")
     fun putPropertyEntry(@PathVariable key: String, @RequestBody request: PropertyRequest): ResponseEntity<MessageResponse> =
-        propertyRepository.upsert(key, request.value, request.ttl).fold(
-            ifLeft = { _ -> status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(MessageResponse("Failed to upsert property entry")) },
+        upsertPropertyUseCase.execute(key, request.value, request.ttl).fold(
+            ifLeft = { failure ->
+                when (failure) {
+                    PropertyRepositoryError -> status(HttpStatus.INTERNAL_SERVER_ERROR).body(MessageResponse("Failed to upsert property entry"))
+                }
+            },
             ifRight = { ok(MessageResponse("Entry for key '$key' upserted successfully")) }
         )
 
     /**
      * Inserts or updates a batch of property entries.
      *
-     * @param batch A collection of [PropertyUpsertEntry] objects to be persisted. The maximum batch size is [MAX_BATCH_SIZE].
+     * @param batch A collection of [PropertyUpsertEntry] objects to be persisted.
      * @return A [ResponseEntity] containing a [MessageResponse] indicating success or failure.
      */
     @PostMapping("/batch")
     fun postPropertyBatch(@RequestBody batch: List<PropertyUpsertEntry>): ResponseEntity<MessageResponse> =
-        validateBatch(batch)
-            .flatMap { validBatch ->
-                propertyRepository.upsertBatch(validBatch).mapLeft {
-                    status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(MessageResponse("Failed to persist batch"))
+        upsertPropertyBatchUseCase.execute(batch).fold(
+            ifLeft = { failure ->
+                when (failure) {
+                    EmptyPropertyBatch -> status(HttpStatus.BAD_REQUEST).body(MessageResponse("There are no entries to persist"))
+                    is PropertyBatchTooLarge -> status(HttpStatus.PAYLOAD_TOO_LARGE).body(MessageResponse("Batch size exceeds the maximum of ${failure.maxSize} entries"))
+                    DuplicatePropertyKeys -> status(HttpStatus.BAD_REQUEST).body(MessageResponse("Batch contains duplicate keys"))
+                    PropertyRepositoryError -> status(HttpStatus.INTERNAL_SERVER_ERROR).body(MessageResponse("Failed to persist batch"))
                 }
-            }
-            .fold(
-                ifLeft = { it },
-                ifRight = { ok(MessageResponse("Successfully persisted ${batch.size} entries")) }
-            )
-
-    private fun validateBatch(
-        batch: List<PropertyUpsertEntry>
-    ): Either<ResponseEntity<MessageResponse>, List<PropertyUpsertEntry>> = when {
-        batch.isEmpty() -> status(HttpStatus.BAD_REQUEST)
-            .body(MessageResponse("There are no entries to persist")).left()
-        batch.size > MAX_BATCH_SIZE -> status(HttpStatus.PAYLOAD_TOO_LARGE)
-            .body(MessageResponse("Batch size exceeds the maximum of $MAX_BATCH_SIZE entries")).left()
-        hasDuplicateKeys(batch) -> status(HttpStatus.BAD_REQUEST)
-            .body(MessageResponse("Batch contains duplicate keys")).left()
-        else -> batch.right()
-    }
+            },
+            ifRight = { ok(MessageResponse("Successfully persisted ${batch.size} entries")) }
+        )
 
     /**
      * Retrieves a property entry by its key.
@@ -91,20 +81,15 @@ class PropertyController(
      * an error occurs.
      */
     @GetMapping("/{key}")
-    fun getPropertyEntry(@PathVariable key: String): ResponseEntity<Any> = propertyRepository.getEntry(key).fold(
+    fun getPropertyEntry(@PathVariable key: String): ResponseEntity<Any> = getPropertyUseCase.execute(key).fold(
         ifLeft = { failure ->
             when (failure) {
                 PropertyNotFound -> status(NOT_FOUND).body(MessageResponse("Key '$key' is missing"))
-                PropertyRepositoryError -> status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(MessageResponse("Failed to get property entry"))
+                PropertyRepositoryError -> status(HttpStatus.INTERNAL_SERVER_ERROR).body(MessageResponse("Failed to get property entry"))
             }
         },
         ifRight = { entry -> ok(entry) }
     )
-
-    private fun hasDuplicateKeys(batch: List<PropertyUpsertEntry>): Boolean {
-        return batch.map { it.key }.toSet().size < batch.size
-    }
 
 }
 
