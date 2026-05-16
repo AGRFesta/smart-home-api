@@ -44,6 +44,14 @@ class ActuatorsAssignmentsJdbcRepository(
         }
     }
 
+    fun deleteAssignment(areaId: UUID, deviceId: UUID) {
+        val sql = """
+            DELETE FROM smart_home.actuator_assignment
+            WHERE area_uuid = :areaUuid AND device_uuid = :deviceUuid
+        """
+        jdbcTemplate.update(sql, mapOf("areaUuid" to areaId, "deviceUuid" to deviceId))
+    }
+
     fun findByDevice(deviceUuid: UUID): Collection<ActuatorAssignmentEntity> = jdbcTemplate.query(
             """SELECT * FROM smart_home.actuator_assignment WHERE device_uuid = :deviceUuid;""",
             MapSqlParameterSource(mapOf("deviceUuid" to deviceUuid)), //TODO maybe just a map?

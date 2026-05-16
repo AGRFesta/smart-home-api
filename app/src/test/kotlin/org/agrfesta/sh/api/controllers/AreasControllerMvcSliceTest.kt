@@ -11,6 +11,8 @@ import io.mockk.every
 import java.util.*
 import org.agrfesta.sh.api.core.application.ports.inbounds.AssignActuatorToAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.AssignSensorToAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignActuatorFromAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignSensorFromAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.CreateAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.DeleteAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetAreaByIdUseCase
@@ -24,8 +26,10 @@ import org.agrfesta.sh.api.core.domain.failures.NotASensor
 import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.ActuatorNotAssigned
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
+import org.agrfesta.sh.api.core.domain.failures.SensorNotAssigned
 import org.agrfesta.sh.api.domain.aSensor
 import org.agrfesta.sh.api.domain.anActuator
 import org.agrfesta.sh.api.domain.anAreaDto
@@ -57,7 +61,9 @@ class AreasControllerMvcSliceTest(
     @MockkBean private val deleteAreaUseCase: DeleteAreaUseCase,
     @MockkBean private val updateAreaUseCase: UpdateAreaUseCase,
     @MockkBean private val assignSensorToAreaUseCase: AssignSensorToAreaUseCase,
-    @MockkBean private val assignActuatorToAreaUseCase: AssignActuatorToAreaUseCase
+    @MockkBean private val assignActuatorToAreaUseCase: AssignActuatorToAreaUseCase,
+    @MockkBean private val unassignSensorFromAreaUseCase: UnassignSensorFromAreaUseCase,
+    @MockkBean private val unassignActuatorFromAreaUseCase: UnassignActuatorFromAreaUseCase
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
@@ -556,6 +562,154 @@ class AreasControllerMvcSliceTest(
         mockMvc.perform(
             put("/areas/$areaId/actuators/$deviceId").authenticated())
             .andExpect(status().isNoContent)
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ///// unassignSensorFromArea //////////////////////////////////////////////////////////////////////////////////////
+
+    @TestFactory fun `unassignSensorFromArea() auth tests`() = authTestSupport.dynamicTestsBy {
+        delete("/areas/${UUID.randomUUID()}/sensors/${UUID.randomUUID()}")
+    }
+
+    @Test fun `unassignSensorFromArea() returns 500 on AssignmentRepositoryError`() {
+        val areaId = UUID.randomUUID()
+        val deviceId = UUID.randomUUID()
+        every { unassignSensorFromAreaUseCase.execute(areaId, deviceId) } returns AssignmentRepositoryError.left()
+
+        val responseBody: String = mockMvc.perform(
+            delete("/areas/$areaId/sensors/$deviceId").authenticated())
+            .andExpect(status().isInternalServerError)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Unable to unassign sensor '$deviceId' from area '$areaId'!"
+    }
+
+    @Test fun `unassignSensorFromArea() returns 204 on success`() {
+        val areaId = UUID.randomUUID()
+        val deviceId = UUID.randomUUID()
+        every { unassignSensorFromAreaUseCase.execute(areaId, deviceId) } returns Unit.right()
+
+        mockMvc.perform(
+            delete("/areas/$areaId/sensors/$deviceId").authenticated())
+            .andExpect(status().isNoContent)
+    }
+
+    @Test fun `unassignSensorFromArea() returns 404 when sensor is not assigned to this area`() {
+        val areaId = UUID.randomUUID()
+        val deviceId = UUID.randomUUID()
+        every { unassignSensorFromAreaUseCase.execute(areaId, deviceId) } returns SensorNotAssigned.left()
+
+        val responseBody: String = mockMvc.perform(
+            delete("/areas/$areaId/sensors/$deviceId").authenticated())
+            .andExpect(status().isNotFound)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Sensor with id '$deviceId' is not assigned to area '$areaId'!"
+    }
+
+    @Test fun `unassignSensorFromArea() returns 404 when device is not found`() {
+        val areaId = UUID.randomUUID()
+        val deviceId = UUID.randomUUID()
+        every { unassignSensorFromAreaUseCase.execute(areaId, deviceId) } returns DeviceNotFound(deviceId).left()
+
+        val responseBody: String = mockMvc.perform(
+            delete("/areas/$areaId/sensors/$deviceId").authenticated())
+            .andExpect(status().isNotFound)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Device with id '$deviceId' is missing!"
+    }
+
+    @Test fun `unassignSensorFromArea() returns 404 when area is not found`() {
+        val areaId = UUID.randomUUID()
+        val deviceId = UUID.randomUUID()
+        every { unassignSensorFromAreaUseCase.execute(areaId, deviceId) } returns AreaNotFound(areaId).left()
+
+        val responseBody: String = mockMvc.perform(
+            delete("/areas/$areaId/sensors/$deviceId").authenticated())
+            .andExpect(status().isNotFound)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Area with id '$areaId' is missing!"
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ///// unassignActuatorFromArea ////////////////////////////////////////////////////////////////////////////////////
+
+    @TestFactory fun `unassignActuatorFromArea() auth tests`() = authTestSupport.dynamicTestsBy {
+        delete("/areas/${UUID.randomUUID()}/actuators/${UUID.randomUUID()}")
+    }
+
+    @Test fun `unassignActuatorFromArea() returns 500 on AssignmentRepositoryError`() {
+        val areaId = UUID.randomUUID()
+        val deviceId = UUID.randomUUID()
+        every { unassignActuatorFromAreaUseCase.execute(areaId, deviceId) } returns AssignmentRepositoryError.left()
+
+        val responseBody: String = mockMvc.perform(
+            delete("/areas/$areaId/actuators/$deviceId").authenticated())
+            .andExpect(status().isInternalServerError)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Unable to unassign actuator '$deviceId' from area '$areaId'!"
+    }
+
+    @Test fun `unassignActuatorFromArea() returns 204 on success`() {
+        val areaId = UUID.randomUUID()
+        val deviceId = UUID.randomUUID()
+        every { unassignActuatorFromAreaUseCase.execute(areaId, deviceId) } returns Unit.right()
+
+        mockMvc.perform(
+            delete("/areas/$areaId/actuators/$deviceId").authenticated())
+            .andExpect(status().isNoContent)
+    }
+
+    @Test fun `unassignActuatorFromArea() returns 404 when actuator is not assigned to this area`() {
+        val areaId = UUID.randomUUID()
+        val deviceId = UUID.randomUUID()
+        every { unassignActuatorFromAreaUseCase.execute(areaId, deviceId) } returns ActuatorNotAssigned.left()
+
+        val responseBody: String = mockMvc.perform(
+            delete("/areas/$areaId/actuators/$deviceId").authenticated())
+            .andExpect(status().isNotFound)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Actuator with id '$deviceId' is not assigned to area '$areaId'!"
+    }
+
+    @Test fun `unassignActuatorFromArea() returns 404 when device is not found`() {
+        val areaId = UUID.randomUUID()
+        val deviceId = UUID.randomUUID()
+        every { unassignActuatorFromAreaUseCase.execute(areaId, deviceId) } returns DeviceNotFound(deviceId).left()
+
+        val responseBody: String = mockMvc.perform(
+            delete("/areas/$areaId/actuators/$deviceId").authenticated())
+            .andExpect(status().isNotFound)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Device with id '$deviceId' is missing!"
+    }
+
+    @Test fun `unassignActuatorFromArea() returns 404 when area is not found`() {
+        val areaId = UUID.randomUUID()
+        val deviceId = UUID.randomUUID()
+        every { unassignActuatorFromAreaUseCase.execute(areaId, deviceId) } returns AreaNotFound(areaId).left()
+
+        val responseBody: String = mockMvc.perform(
+            delete("/areas/$areaId/actuators/$deviceId").authenticated())
+            .andExpect(status().isNotFound)
+            .andReturn().response.contentAsString
+
+        val response: MessageResponse = objectMapper.readValue(responseBody, MessageResponse::class.java)
+        response.message shouldBe "Area with id '$areaId' is missing!"
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

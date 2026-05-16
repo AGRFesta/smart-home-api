@@ -2,6 +2,7 @@ package org.agrfesta.sh.api.persistence.jdbc.adapters
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -9,6 +10,7 @@ import java.time.Instant
 import java.util.*
 import org.agrfesta.sh.api.domain.anActuatorProviderData
 import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.core.domain.failures.ActuatorNotAssigned
 import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -65,6 +67,42 @@ class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
         sut.assign(areaId, actuatorId)
             .shouldBeLeft()
             .shouldBe(AssignmentRepositoryError)
+    }
+
+    @Test
+    fun `unassign() Returns AssignmentRepositoryError when a DataAccessException is thrown`() {
+        val areaId = UUID.randomUUID()
+        val actuatorId = UUID.randomUUID()
+        every { actuatorsAssignmentsRepo.findByDevice(actuatorId) } throws object : DataAccessException("DB failure") {}
+
+        sut.unassign(areaId, actuatorId)
+            .shouldBeLeft()
+            .shouldBe(AssignmentRepositoryError)
+    }
+
+    @Test
+    fun `unassign() Returns Right(Unit) and the row is deleted on success`() {
+        every { timeProvider.now() } returns Instant.now()
+        val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val actuatorId = UUID.randomUUID()
+        devicesRepo.persist(actuatorId, anActuatorProviderData())
+        actuatorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = actuatorId)
+
+        sut.unassign(area.uuid, actuatorId).shouldBeRight()
+
+        actuatorsAssignmentsRepo.findByDevice(actuatorId).shouldBeEmpty()
+    }
+
+    @Test
+    fun `unassign() Returns ActuatorNotAssigned when no assignment row exists for this area`() {
+        every { timeProvider.now() } returns Instant.now()
+        val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val actuatorId = UUID.randomUUID()
+        devicesRepo.persist(actuatorId, anActuatorProviderData())
+
+        sut.unassign(area.uuid, actuatorId)
+            .shouldBeLeft()
+            .shouldBe(ActuatorNotAssigned)
     }
 
     @Test

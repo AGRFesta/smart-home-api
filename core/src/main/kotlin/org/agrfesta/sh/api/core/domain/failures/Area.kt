@@ -15,7 +15,8 @@ data class AreaNotFound(
     val missingAreaId: UUID
 ): AreaFetchFailure, AreaDeletionFailure, AreaUpdateFailure,
     TemperatureSettingCreationFailure, TemperatureSettingDeletionFailure, TemperatureSettingRetrievalFailure,
-    SensorAssignmentFailure, ActuatorAssignmentFailure
+    SensorAssignmentFailure, ActuatorAssignmentFailure,
+    SensorUnassignFailure, ActuatorUnassignFailure
 
 data object AreaRepositoryError:
     AreaCreationFailure,

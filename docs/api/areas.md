@@ -324,6 +324,114 @@ Actuator assigned successfully (or already assigned to the same area — idempot
 
 ---
 
+## DELETE /areas/{areaId}/sensors/{deviceId}
+
+Unassigns a sensor from the given area (soft delete — sets `disconnectedOn` on the active assignment row).
+
+### Authentication
+
+Bearer token required. Returns `401 Unauthorized` if the token is missing or invalid.
+
+### Path Parameters
+
+| Parameter  | Type   | Description                      |
+|------------|--------|----------------------------------|
+| `areaId`   | `UUID` | The target area's id             |
+| `deviceId` | `UUID` | The sensor device to unassign    |
+
+### Response: `204 No Content`
+
+Sensor unassigned successfully. No response body.
+
+### Response: `404 Not Found` — area does not exist
+
+```json
+{ "message": "Area with id '<areaId>' is missing!" }
+```
+
+### Response: `404 Not Found` — device does not exist
+
+```json
+{ "message": "Device with id '<deviceId>' is missing!" }
+```
+
+### Response: `404 Not Found` — sensor has no active assignment to this area
+
+```json
+{ "message": "Sensor with id '<deviceId>' is not assigned to area '<areaId>'!" }
+```
+
+### Response: `500 Internal Server Error`
+
+```json
+{ "message": "Unable to unassign sensor '<deviceId>' from area '<areaId>'!" }
+```
+
+### HTTP Status Codes
+
+| Status | Condition                                                |
+|--------|----------------------------------------------------------|
+| `204`  | Sensor unassigned successfully                           |
+| `401`  | Missing, empty, or invalid Bearer token                  |
+| `404`  | Area or device not found, or no active assignment exists |
+| `500`  | Persistence failure                                      |
+
+---
+
+## DELETE /areas/{areaId}/actuators/{deviceId}
+
+Unassigns an actuator from the given area (hard delete — removes the assignment row).
+
+### Authentication
+
+Bearer token required. Returns `401 Unauthorized` if the token is missing or invalid.
+
+### Path Parameters
+
+| Parameter  | Type   | Description                       |
+|------------|--------|-----------------------------------|
+| `areaId`   | `UUID` | The target area's id              |
+| `deviceId` | `UUID` | The actuator device to unassign   |
+
+### Response: `204 No Content`
+
+Actuator unassigned successfully. No response body.
+
+### Response: `404 Not Found` — area does not exist
+
+```json
+{ "message": "Area with id '<areaId>' is missing!" }
+```
+
+### Response: `404 Not Found` — device does not exist
+
+```json
+{ "message": "Device with id '<deviceId>' is missing!" }
+```
+
+### Response: `404 Not Found` — actuator has no assignment to this area
+
+```json
+{ "message": "Actuator with id '<deviceId>' is not assigned to area '<areaId>'!" }
+```
+
+### Response: `500 Internal Server Error`
+
+```json
+{ "message": "Unable to unassign actuator '<deviceId>' from area '<areaId>'!" }
+```
+
+### HTTP Status Codes
+
+| Status | Condition                                          |
+|--------|----------------------------------------------------|
+| `204`  | Actuator unassigned successfully                   |
+| `401`  | Missing, empty, or invalid Bearer token            |
+| `404`  | Area or device not found, or no assignment exists  |
+| `500`  | Persistence failure                                |
+
+---
+
 ## GET /areas/{areaId}/heating-schedule
 
 Returns the heating schedule for the given area. If the area has no schedule configured, returns a default empty structure.
