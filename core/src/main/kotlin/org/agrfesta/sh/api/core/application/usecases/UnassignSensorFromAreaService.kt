@@ -27,11 +27,8 @@ class UnassignSensorFromAreaService(
     override fun execute(areaId: UUID, deviceId: UUID): Either<SensorUnassignFailure, Unit> =
         areasRepository.getAreaById(areaId)
             .mapLeft { it.toSensorUnassignFailure() }
-            .flatMap { _ ->
-                devicesRepository.getDeviceById(deviceId)
-                    .mapLeft { it.toSensorUnassignFailure() }
-                    .flatMap { _ -> sensorsAssignmentsRepository.unassign(areaId, deviceId) }
-            }
+            .flatMap { _ -> devicesRepository.getDeviceById(deviceId).mapLeft { it.toSensorUnassignFailure() } }
+            .flatMap { _ -> sensorsAssignmentsRepository.unassign(areaId, deviceId) }
 
     private fun AreaFetchFailure.toSensorUnassignFailure(): SensorUnassignFailure = when (this) {
         is AreaNotFound -> this
