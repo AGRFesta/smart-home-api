@@ -5,6 +5,8 @@ import arrow.core.left
 import arrow.core.right
 import java.util.UUID
 import org.agrfesta.sh.api.core.domain.failures.ActuatorAssignmentFailure
+import org.agrfesta.sh.api.core.domain.failures.ActuatorNotAssigned
+import org.agrfesta.sh.api.core.domain.failures.ActuatorUnassignFailure
 import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.ActuatorsAssignmentsRepository
@@ -35,6 +37,19 @@ class ActuatorsAssignmentsJdbcAdapter(
         AssignmentRepositoryError.left()
     } catch (e: DataAccessException) {
         logger.error("Unexpected persistence error during actuator assignment", e)
+        AssignmentRepositoryError.left()
+    }
+
+    override fun unassign(areaId: UUID, actuatorId: UUID): Either<ActuatorUnassignFailure, Unit> = try {
+        actuatorsAssignmentsJdbcRepository.findByDevice(actuatorId)
+            .firstOrNull { it.areaUuid == areaId }
+            ?.let {
+                actuatorsAssignmentsJdbcRepository.deleteAssignment(areaId, actuatorId)
+                Unit.right()
+            }
+            ?: ActuatorNotAssigned.left()
+    } catch (e: DataAccessException) {
+        logger.error("Unexpected persistence error during actuator unassignment", e)
         AssignmentRepositoryError.left()
     }
 

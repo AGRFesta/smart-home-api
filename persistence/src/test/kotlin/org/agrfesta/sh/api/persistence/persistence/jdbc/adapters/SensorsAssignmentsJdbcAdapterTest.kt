@@ -4,6 +4,7 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import java.time.Instant
@@ -15,6 +16,7 @@ import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
+import org.agrfesta.sh.api.core.domain.failures.SensorNotAssigned
 import org.agrfesta.test.mothers.aProvider
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
@@ -93,6 +95,44 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
         sut.assign(areaId, sensorId)
             .shouldBeLeft()
             .shouldBe(AssignmentRepositoryError)
+    }
+
+    @Test
+    fun `unassign() Returns AssignmentRepositoryError when a DataAccessException is thrown`() {
+        val areaId = UUID.randomUUID()
+        val sensorId = UUID.randomUUID()
+        every { sensorsAssignmentsRepo.findByDevice(sensorId) } throws object : DataAccessException("DB failure") {}
+
+        sut.unassign(areaId, sensorId)
+            .shouldBeLeft()
+            .shouldBe(AssignmentRepositoryError)
+    }
+
+    @Test
+    fun `unassign() Returns Right(Unit) and disconnectedOn is set on success`() {
+        val now = Instant.now().truncatedTo(ChronoUnit.MICROS)
+        every { timeProvider.now() } returns now
+        val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val sensorId = UUID.randomUUID()
+        devicesRepo.persist(sensorId, aSensorProviderData())
+        sensorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = sensorId)
+
+        sut.unassign(area.uuid, sensorId).shouldBeRight()
+
+        sensorsAssignmentsRepo.findByDevice(sensorId).shouldNotBeEmpty()
+            .first().disconnectedOn.shouldNotBeNull()
+    }
+
+    @Test
+    fun `unassign() Returns SensorNotAssigned when no active assignment exists for this area`() {
+        every { timeProvider.now() } returns Instant.now()
+        val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val sensorId = UUID.randomUUID()
+        devicesRepo.persist(sensorId, aSensorProviderData())
+
+        sut.unassign(area.uuid, sensorId)
+            .shouldBeLeft()
+            .shouldBe(SensorNotAssigned)
     }
 
     @Test

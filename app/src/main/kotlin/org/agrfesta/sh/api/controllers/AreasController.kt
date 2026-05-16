@@ -5,6 +5,8 @@ import arrow.core.Either.Right
 import java.util.*
 import org.agrfesta.sh.api.core.application.ports.inbounds.AssignActuatorToAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.AssignSensorToAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignActuatorFromAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignSensorFromAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.CreateAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.DeleteAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetAreaByIdUseCase
@@ -19,6 +21,8 @@ import org.agrfesta.sh.api.core.domain.failures.NotASensor
 import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
+import org.agrfesta.sh.api.core.domain.failures.ActuatorNotAssigned
+import org.agrfesta.sh.api.core.domain.failures.SensorNotAssigned
 import org.springframework.http.HttpStatus.CREATED
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.ResponseEntity
@@ -45,7 +49,9 @@ class AreasController(
     private val deleteAreaUseCase: DeleteAreaUseCase,
     private val updateAreaUseCase: UpdateAreaUseCase,
     private val assignSensorToAreaUseCase: AssignSensorToAreaUseCase,
-    private val assignActuatorToAreaUseCase: AssignActuatorToAreaUseCase
+    private val assignActuatorToAreaUseCase: AssignActuatorToAreaUseCase,
+    private val unassignSensorFromAreaUseCase: UnassignSensorFromAreaUseCase,
+    private val unassignActuatorFromAreaUseCase: UnassignActuatorFromAreaUseCase
 ) {
 
     @PostMapping
@@ -144,6 +150,44 @@ class AreasController(
                 SameAreaAssignment -> noContent().build()
                 AssignmentRepositoryError -> internalServerError()
                     .body(MessageResponse("Unable to assign actuator '$deviceId' to area '$areaId'!"))
+            }
+        }
+
+    @DeleteMapping("/{areaId}/actuators/{deviceId}")
+    fun unassignActuatorFromArea(
+        @PathVariable areaId: UUID,
+        @PathVariable deviceId: UUID
+    ): ResponseEntity<Any> =
+        when (val result = unassignActuatorFromAreaUseCase.execute(areaId, deviceId)) {
+            is Right -> noContent().build()
+            is Left -> when (result.value) {
+                is AreaNotFound -> status(NOT_FOUND)
+                    .body(MessageResponse("Area with id '$areaId' is missing!"))
+                is DeviceNotFound -> status(NOT_FOUND)
+                    .body(MessageResponse("Device with id '$deviceId' is missing!"))
+                ActuatorNotAssigned -> status(NOT_FOUND)
+                    .body(MessageResponse("Actuator with id '$deviceId' is not assigned to area '$areaId'!"))
+                AssignmentRepositoryError -> internalServerError()
+                    .body(MessageResponse("Unable to unassign actuator '$deviceId' from area '$areaId'!"))
+            }
+        }
+
+    @DeleteMapping("/{areaId}/sensors/{deviceId}")
+    fun unassignSensorFromArea(
+        @PathVariable areaId: UUID,
+        @PathVariable deviceId: UUID
+    ): ResponseEntity<Any> =
+        when (val result = unassignSensorFromAreaUseCase.execute(areaId, deviceId)) {
+            is Right -> noContent().build()
+            is Left -> when (result.value) {
+                is AreaNotFound -> status(NOT_FOUND)
+                    .body(MessageResponse("Area with id '$areaId' is missing!"))
+                is DeviceNotFound -> status(NOT_FOUND)
+                    .body(MessageResponse("Device with id '$deviceId' is missing!"))
+                SensorNotAssigned -> status(NOT_FOUND)
+                    .body(MessageResponse("Sensor with id '$deviceId' is not assigned to area '$areaId'!"))
+                AssignmentRepositoryError -> internalServerError()
+                    .body(MessageResponse("Unable to unassign sensor '$deviceId' from area '$areaId'!"))
             }
         }
 

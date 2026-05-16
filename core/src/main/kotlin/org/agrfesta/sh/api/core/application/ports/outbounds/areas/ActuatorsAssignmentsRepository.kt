@@ -3,6 +3,7 @@ package org.agrfesta.sh.api.core.application.ports.outbounds.areas
 import arrow.core.Either
 import java.util.UUID
 import org.agrfesta.sh.api.core.domain.failures.ActuatorAssignmentFailure
+import org.agrfesta.sh.api.core.domain.failures.ActuatorUnassignFailure
 
 /**
  * Outbound Port for managing actuator-to-area assignments.
@@ -23,5 +24,7 @@ interface ActuatorsAssignmentsRepository {
      * - [org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError] if a database error occurs.
      */
     fun assign(areaId: UUID, actuatorId: UUID): Either<ActuatorAssignmentFailure, Unit>
+
+    fun unassign(areaId: UUID, actuatorId: UUID): Either<ActuatorUnassignFailure, Unit>
 
 }

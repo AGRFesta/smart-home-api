@@ -3,6 +3,7 @@ package org.agrfesta.sh.api.core.application.ports.outbounds.areas
 import arrow.core.Either
 import java.util.UUID
 import org.agrfesta.sh.api.core.domain.failures.SensorAssignmentFailure
+import org.agrfesta.sh.api.core.domain.failures.SensorUnassignFailure
 
 /**
  * Outbound Port for managing sensor-to-area assignments.
@@ -26,5 +27,7 @@ interface SensorsAssignmentsRepository {
      * - [org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError] if a database error occurs.
      */
     fun assign(areaId: UUID, sensorId: UUID): Either<SensorAssignmentFailure, Unit>
+
+    fun unassign(areaId: UUID, sensorId: UUID): Either<SensorUnassignFailure, Unit>
 
 }

@@ -47,6 +47,20 @@ class SensorsAssignmentsJdbcRepository(
         }
     }
 
+    fun disconnectSensor(areaId: UUID, deviceId: UUID) {
+        val sql = """
+            UPDATE smart_home.sensor_assignment
+            SET disconnected_on = :disconnectedOn
+            WHERE area_uuid = :areaUuid AND device_uuid = :deviceUuid AND disconnected_on IS NULL
+        """
+        val params = mapOf(
+            "areaUuid" to areaId,
+            "deviceUuid" to deviceId,
+            "disconnectedOn" to Timestamp.from(timeProvider.now())
+        )
+        jdbcTemplate.update(sql, params)
+    }
+
     fun deleteAll(): Int = jdbcTemplate.update("DELETE FROM smart_home.sensor_assignment", emptyMap<String, Any>())
 
     fun findByDevice(deviceUuid: UUID): Collection<SensorAssignmentEntity> = jdbcTemplate.query(

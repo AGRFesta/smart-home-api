@@ -8,6 +8,8 @@ import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
 import org.agrfesta.sh.api.core.domain.failures.SensorAssignmentFailure
+import org.agrfesta.sh.api.core.domain.failures.SensorNotAssigned
+import org.agrfesta.sh.api.core.domain.failures.SensorUnassignFailure
 import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignmentsRepository
 import org.agrfesta.sh.api.persistence.DeviceNotFoundException
@@ -41,6 +43,20 @@ class SensorsAssignmentsJdbcAdapter(
         AssignmentRepositoryError.left()
     } catch (e: DataAccessException) {
         logger.error("Unexpected persistence error during sensor assignment", e)
+        AssignmentRepositoryError.left()
+    }
+
+    override fun unassign(areaId: UUID, sensorId: UUID): Either<SensorUnassignFailure, Unit> = try {
+        sensorsAssignmentsJdbcRepository.findByDevice(sensorId)
+            .filter { it.disconnectedOn == null && it.areaUuid == areaId }
+            .firstOrNull()
+            ?.let {
+                sensorsAssignmentsJdbcRepository.disconnectSensor(areaId, sensorId)
+                Unit.right()
+            }
+            ?: SensorNotAssigned.left()
+    } catch (e: DataAccessException) {
+        logger.error("Unexpected persistence error during sensor unassignment", e)
         AssignmentRepositoryError.left()
     }
 
