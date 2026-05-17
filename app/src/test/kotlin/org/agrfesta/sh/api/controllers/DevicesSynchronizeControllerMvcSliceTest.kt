@@ -44,7 +44,8 @@ class DevicesSynchronizeControllerMvcSliceTest(
 
         // When
         val responseBody = mockMvc.perform(
-            post("/devices/synchronizations").authenticated())
+            post("/devices/synchronizations").authenticated()
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
@@ -62,7 +63,8 @@ class DevicesSynchronizeControllerMvcSliceTest(
 
         // When
         val responseBody = mockMvc.perform(
-            post("/devices/synchronizations").authenticated())
+            post("/devices/synchronizations").authenticated()
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
@@ -76,11 +78,13 @@ class DevicesSynchronizeControllerMvcSliceTest(
     @Test fun `synchronize() returns 200 with updated devices in response body`() {
         // Given
         val updatedDevice = aDevice()
-        every { refreshDevicesUseCase.execute() } returns RefreshDevicesResult(updatedDevices = listOf(updatedDevice)).right()
+        every { refreshDevicesUseCase.execute() } returns
+            RefreshDevicesResult(updatedDevices = listOf(updatedDevice)).right()
 
         // When
         val responseBody = mockMvc.perform(
-            post("/devices/synchronizations").authenticated())
+            post("/devices/synchronizations").authenticated()
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
@@ -94,11 +98,13 @@ class DevicesSynchronizeControllerMvcSliceTest(
     @Test fun `synchronize() returns 200 with detached devices in response body`() {
         // Given
         val detachedDevice = aDevice()
-        every { refreshDevicesUseCase.execute() } returns RefreshDevicesResult(detachedDevices = listOf(detachedDevice)).right()
+        every { refreshDevicesUseCase.execute() } returns
+            RefreshDevicesResult(detachedDevices = listOf(detachedDevice)).right()
 
         // When
         val responseBody = mockMvc.perform(
-            post("/devices/synchronizations").authenticated())
+            post("/devices/synchronizations").authenticated()
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
@@ -115,7 +121,8 @@ class DevicesSynchronizeControllerMvcSliceTest(
 
         // When
         val responseBody = mockMvc.perform(
-            post("/devices/synchronizations").authenticated())
+            post("/devices/synchronizations").authenticated()
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -123,5 +130,4 @@ class DevicesSynchronizeControllerMvcSliceTest(
         val response = objectMapper.readValue(responseBody, MessageResponse::class.java)
         response.message shouldBe "Device synchronization failed!"
     }
-
 }

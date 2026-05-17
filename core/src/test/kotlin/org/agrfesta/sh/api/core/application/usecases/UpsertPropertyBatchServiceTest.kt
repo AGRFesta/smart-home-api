@@ -30,7 +30,8 @@ class UpsertPropertyBatchServiceTest {
         val tooManyEntries = (1..(UpsertPropertyBatchUseCase.MAX_BATCH_SIZE + 1))
             .map { PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString()) }
 
-        sut.execute(tooManyEntries).shouldBeLeft() shouldBe PropertyBatchTooLarge(UpsertPropertyBatchUseCase.MAX_BATCH_SIZE)
+        sut.execute(tooManyEntries).shouldBeLeft() shouldBe
+            PropertyBatchTooLarge(UpsertPropertyBatchUseCase.MAX_BATCH_SIZE)
     }
 
     @Test fun `execute() returns DuplicatePropertyKeys when entries contain duplicate keys`() {
@@ -60,5 +61,4 @@ class UpsertPropertyBatchServiceTest {
 
         sut.execute(entries).shouldBeLeft() shouldBe PropertyRepositoryError
     }
-
 }

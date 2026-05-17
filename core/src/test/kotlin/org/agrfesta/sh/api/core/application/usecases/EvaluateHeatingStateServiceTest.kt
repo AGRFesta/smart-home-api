@@ -8,17 +8,21 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import java.time.Instant
-import java.time.LocalTime
+import org.agrfesta.sh.api.core.application.areas.AreasFactory
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
+import org.agrfesta.sh.api.core.application.usecases.heating.DynamicSharedHeatingStrategyService
+import org.agrfesta.sh.api.core.application.usecases.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
+import org.agrfesta.sh.api.core.application.usecases.heating.NamedSharedHeatingAreasStrategyService
+import org.agrfesta.sh.api.core.application.usecases.heating.SharedHeatingAreasStrategyService
+import org.agrfesta.sh.api.core.application.usecases.heating.toSensorMockk
+import org.agrfesta.sh.api.core.application.usecases.heating.toSharedHeaterMockk
 import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
-import org.agrfesta.sh.api.core.application.areas.AreasFactory
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.devices.Device
@@ -29,19 +33,15 @@ import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
-import org.agrfesta.sh.api.domain.anAreaDtoWithDevices
-import org.agrfesta.sh.api.domain.anActuator
-import org.agrfesta.sh.api.domain.aSensor
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.COMFORT
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.ECONOMY
-import org.agrfesta.sh.api.core.application.usecases.heating.DynamicSharedHeatingStrategyService
-import org.agrfesta.sh.api.core.application.usecases.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
-import org.agrfesta.sh.api.core.application.usecases.heating.NamedSharedHeatingAreasStrategyService
-import org.agrfesta.sh.api.core.application.usecases.heating.toSensorMockk
-import org.agrfesta.sh.api.core.application.usecases.heating.toSharedHeaterMockk
-import org.agrfesta.sh.api.core.application.usecases.heating.SharedHeatingAreasStrategyService
+import org.agrfesta.sh.api.domain.aSensor
+import org.agrfesta.sh.api.domain.anActuator
+import org.agrfesta.sh.api.domain.anAreaDtoWithDevices
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
+import java.time.Instant
+import java.time.LocalTime
 
 class EvaluateHeatingStateServiceTest {
     private val now: Instant = Instant.now()
@@ -64,8 +64,15 @@ class EvaluateHeatingStateServiceTest {
 
     private val areasFactory = AreasFactory(temperatureSettingsRepository)
 
-    private val sut = EvaluateHeatingStateService(devicesRepository, listOf(factory),
-        areasWithDevicesRepository, areasFactory, strategy, propertyRepository, timeProvider)
+    private val sut = EvaluateHeatingStateService(
+        devicesRepository,
+        listOf(factory),
+        areasWithDevicesRepository,
+        areasFactory,
+        strategy,
+        propertyRepository,
+        timeProvider
+    )
 
     init {
         every { timeProvider.currentLocalTime() } returns LocalTime.now()
@@ -181,8 +188,15 @@ class EvaluateHeatingStateServiceTest {
         // Given
         every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(COMFORT.name).right()
         val emptyStrategy = DynamicSharedHeatingStrategyService(ECONOMY, emptyList(), propertyRepository)
-        val sut = EvaluateHeatingStateService(devicesRepository, listOf(factory),
-            areasWithDevicesRepository, areasFactory, emptyStrategy, propertyRepository, timeProvider)
+        val sut = EvaluateHeatingStateService(
+            devicesRepository,
+            listOf(factory),
+            areasWithDevicesRepository,
+            areasFactory,
+            emptyStrategy,
+            propertyRepository,
+            timeProvider
+        )
         givenHeatableArea()
 
         // When
@@ -348,12 +362,24 @@ class EvaluateHeatingStateServiceTest {
     }
 
     private fun sutWith(strategy: SharedHeatingAreasStrategyService) =
-        EvaluateHeatingStateService(devicesRepository, listOf(factory),
-            areasWithDevicesRepository, areasFactory, strategy, propertyRepository, timeProvider)
+        EvaluateHeatingStateService(
+            devicesRepository,
+            listOf(factory),
+            areasWithDevicesRepository,
+            areasFactory,
+            strategy,
+            propertyRepository,
+            timeProvider
+        )
 
     private fun sutWithBothStrategies() =
-        sutWith(DynamicSharedHeatingStrategyService(ECONOMY,
-            listOf(economyStrategy, comfortStrategy), propertyRepository))
+        sutWith(
+            DynamicSharedHeatingStrategyService(
+                ECONOMY,
+                listOf(economyStrategy, comfortStrategy),
+                propertyRepository
+            )
+        )
 
     private fun givenHeatableArea(): Pair<AreaDtoWithDevices, SharedHeater> {
         val sensorDto = aSensor()
@@ -375,5 +401,4 @@ class EvaluateHeatingStateServiceTest {
         heaterSlot.captured shouldBe second
         areasSlot.captured.map { it.uuid }.shouldContainExactlyInAnyOrder(first.uuid)
     }
-
 }

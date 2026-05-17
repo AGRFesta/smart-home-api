@@ -8,8 +8,6 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import java.math.BigDecimal
-import java.util.*
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHomeDashboardUseCase
 import org.agrfesta.sh.api.core.domain.commons.FieldFailure
 import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
@@ -32,6 +30,8 @@ import org.springframework.test.context.TestConstructor
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.math.BigDecimal
+import java.util.*
 
 @WebMvcTest(HomeController::class)
 @Import(SecurityConfig::class)
@@ -44,7 +44,7 @@ class HomeControllerMvcSliceTest(
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
-    ///// getHome //////////////////////////////////////////////////////////////////////////////////////////////////////
+    // /// getHome //////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `getHome() auth tests`() = authTestSupport.dynamicTestsBy {
         get("/home")
@@ -134,6 +134,5 @@ class HomeControllerMvcSliceTest(
         response.message shouldBe "Unable to fetch home dashboard!"
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }

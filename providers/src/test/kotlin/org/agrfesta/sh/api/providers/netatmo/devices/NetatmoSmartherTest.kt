@@ -10,19 +10,17 @@ import io.ktor.http.HttpHeaders.Authorization
 import io.ktor.http.HttpMethod.Companion.Post
 import io.mockk.every
 import io.mockk.mockk
-import java.math.BigDecimal
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import java.util.*
 import kotlinx.coroutines.runBlocking
-import org.agrfesta.sh.api.providers.createMockEngine
+import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.OFF
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.ON
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.UNDEFINED
 import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
-import org.agrfesta.sh.api.providers.netatmo.KtorRequestFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
+import org.agrfesta.sh.api.providers.createMockEngine
 import org.agrfesta.sh.api.providers.netatmo.BehaviorRegistry
+import org.agrfesta.sh.api.providers.netatmo.KtorRequestFailure
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClient
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClientAsserter
 import org.agrfesta.sh.api.providers.netatmo.NetatmoConfiguration
@@ -33,14 +31,16 @@ import org.agrfesta.sh.api.providers.netatmo.aNetatmoRoomStatus
 import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoSmarther.Companion.MAX_SET_POINT_TEMPERATURE
 import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoSmarther.Companion.MIN_SET_POINT_TEMPERATURE
 import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoSmarther.Companion.SET_POINT_MODE
-import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.utils.CacheAsserter
-import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.test.mothers.aJsonNode
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.anUrl
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.*
 
 class NetatmoSmartherTest {
     private val accessToken = aRandomUniqueString()
@@ -80,16 +80,18 @@ class NetatmoSmartherTest {
         every { timeProvider.now() } returns now
     }
 
-    ///// fetchReadings() //////////////////////////////////////////////////////////////////////////////////////////////
+    // /// fetchReadings() //////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
     fun `fetchReadings() Returns sensor data`() = runBlocking {
         val expectedData = aRandomThermoHygroData()
         val homeStatus = aNetatmoHomeStatus(
-            rooms = listOf(aNetatmoRoomStatus(
-                humidity = expectedData.relativeHumidity.value.movePointRight(2).stripTrailingZeros(),
-                measuredTemperature = expectedData.temperature.value
-            ))
+            rooms = listOf(
+                aNetatmoRoomStatus(
+                    humidity = expectedData.relativeHumidity.value.movePointRight(2).stripTrailingZeros(),
+                    measuredTemperature = expectedData.temperature.value
+                )
+            )
         )
         clientAsserter.givenHomeStatusFetchResponse(homeStatus)
 
@@ -177,9 +179,9 @@ class NetatmoSmartherTest {
 
         clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// getActuatorStatus() //////////////////////////////////////////////////////////////////////////////////////////
+    // /// getActuatorStatus() //////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
     fun `getActuatorStatus() Returns ON when mode is 'manual' and target temperature is max`() = runBlocking {
@@ -276,9 +278,9 @@ class NetatmoSmartherTest {
         clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// on() /////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // /// on() /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
     fun `on() Sets setpoint with temperature of 30 degree for one hour`() = runBlocking {
@@ -316,9 +318,9 @@ class NetatmoSmartherTest {
         sut.on().shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// off() ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // /// off() ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
     fun `off() Sets setpoint with temperature of 7 degree for one hour`() = runBlocking {
@@ -356,7 +358,7 @@ class NetatmoSmartherTest {
         sut.off().shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private fun generateNoNanosInstant(): Instant = Instant.now().truncatedTo(ChronoUnit.MILLIS)
 }

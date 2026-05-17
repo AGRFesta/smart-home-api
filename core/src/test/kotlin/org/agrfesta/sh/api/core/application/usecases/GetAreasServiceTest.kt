@@ -57,5 +57,4 @@ class GetAreasServiceTest {
         // Then
         result.shouldBeLeft().shouldBe(AreaRepositoryError)
     }
-
 }

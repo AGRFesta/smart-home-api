@@ -6,17 +6,17 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import java.time.Instant
-import java.util.*
-import org.agrfesta.sh.api.domain.anActuatorProviderData
-import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.core.domain.failures.ActuatorNotAssigned
 import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
+import org.agrfesta.sh.api.domain.anActuatorProviderData
+import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataAccessException
+import java.time.Instant
+import java.util.*
 
 class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
@@ -120,5 +120,4 @@ class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
                 it.actuatorUuid shouldBe actuatorId
             }
     }
-
 }

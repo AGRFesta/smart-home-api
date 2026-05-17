@@ -8,7 +8,6 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.util.UUID
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
@@ -16,6 +15,7 @@ import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.junit.jupiter.api.Test
+import java.util.UUID
 
 class DeleteHeatingScheduleServiceTest {
 
@@ -67,5 +67,4 @@ class DeleteHeatingScheduleServiceTest {
 
         sut.execute(areaId).shouldBeRight()
     }
-
 }

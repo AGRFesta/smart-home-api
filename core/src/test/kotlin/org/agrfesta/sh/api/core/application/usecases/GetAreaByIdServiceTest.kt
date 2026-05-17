@@ -59,5 +59,4 @@ class GetAreaByIdServiceTest {
         // Then
         result.shouldBeLeft().shouldBe(AreaRepositoryError)
     }
-
 }

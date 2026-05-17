@@ -6,9 +6,9 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
+import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
-import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.test.mothers.aRandomTtl
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.nowNoMills
@@ -220,5 +220,4 @@ class PropertyJdbcAdapterTest : AbstractJdbcAdapterTest() {
             .shouldBeLeft()
             .shouldBe(PropertyRepositoryError)
     }
-
 }

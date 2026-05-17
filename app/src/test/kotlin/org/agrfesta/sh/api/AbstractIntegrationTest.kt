@@ -3,9 +3,9 @@ package org.agrfesta.sh.api
 import com.ninjasquad.springmockk.MockkBean
 import com.ninjasquad.springmockk.SpykBean
 import io.restassured.RestAssured
-import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
+import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -42,5 +42,4 @@ abstract class AbstractIntegrationTest {
 
         redisTemplate.connectionFactory?.connection?.serverCommands()?.flushDb()
     }
-
 }

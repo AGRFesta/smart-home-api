@@ -39,5 +39,4 @@ class GetPropertyServiceTest {
 
         sut.execute(key).shouldBeLeft() shouldBe PropertyRepositoryError
     }
-
 }

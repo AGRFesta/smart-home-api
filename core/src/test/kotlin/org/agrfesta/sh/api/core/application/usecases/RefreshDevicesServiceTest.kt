@@ -11,7 +11,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.util.UUID
+import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesProvider
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.domain.devices.Device
@@ -23,9 +23,9 @@ import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError
 import org.agrfesta.sh.api.core.domain.failures.RefreshDevicesError
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aProviderDeviceData
-import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.util.UUID
 
 class RefreshDevicesServiceTest {
     private val devicesRepository: DevicesRepository = mockk()
@@ -271,7 +271,10 @@ class RefreshDevicesServiceTest {
     fun `execute() treats a provider device with the same providerId but a different provider as a new device`() {
         // Given
         val netatmoDeviceData = aProviderDeviceData(provider = Provider.NETATMO)
-        val storedSwitchbotDevice = aDevice(providerId = netatmoDeviceData.deviceProviderId, provider = Provider.SWITCHBOT)
+        val storedSwitchbotDevice = aDevice(
+            providerId = netatmoDeviceData.deviceProviderId,
+            provider = Provider.SWITCHBOT
+        )
         val generatedUuid = UUID.randomUUID()
         every { devicesRepository.getAll() } returns listOf(storedSwitchbotDevice).right()
         every { provider.getAllDevices() } returns listOf(netatmoDeviceData).right()
@@ -291,7 +294,10 @@ class RefreshDevicesServiceTest {
     fun `execute() does not update a stored device when a different provider returns the same providerId`() {
         // Given
         val netatmoDeviceData = aProviderDeviceData(provider = Provider.NETATMO)
-        val storedSwitchbotDevice = aDevice(providerId = netatmoDeviceData.deviceProviderId, provider = Provider.SWITCHBOT)
+        val storedSwitchbotDevice = aDevice(
+            providerId = netatmoDeviceData.deviceProviderId,
+            provider = Provider.SWITCHBOT
+        )
         every { devicesRepository.getAll() } returns listOf(storedSwitchbotDevice).right()
         every { provider.getAllDevices() } returns listOf(netatmoDeviceData).right()
 
@@ -305,7 +311,7 @@ class RefreshDevicesServiceTest {
     }
 
     @Test
-    fun `execute() detaches a device when its own provider does not return it, even if another provider returns the same providerId`() {
+    fun `execute() detaches a device when its provider doesn't return it even if another has the same providerId`() {
         // Given
         val sharedProviderId = aProviderDeviceData().deviceProviderId
         val storedSwitchbotDevice = aDevice(providerId = sharedProviderId, provider = Provider.SWITCHBOT)
@@ -347,5 +353,4 @@ class RefreshDevicesServiceTest {
         result.newDevices.shouldBeEmpty()
         result.detachedDevices.shouldBeEmpty()
     }
-
 }

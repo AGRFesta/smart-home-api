@@ -8,25 +8,24 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import java.util.*
 import org.agrfesta.sh.api.core.application.ports.inbounds.AssignActuatorToAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.AssignSensorToAreaUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignActuatorFromAreaUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignSensorFromAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.CreateAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.DeleteAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetAreaByIdUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetAreasUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignActuatorFromAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignSensorFromAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.UpdateAreaUseCase
 import org.agrfesta.sh.api.core.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.domain.failures.ActuatorNotAssigned
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.NotASensor
 import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
-import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
-import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
-import org.agrfesta.sh.api.core.domain.failures.ActuatorNotAssigned
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
 import org.agrfesta.sh.api.core.domain.failures.SensorNotAssigned
@@ -47,6 +46,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.util.*
 
 @WebMvcTest(AreasController::class)
 @Import(SecurityConfig::class)
@@ -67,7 +67,7 @@ class AreasControllerMvcSliceTest(
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
-    ///// create ///////////////////////////////////////////////////////////////////////////////////////////////////////
+    // /// create ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `create() auth tests`() = authTestSupport.dynamicTestsBy {
         post("/areas")
@@ -83,7 +83,8 @@ class AreasControllerMvcSliceTest(
             post("/areas")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"name": "$name"}"""))
+                .content("""{"name": "$name"}""")
+        )
             .andExpect(status().isBadRequest)
             .andReturn().response.contentAsString
 
@@ -99,7 +100,8 @@ class AreasControllerMvcSliceTest(
             post("/areas")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"name": "$name"}"""))
+                .content("""{"name": "$name"}""")
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -118,7 +120,8 @@ class AreasControllerMvcSliceTest(
             post("/areas")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"name": "$name"}"""))
+                .content("""{"name": "$name"}""")
+        )
             .andExpect(status().isCreated)
             .andReturn().response.contentAsString
 
@@ -139,7 +142,8 @@ class AreasControllerMvcSliceTest(
             post("/areas")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"name": "$name", "isIndoor": true}"""))
+                .content("""{"name": "$name", "isIndoor": true}""")
+        )
             .andExpect(status().isCreated)
             .andReturn().response.contentAsString
 
@@ -160,7 +164,8 @@ class AreasControllerMvcSliceTest(
             post("/areas")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"name": "$name", "isIndoor": false}"""))
+                .content("""{"name": "$name", "isIndoor": false}""")
+        )
             .andExpect(status().isCreated)
             .andReturn().response.contentAsString
 
@@ -170,9 +175,9 @@ class AreasControllerMvcSliceTest(
         response.resourceId shouldBe uuid.toString()
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// update ///////////////////////////////////////////////////////////////////////////////////////////////////////
+    // /// update ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `update() auth tests`() = authTestSupport.dynamicTestsBy {
         put("/areas/${UUID.randomUUID()}")
@@ -188,7 +193,8 @@ class AreasControllerMvcSliceTest(
             put("/areas/$id")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"name": "any", "isIndoor": true}"""))
+                .content("""{"name": "any", "isIndoor": true}""")
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -205,7 +211,8 @@ class AreasControllerMvcSliceTest(
             put("/areas/$id")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"name": "$name", "isIndoor": true}"""))
+                .content("""{"name": "$name", "isIndoor": true}""")
+        )
             .andExpect(status().isBadRequest)
             .andReturn().response.contentAsString
 
@@ -221,7 +228,8 @@ class AreasControllerMvcSliceTest(
             put("/areas/$id")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"name": "any", "isIndoor": true}"""))
+                .content("""{"name": "any", "isIndoor": true}""")
+        )
             .andExpect(status().isNotFound)
     }
 
@@ -235,7 +243,8 @@ class AreasControllerMvcSliceTest(
             put("/areas/${area.uuid}")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"name": "$newName", "isIndoor": false}"""))
+                .content("""{"name": "$newName", "isIndoor": false}""")
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
@@ -245,9 +254,9 @@ class AreasControllerMvcSliceTest(
         withClue("isIndoor should match") { response["isIndoor"] shouldBe false }
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// delete ///////////////////////////////////////////////////////////////////////////////////////////////////////
+    // /// delete ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `delete() auth tests`() = authTestSupport.dynamicTestsBy {
         delete("/areas/${UUID.randomUUID()}")
@@ -258,7 +267,8 @@ class AreasControllerMvcSliceTest(
         every { deleteAreaUseCase.execute(id) } returns AreaRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
-            delete("/areas/$id").authenticated())
+            delete("/areas/$id").authenticated()
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -271,7 +281,8 @@ class AreasControllerMvcSliceTest(
         every { deleteAreaUseCase.execute(id) } returns AreaNotFound(id).left()
 
         mockMvc.perform(
-            delete("/areas/$id").authenticated())
+            delete("/areas/$id").authenticated()
+        )
             .andExpect(status().isNotFound)
     }
 
@@ -280,13 +291,14 @@ class AreasControllerMvcSliceTest(
         every { deleteAreaUseCase.execute(id) } returns Unit.right()
 
         mockMvc.perform(
-            delete("/areas/$id").authenticated())
+            delete("/areas/$id").authenticated()
+        )
             .andExpect(status().isNoContent)
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// getById //////////////////////////////////////////////////////////////////////////////////////////////////////
+    // /// getById //////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `getById() auth tests`() = authTestSupport.dynamicTestsBy {
         get("/areas/${UUID.randomUUID()}")
@@ -297,7 +309,8 @@ class AreasControllerMvcSliceTest(
         every { getAreaByIdUseCase.execute(id) } returns AreaRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
-            get("/areas/$id").authenticated())
+            get("/areas/$id").authenticated()
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -310,7 +323,8 @@ class AreasControllerMvcSliceTest(
         every { getAreaByIdUseCase.execute(id) } returns AreaNotFound(id).left()
 
         mockMvc.perform(
-            get("/areas/$id").authenticated())
+            get("/areas/$id").authenticated()
+        )
             .andExpect(status().isNotFound)
     }
 
@@ -319,7 +333,8 @@ class AreasControllerMvcSliceTest(
         every { getAreaByIdUseCase.execute(area.uuid) } returns area.right()
 
         val responseBody: String = mockMvc.perform(
-            get("/areas/${area.uuid}").authenticated())
+            get("/areas/${area.uuid}").authenticated()
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
@@ -329,9 +344,9 @@ class AreasControllerMvcSliceTest(
         withClue("isIndoor should match") { response["isIndoor"] shouldBe area.isIndoor }
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// getAll ///////////////////////////////////////////////////////////////////////////////////////////////////////
+    // /// getAll ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `getAll() auth tests`() = authTestSupport.dynamicTestsBy {
         get("/areas")
@@ -341,7 +356,8 @@ class AreasControllerMvcSliceTest(
         every { getAreasUseCase.execute() } returns emptyList<AreaDto>().right()
 
         val responseBody: String = mockMvc.perform(
-            get("/areas").authenticated())
+            get("/areas").authenticated()
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
@@ -353,7 +369,8 @@ class AreasControllerMvcSliceTest(
         every { getAreasUseCase.execute() } returns AreaRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
-            get("/areas").authenticated())
+            get("/areas").authenticated()
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -367,22 +384,26 @@ class AreasControllerMvcSliceTest(
         every { getAreasUseCase.execute() } returns listOf(area1, area2).right()
 
         val responseBody: String = mockMvc.perform(
-            get("/areas").authenticated())
+            get("/areas").authenticated()
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
         val response: List<Map<String, Any>> =
-            objectMapper.readValue(responseBody, objectMapper.typeFactory
-                .constructCollectionType(List::class.java, Map::class.java))
+            objectMapper.readValue(
+                responseBody,
+                objectMapper.typeFactory
+                    .constructCollectionType(List::class.java, Map::class.java)
+            )
         withClue("response should contain both areas") {
             response.map { it["uuid"] } shouldContainExactlyInAnyOrder
                 listOf(area1.uuid.toString(), area2.uuid.toString())
         }
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// assignSensorToArea //////////////////////////////////////////////////////////////////////////////////////////
+    // /// assignSensorToArea //////////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `assignSensorToArea() auth tests`() = authTestSupport.dynamicTestsBy {
         put("/areas/${UUID.randomUUID()}/sensors/${UUID.randomUUID()}")
@@ -394,7 +415,8 @@ class AreasControllerMvcSliceTest(
         every { assignSensorToAreaUseCase.execute(areaId, deviceId) } returns DeviceNotFound(deviceId).left()
 
         val responseBody: String = mockMvc.perform(
-            put("/areas/$areaId/sensors/$deviceId").authenticated())
+            put("/areas/$areaId/sensors/$deviceId").authenticated()
+        )
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
 
@@ -408,7 +430,8 @@ class AreasControllerMvcSliceTest(
         every { assignSensorToAreaUseCase.execute(areaId, deviceId) } returns SameAreaAssignment.left()
 
         mockMvc.perform(
-            put("/areas/$areaId/sensors/$deviceId").authenticated())
+            put("/areas/$areaId/sensors/$deviceId").authenticated()
+        )
             .andExpect(status().isNoContent)
     }
 
@@ -418,7 +441,8 @@ class AreasControllerMvcSliceTest(
         every { assignSensorToAreaUseCase.execute(areaId, deviceId) } returns SensorAlreadyAssigned.left()
 
         val responseBody: String = mockMvc.perform(
-            put("/areas/$areaId/sensors/$deviceId").authenticated())
+            put("/areas/$areaId/sensors/$deviceId").authenticated()
+        )
             .andExpect(status().isBadRequest)
             .andReturn().response.contentAsString
 
@@ -430,10 +454,11 @@ class AreasControllerMvcSliceTest(
         val areaId = UUID.randomUUID()
         val device = anActuator()
         every { assignSensorToAreaUseCase.execute(areaId, device.uuid) } returns
-                NotASensor(device.uuid, device.features).left()
+            NotASensor(device.uuid, device.features).left()
 
         val responseBody: String = mockMvc.perform(
-            put("/areas/$areaId/sensors/${device.uuid}").authenticated())
+            put("/areas/$areaId/sensors/${device.uuid}").authenticated()
+        )
             .andExpect(status().isBadRequest)
             .andReturn().response.contentAsString
 
@@ -447,7 +472,8 @@ class AreasControllerMvcSliceTest(
         every { assignSensorToAreaUseCase.execute(areaId, deviceId) } returns AreaNotFound(areaId).left()
 
         val responseBody: String = mockMvc.perform(
-            put("/areas/$areaId/sensors/$deviceId").authenticated())
+            put("/areas/$areaId/sensors/$deviceId").authenticated()
+        )
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
 
@@ -461,7 +487,8 @@ class AreasControllerMvcSliceTest(
         every { assignSensorToAreaUseCase.execute(areaId, deviceId) } returns AssignmentRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
-            put("/areas/$areaId/sensors/$deviceId").authenticated())
+            put("/areas/$areaId/sensors/$deviceId").authenticated()
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -475,13 +502,14 @@ class AreasControllerMvcSliceTest(
         every { assignSensorToAreaUseCase.execute(areaId, deviceId) } returns Unit.right()
 
         mockMvc.perform(
-            put("/areas/$areaId/sensors/$deviceId").authenticated())
+            put("/areas/$areaId/sensors/$deviceId").authenticated()
+        )
             .andExpect(status().isNoContent)
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// assignActuatorToArea ////////////////////////////////////////////////////////////////////////////////////////
+    // /// assignActuatorToArea ////////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `assignActuatorToArea() auth tests`() = authTestSupport.dynamicTestsBy {
         put("/areas/${UUID.randomUUID()}/actuators/${UUID.randomUUID()}")
@@ -491,10 +519,11 @@ class AreasControllerMvcSliceTest(
         val areaId = UUID.randomUUID()
         val device = aSensor()
         every { assignActuatorToAreaUseCase.execute(areaId, device.uuid) } returns
-                NotAnActuator(device.uuid, device.features).left()
+            NotAnActuator(device.uuid, device.features).left()
 
         val responseBody: String = mockMvc.perform(
-            put("/areas/$areaId/actuators/${device.uuid}").authenticated())
+            put("/areas/$areaId/actuators/${device.uuid}").authenticated()
+        )
             .andExpect(status().isBadRequest)
             .andReturn().response.contentAsString
 
@@ -508,7 +537,8 @@ class AreasControllerMvcSliceTest(
         every { assignActuatorToAreaUseCase.execute(areaId, deviceId) } returns DeviceNotFound(deviceId).left()
 
         val responseBody: String = mockMvc.perform(
-            put("/areas/$areaId/actuators/$deviceId").authenticated())
+            put("/areas/$areaId/actuators/$deviceId").authenticated()
+        )
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
 
@@ -522,7 +552,8 @@ class AreasControllerMvcSliceTest(
         every { assignActuatorToAreaUseCase.execute(areaId, deviceId) } returns SameAreaAssignment.left()
 
         mockMvc.perform(
-            put("/areas/$areaId/actuators/$deviceId").authenticated())
+            put("/areas/$areaId/actuators/$deviceId").authenticated()
+        )
             .andExpect(status().isNoContent)
     }
 
@@ -532,7 +563,8 @@ class AreasControllerMvcSliceTest(
         every { assignActuatorToAreaUseCase.execute(areaId, deviceId) } returns AreaNotFound(areaId).left()
 
         val responseBody: String = mockMvc.perform(
-            put("/areas/$areaId/actuators/$deviceId").authenticated())
+            put("/areas/$areaId/actuators/$deviceId").authenticated()
+        )
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
 
@@ -546,7 +578,8 @@ class AreasControllerMvcSliceTest(
         every { assignActuatorToAreaUseCase.execute(areaId, deviceId) } returns AssignmentRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
-            put("/areas/$areaId/actuators/$deviceId").authenticated())
+            put("/areas/$areaId/actuators/$deviceId").authenticated()
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -560,13 +593,14 @@ class AreasControllerMvcSliceTest(
         every { assignActuatorToAreaUseCase.execute(areaId, deviceId) } returns Unit.right()
 
         mockMvc.perform(
-            put("/areas/$areaId/actuators/$deviceId").authenticated())
+            put("/areas/$areaId/actuators/$deviceId").authenticated()
+        )
             .andExpect(status().isNoContent)
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// unassignSensorFromArea //////////////////////////////////////////////////////////////////////////////////////
+    // /// unassignSensorFromArea //////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `unassignSensorFromArea() auth tests`() = authTestSupport.dynamicTestsBy {
         delete("/areas/${UUID.randomUUID()}/sensors/${UUID.randomUUID()}")
@@ -578,7 +612,8 @@ class AreasControllerMvcSliceTest(
         every { unassignSensorFromAreaUseCase.execute(areaId, deviceId) } returns AssignmentRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
-            delete("/areas/$areaId/sensors/$deviceId").authenticated())
+            delete("/areas/$areaId/sensors/$deviceId").authenticated()
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -592,7 +627,8 @@ class AreasControllerMvcSliceTest(
         every { unassignSensorFromAreaUseCase.execute(areaId, deviceId) } returns Unit.right()
 
         mockMvc.perform(
-            delete("/areas/$areaId/sensors/$deviceId").authenticated())
+            delete("/areas/$areaId/sensors/$deviceId").authenticated()
+        )
             .andExpect(status().isNoContent)
     }
 
@@ -602,7 +638,8 @@ class AreasControllerMvcSliceTest(
         every { unassignSensorFromAreaUseCase.execute(areaId, deviceId) } returns SensorNotAssigned.left()
 
         val responseBody: String = mockMvc.perform(
-            delete("/areas/$areaId/sensors/$deviceId").authenticated())
+            delete("/areas/$areaId/sensors/$deviceId").authenticated()
+        )
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
 
@@ -616,7 +653,8 @@ class AreasControllerMvcSliceTest(
         every { unassignSensorFromAreaUseCase.execute(areaId, deviceId) } returns DeviceNotFound(deviceId).left()
 
         val responseBody: String = mockMvc.perform(
-            delete("/areas/$areaId/sensors/$deviceId").authenticated())
+            delete("/areas/$areaId/sensors/$deviceId").authenticated()
+        )
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
 
@@ -630,7 +668,8 @@ class AreasControllerMvcSliceTest(
         every { unassignSensorFromAreaUseCase.execute(areaId, deviceId) } returns AreaNotFound(areaId).left()
 
         val responseBody: String = mockMvc.perform(
-            delete("/areas/$areaId/sensors/$deviceId").authenticated())
+            delete("/areas/$areaId/sensors/$deviceId").authenticated()
+        )
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
 
@@ -638,9 +677,9 @@ class AreasControllerMvcSliceTest(
         response.message shouldBe "Area with id '$areaId' is missing!"
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// unassignActuatorFromArea ////////////////////////////////////////////////////////////////////////////////////
+    // /// unassignActuatorFromArea ////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `unassignActuatorFromArea() auth tests`() = authTestSupport.dynamicTestsBy {
         delete("/areas/${UUID.randomUUID()}/actuators/${UUID.randomUUID()}")
@@ -652,7 +691,8 @@ class AreasControllerMvcSliceTest(
         every { unassignActuatorFromAreaUseCase.execute(areaId, deviceId) } returns AssignmentRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
-            delete("/areas/$areaId/actuators/$deviceId").authenticated())
+            delete("/areas/$areaId/actuators/$deviceId").authenticated()
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -666,7 +706,8 @@ class AreasControllerMvcSliceTest(
         every { unassignActuatorFromAreaUseCase.execute(areaId, deviceId) } returns Unit.right()
 
         mockMvc.perform(
-            delete("/areas/$areaId/actuators/$deviceId").authenticated())
+            delete("/areas/$areaId/actuators/$deviceId").authenticated()
+        )
             .andExpect(status().isNoContent)
     }
 
@@ -676,7 +717,8 @@ class AreasControllerMvcSliceTest(
         every { unassignActuatorFromAreaUseCase.execute(areaId, deviceId) } returns ActuatorNotAssigned.left()
 
         val responseBody: String = mockMvc.perform(
-            delete("/areas/$areaId/actuators/$deviceId").authenticated())
+            delete("/areas/$areaId/actuators/$deviceId").authenticated()
+        )
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
 
@@ -690,7 +732,8 @@ class AreasControllerMvcSliceTest(
         every { unassignActuatorFromAreaUseCase.execute(areaId, deviceId) } returns DeviceNotFound(deviceId).left()
 
         val responseBody: String = mockMvc.perform(
-            delete("/areas/$areaId/actuators/$deviceId").authenticated())
+            delete("/areas/$areaId/actuators/$deviceId").authenticated()
+        )
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
 
@@ -704,7 +747,8 @@ class AreasControllerMvcSliceTest(
         every { unassignActuatorFromAreaUseCase.execute(areaId, deviceId) } returns AreaNotFound(areaId).left()
 
         val responseBody: String = mockMvc.perform(
-            delete("/areas/$areaId/actuators/$deviceId").authenticated())
+            delete("/areas/$areaId/actuators/$deviceId").authenticated()
+        )
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
 
@@ -712,6 +756,5 @@ class AreasControllerMvcSliceTest(
         response.message shouldBe "Area with id '$areaId' is missing!"
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }

@@ -5,16 +5,15 @@ import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
-import java.util.*
+import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
-import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
+import java.util.*
 
 class CreateAreaServiceTest {
     private val areasRepository: AreasRepository = mockk()
@@ -71,5 +70,4 @@ class CreateAreaServiceTest {
             .shouldBeLeft()
             .shouldBe(AreaRepositoryError)
     }
-
 }

@@ -6,4 +6,4 @@ import org.agrfesta.test.mothers.aRandomTemperature
 fun aThermoHygroCacheJson(
     temperature: String = aRandomTemperature().toString(),
     humidity: String = aRandomPercentage().value.toString()
-): String = """{"t":"","h":""}"""
+): String = """{"t":"$temperature","h":"$humidity"}"""

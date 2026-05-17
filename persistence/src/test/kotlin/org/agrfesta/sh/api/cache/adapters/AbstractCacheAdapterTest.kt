@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.agrfesta.sh.api.TestContainersConfig
-import org.agrfesta.sh.api.cache.adapters.RedisCache
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.redis.DataRedisTest
@@ -36,5 +35,4 @@ abstract class AbstractCacheAdapterTest {
     fun cleanRedis() {
         stringRedisTemplate.connectionFactory?.connection?.serverCommands()?.flushDb()
     }
-
 }

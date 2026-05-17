@@ -28,7 +28,7 @@ class SnapshotSensorHistoryServiceIntegrationTest(
     private val devicesRepository: DevicesJdbcRepository,
     private val historyDao: SensorsHistoryDataRepository,
     private val switchBotClientAsserter: SwitchBotClientAsserter
-): AbstractIntegrationTest() {
+) : AbstractIntegrationTest() {
     private val now = Instant.now()
 
     @BeforeEach
@@ -38,7 +38,8 @@ class SnapshotSensorHistoryServiceIntegrationTest(
 
     @Test fun `execute() saves all cached sensor values as history records`() {
         val sensorData = aRandomThermoHygroData(
-            relativeHumidity = Percentage.ofHundreds(aRandomIntHumidity()))
+            relativeHumidity = Percentage.ofHundreds(aRandomIntHumidity())
+        )
         val sensor = aProviderDeviceData(features = setOf(SENSOR))
         val uuid = UUID.randomUUID()
         devicesRepository.persist(uuid, sensor)
@@ -55,5 +56,4 @@ class SnapshotSensorHistoryServiceIntegrationTest(
                 listOf(now.truncatedTo(ChronoUnit.SECONDS), HUMIDITY, sensorData.relativeHumidity.value)
             )
     }
-
 }

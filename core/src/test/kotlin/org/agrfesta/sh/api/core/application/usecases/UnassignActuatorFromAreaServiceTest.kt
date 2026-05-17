@@ -8,7 +8,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
-import java.util.UUID
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.ActuatorsAssignmentsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
@@ -18,13 +17,18 @@ import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.domain.anActuator
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.junit.jupiter.api.Test
+import java.util.UUID
 
 class UnassignActuatorFromAreaServiceTest {
     private val areasRepository: AreasRepository = mockk()
     private val devicesRepository: DevicesRepository = mockk()
     private val actuatorsAssignmentsRepository: ActuatorsAssignmentsRepository = mockk()
 
-    private val sut = UnassignActuatorFromAreaService(areasRepository, devicesRepository, actuatorsAssignmentsRepository)
+    private val sut = UnassignActuatorFromAreaService(
+        areasRepository,
+        devicesRepository,
+        actuatorsAssignmentsRepository
+    )
 
     @Test fun `execute() returns Right(Unit) on success`() {
         val area = anAreaDto()
@@ -71,5 +75,4 @@ class UnassignActuatorFromAreaServiceTest {
             .shouldBeInstanceOf<AreaNotFound>()
             .missingAreaId shouldBe areaId
     }
-
 }

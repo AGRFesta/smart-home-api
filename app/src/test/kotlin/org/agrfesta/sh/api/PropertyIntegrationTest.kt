@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test
 class PropertyIntegrationTest(
     private val propertyRepository: PropertyJdbcRepository,
     private val objectMapper: ObjectMapper
-): AbstractIntegrationTest() {
+) : AbstractIntegrationTest() {
     private val now = nowNoMills()
 
     @BeforeEach
@@ -30,7 +30,7 @@ class PropertyIntegrationTest(
         every { timeProvider.now() } returns now
     }
 
-    ///// putPropertyEntry /////////////////////////////////////////////////////////////////////////////////////////////
+    // /// putPropertyEntry /////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `putPropertyEntry() insert new entry when key is missing`() {
         val key = aRandomUniqueString()
@@ -55,14 +55,14 @@ class PropertyIntegrationTest(
         propertyEntry.expiresAt shouldBe now.plusSeconds(ttl)
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// getPropertyEntry /////////////////////////////////////////////////////////////////////////////////////////////
+    // /// getPropertyEntry /////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `getPropertyEntry() return 404 when key is expired`() {
         val key = aRandomUniqueString()
         val ttl = aRandomTtl()
-        every { timeProvider.now() } returns now andThen now andThen now.plusSeconds(ttl+10)
+        every { timeProvider.now() } returns now andThen now andThen now.plusSeconds(ttl + 10)
         propertyRepository.upsert(key, aRandomUniqueString(), ttl)
         propertyRepository.findEntry(key)
 
@@ -83,7 +83,7 @@ class PropertyIntegrationTest(
     @Test fun `getPropertyEntry() returns property entry when is not missing nor expired`() {
         val key = aRandomUniqueString()
         val ttl = aRandomTtl()
-        every { timeProvider.now() } returns now andThen now.plusSeconds(ttl-1)
+        every { timeProvider.now() } returns now andThen now.plusSeconds(ttl - 1)
         propertyRepository.upsert(key, aRandomUniqueString(), ttl)
         propertyRepository.findEntry(key)
 
@@ -101,9 +101,9 @@ class PropertyIntegrationTest(
         propertyEntry shouldBe result
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// postPropertyBatch ////////////////////////////////////////////////////////////////////////////////////////////
+    // /// postPropertyBatch ////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `postPropertyBatch() returns 200 when successfully upserts all entries`() {
         val key1 = aRandomUniqueString()
@@ -147,5 +147,5 @@ class PropertyIntegrationTest(
         entry3.expiresAt.shouldBeNull()
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }

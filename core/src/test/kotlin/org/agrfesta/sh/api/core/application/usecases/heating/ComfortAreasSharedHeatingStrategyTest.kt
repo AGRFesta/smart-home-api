@@ -4,12 +4,12 @@ import arrow.core.right
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.time.LocalTime
-import java.util.UUID
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.SharedHeater
 import org.junit.jupiter.api.Test
+import java.time.LocalTime
+import java.util.UUID
 
 class ComfortAreasSharedHeatingStrategyTest {
     private val sharedHeater: SharedHeater = mockk(relaxed = true) {
@@ -30,7 +30,6 @@ class ComfortAreasSharedHeatingStrategyTest {
     private val areas = listOf(areaB, areaC, areaA)
 
     private val sut = ComfortAreasSharedHeatingStrategyService()
-
 
     @Test
     fun `handleHeatingFor() Do nothing when there are no areas`() {
@@ -129,5 +128,4 @@ class ComfortAreasSharedHeatingStrategyTest {
         verify(exactly = 0) { sharedHeater.on() }
         verify(exactly = 1) { sharedHeater.off() }
     }
-
 }

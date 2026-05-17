@@ -1,12 +1,12 @@
 package org.agrfesta.sh.api.domain.commons
 
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.DynamicTest.dynamicTest
-import org.junit.jupiter.api.TestFactory
-import java.math.BigDecimal
 import org.agrfesta.sh.api.core.domain.commons.Percentage
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
+import org.junit.jupiter.api.DynamicTest.dynamicTest
+import org.junit.jupiter.api.TestFactory
+import java.math.BigDecimal
 
 class ThermoHygroDataTest {
 
@@ -25,5 +25,4 @@ class ThermoHygroDataTest {
                 .calculateAbsoluteHumidity().value shouldBe it.third
         }
     }
-
 }

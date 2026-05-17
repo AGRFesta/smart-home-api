@@ -5,16 +5,16 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import java.time.Instant
-import java.util.UUID
+import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
+import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.domain.anActuatorProviderData
 import org.agrfesta.sh.api.domain.anAreaDto
-import org.agrfesta.sh.api.domain.aSensorProviderData
-import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataAccessResourceFailureException
+import java.time.Instant
+import java.util.UUID
 
 class AreasWithDevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
@@ -90,5 +90,4 @@ class AreasWithDevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
             .shouldBeLeft()
             .shouldBe(AreaRepositoryError)
     }
-
 }

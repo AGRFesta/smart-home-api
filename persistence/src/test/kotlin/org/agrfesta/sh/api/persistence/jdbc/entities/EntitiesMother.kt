@@ -1,6 +1,7 @@
 package org.agrfesta.sh.api.persistence.jdbc.entities
 
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
@@ -11,7 +12,6 @@ import org.agrfesta.test.mothers.aRandomUniqueString
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.*
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
 
 fun anAreaEntity(
     uuid: UUID = UUID.randomUUID(),
@@ -60,8 +60,13 @@ fun aSensorAssignmentEntity(
     deviceUuid: UUID = UUID.randomUUID(),
     connectedOn: Instant = Instant.now(),
     disconnectedOn: Instant? = null
-) = SensorAssignmentEntity(uuid = uuid, areaUuid = areaUuid, sensorUuid = deviceUuid, connectedOn = connectedOn,
-    disconnectedOn = disconnectedOn)
+) = SensorAssignmentEntity(
+    uuid = uuid,
+    areaUuid = areaUuid,
+    sensorUuid = deviceUuid,
+    connectedOn = connectedOn,
+    disconnectedOn = disconnectedOn
+)
 
 fun anActuatorAssignmentEntity(
     uuid: UUID = UUID.randomUUID(),
