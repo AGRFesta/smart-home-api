@@ -21,9 +21,11 @@ import io.ktor.http.headersOf
 import org.agrfesta.test.mothers.aRandomNonNegativeInt
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.anUrl
+import org.agrfesta.sh.api.providers.netatmo.ConditionalOnNetatmo
 import org.springframework.stereotype.Service
 
 @Service
+@ConditionalOnNetatmo
 class NetatmoClientAsserter(
     private val config: NetatmoConfiguration = NetatmoConfiguration(
         baseUrl = anUrl(),

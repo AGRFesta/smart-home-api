@@ -5,9 +5,11 @@ import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.test.mothers.aRandomUniqueString
+import org.agrfesta.sh.api.providers.netatmo.ConditionalOnNetatmo
 import org.springframework.stereotype.Service
 
 @Service
+@ConditionalOnNetatmo
 class NetatmoIntegrationAsserter(
     private val cache: Cache,
     private val asserter: NetatmoClientAsserter,
