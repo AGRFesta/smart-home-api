@@ -32,10 +32,9 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRep
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_REFRESH_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.utils.LoggerDelegate
-import org.agrfesta.sh.api.utils.toDetailedString
-import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.io.IOException
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -51,7 +50,7 @@ class NetatmoClient(
     private val client = HttpClient(netatmoClientEngine) {
         expectSuccess = true
         install(HttpTimeout) {
-            requestTimeoutMillis = 60_000
+            requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS
         }
         install(ContentNegotiation) {
             register(ContentType.Application.Json, JacksonConverter(NETATMO_OBJECT_MAPPER))
@@ -64,22 +63,24 @@ class NetatmoClient(
      *
      * @param prevRefreshToken previous unused refresh token.
      */
+    // HTTP + JSON parsing errors from incompatible hierarchies — Exception is the common base
+    @Suppress("TooGenericExceptionCaught")
     suspend fun refreshToken(prevRefreshToken: String): Either<NetatmoAuthFailure, NetatmoRefreshTokenResponse> = try {
         logger.info("Refreshing Netatmo token...")
         val response = client.submitForm(
-                url = "${config.baseUrl}/oauth2/token",
-                formParameters = Parameters.build {
-                    append("grant_type", "refresh_token")
-                    append("refresh_token", prevRefreshToken)
-                    append("client_id", config.clientId)
-                    append("client_secret", config.clientSecret)
-                }
-            )
-            val body = response.body<String>()
-            mapper.readValue<NetatmoRefreshTokenResponse>(body).right()
-        } catch (e: Exception) {
-            NetatmoAuthFailure(e).left()
-        }
+            url = "${config.baseUrl}/oauth2/token",
+            formParameters = Parameters.build {
+                append("grant_type", "refresh_token")
+                append("refresh_token", prevRefreshToken)
+                append("client_id", config.clientId)
+                append("client_secret", config.clientSecret)
+            }
+        )
+        val body = response.body<String>()
+        mapper.readValue<NetatmoRefreshTokenResponse>(body).right()
+    } catch (e: Exception) {
+        NetatmoAuthFailure(e).left()
+    }
 
     /**
      * This endpoint permits to retrieve the actual topology and static information of all devices present into a user
@@ -113,7 +114,8 @@ class NetatmoClient(
                     mapper.readTree(content).at("/body/home").let {
                         mapper.treeToValue(it, NetatmoHomeStatus::class.java)
                     }?.right() ?: NetatmoContractBreak("Unexpected home status response", content).left()
-                } catch (e: Exception) {
+                } catch (e: IOException) {
+                    logger.warn("Failed to parse home status response: ${e.message}", e)
                     NetatmoContractBreak("Unexpected home status response", content).left()
                 }
             } catch (e: ClientRequestException) {
@@ -165,25 +167,24 @@ class NetatmoClient(
             ifRight = { it.right() }
         )
 
+    companion object {
+        private const val REQUEST_TIMEOUT_MILLIS = 60_000L
+    }
+
     private suspend fun fetchAndCacheNewToken(): Either<NetatmoClientFailure, String> =
         propertyRepository.getEntry(NETATMO_REFRESH_TOKEN_CACHE_KEY)
             .mapLeft { NetatmoPropertyError(it) }
             .flatMap { entry -> refreshToken(entry.value) }
             .map { refreshResp ->
-                try {
-                    cache.set(
-                        NETATMO_ACCESS_TOKEN_CACHE_KEY,
-                        refreshResp.accessToken,
-                        refreshResp.expiresIn.toDuration(DurationUnit.SECONDS)
-                    )
-                } catch (e: Exception) {
-                    logger.error("Unable to refresh Netatmo token in cache. ${e.toDetailedString()}")
-                }
+                cache.set(
+                    NETATMO_ACCESS_TOKEN_CACHE_KEY,
+                    refreshResp.accessToken,
+                    refreshResp.expiresIn.toDuration(DurationUnit.SECONDS)
+                )
                 this@NetatmoClient.propertyRepository.upsert(NETATMO_REFRESH_TOKEN_CACHE_KEY, refreshResp.refreshToken)
                     .onLeft { logger.error("Failed to persist Netatmo refresh token") }
                 refreshResp.accessToken
             }
-
 }
 
-object NetatmoInvalidAccessToken: NetatmoClientFailure
+object NetatmoInvalidAccessToken : NetatmoClientFailure

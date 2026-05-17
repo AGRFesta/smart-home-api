@@ -1,12 +1,12 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
-import java.util.UUID
 import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity
 import org.postgresql.util.PSQLException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import java.util.UUID
 
 @Repository
 class TemperatureSettingRepository(private val jdbcTemplate: NamedParameterJdbcTemplate) {

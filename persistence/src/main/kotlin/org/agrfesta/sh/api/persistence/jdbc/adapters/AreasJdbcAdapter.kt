@@ -3,7 +3,7 @@ package org.agrfesta.sh.api.persistence.jdbc.adapters
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import java.util.UUID
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.domain.areas.AreaDto
 import org.agrfesta.sh.api.core.domain.failures.AreaCreationFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaDeletionFailure
@@ -13,17 +13,17 @@ import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.AreaUpdateFailure
 import org.agrfesta.sh.api.core.domain.failures.GetAreasFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.persistence.SameNameAreaException
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.dao.DataAccessException
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 @Service
- class AreasJdbcAdapter(
+class AreasJdbcAdapter(
     private val areasRepo: AreasJdbcRepository
-): AreasRepository {
+) : AreasRepository {
 
     private val logger by LoggerDelegate()
 
@@ -59,8 +59,7 @@ import org.springframework.stereotype.Service
     }
 
     override fun update(area: AreaDto): Either<AreaUpdateFailure, AreaDto> = try {
-        if (areasRepo.update(area) == 0) AreaNotFound(missingAreaId = area.uuid).left()
-        else area.right()
+        if (areasRepo.update(area) == 0) { AreaNotFound(missingAreaId = area.uuid).left() } else { area.right() }
     } catch (_: SameNameAreaException) {
         AreaNameConflict.left()
     } catch (e: DataAccessException) {
@@ -69,11 +68,9 @@ import org.springframework.stereotype.Service
     }
 
     override fun deleteAreaById(areaId: UUID): Either<AreaDeletionFailure, Unit> = try {
-        if (areasRepo.deleteAreaById(areaId) == 0) AreaNotFound(missingAreaId = areaId).left()
-        else Unit.right()
+        if (areasRepo.deleteAreaById(areaId) == 0) { AreaNotFound(missingAreaId = areaId).left() } else { Unit.right() }
     } catch (e: DataAccessException) {
         logger.error("Unexpected persistence error in AreasJdbcAdapter", e)
         AreaRepositoryError.left()
     }
-
 }

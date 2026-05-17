@@ -4,7 +4,6 @@ import arrow.core.Either
 import org.agrfesta.sh.api.core.application.ports.inbounds.RefreshDevicesUseCase
 import org.agrfesta.sh.api.core.domain.devices.RefreshDevicesResult
 import org.agrfesta.sh.api.core.domain.failures.RefreshDevicesError
-import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.internalServerError
 import org.springframework.http.ResponseEntity.ok
@@ -17,8 +16,6 @@ import org.springframework.web.bind.annotation.RestController
 class DevicesController(
     private val refreshDevicesUseCase: RefreshDevicesUseCase
 ) {
-    private val logger by LoggerDelegate()
-
     @PostMapping("/synchronizations")
     fun synchronize(): ResponseEntity<Any> =
         when (val result = refreshDevicesUseCase.execute()) {
@@ -27,7 +24,6 @@ class DevicesController(
             }
             is Either.Right -> ok(result.value.toResponse())
         }
-
 }
 
 data class DevicesRefreshResponse(

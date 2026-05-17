@@ -29,9 +29,11 @@ value class Percentage(val value: BigDecimal) {
     }
 }
 
+private const val AVERAGE_SCALE = 10
+
 fun Collection<Percentage>.average(): BigDecimal? {
     if (isEmpty()) return null
     return fold(ZERO) { acc, p -> acc + p.value }
-        .divide(BigDecimal(size), 10, RoundingMode.HALF_UP)
+        .divide(BigDecimal(size), AVERAGE_SCALE, RoundingMode.HALF_UP)
         .stripTrailingZeros()
 }

@@ -15,5 +15,4 @@ interface UpsertPropertyUseCase {
      * or [Either.Left] with [UpsertPropertyFailure] if a persistence error occurs.
      */
     fun execute(key: String, value: String, ttl: Long? = null): Either<UpsertPropertyFailure, Unit>
-
 }

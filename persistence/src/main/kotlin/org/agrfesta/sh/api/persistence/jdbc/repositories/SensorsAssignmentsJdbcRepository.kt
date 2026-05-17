@@ -1,21 +1,21 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.util.*
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.persistence.DeviceNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.entities.SensorAssignmentEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
-import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.postgresql.util.PSQLException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.util.*
 
 @Service
 class SensorsAssignmentsJdbcRepository(
@@ -64,19 +64,18 @@ class SensorsAssignmentsJdbcRepository(
     fun deleteAll(): Int = jdbcTemplate.update("DELETE FROM smart_home.sensor_assignment", emptyMap<String, Any>())
 
     fun findByDevice(deviceUuid: UUID): Collection<SensorAssignmentEntity> = jdbcTemplate.query(
-            """SELECT * FROM smart_home.sensor_assignment WHERE device_uuid = :deviceUuid;""",
-            MapSqlParameterSource(mapOf("deviceUuid" to deviceUuid)),
-            SensorAssignmentRowMapper
-        )
-
+        """SELECT * FROM smart_home.sensor_assignment WHERE device_uuid = :deviceUuid;""",
+        MapSqlParameterSource(mapOf("deviceUuid" to deviceUuid)),
+        SensorAssignmentRowMapper
+    )
 }
 
-object SensorAssignmentRowMapper: RowMapper<SensorAssignmentEntity> {
+object SensorAssignmentRowMapper : RowMapper<SensorAssignmentEntity> {
     override fun mapRow(rs: ResultSet, rowNum: Int) = SensorAssignmentEntity(
-            uuid = rs.getUuid("uuid"),
-            sensorUuid = rs.getUuid("device_uuid"),
-            areaUuid = rs.getUuid("area_uuid"),
-            connectedOn = rs.getInstant("connected_on"),
-            disconnectedOn = rs.findInstant("disconnected_on")
-        )
+        uuid = rs.getUuid("uuid"),
+        sensorUuid = rs.getUuid("device_uuid"),
+        areaUuid = rs.getUuid("area_uuid"),
+        connectedOn = rs.getInstant("connected_on"),
+        disconnectedOn = rs.findInstant("disconnected_on")
+    )
 }

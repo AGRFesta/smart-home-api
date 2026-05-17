@@ -9,7 +9,7 @@ import kotlin.reflect.full.companionObject
 /**
  * Notes: https://www.baeldung.com/kotlin/logging
  */
-class LoggerDelegate<in R : Any>: ReadOnlyProperty<R, Logger> {
+class LoggerDelegate<in R : Any> : ReadOnlyProperty<R, Logger> {
     override fun getValue(thisRef: R, property: KProperty<*>): Logger =
         LoggerFactory.getLogger(getClassForLogging(thisRef.javaClass))
 

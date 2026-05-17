@@ -18,5 +18,4 @@ interface UpdateAreaUseCase {
      *         a name conflict occurs, or a persistence error occurs.
      */
     fun execute(areaId: UUID, name: String, isIndoor: Boolean): Either<AreaUpdateFailure, AreaDto>
-
 }

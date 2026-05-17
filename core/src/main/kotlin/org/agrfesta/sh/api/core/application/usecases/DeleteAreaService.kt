@@ -14,5 +14,4 @@ class DeleteAreaService(
 
     override fun execute(areaId: UUID): Either<AreaDeletionFailure, Unit> =
         areasRepository.deleteAreaById(areaId)
-
 }

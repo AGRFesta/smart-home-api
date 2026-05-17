@@ -10,5 +10,4 @@ interface EvaluateHeatingStateUseCase {
      * areas by shared heater, and delegates control to the configured heating strategy.
      */
     fun execute()
-
 }

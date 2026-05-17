@@ -22,5 +22,4 @@ class HomeController(
             is Right -> ok(result.value.toResponse())
             is Left -> internalServerError().body(MessageResponse("Unable to fetch home dashboard!"))
         }
-
 }

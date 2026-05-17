@@ -1,12 +1,12 @@
 package org.agrfesta.sh.api.core.application.usecases.heating
 
-import java.math.BigDecimal
-import java.time.LocalTime
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.utils.LoggerDelegate
+import java.math.BigDecimal
+import java.time.LocalTime
 
 /**
  * Strategy interface for controlling a shared heater across multiple heatable areas.
@@ -27,7 +27,7 @@ sealed interface SharedHeatingAreasStrategyService {
  * It also provides helper methods to determine if a specific area requires heating based on
  * current temperature, target temperature, and hysteresis logic.
  */
-abstract class AbstractSharedHeatingAreasStrategyService: SharedHeatingAreasStrategyService {
+abstract class AbstractSharedHeatingAreasStrategyService : SharedHeatingAreasStrategyService {
     private val logger by LoggerDelegate()
 
     companion object {
@@ -84,12 +84,11 @@ abstract class AbstractSharedHeatingAreasStrategyService: SharedHeatingAreasStra
             temp <= targetTemp
         },
         ifRight = { status ->
-            when(status) {
+            when (status) {
                 ActuatorStatus.ON -> true
                 ActuatorStatus.OFF -> false
                 ActuatorStatus.UNDEFINED -> temp <= targetTemp
             }
         }
     )
-
 }

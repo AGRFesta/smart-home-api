@@ -7,18 +7,24 @@ sealed interface AreaDeletionFailure
 sealed interface AreaUpdateFailure
 sealed interface GetAreasFailure
 
-data object AreaNameConflict: AreaCreationFailure, AreaUpdateFailure
+data object AreaNameConflict : AreaCreationFailure, AreaUpdateFailure
 
 sealed interface AreaFetchFailure
 
 data class AreaNotFound(
     val missingAreaId: UUID
-): AreaFetchFailure, AreaDeletionFailure, AreaUpdateFailure,
-    TemperatureSettingCreationFailure, TemperatureSettingDeletionFailure, TemperatureSettingRetrievalFailure,
-    SensorAssignmentFailure, ActuatorAssignmentFailure,
-    SensorUnassignFailure, ActuatorUnassignFailure
+) : AreaFetchFailure,
+    AreaDeletionFailure,
+    AreaUpdateFailure,
+    TemperatureSettingCreationFailure,
+    TemperatureSettingDeletionFailure,
+    TemperatureSettingRetrievalFailure,
+    SensorAssignmentFailure,
+    ActuatorAssignmentFailure,
+    SensorUnassignFailure,
+    ActuatorUnassignFailure
 
-data object AreaRepositoryError:
+data object AreaRepositoryError :
     AreaCreationFailure,
     AreaFetchFailure,
     AreaUpdateFailure,

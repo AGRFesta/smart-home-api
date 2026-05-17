@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.core.domain.failures
 
-import java.util.UUID
 import org.agrfesta.sh.api.core.domain.devices.Device
+import java.util.UUID
 
 /**
  * Groups all causes of a failure fetching a [Device].
@@ -12,8 +12,11 @@ sealed interface DeviceUpdateFailure
 
 data class DeviceNotFound(
     val missingDeviceId: UUID
-): DeviceFetchFailure, DeviceUpdateFailure,
-    SensorAssignmentFailure, ActuatorAssignmentFailure,
-    SensorUnassignFailure, ActuatorUnassignFailure
+) : DeviceFetchFailure,
+    DeviceUpdateFailure,
+    SensorAssignmentFailure,
+    ActuatorAssignmentFailure,
+    SensorUnassignFailure,
+    ActuatorUnassignFailure
 
 data object DeviceRepositoryError : DeviceFetchFailure, DeviceCreationFailure, DeviceUpdateFailure

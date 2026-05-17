@@ -1,22 +1,22 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.util.*
-import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.persistence.jdbc.entities.DeviceEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getProvider
 import org.agrfesta.sh.api.persistence.jdbc.utils.getStatus
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
-import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.util.*
 
 @Repository
 class DevicesJdbcRepository(
@@ -70,10 +70,9 @@ class DevicesJdbcRepository(
     }
 
     fun deleteAll(): Int = jdbcTemplate.update("DELETE FROM smart_home.device", emptyMap<String, Any>())
-
 }
 
-object DeviceRowMapper: RowMapper<DeviceEntity> {
+object DeviceRowMapper : RowMapper<DeviceEntity> {
     override fun mapRow(rs: ResultSet, rowNum: Int): DeviceEntity {
         return DeviceEntity(
             uuid = rs.getUuid("uuid"),

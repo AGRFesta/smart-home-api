@@ -13,5 +13,4 @@ interface GetAreasUseCase {
      *         or [Either.Left] with a [GetAreasFailure] if a database error occurs.
      */
     fun execute(): Either<GetAreasFailure, Collection<AreaDto>>
-
 }

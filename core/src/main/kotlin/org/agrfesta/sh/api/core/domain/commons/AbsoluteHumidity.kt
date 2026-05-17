@@ -37,6 +37,9 @@ class AbsoluteHumidity(temperature: Temperature, relativeHumidity: Percentage) {
     }
 
     // Function to calculate e^x for BigDecimal using a Taylor series approximation
+    // Detekt 1.23.x false positive: flags the for-loop counter `i` as UnusedPrivateProperty.
+    // Kotlin reserves `_` so it cannot be used as the loop variable — suppress locally.
+    @Suppress("UnusedPrivateProperty")
     private fun expBigDecimal(x: BigDecimal): BigDecimal {
         var result = BigDecimal.ONE
         var term = BigDecimal.ONE

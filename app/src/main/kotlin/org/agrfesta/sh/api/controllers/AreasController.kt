@@ -2,16 +2,16 @@ package org.agrfesta.sh.api.controllers
 
 import arrow.core.Either.Left
 import arrow.core.Either.Right
-import java.util.*
 import org.agrfesta.sh.api.core.application.ports.inbounds.AssignActuatorToAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.AssignSensorToAreaUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignActuatorFromAreaUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignSensorFromAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.CreateAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.DeleteAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetAreaByIdUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetAreasUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignActuatorFromAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignSensorFromAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.UpdateAreaUseCase
+import org.agrfesta.sh.api.core.domain.failures.ActuatorNotAssigned
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
@@ -21,7 +21,6 @@ import org.agrfesta.sh.api.core.domain.failures.NotASensor
 import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
-import org.agrfesta.sh.api.core.domain.failures.ActuatorNotAssigned
 import org.agrfesta.sh.api.core.domain.failures.SensorNotAssigned
 import org.springframework.http.HttpStatus.CREATED
 import org.springframework.http.HttpStatus.NOT_FOUND
@@ -39,7 +38,9 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.util.*
 
+@Suppress("LongParameterList")
 @RestController
 @RequestMapping("/areas")
 class AreasController(
@@ -60,7 +61,9 @@ class AreasController(
             is Right -> status(CREATED).body(
                 CreatedResourceResponse(
                     message = "Area '${request.name}' successfully created!",
-                    resourceId = result.value.uuid.toString() ))
+                    resourceId = result.value.uuid.toString()
+                )
+            )
             is Left -> when (result.value) {
                 AreaNameConflict -> badRequest().body(MessageResponse("An Area '${request.name}' already exists!"))
                 AreaRepositoryError -> internalServerError()
@@ -190,7 +193,6 @@ class AreasController(
                     .body(MessageResponse("Unable to unassign sensor '$deviceId' from area '$areaId'!"))
             }
         }
-
 }
 
 data class CreateAreaRequest(val name: String, val isIndoor: Boolean?)

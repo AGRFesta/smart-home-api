@@ -2,10 +2,10 @@ package org.agrfesta.sh.api.core.application.ports.outbounds.settings
 
 import arrow.core.Either
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
+import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.sh.api.core.domain.failures.FindPropertyFailure
 import org.agrfesta.sh.api.core.domain.failures.GetPropertyFailure
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
-import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 
 /**
  * Outbound Port for property persistence operations.
@@ -49,5 +49,4 @@ interface PropertyRepository {
      * or [Either.Left] with [GetPropertyFailure] if the entry does not exist or a database error occurs.
      */
     fun getEntry(key: String): Either<GetPropertyFailure, PropertyEntry>
-
 }

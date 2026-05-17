@@ -13,5 +13,4 @@ interface GetHomeDashboardUseCase {
      *         if the dashboard data could not be fetched.
      */
     fun execute(): Either<GetHomeDashboardFailure, HomeDashboardDto>
-
 }

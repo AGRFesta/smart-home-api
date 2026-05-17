@@ -1,17 +1,17 @@
 package org.agrfesta.sh.api.core.application.usecases.heating
 
-import java.math.BigDecimal
-import java.math.RoundingMode
-import java.time.LocalTime
+import org.agrfesta.sh.api.core.application.usecases.heating.AbstractSharedHeatingAreasStrategyService.Companion.HYSTERESIS
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
-import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 import org.agrfesta.sh.api.core.domain.commons.Percentage
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.Heater
-import org.agrfesta.sh.api.core.application.usecases.heating.AbstractSharedHeatingAreasStrategyService.Companion.HYSTERESIS
+import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.time.LocalTime
 
 /**
  * Implementation of [AbstractSharedHeatingAreasStrategyService] that optimizes heating for economy.
@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service
 @Service
 class EconomyAreasSharedHeatingStrategyService(
     @Value("\${heating.params.economy-areas-percentage:0.5}") percentageValue: BigDecimal
-): NamedSharedHeatingAreasStrategyService, AbstractSharedHeatingAreasStrategyService() {
+) : NamedSharedHeatingAreasStrategyService, AbstractSharedHeatingAreasStrategyService() {
     private val percentage = Percentage(percentageValue)
     private val logger by LoggerDelegate()
     override val strategy: SharedHeatingStrategy = SharedHeatingStrategy.ECONOMY
@@ -55,15 +55,21 @@ class EconomyAreasSharedHeatingStrategyService(
                 ?.let { a.requiresHeatingFor(it) }
                 ?: false
         }
-        val neededHeatingPerc = Percentage(BigDecimal(areasToHeat.size)
-            .divide(BigDecimal(areas.size), 2, RoundingMode.HALF_UP))
+        val neededHeatingPerc = Percentage(
+            BigDecimal(areasToHeat.size)
+                .divide(BigDecimal(areas.size), 2, RoundingMode.HALF_UP)
+        )
         if (neededHeatingPerc.value >= percentage.value) {
-            logger.info("$neededHeatingPerc of the heatable areas require heating. " +
-                    "(above $percentage) -> heater ON")
+            logger.info(
+                "$neededHeatingPerc of the heatable areas require heating. " +
+                    "(above $percentage) -> heater ON"
+            )
             sharedHeater.on()
         } else {
-            logger.info("$neededHeatingPerc of the heatable areas require heating. " +
-                    "(below $percentage) -> heater OFF")
+            logger.info(
+                "$neededHeatingPerc of the heatable areas require heating. " +
+                    "(below $percentage) -> heater OFF"
+            )
             sharedHeater.off()
         }
     }

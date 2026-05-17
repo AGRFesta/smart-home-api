@@ -2,8 +2,8 @@ package org.agrfesta.sh.api.core.application.usecases
 
 import arrow.core.Either
 import org.agrfesta.sh.api.core.application.ports.inbounds.CreateAreaUseCase
-import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.domain.areas.AreaDto
 import org.agrfesta.sh.api.core.domain.failures.AreaCreationFailure
 import org.springframework.stereotype.Service
@@ -22,5 +22,4 @@ class CreateAreaService(
         )
         return areasRepository.save(area).map { area }
     }
-
 }

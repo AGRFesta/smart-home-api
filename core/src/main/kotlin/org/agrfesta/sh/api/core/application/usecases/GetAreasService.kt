@@ -14,5 +14,4 @@ class GetAreasService(
 
     override fun execute(): Either<GetAreasFailure, Collection<AreaDto>> =
         areasRepository.getAll()
-
 }

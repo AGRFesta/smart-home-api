@@ -1,15 +1,10 @@
 package org.agrfesta.sh.api.controllers
 
-import java.math.BigDecimal
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
-import java.util.UUID
 import org.agrfesta.sh.api.core.application.ports.inbounds.DeleteHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingScheduleUseCase
-import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
+import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
@@ -30,6 +25,11 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.math.BigDecimal
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.util.UUID
 
 private val timeFormatter = DateTimeFormatter.ofPattern(INTERVAL_TIME_FORMAT)
 
@@ -104,7 +104,8 @@ class AreaHeatingScheduleController(
                 when (failure) {
                     OverlappingIntervals -> {
                         val problem = ProblemDetail.forStatusAndDetail(
-                            UNPROCESSABLE_ENTITY, "The provided heating intervals overlap."
+                            UNPROCESSABLE_ENTITY,
+                            "The provided heating intervals overlap."
                         )
                         problem.title = "Overlapping Intervals"
                         status(UNPROCESSABLE_ENTITY).body(problem)
@@ -118,7 +119,6 @@ class AreaHeatingScheduleController(
             { schedule -> status(OK).body(schedule.toResponse()) }
         )
     }
-
 }
 
 private fun parseTime(value: String): LocalTime =

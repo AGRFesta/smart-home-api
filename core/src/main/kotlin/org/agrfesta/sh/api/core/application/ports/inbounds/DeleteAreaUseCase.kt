@@ -14,5 +14,4 @@ interface DeleteAreaUseCase {
      *         or [Either.Left] with an [AreaDeletionFailure] if the area does not exist or a persistence error occurs.
      */
     fun execute(areaId: UUID): Either<AreaDeletionFailure, Unit>
-
 }

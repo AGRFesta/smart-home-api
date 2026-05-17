@@ -3,7 +3,6 @@ package org.agrfesta.sh.api.core.application.usecases
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
-import java.util.UUID
 import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
@@ -20,6 +19,7 @@ import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
 import org.agrfesta.sh.api.core.domain.failures.TemperatureSettingCreationFailure
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 @Service
 class ReplaceHeatingScheduleService(
@@ -63,5 +63,4 @@ class ReplaceHeatingScheduleService(
         is AreaNotFound -> this
         AreaRepositoryError -> HeatingScheduleRepositoryError
     }
-
 }

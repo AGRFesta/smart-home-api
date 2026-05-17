@@ -42,11 +42,12 @@ class FetchSensorReadingsService(
                         }
                     if (readings is ThermoHygroDataValue) {
                         readingsRepository.save(driver, readings.thermoHygroData)
-                            .onLeft { failure -> logger.error("Failed to save readings for device ${device.uuid}: $failure") }
+                            .onLeft { failure ->
+                                logger.error("Failed to save readings for device ${device.uuid}: $failure")
+                            }
                     }
                 }
             }
         return Unit.right()
     }
-
 }

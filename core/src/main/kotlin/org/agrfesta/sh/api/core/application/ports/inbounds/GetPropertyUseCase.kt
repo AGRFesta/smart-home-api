@@ -14,5 +14,4 @@ interface GetPropertyUseCase {
      * or [Either.Left] with [GetPropertyFailure] if the entry does not exist or a database error occurs.
      */
     fun execute(key: String): Either<GetPropertyFailure, PropertyEntry>
-
 }

@@ -1,7 +1,5 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
-import java.sql.ResultSet
-import java.util.*
 import org.agrfesta.sh.api.persistence.AreaNotFoundException
 import org.agrfesta.sh.api.persistence.DeviceNotFoundException
 import org.agrfesta.sh.api.persistence.jdbc.entities.ActuatorAssignmentEntity
@@ -12,6 +10,8 @@ import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
+import java.sql.ResultSet
+import java.util.*
 
 @Service
 class ActuatorsAssignmentsJdbcRepository(
@@ -53,14 +53,13 @@ class ActuatorsAssignmentsJdbcRepository(
     }
 
     fun findByDevice(deviceUuid: UUID): Collection<ActuatorAssignmentEntity> = jdbcTemplate.query(
-            """SELECT * FROM smart_home.actuator_assignment WHERE device_uuid = :deviceUuid;""",
-            MapSqlParameterSource(mapOf("deviceUuid" to deviceUuid)), //TODO maybe just a map?
-            ActuatorAssignmentRowMapper
-        )
-
+        """SELECT * FROM smart_home.actuator_assignment WHERE device_uuid = :deviceUuid;""",
+        MapSqlParameterSource(mapOf("deviceUuid" to deviceUuid)), // TODO maybe just a map?
+        ActuatorAssignmentRowMapper
+    )
 }
 
-object ActuatorAssignmentRowMapper: RowMapper<ActuatorAssignmentEntity> {
+object ActuatorAssignmentRowMapper : RowMapper<ActuatorAssignmentEntity> {
     override fun mapRow(rs: ResultSet, rowNum: Int) = ActuatorAssignmentEntity(
         uuid = rs.getUuid("uuid"),
         actuatorUuid = rs.getUuid("device_uuid"),

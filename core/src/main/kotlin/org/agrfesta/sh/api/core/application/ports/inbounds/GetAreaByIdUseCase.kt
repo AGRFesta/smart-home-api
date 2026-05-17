@@ -15,5 +15,4 @@ interface GetAreaByIdUseCase {
      *         or [Either.Left] with an [AreaFetchFailure] if the area does not exist or a persistence error occurs.
      */
     fun execute(areaId: UUID): Either<AreaFetchFailure, AreaDto>
-
 }

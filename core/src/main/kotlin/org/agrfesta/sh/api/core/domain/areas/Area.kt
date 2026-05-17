@@ -3,8 +3,6 @@ package org.agrfesta.sh.api.core.domain.areas
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import java.time.LocalTime
-import java.util.*
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.commons.average
 import org.agrfesta.sh.api.core.domain.devices.Actuator
@@ -12,6 +10,8 @@ import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
 import org.agrfesta.sh.api.utils.LoggerDelegate
+import java.time.LocalTime
+import java.util.*
 
 /**
  * Represents a physical or logical space within the smart home system.
@@ -34,7 +34,7 @@ data class AreaImpl(
     override val uuid: UUID,
     override val sensors: Collection<Sensor>,
     override val actuators: Collection<Actuator>
-): Area
+) : Area
 
 /**
  * Represents an [Area] that exposes climate data.
@@ -43,7 +43,7 @@ data class AreaImpl(
  */
 data object TemperatureUnavailable
 
-interface MonitoredClimateArea: Area {
+interface MonitoredClimateArea : Area {
     /**
      * Retrieves the current temperature of the area.
      * This is typically an aggregate of readings from the sensors in the area.
@@ -51,7 +51,7 @@ interface MonitoredClimateArea: Area {
      * @return [Either] a [TemperatureUnavailable] if the temperature cannot be retrieved, or the [Temperature].
      */
     fun getCurrentTemperature(): Either<TemperatureUnavailable, Temperature>
-    //TODO humidity
+    // TODO humidity
 }
 
 /**
@@ -63,7 +63,7 @@ interface MonitoredClimateArea: Area {
  */
 class MonitoredClimateAreaImpl(
     private val area: Area
-): MonitoredClimateArea, Area by area {
+) : MonitoredClimateArea, Area by area {
     private val logger by LoggerDelegate()
 
     init {
@@ -75,21 +75,21 @@ class MonitoredClimateAreaImpl(
     override fun getCurrentTemperature(): Either<TemperatureUnavailable, Temperature> =
         sensors.mapNotNull {
             it.fetchReadings().fold(
-                    ifLeft = { _ ->
-                        logger.error("Unable to fetch readings by sensor '${it.uuid}'.")
-                        null},
-                    ifRight = { r -> (r as? ThermoHygroDataValue)?.thermoHygroData?.temperature }
-                )
+                ifLeft = { _ ->
+                    logger.error("Unable to fetch readings by sensor '${it.uuid}'.")
+                    null
+                },
+                ifRight = { r -> (r as? ThermoHygroDataValue)?.thermoHygroData?.temperature }
+            )
         }.average()?.right()
             ?: TemperatureUnavailable.left()
-
 }
 
 /**
  * Represents a [MonitoredClimateArea] that has heating capabilities.
  * In addition to monitoring climate, it includes a [Heater] and logic to determine the target temperature.
  */
-interface HeatableArea: MonitoredClimateArea {
+interface HeatableArea : MonitoredClimateArea {
     val heater: Heater
 
     /**
@@ -113,9 +113,8 @@ class HeatableAreaImpl(
     override val heater: Heater,
     private val mcArea: MonitoredClimateArea,
     private val setting: AreaTemperatureSetting?
-): HeatableArea, MonitoredClimateArea by mcArea {
+) : HeatableArea, MonitoredClimateArea by mcArea {
 
     override fun getCurrentTargetTemperature(currentTime: LocalTime): Temperature? =
         setting?.targetTemperatureAt(currentTime)
-
 }

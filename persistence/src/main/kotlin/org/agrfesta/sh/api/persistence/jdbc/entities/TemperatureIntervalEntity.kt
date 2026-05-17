@@ -4,7 +4,7 @@ import java.math.BigDecimal
 import java.time.LocalTime
 import java.util.*
 
-class TemperatureIntervalEntity (
+class TemperatureIntervalEntity(
     val uuid: UUID,
     val areaUuid: UUID,
     val startTime: LocalTime,

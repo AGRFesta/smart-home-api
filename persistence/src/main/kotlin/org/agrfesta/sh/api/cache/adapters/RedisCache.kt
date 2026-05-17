@@ -6,10 +6,11 @@ import arrow.core.right
 import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
 import org.agrfesta.sh.api.core.application.ports.outbounds.CacheError
 import org.agrfesta.sh.api.core.application.ports.outbounds.CacheFailure
-import org.agrfesta.sh.api.core.application.ports.outbounds.CachedValueNotFound
 import org.agrfesta.sh.api.core.application.ports.outbounds.CacheOkResponse
 import org.agrfesta.sh.api.core.application.ports.outbounds.CacheResponse
+import org.agrfesta.sh.api.core.application.ports.outbounds.CachedValueNotFound
 import org.slf4j.Logger
+import org.springframework.dao.DataAccessException
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 import kotlin.time.Duration
@@ -20,10 +21,13 @@ class RedisCache(private val template: RedisTemplate<String, String>) : Cache {
 
     override fun set(key: String, value: String, ttl: Duration?): CacheResponse =
         try {
-            if (ttl != null) template.opsForValue().set(key, value, ttl.toJavaDuration())
-            else template.opsForValue().set(key, value)
+            if (ttl != null) {
+                template.opsForValue().set(key, value, ttl.toJavaDuration())
+            } else {
+                template.opsForValue().set(key, value)
+            }
             CacheOkResponse
-        } catch (ex: Exception) {
+        } catch (ex: DataAccessException) {
             CacheError(ex)
         }
 
@@ -32,7 +36,7 @@ class RedisCache(private val template: RedisTemplate<String, String>) : Cache {
             template.opsForValue().get(key)
                 ?.right()
                 ?: CachedValueNotFound(key).left()
-        } catch (ex: Exception) {
+        } catch (ex: DataAccessException) {
             CacheError(ex).left()
         }
 
@@ -40,7 +44,7 @@ class RedisCache(private val template: RedisTemplate<String, String>) : Cache {
         try {
             template.delete(key)
             Unit.right()
-        } catch (ex: Exception) {
+        } catch (ex: DataAccessException) {
             CacheError(ex).left()
         }
 }

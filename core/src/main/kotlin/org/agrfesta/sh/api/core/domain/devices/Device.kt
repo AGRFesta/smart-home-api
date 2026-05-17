@@ -9,7 +9,7 @@ data class Device(
     override val provider: Provider,
     val name: String,
     val features: Set<DeviceFeature>
-): DeviceProviderIdentity {
+) : DeviceProviderIdentity {
     constructor(uuid: UUID, providerData: ProviderDeviceData, status: DeviceStatus = DeviceStatus.PAIRED) : this(
         uuid = uuid,
         status = status,

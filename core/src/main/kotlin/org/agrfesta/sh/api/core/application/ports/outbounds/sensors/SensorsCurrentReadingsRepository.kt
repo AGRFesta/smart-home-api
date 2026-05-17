@@ -31,5 +31,4 @@ interface SensorsCurrentReadingsRepository {
      * [SensorReadingsSaveFailure] if the write fails.
      */
     fun save(sensor: DeviceProviderIdentity, data: ThermoHygroData): Either<SensorReadingsSaveFailure, Unit>
-
 }

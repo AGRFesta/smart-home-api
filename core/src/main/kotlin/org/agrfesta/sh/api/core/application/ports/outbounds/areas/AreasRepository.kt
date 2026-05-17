@@ -1,7 +1,6 @@
 package org.agrfesta.sh.api.core.application.ports.outbounds.areas
 
 import arrow.core.Either
-import java.util.UUID
 import org.agrfesta.sh.api.core.domain.areas.AreaDto
 import org.agrfesta.sh.api.core.domain.failures.AreaCreationFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaDeletionFailure
@@ -9,6 +8,7 @@ import org.agrfesta.sh.api.core.domain.failures.AreaFetchFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.AreaUpdateFailure
 import org.agrfesta.sh.api.core.domain.failures.GetAreasFailure
+import java.util.UUID
 
 /**
  * Outbound Port for [AreaDto] persistence operations.
@@ -73,5 +73,4 @@ interface AreasRepository {
      * or [Either.Left] with [AreaDeletionFailure] if the area does not exist or a persistence error occurs.
      */
     fun deleteAreaById(areaId: UUID): Either<AreaDeletionFailure, Unit>
-
 }

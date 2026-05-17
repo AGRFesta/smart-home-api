@@ -1,16 +1,16 @@
 package org.agrfesta.sh.api.core.application.usecases.heating
 
-import java.time.LocalTime
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
-import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.time.LocalTime
 
 /**
  * Implementation of [SharedHeatingAreasStrategyService] that dynamically delegates to a specific strategy
@@ -26,7 +26,7 @@ class DynamicSharedHeatingStrategyService(
     @param:Value("\${heating.default-strategy:ECONOMY}") private val defaultStrategy: SharedHeatingStrategy,
     strategyServices: Collection<NamedSharedHeatingAreasStrategyService>,
     private val propertyRepository: PropertyRepository
-): SharedHeatingAreasStrategyService {
+) : SharedHeatingAreasStrategyService {
     private val logger by LoggerDelegate()
     private val servicesByStrategy: Map<SharedHeatingStrategy, NamedSharedHeatingAreasStrategyService> =
         strategyServices.associateBy { it.strategy }
@@ -47,13 +47,17 @@ class DynamicSharedHeatingStrategyService(
         val service = when {
             servicesByStrategy.containsKey(strategy) -> servicesByStrategy[strategy]
             servicesByStrategy.containsKey(defaultStrategy) -> {
-                logger.error("Selected strategy '${strategy.name}' is missing. " +
-                        "Falling back to default: '${defaultStrategy.name}'")
+                logger.error(
+                    "Selected strategy '${strategy.name}' is missing. " +
+                        "Falling back to default: '${defaultStrategy.name}'"
+                )
                 servicesByStrategy[defaultStrategy]
             }
             else -> {
-                logger.error("Default strategy '${defaultStrategy.name}' is also missing. " +
-                        "Skipping heating control for heater ${sharedHeater.uuid}")
+                logger.error(
+                    "Default strategy '${defaultStrategy.name}' is also missing. " +
+                        "Skipping heating control for heater ${sharedHeater.uuid}"
+                )
                 null
             }
         }
@@ -62,13 +66,17 @@ class DynamicSharedHeatingStrategyService(
 
     private fun getStrategy(): SharedHeatingStrategy = propertyRepository.getEntry(HEATING_STRATEGY_KEY).fold(
         ifLeft = {
-            when(it) {
+            when (it) {
                 is PropertyNotFound ->
-                    logger.error("$HEATING_STRATEGY_KEY cache entry is missing. " +
-                            "Falling back to ${defaultStrategy.name}")
+                    logger.error(
+                        "$HEATING_STRATEGY_KEY cache entry is missing. " +
+                            "Falling back to ${defaultStrategy.name}"
+                    )
                 PropertyRepositoryError ->
-                    logger.error("Unable to fetch $HEATING_STRATEGY_KEY cache entry. " +
-                            "Falling back to ${defaultStrategy.name}")
+                    logger.error(
+                        "Unable to fetch $HEATING_STRATEGY_KEY cache entry. " +
+                            "Falling back to ${defaultStrategy.name}"
+                    )
             }
             defaultStrategy
         },
@@ -81,5 +89,4 @@ class DynamicSharedHeatingStrategyService(
         logger.error("Value $this is not a valid HeatingStrategy. Falling back to ${defaultStrategy.name}", e)
         defaultStrategy
     }
-
 }

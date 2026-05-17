@@ -23,11 +23,12 @@ class JacksonConfiguration {
         configure(SerializationFeature.WRITE_BIGDECIMAL_AS_PLAIN, true)
         configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         registerModule(JavaTimeModule())
-        registerModule(SimpleModule().apply {
-            addSerializer(Instant::class.java, InstantSerializer())
-        })
+        registerModule(
+            SimpleModule().apply {
+                addSerializer(Instant::class.java, InstantSerializer())
+            }
+        )
     }
-
 }
 
 /**
