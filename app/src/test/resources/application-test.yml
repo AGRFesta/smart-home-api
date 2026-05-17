@@ -2,12 +2,14 @@ security:
   api-token-hash: 3dffc45f175a5b4c7b8d04d3c271405fc27e4fad6f2d1d10c56f5280fd738440 # -> token: e88230d7d195479dabb1a6650343633f
 providers:
   netatmo:
+    enabled: true
     base-url: https://netatmo.fake
     client-id: fake-client-id
     client-secret: fake-client-secret
     home-id: fake-home-id
     room-id: fake-room-id
   switchbot:
+    enabled: true
     base-url: https://switch-bot.fake
     token: fake-token
     secret: fake-secret

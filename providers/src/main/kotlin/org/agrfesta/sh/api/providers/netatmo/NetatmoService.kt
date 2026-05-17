@@ -13,6 +13,7 @@ import org.agrfesta.sh.api.core.domain.failures.DevicesProviderFailure
 import org.springframework.stereotype.Service
 
 @Service
+@ConditionalOnNetatmo
 class NetatmoService(
     private val netatmoClient: NetatmoClient
 ) : DevicesProvider {

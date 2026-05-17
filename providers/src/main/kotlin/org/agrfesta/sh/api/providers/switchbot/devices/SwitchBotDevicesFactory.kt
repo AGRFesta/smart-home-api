@@ -4,10 +4,12 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevi
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceDriver
 import org.agrfesta.sh.api.core.domain.devices.Provider
+import org.agrfesta.sh.api.providers.switchbot.ConditionalOnSwitchBot
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.springframework.stereotype.Service
 
 @Service
+@ConditionalOnSwitchBot
 class SwitchBotDevicesFactory(
     private val client: SwitchBotDevicesClient
 ) : ProviderDevicesFactory {

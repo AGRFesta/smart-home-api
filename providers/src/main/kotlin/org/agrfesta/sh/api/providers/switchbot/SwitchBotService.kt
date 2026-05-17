@@ -14,6 +14,7 @@ import org.agrfesta.sh.api.core.domain.failures.DevicesProviderFailure
 import org.springframework.stereotype.Service
 
 @Service
+@ConditionalOnSwitchBot
 class SwitchBotService(
     private val devicesClient: SwitchBotDevicesClient,
     private val mapper: ObjectMapper

@@ -21,6 +21,7 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 @Service
+@ConditionalOnSwitchBot
 class SwitchBotDevicesClient(
     private val config: SwitchBotConfiguration,
     private val mapper: ObjectMapper,

@@ -5,11 +5,13 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevi
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceDriver
 import org.agrfesta.sh.api.core.domain.devices.Provider
+import org.agrfesta.sh.api.providers.netatmo.ConditionalOnNetatmo
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClient
 import org.agrfesta.sh.api.providers.netatmo.NetatmoConfiguration
 import org.springframework.stereotype.Service
 
 @Service
+@ConditionalOnNetatmo
 class NetatmoDevicesFactory(
     private val config: NetatmoConfiguration,
     private val client: NetatmoClient,

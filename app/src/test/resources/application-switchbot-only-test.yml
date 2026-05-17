@@ -1,0 +1,8 @@
+security:
+  api-token-hash: 3dffc45f175a5b4c7b8d04d3c271405fc27e4fad6f2d1d10c56f5280fd738440
+providers:
+  switchbot:
+    enabled: true
+    base-url: https://switch-bot.fake
+    token: fake-token
+    secret: fake-secret

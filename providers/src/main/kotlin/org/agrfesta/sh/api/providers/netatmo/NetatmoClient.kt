@@ -39,6 +39,7 @@ import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 @Service
+@ConditionalOnNetatmo
 class NetatmoClient(
     private val config: NetatmoConfiguration,
     private val cache: Cache,

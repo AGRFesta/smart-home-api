@@ -2,6 +2,7 @@ package org.agrfesta.sh.api.controllers
 
 import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.runBlocking
+import org.agrfesta.sh.api.providers.switchbot.ConditionalOnSwitchBot
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/switchbot")
+@ConditionalOnSwitchBot
 class SwitchBotController(
     private val switchBotDevicesClient: SwitchBotDevicesClient
 ) {

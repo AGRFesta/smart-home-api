@@ -1,0 +1,9 @@
+package org.agrfesta.sh.api.providers.netatmo
+
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+@ConditionalOnNetatmo
+@EnableConfigurationProperties(NetatmoConfiguration::class)
+class NetatmoConfig
