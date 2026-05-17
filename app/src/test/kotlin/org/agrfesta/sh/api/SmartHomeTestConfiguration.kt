@@ -11,5 +11,4 @@ class SmartHomeTestConfiguration {
     @Bean fun registry() = BehaviorRegistry()
 
     @Bean fun engine(registry: BehaviorRegistry) = createMockEngine(registry)
-
 }

@@ -7,7 +7,6 @@ import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import java.util.*
 import org.agrfesta.sh.api.core.application.ports.inbounds.DeleteHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingScheduleUseCase
@@ -32,6 +31,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delet
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.util.*
 
 @WebMvcTest(AreaHeatingScheduleController::class)
 @Import(SecurityConfig::class)
@@ -46,7 +46,7 @@ class AreaHeatingScheduleControllerMvcSliceTest(
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
-    ///// getHeatingSchedule ///////////////////////////////////////////////////////////////////////////////////////////
+    // /// getHeatingSchedule ///////////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `getHeatingSchedule() auth tests`() = authTestSupport.dynamicTestsBy {
         get("/areas/${UUID.randomUUID()}/heating-schedule")
@@ -66,7 +66,8 @@ class AreaHeatingScheduleControllerMvcSliceTest(
         every { getHeatingScheduleUseCase.execute(areaId) } returns returnedSchedule.right()
 
         val responseBody: String = mockMvc.perform(
-            get("/areas/$areaId/heating-schedule").authenticated())
+            get("/areas/$areaId/heating-schedule").authenticated()
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
@@ -85,7 +86,8 @@ class AreaHeatingScheduleControllerMvcSliceTest(
         every { getHeatingScheduleUseCase.execute(areaId) } returns null.right()
 
         val responseBody: String = mockMvc.perform(
-            get("/areas/$areaId/heating-schedule").authenticated())
+            get("/areas/$areaId/heating-schedule").authenticated()
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
@@ -100,7 +102,8 @@ class AreaHeatingScheduleControllerMvcSliceTest(
         every { getHeatingScheduleUseCase.execute(areaId) } returns AreaNotFound(areaId).left()
 
         val responseBody: String = mockMvc.perform(
-            get("/areas/$areaId/heating-schedule").authenticated())
+            get("/areas/$areaId/heating-schedule").authenticated()
+        )
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
 
@@ -114,7 +117,8 @@ class AreaHeatingScheduleControllerMvcSliceTest(
             HeatingScheduleRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
-            get("/areas/$areaId/heating-schedule").authenticated())
+            get("/areas/$areaId/heating-schedule").authenticated()
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -122,7 +126,7 @@ class AreaHeatingScheduleControllerMvcSliceTest(
         response.message shouldBe "Internal server error while retrieving heating schedule."
     }
 
-    ///// replaceHeatingSchedule ///////////////////////////////////////////////////////////////////////////////////////
+    // /// replaceHeatingSchedule ///////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `replaceHeatingSchedule() auth tests`() = authTestSupport.dynamicTestsBy {
         val temp = aRandomTemperature().value
@@ -140,7 +144,8 @@ class AreaHeatingScheduleControllerMvcSliceTest(
             put("/areas/$areaId/heating-schedule")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"defaultTemperature": $temp, "intervals": []}"""))
+                .content("""{"defaultTemperature": $temp, "intervals": []}""")
+        )
             .andExpect(status().isUnprocessableEntity)
             .andReturn().response.contentAsString
 
@@ -158,7 +163,8 @@ class AreaHeatingScheduleControllerMvcSliceTest(
             put("/areas/$areaId/heating-schedule")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"defaultTemperature": $temp, "intervals": []}"""))
+                .content("""{"defaultTemperature": $temp, "intervals": []}""")
+        )
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
 
@@ -176,7 +182,8 @@ class AreaHeatingScheduleControllerMvcSliceTest(
             put("/areas/$areaId/heating-schedule")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"defaultTemperature": $temp, "intervals": []}"""))
+                .content("""{"defaultTemperature": $temp, "intervals": []}""")
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -202,12 +209,16 @@ class AreaHeatingScheduleControllerMvcSliceTest(
             put("/areas/$areaId/heating-schedule")
                 .contentType("application/json")
                 .authenticated()
-                .content("""
+                .content(
+                    """
                     {
                         "defaultTemperature": $temp,
                         "intervals": [
                             {"temperature": $temp, "startTime": "08:00", "endTime": "22:00"}
-                            ]}""".trimIndent()))
+                            ]}
+                    """.trimIndent()
+                )
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
@@ -221,7 +232,7 @@ class AreaHeatingScheduleControllerMvcSliceTest(
         response.intervals[0].endTime shouldBe returnedInterval.endTime.format(formatter)
     }
 
-    ///// deleteHeatingSchedule ///////////////////////////////////////////////////////////////////////////////////////
+    // /// deleteHeatingSchedule ///////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `deleteHeatingSchedule() auth tests`() = authTestSupport.dynamicTestsBy {
         delete("/areas/${UUID.randomUUID()}/heating-schedule")
@@ -232,7 +243,8 @@ class AreaHeatingScheduleControllerMvcSliceTest(
         every { deleteHeatingScheduleUseCase.execute(areaId) } returns Unit.right()
 
         mockMvc.perform(
-            delete("/areas/$areaId/heating-schedule").authenticated())
+            delete("/areas/$areaId/heating-schedule").authenticated()
+        )
             .andExpect(status().isNoContent)
     }
 
@@ -241,7 +253,8 @@ class AreaHeatingScheduleControllerMvcSliceTest(
         every { deleteHeatingScheduleUseCase.execute(areaId) } returns AreaNotFound(areaId).left()
 
         val responseBody: String = mockMvc.perform(
-            delete("/areas/$areaId/heating-schedule").authenticated())
+            delete("/areas/$areaId/heating-schedule").authenticated()
+        )
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
 
@@ -255,7 +268,8 @@ class AreaHeatingScheduleControllerMvcSliceTest(
             HeatingScheduleRepositoryError.left()
 
         val responseBody: String = mockMvc.perform(
-            delete("/areas/$areaId/heating-schedule").authenticated())
+            delete("/areas/$areaId/heating-schedule").authenticated()
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -263,5 +277,5 @@ class AreaHeatingScheduleControllerMvcSliceTest(
         response.message shouldBe "Internal server error while deleting heating schedule."
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }

@@ -11,12 +11,13 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import java.time.LocalTime
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
+import org.agrfesta.sh.api.core.application.usecases.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.sh.api.core.domain.commons.FieldFailure
 import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
@@ -27,15 +28,14 @@ import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupError
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
+import org.agrfesta.sh.api.domain.aSensor
+import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.anAreaDtoWithDevices
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
-import org.agrfesta.sh.api.domain.aTemperatureInterval
-import org.agrfesta.sh.api.domain.aSensor
-import org.agrfesta.sh.api.core.application.usecases.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.agrfesta.test.mothers.aRandomThermoHygroData
-import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.junit.jupiter.api.Test
+import java.time.LocalTime
 
 class GetHomeDashboardServiceTest {
     private val propertyRepository: PropertyRepository = mockk()
@@ -196,7 +196,8 @@ class GetHomeDashboardServiceTest {
         }
     }
 
-    @Test fun `execute() area heating currentTemperature is the sensor temperature when area has one sensor with readings`() {
+    @Test
+    fun `execute() area heating currentTemperature is the sensor temperature when area has one sensor with readings`() {
         val sensor = aSensor()
         val data = aRandomThermoHygroData()
         val area = anAreaDtoWithDevices(sensors = listOf(sensor))
@@ -227,7 +228,8 @@ class GetHomeDashboardServiceTest {
         }
     }
 
-    @Test fun `execute() area heating currentTemperature is the average when area has multiple sensors with readings`() {
+    @Test
+    fun `execute() area heating currentTemperature is the average when area has multiple sensors with readings`() {
         val sensor1 = aSensor()
         val sensor2 = aSensor()
         val data1 = aRandomThermoHygroData()
@@ -246,7 +248,8 @@ class GetHomeDashboardServiceTest {
         }
     }
 
-    @Test fun `execute() area heating currentTemperature is the average of available readings when some sensors have no cached readings`() {
+    @Test
+    fun `execute() area heating currentTemperature is average of readings when some sensors have no cached readings`() {
         val sensor1 = aSensor()
         val sensor2 = aSensor()
         val data = aRandomThermoHygroData()
@@ -316,7 +319,8 @@ class GetHomeDashboardServiceTest {
         }
     }
 
-    @Test fun `execute() area heating targetTemperature is the default temperature when setting exists and no interval matches`() {
+    @Test
+    fun `execute() area heating targetTemperature is the default temperature when no interval matches`() {
         val area = anAreaDtoWithDevices()
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = emptySet())
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
@@ -471,7 +475,8 @@ class GetHomeDashboardServiceTest {
         }
     }
 
-    @Test fun `execute() area humidity relative is the average of available readings when some sensors have no cached readings`() {
+    @Test
+    fun `execute() area humidity relative is average of readings when some sensors have no cached readings`() {
         val sensor1 = aSensor()
         val sensor2 = aSensor()
         val data = aRandomThermoHygroData()
@@ -523,5 +528,4 @@ class GetHomeDashboardServiceTest {
                 .relative shouldBe FieldSuccess(data.relativeHumidity.value)
         }
     }
-
 }

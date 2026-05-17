@@ -28,5 +28,4 @@ class TemperatureTest {
             it.first.average() shouldBe it.second
         }
     }
-
 }

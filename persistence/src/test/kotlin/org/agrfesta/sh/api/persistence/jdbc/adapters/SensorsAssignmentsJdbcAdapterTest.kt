@@ -7,21 +7,21 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import java.util.*
-import org.agrfesta.sh.api.domain.aProviderDeviceData
-import org.agrfesta.sh.api.domain.aSensorProviderData
-import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
 import org.agrfesta.sh.api.core.domain.failures.SensorNotAssigned
+import org.agrfesta.sh.api.domain.aProviderDeviceData
+import org.agrfesta.sh.api.domain.aSensorProviderData
+import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.test.mothers.aProvider
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataAccessException
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.*
 
 class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
@@ -153,5 +153,4 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
                 it.disconnectedOn.shouldBeNull()
             }
     }
-
 }

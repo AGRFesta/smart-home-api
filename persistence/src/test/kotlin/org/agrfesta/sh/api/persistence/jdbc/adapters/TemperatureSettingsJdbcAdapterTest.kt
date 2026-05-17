@@ -9,13 +9,11 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
-import java.time.Instant
-import java.util.*
-import org.agrfesta.sh.api.domain.anAreaDto
-import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
-import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
+import org.agrfesta.sh.api.domain.aTemperatureInterval
+import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
@@ -23,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataAccessException
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
+import java.util.*
 
 class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
@@ -214,7 +214,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
     @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    fun `persistAreaTemperatureSetting() Returns HeatingScheduleRepositoryError when called outside active transaction`() {
+    fun `persistAreaTemperatureSetting() returns HeatingScheduleRepositoryError when called outside transaction`() {
         val setting = anAreaTemperatureSetting(areaId = UUID.randomUUID())
 
         sut.persistAreaTemperatureSetting(setting)
@@ -264,7 +264,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `persistAreaTemperatureSetting() Returns HeatingScheduleRepositoryError on database error while persisting root`() {
+    fun `persistAreaTemperatureSetting() returns HeatingScheduleRepositoryError on db error while persisting root`() {
         every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = emptySet())
@@ -276,7 +276,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `persistAreaTemperatureSetting() Returns HeatingScheduleRepositoryError on database error while persisting an interval`() {
+    fun `persistAreaTemperatureSetting() returns HeatingScheduleRepositoryError on db error persisting an interval`() {
         every { timeProvider.now() } returns Instant.now()
         val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = setOf(aTemperatureInterval()))

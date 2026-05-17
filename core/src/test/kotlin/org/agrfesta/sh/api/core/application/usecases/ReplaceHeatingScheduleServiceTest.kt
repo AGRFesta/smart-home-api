@@ -9,8 +9,6 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.time.LocalTime
-import java.util.*
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
@@ -20,6 +18,8 @@ import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.junit.jupiter.api.Test
+import java.time.LocalTime
+import java.util.*
 
 class ReplaceHeatingScheduleServiceTest {
 
@@ -105,5 +105,4 @@ class ReplaceHeatingScheduleServiceTest {
         result.defaultTemperature shouldBe defaultTemperature
         result.intervals shouldHaveSize 0
     }
-
 }

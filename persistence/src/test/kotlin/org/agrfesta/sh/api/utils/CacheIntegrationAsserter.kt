@@ -26,5 +26,4 @@ class CacheIntegrationAsserter(
         cache.get(sensor.getThermoHygroKey())
             .shouldBeLeft() shouldBe CachedValueNotFound(sensor.getThermoHygroKey())
     }
-
 }

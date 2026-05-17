@@ -58,7 +58,8 @@ class SensorsCurrentReadingsCacheAdapterTest : AbstractCacheAdapterTest() {
 
         sut.save(sensor, data).shouldBeRight()
 
-        cache.get(sensor.getThermoHygroKey()).shouldBeRight() shouldBe objectMapper.writeValueAsString(data.toCacheDto())
+        cache.get(sensor.getThermoHygroKey()).shouldBeRight() shouldBe
+            objectMapper.writeValueAsString(data.toCacheDto())
     }
 
     @Test fun `save() overwrites previously stored data for the same sensor`() {
@@ -69,7 +70,7 @@ class SensorsCurrentReadingsCacheAdapterTest : AbstractCacheAdapterTest() {
 
         sut.save(sensor, second).shouldBeRight()
 
-        cache.get(sensor.getThermoHygroKey()).shouldBeRight() shouldBe objectMapper.writeValueAsString(second.toCacheDto())
+        cache.get(sensor.getThermoHygroKey()).shouldBeRight() shouldBe
+            objectMapper.writeValueAsString(second.toCacheDto())
     }
-
 }

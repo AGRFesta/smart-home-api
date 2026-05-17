@@ -8,7 +8,6 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-
 class AuthTestSupport(
     private val mockMvc: MockMvc,
     private val objectMapper: ObjectMapper
@@ -55,5 +54,4 @@ class AuthTestSupport(
             testInvalidToken(requestBuilder, "Invalid token")
         }
     )
-
 }

@@ -8,7 +8,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
-import java.util.*
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
@@ -16,6 +15,7 @@ import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
+import java.util.*
 
 class UpdateAreaServiceTest {
     private val areasRepository: AreasRepository = mockk()
@@ -73,5 +73,4 @@ class UpdateAreaServiceTest {
         // Then
         result.shouldBeLeft().shouldBe(AreaRepositoryError)
     }
-
 }

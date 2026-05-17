@@ -15,6 +15,7 @@ complexity:
     threshold: 60
   LongParameterList:
     ignoreDataClasses: true
+    excludes: ['**/test/**']
 
 naming:
   FunctionNaming:

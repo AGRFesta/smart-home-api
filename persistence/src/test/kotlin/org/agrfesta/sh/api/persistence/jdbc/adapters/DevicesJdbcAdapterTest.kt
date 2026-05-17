@@ -6,17 +6,17 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
-import java.time.Instant
-import java.util.*
-import org.agrfesta.sh.api.domain.aDevice
-import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
+import org.agrfesta.sh.api.domain.aDevice
+import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.agrfesta.test.mothers.aProvider
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataAccessResourceFailureException
+import java.time.Instant
+import java.util.*
 
 class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
 

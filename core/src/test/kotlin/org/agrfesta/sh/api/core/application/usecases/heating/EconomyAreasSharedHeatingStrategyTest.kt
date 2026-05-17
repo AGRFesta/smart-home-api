@@ -4,14 +4,14 @@ import arrow.core.right
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.math.BigDecimal
-import java.time.LocalTime
-import java.util.*
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.commons.Percentage
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.SharedHeater
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
+import java.time.LocalTime
+import java.util.*
 
 class EconomyAreasSharedHeatingStrategyTest {
     val percentage = Percentage(BigDecimal("0.5"))
@@ -132,6 +132,4 @@ class EconomyAreasSharedHeatingStrategyTest {
         verify(exactly = 1) { sharedHeater.on() }
         verify(exactly = 0) { sharedHeater.off() }
     }
-
-
 }

@@ -5,20 +5,19 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
-import java.time.Instant
-import java.util.*
-import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.core.domain.devices.SensorDataType.HUMIDITY
 import org.agrfesta.sh.api.core.domain.devices.SensorDataType.TEMPERATURE
 import org.agrfesta.sh.api.core.domain.failures.SensorHistoryRepositoryError
+import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.test.mothers.aRandomHumidity
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.agrfesta.test.mothers.nowNoMills
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataAccessException
+import java.time.Instant
+import java.util.*
 
 class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
@@ -49,7 +48,7 @@ class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `persistTemperature() Returns SensorHistoryRepositoryError on database error`() {
         every { historyDataRepository.persist(any(), any(), any(), any()) } throws
-                object : DataAccessException("db error") {}
+            object : DataAccessException("db error") {}
 
         sut.persistTemperature(UUID.randomUUID(), Instant.now(), aRandomTemperature())
             .shouldBeLeft()
@@ -81,7 +80,7 @@ class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `persistHumidity() Returns SensorHistoryRepositoryError on database error`() {
         every { historyDataRepository.persist(any(), any(), any(), any()) } throws
-                object : DataAccessException("db error") {}
+            object : DataAccessException("db error") {}
 
         sut.persistHumidity(UUID.randomUUID(), Instant.now(), aRandomHumidity())
             .shouldBeLeft()
@@ -118,7 +117,7 @@ class SensorsHistoryDataJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `findBySensor() Returns SensorHistoryRepositoryError on database error`() {
         every { historyDataRepository.findAllBySensorUuid(any()) } throws
-                object : DataAccessException("db error") {}
+            object : DataAccessException("db error") {}
 
         sut.findBySensor(UUID.randomUUID())
             .shouldBeLeft()

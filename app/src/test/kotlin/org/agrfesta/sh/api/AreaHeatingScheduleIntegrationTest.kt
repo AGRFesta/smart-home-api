@@ -5,38 +5,40 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
-import java.time.LocalTime
 import org.agrfesta.sh.api.controllers.HeatingScheduleResponse
 import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
+import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
-import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.test.mothers.aDailyTime
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.junit.jupiter.api.Test
+import java.time.LocalTime
 
 class AreaHeatingScheduleIntegrationTest(
     private val areasRepository: AreasRepository,
     private val temperatureSettingsRepository: TemperatureSettingsRepository
 ) : AbstractIntegrationTest() {
 
-    ///// GET /areas/{areaId}/heating-schedule /////////////////////////////////////////////////////////////////////////
+    // /// GET /areas/{areaId}/heating-schedule /////////////////////////////////////////////////////////////////////////
 
     @Test fun `getHeatingSchedule() returns 200 with schedule when area has a heating schedule`() {
         val area = anAreaDto()
         areasRepository.save(area)
         val defaultTemperature = aRandomTemperature()
-        temperatureSettingsRepository.createSetting(anAreaTemperatureSetting(
-            areaId = area.uuid,
-            defaultTemperature = defaultTemperature,
-            temperatureSchedule = setOf(
-                aTemperatureInterval(startTime = aDailyTime(hour = 8), endTime = aDailyTime(hour = 10)),
-                aTemperatureInterval(startTime = aDailyTime(hour = 12), endTime = aDailyTime(hour = 14))
+        temperatureSettingsRepository.createSetting(
+            anAreaTemperatureSetting(
+                areaId = area.uuid,
+                defaultTemperature = defaultTemperature,
+                temperatureSchedule = setOf(
+                    aTemperatureInterval(startTime = aDailyTime(hour = 8), endTime = aDailyTime(hour = 10)),
+                    aTemperatureInterval(startTime = aDailyTime(hour = 12), endTime = aDailyTime(hour = 14))
+                )
             )
-        ))
+        )
 
         val response = given()
             .authenticated()
@@ -68,7 +70,7 @@ class AreaHeatingScheduleIntegrationTest(
         response.intervals shouldHaveSize 0
     }
 
-    ///// PUT /areas/{areaId}/heating-schedule /////////////////////////////////////////////////////////////////////////
+    // /// PUT /areas/{areaId}/heating-schedule /////////////////////////////////////////////////////////////////////////
 
     @Test fun `replaceHeatingSchedule() creates schedule and returns 200 with interval IDs`() {
         val area = anAreaDto()
@@ -80,7 +82,8 @@ class AreaHeatingScheduleIntegrationTest(
         val response = given()
             .contentType(ContentType.JSON)
             .authenticated()
-            .body("""
+            .body(
+                """
                 {
                     "defaultTemperature": ${defaultTemperature.value},
                     "intervals": [
@@ -88,7 +91,8 @@ class AreaHeatingScheduleIntegrationTest(
                         {"temperature": ${intB.temperature.value}, "startTime": "12:00", "endTime": "14:00"}
                     ]
                 }
-            """.trimIndent())
+                """.trimIndent()
+            )
             .`when`()
             .put("/areas/${area.uuid}/heating-schedule")
             .then()
@@ -107,24 +111,28 @@ class AreaHeatingScheduleIntegrationTest(
     @Test fun `replaceHeatingSchedule() replaces existing schedule`() {
         val area = anAreaDto()
         areasRepository.save(area)
-        temperatureSettingsRepository.createSetting(anAreaTemperatureSetting(
-            areaId = area.uuid,
-            temperatureSchedule = setOf(
-                aTemperatureInterval(startTime = aDailyTime(hour = 0), endTime = aDailyTime(hour = 1)),
-                aTemperatureInterval(startTime = aDailyTime(hour = 2), endTime = aDailyTime(hour = 3))
+        temperatureSettingsRepository.createSetting(
+            anAreaTemperatureSetting(
+                areaId = area.uuid,
+                temperatureSchedule = setOf(
+                    aTemperatureInterval(startTime = aDailyTime(hour = 0), endTime = aDailyTime(hour = 1)),
+                    aTemperatureInterval(startTime = aDailyTime(hour = 2), endTime = aDailyTime(hour = 3))
+                )
             )
-        ))
+        )
         val newDefaultTemperature = aRandomTemperature()
 
         val response = given()
             .contentType(ContentType.JSON)
             .authenticated()
-            .body("""
+            .body(
+                """
                 {
                     "defaultTemperature": ${newDefaultTemperature.value},
                     "intervals": []
                 }
-            """.trimIndent())
+                """.trimIndent()
+            )
             .`when`()
             .put("/areas/${area.uuid}/heating-schedule")
             .then()
@@ -140,7 +148,7 @@ class AreaHeatingScheduleIntegrationTest(
         saved.temperatureSchedule shouldHaveSize 0
     }
 
-    ///// DELETE /areas/{areaId}/heating-schedule //////////////////////////////////////////////////////////////////////
+    // /// DELETE /areas/{areaId}/heating-schedule //////////////////////////////////////////////////////////////////////
 
     @Test fun `deleteHeatingSchedule() deletes schedule and returns 204`() {
         val area = anAreaDto()
@@ -157,5 +165,5 @@ class AreaHeatingScheduleIntegrationTest(
         temperatureSettingsRepository.findAreaSetting(area.uuid).getOrNull().shouldBe(null)
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }

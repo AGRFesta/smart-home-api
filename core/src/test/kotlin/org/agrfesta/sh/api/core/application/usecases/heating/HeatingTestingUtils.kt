@@ -4,16 +4,16 @@ import arrow.core.left
 import arrow.core.right
 import io.mockk.every
 import io.mockk.mockk
-import java.math.BigDecimal
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
+import org.agrfesta.sh.api.core.application.usecases.heating.AbstractSharedHeatingAreasStrategyService.Companion.HYSTERESIS
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
+import org.agrfesta.sh.api.core.domain.areas.TemperatureUnavailable
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.SharedHeater
-import org.agrfesta.sh.api.core.domain.areas.TemperatureUnavailable
-import org.agrfesta.sh.api.core.application.usecases.heating.AbstractSharedHeatingAreasStrategyService.Companion.HYSTERESIS
 import org.agrfesta.test.mothers.aRandomTemperature
+import java.math.BigDecimal
 
 fun Device.toSensorMockk(factory: ProviderDevicesFactory): Sensor {
     val dto = this

@@ -10,7 +10,6 @@ import io.kotest.matchers.throwable.shouldHaveMessage
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
-import java.util.*
 import org.agrfesta.sh.api.core.domain.areas.Area
 import org.agrfesta.sh.api.core.domain.areas.MonitoredClimateAreaImpl
 import org.agrfesta.sh.api.core.domain.areas.TemperatureUnavailable
@@ -21,6 +20,7 @@ import org.agrfesta.test.mothers.aThermoHygroDataValue
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import java.util.*
 
 class MonitoredClimateAreaImplTest {
 
@@ -128,5 +128,4 @@ class MonitoredClimateAreaImplTest {
         val result = sut.getCurrentTemperature()
         result.shouldBeLeft().shouldBeInstanceOf<TemperatureUnavailable>()
     }
-
 }

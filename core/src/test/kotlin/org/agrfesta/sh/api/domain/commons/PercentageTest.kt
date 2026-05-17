@@ -2,10 +2,10 @@ package org.agrfesta.sh.api.domain.commons
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import org.agrfesta.sh.api.core.domain.commons.Percentage
 import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.TestFactory
 import java.math.BigDecimal
-import org.agrfesta.sh.api.core.domain.commons.Percentage
 
 class PercentageTest {
 
@@ -94,5 +94,4 @@ class PercentageTest {
             Percentage.of(str) shouldBe expected
         }
     }
-
 }

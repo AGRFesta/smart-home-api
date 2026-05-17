@@ -10,12 +10,12 @@ import org.agrfesta.sh.api.core.application.ports.inbounds.GetPropertyUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.UpsertPropertyBatchUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.UpsertPropertyUseCase
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
+import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.sh.api.core.domain.failures.DuplicatePropertyKeys
 import org.agrfesta.sh.api.core.domain.failures.EmptyPropertyBatch
 import org.agrfesta.sh.api.core.domain.failures.PropertyBatchTooLarge
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
-import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.test.mothers.aRandomTtl
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -44,7 +44,7 @@ class PropertyControllerMvcSliceTest(
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
-    ///// putPropertyEntry /////////////////////////////////////////////////////////////////////////////////////////////
+    // /// putPropertyEntry /////////////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `putPropertyEntry() auth tests`() = authTestSupport.dynamicTestsBy {
         put("/properties/${aRandomUniqueString()}")
@@ -62,7 +62,8 @@ class PropertyControllerMvcSliceTest(
             put("/properties/$key")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"value": "$value", "ttl": $ttl}"""))
+                .content("""{"value": "$value", "ttl": $ttl}""")
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -80,7 +81,8 @@ class PropertyControllerMvcSliceTest(
             put("/properties/$key")
                 .contentType("application/json")
                 .authenticated()
-                .content("""{"value": "$value", "ttl": $ttl}"""))
+                .content("""{"value": "$value", "ttl": $ttl}""")
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
@@ -88,9 +90,9 @@ class PropertyControllerMvcSliceTest(
         response.message shouldBe "Entry for key '$key' upserted successfully"
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// postPropertyBatch ////////////////////////////////////////////////////////////////////////////////////////////
+    // /// postPropertyBatch ////////////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `postPropertyBatch() auth tests`() = authTestSupport.dynamicTestsBy {
         post("/properties/batch")
@@ -105,7 +107,8 @@ class PropertyControllerMvcSliceTest(
             post("/properties/batch")
                 .contentType("application/json")
                 .authenticated()
-                .content("[]"))
+                .content("[]")
+        )
             .andExpect(status().isBadRequest)
             .andReturn().response.contentAsString
 
@@ -121,7 +124,12 @@ class PropertyControllerMvcSliceTest(
             post("/properties/batch")
                 .contentType("application/json")
                 .authenticated()
-                .content(objectMapper.writeValueAsString(listOf(PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString())))))
+                .content(
+                    objectMapper.writeValueAsString(
+                        listOf(PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString()))
+                    )
+                )
+        )
             .andExpect(status().isPayloadTooLarge)
             .andReturn().response.contentAsString
 
@@ -136,7 +144,12 @@ class PropertyControllerMvcSliceTest(
             post("/properties/batch")
                 .contentType("application/json")
                 .authenticated()
-                .content(objectMapper.writeValueAsString(listOf(PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString())))))
+                .content(
+                    objectMapper.writeValueAsString(
+                        listOf(PropertyUpsertEntry(aRandomUniqueString(), aRandomUniqueString()))
+                    )
+                )
+        )
             .andExpect(status().isBadRequest)
             .andReturn().response.contentAsString
 
@@ -156,7 +169,8 @@ class PropertyControllerMvcSliceTest(
             post("/properties/batch")
                 .contentType("application/json")
                 .authenticated()
-                .content(objectMapper.writeValueAsString(batchEntries)))
+                .content(objectMapper.writeValueAsString(batchEntries))
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -175,7 +189,8 @@ class PropertyControllerMvcSliceTest(
             post("/properties/batch")
                 .contentType("application/json")
                 .authenticated()
-                .content(objectMapper.writeValueAsString(batchEntries)))
+                .content(objectMapper.writeValueAsString(batchEntries))
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
@@ -183,9 +198,9 @@ class PropertyControllerMvcSliceTest(
         response.message shouldBe "Successfully persisted ${batchEntries.size} entries"
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///// getPropertyEntry /////////////////////////////////////////////////////////////////////////////////////////////
+    // /// getPropertyEntry /////////////////////////////////////////////////////////////////////////////////////////////
 
     @TestFactory fun `getPropertyEntry() auth tests`() = authTestSupport.dynamicTestsBy {
         get("/properties/${aRandomUniqueString()}")
@@ -197,7 +212,8 @@ class PropertyControllerMvcSliceTest(
 
         val responseBody: String = mockMvc.perform(
             get("/properties/$key")
-                .authenticated())
+                .authenticated()
+        )
             .andExpect(status().isInternalServerError)
             .andReturn().response.contentAsString
 
@@ -211,7 +227,8 @@ class PropertyControllerMvcSliceTest(
 
         val responseBody: String = mockMvc.perform(
             get("/properties/$key")
-                .authenticated())
+                .authenticated()
+        )
             .andExpect(status().isNotFound)
             .andReturn().response.contentAsString
 
@@ -226,7 +243,8 @@ class PropertyControllerMvcSliceTest(
 
         val responseBody: String = mockMvc.perform(
             get("/properties/$key")
-                .authenticated())
+                .authenticated()
+        )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
@@ -234,6 +252,5 @@ class PropertyControllerMvcSliceTest(
         response shouldBe entry
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }

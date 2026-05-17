@@ -33,5 +33,4 @@ class UpsertPropertyServiceTest {
 
         sut.execute(key, value).shouldBeLeft() shouldBe PropertyRepositoryError
     }
-
 }

@@ -20,8 +20,8 @@ import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.FetchSensorReadingsError
 import org.agrfesta.sh.api.core.domain.failures.SensorReadingsSaveError
 import org.agrfesta.sh.api.domain.aDevice
-import org.agrfesta.sh.api.domain.anActuator
 import org.agrfesta.sh.api.domain.aSensor
+import org.agrfesta.sh.api.domain.anActuator
 import org.agrfesta.test.mothers.aThermoHygroDataValue
 import org.junit.jupiter.api.Test
 
@@ -34,7 +34,8 @@ class FetchSensorReadingsServiceTest {
 
     private val sut = FetchSensorReadingsService(devicesRepository, listOf(factory), readingsRepository)
 
-    @Test fun `execute() returns Left(FetchSensorReadingsError) and does not interact with readings repository when getAll() fails`() {
+    @Test
+    fun `execute() returns Left(FetchSensorReadingsError) when getAll() fails`() {
         every { devicesRepository.getAll() } returns DeviceRepositoryError.left()
 
         val result = sut.execute()
@@ -43,7 +44,8 @@ class FetchSensorReadingsServiceTest {
         verify(exactly = 0) { readingsRepository.save(any(), any()) }
     }
 
-    @Test fun `execute() returns Right(Unit) and does not interact with readings repository when device list is empty`() {
+    @Test
+    fun `execute() returns Right(Unit) and does not interact with readings repository when device list is empty`() {
         every { devicesRepository.getAll() } returns emptyList<Device>().right()
 
         val result = sut.execute()
@@ -52,7 +54,8 @@ class FetchSensorReadingsServiceTest {
         verify(exactly = 0) { readingsRepository.save(any(), any()) }
     }
 
-    @Test fun `execute() returns Right(Unit) and does not interact with readings repository when no device is a sensor`() {
+    @Test
+    fun `execute() returns Right(Unit) and does not interact with readings repository when no device is a sensor`() {
         val noFeatureDevice = aDevice(features = emptySet())
         val actuator = anActuator()
         every { devicesRepository.getAll() } returns listOf(noFeatureDevice, actuator).right()
@@ -174,5 +177,4 @@ class FetchSensorReadingsServiceTest {
         result.shouldBeRight()
         verify(exactly = 1) { readingsRepository.save(sensorDriver, thermoHygro.thermoHygroData) }
     }
-
 }

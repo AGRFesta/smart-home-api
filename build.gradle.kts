@@ -9,7 +9,8 @@ repositories {
 detekt {
     config.setFrom(files("detekt.yml"))
     buildUponDefaultConfig = true
-    source.setFrom(subprojects.map { it.file("src/main") })
+    autoCorrect = false
+    source.setFrom(subprojects.flatMap { listOf(it.file("src/main"), it.file("src/test")) })
 }
 
 dependencies {

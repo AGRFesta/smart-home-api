@@ -58,5 +58,4 @@ class DeleteAreaServiceTest {
         // Then
         result.shouldBeLeft().shouldBe(AreaRepositoryError)
     }
-
 }
