@@ -14,5 +14,4 @@ interface RefreshDevicesUseCase {
      *         be completed.
      */
     fun execute(): Either<RefreshDevicesFailure, RefreshDevicesResult>
-
 }

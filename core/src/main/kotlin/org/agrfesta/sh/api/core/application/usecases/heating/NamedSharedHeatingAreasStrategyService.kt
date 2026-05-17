@@ -10,6 +10,6 @@ import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
  *
  * @property strategy The specific strategy type implemented by this service.
  */
-interface NamedSharedHeatingAreasStrategyService: SharedHeatingAreasStrategyService {
+interface NamedSharedHeatingAreasStrategyService : SharedHeatingAreasStrategyService {
     val strategy: SharedHeatingStrategy
 }

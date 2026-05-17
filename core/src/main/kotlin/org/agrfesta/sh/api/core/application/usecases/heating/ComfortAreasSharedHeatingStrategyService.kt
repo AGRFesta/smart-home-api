@@ -1,11 +1,11 @@
 package org.agrfesta.sh.api.core.application.usecases.heating
 
-import java.time.LocalTime
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.devices.Heater
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.stereotype.Service
+import java.time.LocalTime
 
 /**
  * Implementation of [AbstractSharedHeatingAreasStrategyService] that optimizes heating for comfort.
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service
  * It corresponds to the [SharedHeatingStrategy.COMFORT] strategy.
  */
 @Service
-class ComfortAreasSharedHeatingStrategyService: NamedSharedHeatingAreasStrategyService,
+class ComfortAreasSharedHeatingStrategyService : NamedSharedHeatingAreasStrategyService,
     AbstractSharedHeatingAreasStrategyService() {
     private val logger by LoggerDelegate()
     override val strategy: SharedHeatingStrategy = SharedHeatingStrategy.COMFORT
@@ -39,5 +39,4 @@ class ComfortAreasSharedHeatingStrategyService: NamedSharedHeatingAreasStrategyS
             sharedHeater.off()
         }
     }
-
 }

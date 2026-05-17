@@ -1,14 +1,14 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
-import java.sql.Timestamp
-import java.time.temporal.ChronoUnit
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
-import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.core.namedparam.SqlParameterSource
 import org.springframework.stereotype.Service
+import java.sql.Timestamp
+import java.time.temporal.ChronoUnit
 
 /**
  * Repository for managing property entries in a JDBC-based database.
@@ -102,8 +102,8 @@ class PropertyJdbcRepository(
         return jdbcTemplate.query(sql, params) { rs, _ ->
             PropertyEntry(
                 value = rs.getString("value"),
-                expiresAt = rs.getTimestamp("expires_at")?.toInstant())
+                expiresAt = rs.getTimestamp("expires_at")?.toInstant()
+            )
         }.firstOrNull()
     }
-
 }

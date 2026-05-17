@@ -13,5 +13,4 @@ class UpsertPropertyService(
 
     override fun execute(key: String, value: String, ttl: Long?): Either<UpsertPropertyFailure, Unit> =
         propertyRepository.upsert(key, value, ttl)
-
 }

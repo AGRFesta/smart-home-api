@@ -16,5 +16,4 @@ interface FetchSensorReadingsUseCase {
      * could not start (e.g. device list unavailable).
      */
     fun execute(): Either<FetchSensorReadingsFailure, Unit>
-
 }

@@ -4,11 +4,8 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
-import java.math.BigDecimal
-import java.time.Duration
-import java.time.Instant
-import java.util.*
 import kotlinx.coroutines.runBlocking
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.OFF
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.ON
@@ -23,7 +20,10 @@ import org.agrfesta.sh.api.providers.netatmo.NetatmoContractBreak
 import org.agrfesta.sh.api.providers.netatmo.NetatmoHomeStatusChange
 import org.agrfesta.sh.api.providers.netatmo.NetatmoRoomStatusChange
 import org.agrfesta.sh.api.utils.LoggerDelegate
-import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
+import java.math.BigDecimal
+import java.time.Duration
+import java.time.Instant
+import java.util.*
 
 class NetatmoSmarther(
     override val uuid: UUID,
@@ -32,7 +32,7 @@ class NetatmoSmarther(
     private val roomId: String,
     private val client: NetatmoClient,
     private val timeProvider: TimeProvider
-): Sensor, Heater {
+) : Sensor, Heater {
     private val logger by LoggerDelegate()
     override val provider = Provider.NETATMO
 
@@ -55,23 +55,27 @@ class NetatmoSmarther(
         }
     }
 
-    override fun getActuatorStatus(): Either<NetatmoClientFailure, ActuatorStatus> = runBlocking { client.getHomeStatus(homeId) }.map {
-        val room = it.rooms.first()
-        val now = timeProvider.now()
-        if (room.setPointMode == SET_POINT_MODE
-            && now.greaterEqualThan(room.setPointStartTime) && now.lessEqualThan(room.setPointEndTime)) {
-            when {
-                room.setPointTemperature.compareTo(MAX_SET_POINT_TEMPERATURE) == 0 -> ON
-                room.setPointTemperature.compareTo(MIN_SET_POINT_TEMPERATURE) == 0 -> OFF
-                else -> UNDEFINED
-            }
-        } else UNDEFINED
-    }.also {
-        it.fold(
-            ifLeft = { logger.error("NetatmoSmarther '$uuid' status fetch FAILED") },
-            ifRight = { status -> logger.info("NetatmoSmarther '$uuid' is in status $status") }
-        )
-    }
+    override fun getActuatorStatus(): Either<NetatmoClientFailure, ActuatorStatus> =
+        runBlocking { client.getHomeStatus(homeId) }.map {
+            val room = it.rooms.first()
+            val now = timeProvider.now()
+            if (
+                room.setPointMode == SET_POINT_MODE &&
+                now.greaterEqualThan(room.setPointStartTime) &&
+                now.lessEqualThan(room.setPointEndTime)
+            ) {
+                when {
+                    room.setPointTemperature.compareTo(MAX_SET_POINT_TEMPERATURE) == 0 -> ON
+                    room.setPointTemperature.compareTo(MIN_SET_POINT_TEMPERATURE) == 0 -> OFF
+                    else -> UNDEFINED
+                }
+            } else { UNDEFINED }
+        }.also {
+            it.fold(
+                ifLeft = { logger.error("NetatmoSmarther '$uuid' status fetch FAILED") },
+                ifRight = { status -> logger.info("NetatmoSmarther '$uuid' is in status $status") }
+            )
+        }
 
     private fun Instant.greaterEqualThan(other: Long?) = other?.let { this.epochSecond >= it } ?: true
 
@@ -106,5 +110,4 @@ class NetatmoSmarther(
         )
         return runBlocking { client.setState(status) }.map {}
     }
-
 }

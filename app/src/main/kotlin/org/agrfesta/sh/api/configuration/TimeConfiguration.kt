@@ -13,5 +13,4 @@ class TimeConfiguration {
     fun clock(@Value("\${smart-home.timezone:#{null}}") timezone: String?): Clock {
         return Clock.system(if (timezone.isNullOrBlank()) ZoneId.systemDefault() else ZoneId.of(timezone))
     }
-
 }

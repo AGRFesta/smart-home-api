@@ -17,5 +17,4 @@ interface CreateAreaUseCase {
      *         if the area could not be saved (e.g. a duplicate name conflict).
      */
     fun execute(name: String, isIndoor: Boolean? = null): Either<AreaCreationFailure, AreaDto>
-
 }

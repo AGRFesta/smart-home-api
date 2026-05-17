@@ -3,15 +3,16 @@ package org.agrfesta.sh.api.cache.adapters
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
-import org.agrfesta.sh.api.core.application.ports.outbounds.CacheError
-import org.agrfesta.sh.api.core.application.ports.outbounds.CachedValueNotFound
-import org.agrfesta.sh.api.core.application.ports.outbounds.CacheOkResponse
-import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.cache.dto.ThermoHygroDataCacheDto
 import org.agrfesta.sh.api.cache.dto.toCacheDto
 import org.agrfesta.sh.api.cache.dto.toDomain
+import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
+import org.agrfesta.sh.api.core.application.ports.outbounds.CacheError
+import org.agrfesta.sh.api.core.application.ports.outbounds.CacheOkResponse
+import org.agrfesta.sh.api.core.application.ports.outbounds.CachedValueNotFound
+import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.core.domain.devices.DeviceProviderIdentity
 import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupError
@@ -41,7 +42,7 @@ class SensorsCurrentReadingsCacheAdapter(
     override fun save(sensor: DeviceProviderIdentity, data: ThermoHygroData): Either<SensorReadingsSaveFailure, Unit> {
         val json = try {
             objectMapper.writeValueAsString(data.toCacheDto())
-        } catch (e: Exception) {
+        } catch (e: JsonProcessingException) {
             return SensorReadingsSaveError(e).left()
         }
         return when (val response = cache.set(sensor.getThermoHygroKey(), json)) {
@@ -53,11 +54,10 @@ class SensorsCurrentReadingsCacheAdapter(
     private fun deserialize(json: String): Either<ReadingsLookupFailure, ThermoHygroData?> =
         try {
             objectMapper.readValue(json, ThermoHygroDataCacheDto::class.java).toDomain().right()
-        } catch (e: Exception) {
+        } catch (e: JsonProcessingException) {
             ReadingsLookupError(e).left()
         }
-
 }
 
 fun DeviceProviderIdentity.getThermoHygroKey() =
-    "sensors:${provider.name.lowercase()}:${deviceProviderId}:thermohygro"
+    "sensors:${provider.name.lowercase()}:$deviceProviderId:thermohygro"

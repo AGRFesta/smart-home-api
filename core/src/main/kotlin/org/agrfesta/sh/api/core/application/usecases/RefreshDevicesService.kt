@@ -5,9 +5,9 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import org.agrfesta.sh.api.core.application.ports.inbounds.RefreshDevicesUseCase
+import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesProvider
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.RefreshDevicesResult
@@ -44,7 +44,9 @@ class RefreshDevicesService(
         }
         updatedDevices.forEach { devicesRepository.update(it) }
         val detachedDevices = devices
-            .filter { d -> providerDevices.none { it.deviceProviderId == d.deviceProviderId && it.provider == d.provider } }
+            .filter { d ->
+                providerDevices.none { it.deviceProviderId == d.deviceProviderId && it.provider == d.provider }
+            }
             .map { it.copy(status = DeviceStatus.DETACHED) }
         detachedDevices.forEach { devicesRepository.update(it) }
         return RefreshDevicesResult(
@@ -53,5 +55,4 @@ class RefreshDevicesService(
             detachedDevices = detachedDevices
         ).right()
     }
-
 }

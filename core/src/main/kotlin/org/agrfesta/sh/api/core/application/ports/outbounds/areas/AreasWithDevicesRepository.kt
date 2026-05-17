@@ -13,5 +13,4 @@ interface AreasWithDevicesRepository {
      * or [Either.Left] with [AreaRepositoryError] if a database error occurs.
      */
     fun getAllAreasWithDevices(): Either<AreaRepositoryError, Collection<AreaDtoWithDevices>>
-
 }

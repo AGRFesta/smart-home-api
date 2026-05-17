@@ -14,5 +14,4 @@ class HeatingControlScheduler(
     fun scheduledTask() {
         evaluateHeatingState.execute()
     }
-
 }

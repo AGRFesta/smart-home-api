@@ -1,12 +1,12 @@
 package org.agrfesta.sh.api.core.application.ports.outbounds.sensors
 
 import arrow.core.Either
-import java.time.Instant
-import java.util.UUID
 import org.agrfesta.sh.api.core.domain.commons.RelativeHumidity
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.SensorHistoryData
 import org.agrfesta.sh.api.core.domain.failures.SensorHistoryRepositoryError
+import java.time.Instant
+import java.util.UUID
 
 interface SensorsHistoryDataRepository {
 
@@ -19,7 +19,11 @@ interface SensorsHistoryDataRepository {
      * @return [Either.Right] with [Unit] on success,
      * or [Either.Left] with [SensorHistoryRepositoryError] if a database error occurs.
      */
-    fun persistTemperature(sensorUuid: UUID, time: Instant, temperature: Temperature): Either<SensorHistoryRepositoryError, Unit>
+    fun persistTemperature(
+        sensorUuid: UUID,
+        time: Instant,
+        temperature: Temperature
+    ): Either<SensorHistoryRepositoryError, Unit>
 
     /**
      * Persists a humidity reading for a sensor at the given time.
@@ -44,5 +48,4 @@ interface SensorsHistoryDataRepository {
      * or [Either.Left] with [SensorHistoryRepositoryError] if a database error occurs.
      */
     fun findBySensor(sensorUuid: UUID): Either<SensorHistoryRepositoryError, Collection<SensorHistoryData>>
-
 }

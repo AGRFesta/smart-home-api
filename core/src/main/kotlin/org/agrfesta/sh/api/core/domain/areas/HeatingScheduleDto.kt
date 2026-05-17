@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.core.domain.areas
 
-import java.time.LocalTime
 import org.agrfesta.sh.api.core.domain.commons.Temperature
+import java.time.LocalTime
 
 data class HeatingScheduleDto(
     val defaultTemperature: Temperature,

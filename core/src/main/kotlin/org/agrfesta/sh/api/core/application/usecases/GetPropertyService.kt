@@ -14,5 +14,4 @@ class GetPropertyService(
 
     override fun execute(key: String): Either<GetPropertyFailure, PropertyEntry> =
         propertyRepository.getEntry(key)
-
 }

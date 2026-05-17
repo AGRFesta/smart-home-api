@@ -1,9 +1,9 @@
 package org.agrfesta.sh.api.core.domain.areas
 
+import org.agrfesta.sh.api.core.domain.commons.Temperature
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
-import org.agrfesta.sh.api.core.domain.commons.Temperature
 
 fun Collection<TemperatureInterval>.hasOverlap(): Boolean {
     val sortedIntervals = flatMap { interval ->

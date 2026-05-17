@@ -1,10 +1,10 @@
 package org.agrfesta.sh.api.core.application.ports.outbounds.settings
 
 import arrow.core.Either
-import java.util.UUID
 import org.agrfesta.sh.api.core.domain.areas.AreaTemperatureSetting
 import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.TemperatureSettingCreationFailure
+import java.util.UUID
 
 interface TemperatureSettingsRepository {
 
@@ -56,5 +56,4 @@ interface TemperatureSettingsRepository {
      * or [Either.Left] with [HeatingScheduleRepositoryError] if a database error occurs.
      */
     fun deleteAreaSetting(areaId: UUID): Either<HeatingScheduleRepositoryError, Unit>
-
 }

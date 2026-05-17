@@ -2,13 +2,13 @@ package org.agrfesta.sh.api.providers.switchbot
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.agrfesta.sh.api.core.domain.commons.Percentage
+import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.core.domain.devices.BatteryValue
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.SensorReadings
 import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
-import org.agrfesta.sh.api.core.domain.commons.Temperature
 
 enum class SwitchBotDeviceType(val features: Set<DeviceFeature>) {
     @JsonProperty("MeterPlus") METER_PLUS(setOf(SENSOR)),
@@ -30,5 +30,4 @@ data class SwitchBotSensorReadings(
         )
         override val battery: Int = batteryLevel
     }
-
 }

@@ -1,14 +1,14 @@
 package org.agrfesta.sh.api.core.application.usecases
 
 import arrow.core.Either
-import java.math.BigDecimal
-import java.time.LocalTime
-import java.util.UUID
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHomeDashboardUseCase
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
+import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
+import org.agrfesta.sh.api.core.application.usecases.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.sh.api.core.domain.commons.FieldFailure
 import org.agrfesta.sh.api.core.domain.commons.FieldResult
 import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
@@ -25,10 +25,10 @@ import org.agrfesta.sh.api.core.domain.home.HeatingDto
 import org.agrfesta.sh.api.core.domain.home.HomeDashboardDto
 import org.agrfesta.sh.api.core.domain.home.HumidityDto
 import org.agrfesta.sh.api.core.domain.home.MeasurementsDto
-import org.agrfesta.sh.api.core.application.usecases.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
-import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
-import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
+import java.time.LocalTime
+import java.util.UUID
 
 @Service
 class GetHomeDashboardService(
@@ -45,32 +45,33 @@ class GetHomeDashboardService(
         return areasWithDevicesRepository.getAllAreasWithDevices()
             .mapLeft { DashboardRepositoryError }
             .map { areas ->
-            HomeDashboardDto(
-                globalState = GlobalStateDto(
-                    heatingActive = heatingActive,
-                    strategy = resolveStrategy()
-                ),
-                areas = areas.map { area ->
-                    val readings = area.sensors.map { sensorsCurrentReadingsRepository.findBy(it) }
-                    AreaDashboardDto(
-                        id = area.uuid,
-                        name = area.name,
-                        measurements = MeasurementsDto(
-                            heating = HeatingDto(
-                                currentTemperature = resolveCurrentTemperature(readings),
-                                targetTemperature = if (heatingActive == FieldSuccess(true))
-                                    resolveTargetTemperature(area.uuid, currentTime)
-                                else
-                                    FieldSuccess(null)
-                            ),
-                            humidity = HumidityDto(
-                                relative = resolveRelativeHumidity(readings)
+                HomeDashboardDto(
+                    globalState = GlobalStateDto(
+                        heatingActive = heatingActive,
+                        strategy = resolveStrategy()
+                    ),
+                    areas = areas.map { area ->
+                        val readings = area.sensors.map { sensorsCurrentReadingsRepository.findBy(it) }
+                        AreaDashboardDto(
+                            id = area.uuid,
+                            name = area.name,
+                            measurements = MeasurementsDto(
+                                heating = HeatingDto(
+                                    currentTemperature = resolveCurrentTemperature(readings),
+                                    targetTemperature = if (heatingActive == FieldSuccess(true)) {
+                                        resolveTargetTemperature(area.uuid, currentTime)
+                                    } else {
+                                        FieldSuccess(null)
+                                    }
+                                ),
+                                humidity = HumidityDto(
+                                    relative = resolveRelativeHumidity(readings)
+                                )
                             )
                         )
-                    )
-                }
-            )
-        }
+                    }
+                )
+            }
     }
 
     private fun resolveHeatingActive(): FieldResult<Boolean> =
@@ -85,10 +86,13 @@ class GetHomeDashboardService(
             .fold(
                 { FieldFailure("Unable to retrieve heating strategy") },
                 { entry ->
-                    FieldSuccess(entry?.value?.let {
-                        try { SharedHeatingStrategy.valueOf(it.uppercase()) }
-                        catch (_: IllegalArgumentException) { null }
-                    })
+                    FieldSuccess(
+                        entry?.value?.let {
+                            try {
+                                SharedHeatingStrategy.valueOf(it.uppercase())
+                            } catch (_: IllegalArgumentException) { null }
+                        }
+                    )
                 }
             )
 
@@ -123,5 +127,4 @@ class GetHomeDashboardService(
                     )
                 }
             )
-
 }

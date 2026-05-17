@@ -1,9 +1,9 @@
 package org.agrfesta.sh.api.controllers
 
+import org.agrfesta.sh.api.core.domain.areas.HeatingScheduleDto
+import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT
 import java.math.BigDecimal
 import java.time.format.DateTimeFormatter
-import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT
-import org.agrfesta.sh.api.core.domain.areas.HeatingScheduleDto
 
 private val timeFormatter = DateTimeFormatter.ofPattern(INTERVAL_TIME_FORMAT)
 

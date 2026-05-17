@@ -1,9 +1,8 @@
 package org.agrfesta.sh.api.core.application.usecases
 
 import arrow.core.Either
-import java.util.UUID
-import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignSensorFromAreaUseCase
 import arrow.core.flatMap
+import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignSensorFromAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignmentsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
@@ -16,6 +15,7 @@ import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.SensorUnassignFailure
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 @Service
 class UnassignSensorFromAreaService(
@@ -39,5 +39,4 @@ class UnassignSensorFromAreaService(
         is DeviceNotFound -> this
         DeviceRepositoryError -> AssignmentRepositoryError
     }
-
 }

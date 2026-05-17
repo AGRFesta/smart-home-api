@@ -18,9 +18,9 @@ class UpsertPropertyBatchService(
 
     override fun execute(entries: List<PropertyUpsertEntry>): Either<UpsertPropertyBatchFailure, Unit> = when {
         entries.isEmpty() -> EmptyPropertyBatch.left()
-        entries.size > UpsertPropertyBatchUseCase.MAX_BATCH_SIZE -> PropertyBatchTooLarge(UpsertPropertyBatchUseCase.MAX_BATCH_SIZE).left()
+        entries.size > UpsertPropertyBatchUseCase.MAX_BATCH_SIZE ->
+            PropertyBatchTooLarge(UpsertPropertyBatchUseCase.MAX_BATCH_SIZE).left()
         entries.map { it.key }.toSet().size < entries.size -> DuplicatePropertyKeys.left()
         else -> propertyRepository.upsertBatch(entries)
     }
-
 }

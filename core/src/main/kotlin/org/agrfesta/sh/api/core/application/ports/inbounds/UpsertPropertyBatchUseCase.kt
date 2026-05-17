@@ -21,5 +21,4 @@ interface UpsertPropertyBatchUseCase {
      * or [Either.Left] with [UpsertPropertyBatchFailure] if validation fails or a persistence error occurs.
      */
     fun execute(entries: List<PropertyUpsertEntry>): Either<UpsertPropertyBatchFailure, Unit>
-
 }

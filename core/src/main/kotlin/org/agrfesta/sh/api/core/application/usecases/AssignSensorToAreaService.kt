@@ -3,7 +3,6 @@ package org.agrfesta.sh.api.core.application.usecases
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
-import java.util.UUID
 import org.agrfesta.sh.api.core.application.ports.inbounds.AssignSensorToAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignmentsRepository
@@ -18,6 +17,7 @@ import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.NotASensor
 import org.agrfesta.sh.api.core.domain.failures.SensorAssignmentFailure
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 @Service
 class AssignSensorToAreaService(
@@ -33,8 +33,11 @@ class AssignSensorToAreaService(
                 devicesRepository.getDeviceById(deviceId)
                     .mapLeft { it.toSensorFailure() }
                     .flatMap { device ->
-                        if (device.isSensor()) sensorsAssignmentsRepository.assign(areaId, deviceId)
-                        else NotASensor(device.uuid, device.features).left()
+                        if (device.isSensor()) {
+                            sensorsAssignmentsRepository.assign(areaId, deviceId)
+                        } else {
+                            NotASensor(device.uuid, device.features).left()
+                        }
                     }
             }
 
@@ -47,5 +50,4 @@ class AssignSensorToAreaService(
         is DeviceNotFound -> this
         DeviceRepositoryError -> AssignmentRepositoryError
     }
-
 }

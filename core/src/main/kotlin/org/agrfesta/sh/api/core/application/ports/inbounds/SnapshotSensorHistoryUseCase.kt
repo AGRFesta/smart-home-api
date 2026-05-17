@@ -16,5 +16,4 @@ interface SnapshotSensorHistoryUseCase {
      * could not start (e.g. device list unavailable).
      */
     fun execute(): Either<SnapshotSensorHistoryFailure, Unit>
-
 }

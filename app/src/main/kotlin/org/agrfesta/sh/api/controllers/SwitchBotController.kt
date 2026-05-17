@@ -21,5 +21,4 @@ class SwitchBotController(
     @GetMapping("/devices")
     fun getDevices(): JsonNode =
         runBlocking { switchBotDevicesClient.getDevices() }
-
 }

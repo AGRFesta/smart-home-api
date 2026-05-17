@@ -2,9 +2,9 @@ package org.agrfesta.sh.api.core.domain.home
 
 import org.agrfesta.sh.api.core.domain.commons.FieldResult
 import org.agrfesta.sh.api.core.domain.commons.Temperature
+import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 import java.math.BigDecimal
 import java.util.UUID
-import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 
 data class HeatingDto(
     val currentTemperature: FieldResult<Temperature?>,

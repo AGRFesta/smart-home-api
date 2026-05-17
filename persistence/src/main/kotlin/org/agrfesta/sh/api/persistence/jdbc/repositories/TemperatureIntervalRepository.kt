@@ -1,10 +1,10 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
-import java.sql.Time
-import java.util.*
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureIntervalEntity
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import java.sql.Time
+import java.util.*
 
 @Repository
 class TemperatureIntervalRepository(private val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -37,5 +37,4 @@ class TemperatureIntervalRepository(private val jdbcTemplate: NamedParameterJdbc
         )
         jdbcTemplate.update(sql, params)
     }
-
 }

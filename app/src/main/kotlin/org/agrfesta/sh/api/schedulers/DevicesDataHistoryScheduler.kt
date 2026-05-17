@@ -20,5 +20,4 @@ class DevicesDataHistoryScheduler(
             .onLeft { logger.error("[SCHEDULED TASK] snapshot sensor history failed: $it") }
         logger.info("[SCHEDULED TASK] end devices history data")
     }
-
 }

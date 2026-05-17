@@ -19,5 +19,4 @@ class DevicesDataFetchScheduler(
         fetchSensorReadings.execute()
         logger.info("[SCHEDULED TASK] end fetching devices data")
     }
-
 }

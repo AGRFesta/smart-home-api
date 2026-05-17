@@ -1,18 +1,19 @@
 package org.agrfesta.sh.api.core.application.usecases
 
+import org.agrfesta.sh.api.core.application.areas.AreasFactory
 import org.agrfesta.sh.api.core.application.ports.inbounds.EvaluateHeatingStateUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
-import org.agrfesta.sh.api.core.application.areas.AreasFactory
+import org.agrfesta.sh.api.core.application.usecases.heating.SharedHeatingAreasStrategyService
 import org.agrfesta.sh.api.core.domain.areas.HeatableArea
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
-import org.agrfesta.sh.api.core.application.usecases.heating.SharedHeatingAreasStrategyService
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.stereotype.Service
 
+@Suppress("LongParameterList")
 @Service
 class EvaluateHeatingStateService(
     private val devicesRepository: DevicesRepository,
@@ -39,7 +40,10 @@ class EvaluateHeatingStateService(
         val devicesRegistry = deviceRecords.mapNotNull { record ->
             val factory = mappedDevicesFactories[record.provider]
             if (factory == null) {
-                logger.error("No ProviderDevicesFactory registered for provider '${record.provider}', skipping device '${record.uuid}'")
+                logger.error(
+                    "No ProviderDevicesFactory registered for provider '${record.provider}', " +
+                        "skipping device '${record.uuid}'"
+                )
                 null
             } else {
                 factory.createDevice(record)
@@ -66,5 +70,4 @@ class EvaluateHeatingStateService(
         },
         ifRight = { it?.value?.equals("true", ignoreCase = true) ?: false }
     )
-
 }

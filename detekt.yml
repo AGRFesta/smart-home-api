@@ -1,0 +1,48 @@
+build:
+  maxIssues: 0
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+complexity:
+  CyclomaticComplexMethod:
+    threshold: 15
+    ignoreSingleWhenExpression: true
+  CognitiveComplexMethod:
+    threshold: 15
+  LongMethod:
+    threshold: 60
+  LongParameterList:
+    ignoreDataClasses: true
+
+naming:
+  FunctionNaming:
+    # Backtick identifiers are valid in Kotlin test functions
+    functionPattern: '([a-z][a-zA-Z0-9]*)|(`.*`)'
+
+style:
+  MagicNumber:
+    excludes: ['**/test/**', '**/*.kts']
+    ignoreNamedArgument: true
+  MaxLineLength:
+    active: false
+  ReturnCount:
+    max: 3
+    excludeReturnFromLambda: true
+
+formatting:
+  active: true
+  autoCorrect: false
+  AnnotationOnSeparateLine:
+    active: false
+  SpacingBetweenDeclarationsWithAnnotations:
+    active: false
+  MaximumLineLength:
+    active: true
+    maxLineLength: 120
+  FunctionName:
+    # Backtick test names are valid Kotlin — disabled to avoid false positives in test sources
+    active: false
+  NoWildcardImports:
+    active: true

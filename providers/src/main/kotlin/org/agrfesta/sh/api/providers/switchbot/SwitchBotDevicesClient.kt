@@ -2,13 +2,16 @@ package org.agrfesta.sh.api.providers.switchbot
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.ktor.client.*
-import io.ktor.client.engine.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.plugins.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.engine.okhttp.OkHttpConfig
+import io.ktor.client.engine.okhttp.OkHttpEngine
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HeadersBuilder
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMessageBuilder
 import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,7 +31,7 @@ class SwitchBotDevicesClient(
     private val client = HttpClient(engine) {
         expectSuccess = true
         install(HttpTimeout) {
-            requestTimeoutMillis = 60_000
+            requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS
         }
     }
 
@@ -79,8 +82,9 @@ class SwitchBotDevicesClient(
             time = time
         )
     }
-
 }
+
+private const val REQUEST_TIMEOUT_MILLIS = 60_000L
 
 private data class SwitchbotRequestHeader(
     val token: String,

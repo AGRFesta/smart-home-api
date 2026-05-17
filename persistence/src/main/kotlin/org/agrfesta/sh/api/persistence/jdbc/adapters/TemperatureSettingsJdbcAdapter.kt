@@ -3,7 +3,7 @@ package org.agrfesta.sh.api.persistence.jdbc.adapters
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import java.util.*
+import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.areas.AreaTemperatureSetting
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.core.domain.commons.Temperature
@@ -11,7 +11,6 @@ import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.TemperatureSettingCreationFailure
 import org.agrfesta.sh.api.persistence.AreaNotFoundException
-import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureIntervalEntity
 import org.agrfesta.sh.api.persistence.jdbc.entities.TemperatureSettingEntity
 import org.agrfesta.sh.api.persistence.jdbc.repositories.TemperatureIntervalRepository
@@ -21,12 +20,13 @@ import org.springframework.dao.DataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionSynchronizationManager
+import java.util.*
 
 @Service
 class TemperatureSettingsJdbcAdapter(
     private val tempSettingsRepository: TemperatureSettingRepository,
     private val tempIntervalsRepo: TemperatureIntervalRepository
-): TemperatureSettingsRepository {
+) : TemperatureSettingsRepository {
     private val logger by LoggerDelegate()
 
     override fun existsByAreaId(areaId: UUID): Either<HeatingScheduleRepositoryError, Boolean> = try {
@@ -37,16 +37,18 @@ class TemperatureSettingsJdbcAdapter(
     }
 
     override fun persistAreaTemperatureSetting(setting: AreaTemperatureSetting):
-            Either<TemperatureSettingCreationFailure, Unit> {
+        Either<TemperatureSettingCreationFailure, Unit> {
         if (!TransactionSynchronizationManager.isActualTransactionActive()) {
             logger.error("persistAreaTemperatureSetting must be called within an active transaction")
             return HeatingScheduleRepositoryError.left()
         }
         return try {
-            tempSettingsRepository.save(TemperatureSettingEntity(
-                areaUuid = setting.areaId,
-                defaultTemperature = setting.defaultTemperature.value
-            ))
+            tempSettingsRepository.save(
+                TemperatureSettingEntity(
+                    areaUuid = setting.areaId,
+                    defaultTemperature = setting.defaultTemperature.value
+                )
+            )
             setting.temperatureSchedule.map {
                 TemperatureIntervalEntity(
                     uuid = UUID.randomUUID(),
@@ -70,10 +72,12 @@ class TemperatureSettingsJdbcAdapter(
         if (areaTempSettingAlreadyExist(setting.areaId)) {
             tempSettingsRepository.deleteByByAreaId(setting.areaId)
         }
-        tempSettingsRepository.save(TemperatureSettingEntity(
-            areaUuid = setting.areaId,
-            defaultTemperature = setting.defaultTemperature.value
-        ))
+        tempSettingsRepository.save(
+            TemperatureSettingEntity(
+                areaUuid = setting.areaId,
+                defaultTemperature = setting.defaultTemperature.value
+            )
+        )
         setting.temperatureSchedule.map {
             TemperatureIntervalEntity(
                 uuid = UUID.randomUUID(),
@@ -120,9 +124,8 @@ class TemperatureSettingsJdbcAdapter(
 
     private fun areaTempSettingAlreadyExist(areaId: UUID): Boolean = try {
         tempSettingsRepository.existsSettingByAreaId(areaId)
-    } catch (e: Exception) {
+    } catch (e: DataAccessException) {
         logger.error("check area setting failure", e)
         false
     }
-
 }

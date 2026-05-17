@@ -1,20 +1,20 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.util.*
+import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.domain.areas.AreaDto
 import org.agrfesta.sh.api.persistence.SameNameAreaException
 import org.agrfesta.sh.api.persistence.jdbc.entities.AreaEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getUuid
-import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.postgresql.util.PSQLException
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.util.*
 
 @Service
 class AreasJdbcRepository(
@@ -94,12 +94,12 @@ class AreasJdbcRepository(
     fun deleteAll(): Int = jdbcTemplate.update("DELETE FROM smart_home.area", emptyMap<String, Any>())
 }
 
-object AreaRowMapper: RowMapper<AreaEntity> {
+object AreaRowMapper : RowMapper<AreaEntity> {
     override fun mapRow(rs: ResultSet, rowNum: Int) = AreaEntity(
-            uuid = rs.getUuid("uuid"),
-            name = rs.getString("name"),
-            isIndoor = rs.getBoolean("is_indoor"),
-            createdOn = rs.getInstant("created_on"),
-            updatedOn = rs.findInstant("updated_on")
-        )
+        uuid = rs.getUuid("uuid"),
+        name = rs.getString("name"),
+        isIndoor = rs.getBoolean("is_indoor"),
+        createdOn = rs.getInstant("created_on"),
+        updatedOn = rs.findInstant("updated_on")
+    )
 }

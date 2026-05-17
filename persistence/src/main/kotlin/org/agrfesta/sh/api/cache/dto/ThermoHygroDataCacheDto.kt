@@ -1,9 +1,9 @@
 package org.agrfesta.sh.api.cache.dto
 
-import java.math.BigDecimal
 import org.agrfesta.sh.api.core.domain.commons.Percentage
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
+import java.math.BigDecimal
 
 data class ThermoHygroDataCacheDto(
     val temperature: BigDecimal,

@@ -15,5 +15,4 @@ class GetAreaByIdService(
 
     override fun execute(areaId: UUID): Either<AreaFetchFailure, AreaDto> =
         areasRepository.getAreaById(areaId)
-
 }

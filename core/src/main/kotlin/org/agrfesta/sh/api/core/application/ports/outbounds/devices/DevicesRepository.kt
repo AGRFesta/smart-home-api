@@ -1,14 +1,14 @@
 package org.agrfesta.sh.api.core.application.ports.outbounds.devices
 
 import arrow.core.Either
-import java.util.UUID
-import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.domain.failures.DeviceCreationFailure
 import org.agrfesta.sh.api.core.domain.failures.DeviceFetchFailure
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.DeviceUpdateFailure
+import java.util.UUID
 
 /**
  * Outbound Port for [Device] persistence operations.
@@ -59,5 +59,4 @@ interface DevicesRepository {
      * or [Either.Left] with [DeviceUpdateFailure] if the device does not exist or the update fails.
      */
     fun update(device: Device): Either<DeviceUpdateFailure, Unit>
-
 }

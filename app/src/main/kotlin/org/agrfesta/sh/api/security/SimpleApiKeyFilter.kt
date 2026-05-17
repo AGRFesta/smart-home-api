@@ -19,6 +19,7 @@ class SimpleApiKeyFilter(
     private val objectMapper: ObjectMapper
 ) : OncePerRequestFilter() {
 
+    @Suppress("ReturnCount")
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -49,9 +50,9 @@ class SimpleApiKeyFilter(
         }
 
         val auth = UsernamePasswordAuthenticationToken(
-            /* principal = */ "api-client",
-            /* credentials = */ null,
-            /* authorities = */ listOf(SimpleGrantedAuthority("ROLE_API"))
+            "api-client",
+            null,
+            listOf(SimpleGrantedAuthority("ROLE_API"))
         )
         SecurityContextHolder.getContext().authentication = auth
 

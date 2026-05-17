@@ -8,10 +8,10 @@ value class Temperature private constructor(val value: BigDecimal) : Comparable<
 
     companion object {
         fun of(value: BigDecimal) = Temperature(
-                value
-                    .setScale(2, RoundingMode.HALF_UP)
-                    .stripTrailingZeros()
-            )
+            value
+                .setScale(2, RoundingMode.HALF_UP)
+                .stripTrailingZeros()
+        )
 
         fun of(stringValue: String): Temperature = of(BigDecimal(stringValue))
     }

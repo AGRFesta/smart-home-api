@@ -15,5 +15,4 @@ class UpdateAreaService(
 
     override fun execute(areaId: UUID, name: String, isIndoor: Boolean): Either<AreaUpdateFailure, AreaDto> =
         areasRepository.update(AreaDto(uuid = areaId, name = name, isIndoor = isIndoor))
-
 }

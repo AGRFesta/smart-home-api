@@ -8,9 +8,13 @@ sealed interface UpsertPropertyFailure
 
 sealed interface UpsertPropertyBatchFailure
 
-data object PropertyNotFound: GetPropertyFailure
+data object PropertyNotFound : GetPropertyFailure
 
-data object PropertyRepositoryError : GetPropertyFailure, FindPropertyFailure, UpsertPropertyFailure, UpsertPropertyBatchFailure
+data object PropertyRepositoryError :
+    GetPropertyFailure,
+    FindPropertyFailure,
+    UpsertPropertyFailure,
+    UpsertPropertyBatchFailure
 
 data object EmptyPropertyBatch : UpsertPropertyBatchFailure
 

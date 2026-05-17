@@ -6,5 +6,4 @@ interface RandomGenerator {
 
     fun string(): String
     fun uuid(): UUID
-
 }
