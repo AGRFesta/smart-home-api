@@ -2,7 +2,7 @@
 
 [versions]
 kotlin = "2.1.21"
-springboot = "3.5.13"
+springboot = "3.5.14"
 springboot-dependency-management = "1.1.5"
 flyway = "10.15.0"
 ktor = "2.3.13"
