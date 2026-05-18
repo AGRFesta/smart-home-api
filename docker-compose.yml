@@ -1,0 +1,77 @@
+services:
+
+  smart-home-db:
+    image: 'timescale/timescaledb:latest-pg16'
+    container_name: smart-home-db
+    restart: unless-stopped
+    ports:
+      - "${DB_HOST_PORT}:5432"
+    networks:
+      - db-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - postgres_backups:/var/lib/postgresql/backups
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    mem_limit: 512M
+    mem_reservation: 256M
+    cpus: 1.0
+
+  smart-home-cache:
+    image: 'redis:7.0.10-alpine'
+    container_name: smart-home-cache
+    restart: unless-stopped
+    ports:
+      - "${CACHE_HOST_PORT}:6379"
+    networks:
+      - cache-network
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+      - type: tmpfs
+        target: /tmp
+    mem_limit: 256M
+    mem_reservation: 128M
+    cpus: 0.5
+
+  smart-home-api:
+    image: '${APP_IMAGE_TAG:-agrfesta/smart-home-api:1.0.0}'
+    container_name: smart-home-api
+    restart: unless-stopped
+    ports:
+      - "${API_HOST_PORT}:8080"
+    networks:
+      - db-network
+      - cache-network
+    depends_on:
+      - smart-home-db
+      - smart-home-cache
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://smart-home-db:5432/${POSTGRES_USER}
+      - SPRING_DATASOURCE_PLATFORM=postgres
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - SPRING_DATA_REDIS_HOST=smart-home-cache
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECURITY_APITOKENHASH=${API_TOKEN_HASH}
+      - PROVIDERS_SWITCHBOT_BASEURL=https://api.switch-bot.com/v1.1
+      - PROVIDERS_SWITCHBOT_TOKEN=${PROVIDERS_SWITCHBOT_TOKEN}
+      - PROVIDERS_SWITCHBOT_SECRET=${PROVIDERS_SWITCHBOT_SECRET}
+      - PROVIDERS_NETATMO_BASEURL=https://api.netatmo.com
+      - PROVIDERS_NETATMO_CLIENTID=${PROVIDERS_NETATMO_CLIENTID}
+      - PROVIDERS_NETATMO_CLIENTSECRET=${PROVIDERS_NETATMO_CLIENTSECRET}
+      - PROVIDERS_NETATMO_HOMEID=${PROVIDERS_NETATMO_HOMEID}
+      - PROVIDERS_NETATMO_ROOMID=${PROVIDERS_NETATMO_ROOMID}
+    mem_limit: 256M
+    mem_reservation: 128M
+
+networks:
+  db-network:
+  cache-network:
+
+volumes:
+  postgres_data:
+  postgres_backups:
+  redis_data:

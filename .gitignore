@@ -45,3 +45,6 @@ out/
 
 ### Cline ###
 .cline_artifacts/*
+
+### Secrets ###
+.env
