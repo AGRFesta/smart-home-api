@@ -45,3 +45,12 @@ out/
 
 ### Cline ###
 .cline_artifacts/*
+
+### Secrets ###
+.env
+
+### Bruno ###
+bruno/environments/*.bru
+
+### Caddy ###
+caddy/Caddyfile

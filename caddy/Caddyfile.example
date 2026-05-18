@@ -1,0 +1,20 @@
+your-domain.com {
+    reverse_proxy smart-home-api:8080
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer-when-downgrade"
+    }
+
+    log {
+        output stdout
+        format json
+    }
+}
+
+# Optional: redirect bare IP to domain
+YOUR_SERVER_IP {
+    redir https://your-domain.com{uri} permanent
+}

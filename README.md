@@ -1,6 +1,6 @@
 # Smart Home API
 
-[![Version](https://img.shields.io/badge/version-0.5.10-blue.svg)](https://semver.org)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://semver.org)
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.9.24-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.13-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Arrow](https://img.shields.io/badge/Arrow-1.2.4-E91E63)](https://arrow-kt.io)

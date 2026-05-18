@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "org.agrfesta.sh"
-version = "0.5.10"
+version = "1.0.0"
 
 kotlin {
     jvmToolchain(21)
