@@ -1,0 +1,32 @@
+meta {
+  name: Set Heating Schedule
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{BASE_URL}}/areas/:areaId/heating-schedule
+  body: json
+  auth: inherit
+}
+
+params:path {
+  areaId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{API_TOKEN}}
+}
+
+body:json {
+  {
+    "defaultTemperature": 21.5,
+    "intervals": [
+      {
+        "temperature": 18.0,
+        "startTime": "23:00",
+        "endTime": "06:30"
+      }
+    ]
+  }
+}

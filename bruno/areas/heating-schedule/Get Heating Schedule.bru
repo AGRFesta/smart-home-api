@@ -1,0 +1,19 @@
+meta {
+  name: Get Heating Schedule
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/areas/:areaId/heating-schedule
+  body: none
+  auth: inherit
+}
+
+params:path {
+  areaId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{API_TOKEN}}
+}

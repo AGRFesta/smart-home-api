@@ -1,0 +1,19 @@
+meta {
+  name: Get Area
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{BASE_URL}}/areas/:areaId
+  body: none
+  auth: inherit
+}
+
+params:path {
+  areaId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{API_TOKEN}}
+}

@@ -1,0 +1,19 @@
+meta {
+  name: Delete Heating Schedule
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{BASE_URL}}/areas/:areaId/heating-schedule
+  body: none
+  auth: inherit
+}
+
+params:path {
+  areaId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{API_TOKEN}}
+}

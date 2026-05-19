@@ -1,0 +1,4 @@
+vars {
+  BASE_URL: https://REPLACE_WITH_YOUR_URL
+  API_TOKEN: {{process.env.API_TOKEN}}
+}

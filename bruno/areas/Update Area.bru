@@ -1,0 +1,26 @@
+meta {
+  name: Update Area
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{BASE_URL}}/areas/:areaId
+  body: json
+  auth: inherit
+}
+
+params:path {
+  areaId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{API_TOKEN}}
+}
+
+body:json {
+  {
+    "name": "Living Room",
+    "isIndoor": true
+  }
+}

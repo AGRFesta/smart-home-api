@@ -1,0 +1,20 @@
+meta {
+  name: Unassign Actuator
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{BASE_URL}}/areas/:areaId/actuators/:deviceId
+  body: none
+  auth: inherit
+}
+
+params:path {
+  areaId: 00000000-0000-0000-0000-000000000000
+  deviceId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{API_TOKEN}}
+}
