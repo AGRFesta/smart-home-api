@@ -6,6 +6,7 @@ import arrow.core.left
 import arrow.core.right
 import org.agrfesta.sh.api.core.application.ports.inbounds.FetchSensorReadingsUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.home.HomeStateRefreshPublisher
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
@@ -20,7 +21,8 @@ import org.springframework.stereotype.Service
 class FetchSensorReadingsService(
     private val devicesRepository: DevicesRepository,
     providerDevicesFactories: Collection<ProviderDevicesFactory>,
-    private val readingsRepository: SensorsCurrentReadingsRepository
+    private val readingsRepository: SensorsCurrentReadingsRepository,
+    private val homeStateRefreshPublisher: HomeStateRefreshPublisher
 ) : FetchSensorReadingsUseCase {
 
     private val logger by LoggerDelegate()
@@ -48,6 +50,7 @@ class FetchSensorReadingsService(
                     }
                 }
             }
+        homeStateRefreshPublisher.publish()
         return Unit.right()
     }
 }

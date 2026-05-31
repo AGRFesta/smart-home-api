@@ -5,6 +5,7 @@ import arrow.core.flatMap
 import arrow.core.left
 import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.home.HomeStateRefreshPublisher
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.areas.AreaTemperatureSetting
 import org.agrfesta.sh.api.core.domain.areas.HeatingScheduleDto
@@ -24,7 +25,8 @@ import java.util.UUID
 @Service
 class ReplaceHeatingScheduleService(
     private val areasRepository: AreasRepository,
-    private val temperatureSettingsRepository: TemperatureSettingsRepository
+    private val temperatureSettingsRepository: TemperatureSettingsRepository,
+    private val homeStateRefreshPublisher: HomeStateRefreshPublisher
 ) : ReplaceHeatingScheduleUseCase {
 
     override fun execute(
@@ -57,6 +59,7 @@ class ReplaceHeatingScheduleService(
                     }
                 )
             }
+            .onRight { homeStateRefreshPublisher.publish() }
     }
 
     private fun AreaFetchFailure.toCreationFailure(): TemperatureSettingCreationFailure = when (this) {

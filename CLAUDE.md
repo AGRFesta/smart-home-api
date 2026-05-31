@@ -22,6 +22,13 @@
 
 ## Conventions
 - **API Docs:** When adding or modifying an endpoint, update `docs/api/<resource>.md` and the table in `docs/api/API_INDEX.md`.
+- **Changelog:** At the end of every issue, add an entry to `CHANGELOG.md` under `## [Unreleased]`. Use these sections:
+  - `Added` — new endpoints or observable behaviours
+  - `Changed` — modified contracts or behaviours
+  - `Fixed` — bug fixes with observable impact
+  - `Security` — dependency bumps that fix CVEs
+  - Do **not** add entries for: test additions, internal refactoring without contract change, code style cleanup.
+  - One line per entry, imperative mood, issue number in parentheses. Example: `- Add \`GET /home/stream\` SSE endpoint for real-time dashboard. (#173)`
 
 ## Context Links
 - **Architecture & Domain:** See `docs/ARCHITECTURE.md` for rules on Ports, Adapters, Value Objects, and Error Handling.
