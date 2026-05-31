@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHomeDashboardUseCase
@@ -19,6 +20,8 @@ import org.agrfesta.sh.api.core.domain.home.HeatingDto
 import org.agrfesta.sh.api.core.domain.home.HomeDashboardDto
 import org.agrfesta.sh.api.core.domain.home.HumidityDto
 import org.agrfesta.sh.api.core.domain.home.MeasurementsDto
+import org.agrfesta.sh.api.home.DefaultSseEmitterFactory
+import org.agrfesta.sh.api.home.HomeStreamBroadcaster
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.junit.jupiter.api.Test
@@ -27,16 +30,20 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestConstructor
+import org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.request
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.math.BigDecimal
 import java.util.*
 
 @WebMvcTest(HomeController::class)
-@Import(SecurityConfig::class)
+@Import(SecurityConfig::class, HomeStreamBroadcaster::class, DefaultSseEmitterFactory::class)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @ActiveProfiles("test")
+@TestPropertySource(properties = ["home.stream.emitter-timeout-ms=500"])
 class HomeControllerMvcSliceTest(
     private val mockMvc: MockMvc,
     private val objectMapper: ObjectMapper,
@@ -48,6 +55,10 @@ class HomeControllerMvcSliceTest(
 
     @TestFactory fun `getHome() auth tests`() = authTestSupport.dynamicTestsBy {
         get("/home")
+    }
+
+    @TestFactory fun `getHomeStream() auth tests`() = authTestSupport.dynamicTestsBy {
+        get("/home/stream")
     }
 
     @Test fun `getHome() returns 200 with home dashboard on success`() {
@@ -132,6 +143,34 @@ class HomeControllerMvcSliceTest(
 
         val response = objectMapper.readValue(responseBody, MessageResponse::class.java)
         response.message shouldBe "Unable to fetch home dashboard!"
+    }
+
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // /// getHomeStream ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test fun `getHomeStream() returns 200 text event-stream with the initial dashboard event`() {
+        val dashboard = HomeDashboardDto(
+            globalState = GlobalStateDto(
+                heatingActive = FieldSuccess(true),
+                strategy = FieldSuccess(SharedHeatingStrategy.COMFORT)
+            ),
+            areas = emptyList()
+        )
+        every { getHomeDashboardUseCase.execute() } returns dashboard.right()
+
+        // The initial event is written synchronously while the emitter is wired, so the buffered response can be read
+        // directly without an async dispatch (which would block waiting for the long-lived emitter to complete).
+        val response = mockMvc.perform(get("/home/stream").authenticated())
+            .andExpect(request().asyncStarted())
+            .andReturn().response
+
+        withClue("status") { response.status shouldBe 200 }
+        withClue("content type") { response.contentType shouldContain TEXT_EVENT_STREAM_VALUE }
+        withClue("initial event carries the current dashboard") {
+            response.contentAsString shouldContain "\"heatingActive\""
+            response.contentAsString shouldContain "COMFORT"
+        }
     }
 
     // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

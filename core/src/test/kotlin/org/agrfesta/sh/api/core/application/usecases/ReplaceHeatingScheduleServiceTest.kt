@@ -10,6 +10,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.home.HomeStateRefreshPublisher
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
@@ -25,8 +26,11 @@ class ReplaceHeatingScheduleServiceTest {
 
     private val areasRepository: AreasRepository = mockk()
     private val temperatureSettingsRepository: TemperatureSettingsRepository = mockk()
+    private val homeStateRefreshPublisher: HomeStateRefreshPublisher = mockk(relaxUnitFun = true)
 
-    private val sut = ReplaceHeatingScheduleService(areasRepository, temperatureSettingsRepository)
+    private val sut = ReplaceHeatingScheduleService(
+        areasRepository, temperatureSettingsRepository, homeStateRefreshPublisher
+    )
 
     @Test
     fun `execute() Returns OverlappingIntervals without calling repositories when intervals overlap`() {
@@ -90,6 +94,28 @@ class ReplaceHeatingScheduleServiceTest {
         dto2.temperature shouldBe interval2.temperature
         dto2.startTime shouldBe interval2.startTime
         dto2.endTime shouldBe interval2.endTime
+    }
+
+    @Test
+    fun `execute() publishes home state refresh after a successful save`() {
+        val areaId = UUID.randomUUID()
+        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { temperatureSettingsRepository.createSetting(any()) } returns Unit.right()
+
+        sut.execute(areaId, aRandomTemperature(), emptyList())
+
+        verify { homeStateRefreshPublisher.publish() }
+    }
+
+    @Test
+    fun `execute() does not publish home state refresh when the save fails`() {
+        val areaId = UUID.randomUUID()
+        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { temperatureSettingsRepository.createSetting(any()) } returns HeatingScheduleRepositoryError.left()
+
+        sut.execute(areaId, aRandomTemperature(), emptyList())
+
+        verify(exactly = 0) { homeStateRefreshPublisher.publish() }
     }
 
     @Test

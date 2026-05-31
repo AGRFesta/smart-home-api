@@ -10,6 +10,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
+import org.agrfesta.sh.api.core.application.ports.outbounds.home.HomeStateRefreshPublisher
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.domain.devices.BatteryValue
 import org.agrfesta.sh.api.core.domain.devices.Device
@@ -31,8 +32,11 @@ class FetchSensorReadingsServiceTest {
         every { it.provider } returns Provider.SWITCHBOT
     }
     private val readingsRepository: SensorsCurrentReadingsRepository = mockk()
+    private val homeStateRefreshPublisher: HomeStateRefreshPublisher = mockk(relaxUnitFun = true)
 
-    private val sut = FetchSensorReadingsService(devicesRepository, listOf(factory), readingsRepository)
+    private val sut = FetchSensorReadingsService(
+        devicesRepository, listOf(factory), readingsRepository, homeStateRefreshPublisher
+    )
 
     @Test
     fun `execute() returns Left(FetchSensorReadingsError) when getAll() fails`() {
@@ -161,6 +165,22 @@ class FetchSensorReadingsServiceTest {
         result.shouldBeRight()
         verify(exactly = 1) { readingsRepository.save(failingSaveDriver, thermoHygro1.thermoHygroData) }
         verify(exactly = 1) { readingsRepository.save(successDriver, thermoHygro2.thermoHygroData) }
+    }
+
+    @Test fun `execute() publishes home state refresh after a successful fetch cycle`() {
+        every { devicesRepository.getAll() } returns emptyList<Device>().right()
+
+        sut.execute()
+
+        verify { homeStateRefreshPublisher.publish() }
+    }
+
+    @Test fun `execute() does not publish home state refresh when the fetch cycle fails`() {
+        every { devicesRepository.getAll() } returns DeviceRepositoryError.left()
+
+        sut.execute()
+
+        verify(exactly = 0) { homeStateRefreshPublisher.publish() }
     }
 
     @Test fun `execute() calls save() with thermo-hygro data when sensor returns ThermoHygroDataValue`() {

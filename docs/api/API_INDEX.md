@@ -6,6 +6,7 @@ All endpoints require authentication via Bearer token. See [SECURITY.md](../SECU
 |--------|----------|----------|------------------------------------|
 | `POST`   | `/devices/synchronizations` | [devices](devices.md#post-devicessynchronizations) | Synchronise persisted devices with provider snapshot |
 | `GET`    | `/home`  | [home](home.md#get-home) | BFF dashboard — global state + areas |
+| `GET`    | `/home/stream` | [home](home.md#get-homestream) | SSE stream — pushes the dashboard on every home-state change |
 | `POST`   | `/areas` | [areas](areas.md#post-areas) | Create a new area |
 | `GET`    | `/areas` | [areas](areas.md#get-areas) | List all areas |
 | `GET`    | `/areas/{id}` | [areas](areas.md#get-areasid) | Get a single area by id |
