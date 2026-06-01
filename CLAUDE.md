@@ -30,6 +30,12 @@
   - Do **not** add entries for: test additions, internal refactoring without contract change, code style cleanup.
   - One line per entry, imperative mood, issue number in parentheses. Example: `- Add \`GET /home/stream\` SSE endpoint for real-time dashboard. (#173)`
 
+## Version Bump Checklist
+When bumping the project version, update all of these:
+1. `app/build.gradle.kts` — `version` field
+2. `docker-compose.yml` — default image tag (`agrfesta/smart-home-api:<version>`)
+3. `CHANGELOG.md` — promote `## [Unreleased]` to `## [<version>] - <date>` and add a new empty `## [Unreleased]` on top
+
 ## Context Links
 - **Architecture & Domain:** See `docs/ARCHITECTURE.md` for rules on Ports, Adapters, Value Objects, and Error Handling.
 - **Security:** See `docs/SECURITY.md` (API Key SHA-256).
