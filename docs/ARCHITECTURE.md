@@ -25,6 +25,7 @@ flowchart TD
 
     subgraph outbound_adapters["Outbound Adapters (Driven)"]
         DAO["JDBC DAOs\nPersistence"]
+        Cache["Redis\nCache"]
         P["Providers\nExternal APIs"]
     end
 
@@ -33,8 +34,24 @@ flowchart TD
     IP --> D
     IP --> OP
     OP --> DAO
+    OP --> Cache
     OP --> P
 ```
+
+---
+
+## Module Structure
+
+Architectural boundaries are enforced at **compile time** by four Gradle modules with a strict unidirectional dependency graph:
+
+| Module | Responsibility | Depends on |
+|---|---|---|
+| `:core` | Domain entities, value objects, failure types, use case interfaces and service implementations | nothing (pure Kotlin + Arrow) |
+| `:persistence` | JDBC adapters, Redis cache adapters, DB entities | `:core` |
+| `:providers` | External API clients (Netatmo, SwitchBot) | `:core` |
+| `:app` | Spring Boot wiring, controllers, schedulers, security | `:core`, `:persistence`, `:providers` |
+
+No reverse dependencies are permitted. `:core` cannot reference `:persistence`, `:providers`, or `:app` — the compiler enforces this, not convention.
 
 ---
 
@@ -49,6 +66,7 @@ Define the system's capabilities exposed to the outside world.
   - Must return functional types (`Either`). Must accept only primitive types, standard library types, or specific DTOs defined inside the Core.
   - Live in `core/application/ports/inbounds/`.
 - **Implementation (ISP/SRP):** Each use case interface must be implemented by its **own dedicated service class** (e.g., `CreateAreaService implements CreateAreaUseCase`). A single service class must **not** implement multiple use case interfaces. Service implementations live in `core/application/usecases/`.
+- **Spring coupling in `:core`:** Service implementation classes carry `@Service` — the only Spring annotation permitted in `:core`. This makes them discoverable by Spring's component scan without explicit `@Bean` declarations. The domain layer (`core/domain/`) remains completely Spring-free. No other Spring annotation (`@Component`, `@Autowired`, `@Transactional`, etc.) is allowed in `:core`.
 
 ### Inbound Adapters (Controllers)
 Infrastructure components that trigger the Inbound Ports.
@@ -67,6 +85,7 @@ Interfaces defined in the Core used by the domain to communicate with the extern
 ### Outbound Adapters (Persistence & API)
 Technological implementations of the Outbound Ports.
 - **Persistence:** We use **JdbcTemplate / Spring Data JDBC**. Implementations live in `persistence/jdbc/adapters/` and should ideally be `internal` to prevent direct coupling.
+- **Cache:** Redis is used as a read-through cache for data retrieved from external providers. Cache adapters live in `persistence/cache/adapters/` and implement the same outbound port interfaces as the JDBC adapters, so the core never knows whether it is talking to the database or the cache.
 - **Mapping:** Must translate between Domain Entities and Infrastructure Models (e.g., Database Rows) before saving or retrieving.
 - **Exception Boundary:** Must catch infrastructure/technical exceptions (e.g., `DataAccessException`, `RestClientException`) and map them to the expected Domain Errors (e.g., `Left(AreaRepositoryError)`).
 
