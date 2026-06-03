@@ -35,6 +35,7 @@ dependencies {
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.kotest.assertions.arrow)
     testImplementation(libs.mockk)
+    testImplementation(libs.archunit.junit5)
 }
 
 pitest {

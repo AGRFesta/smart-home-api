@@ -53,6 +53,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.springmockk)
     testImplementation(libs.ktor.client.mock)
+    testImplementation(libs.archunit.junit5)
 }
 
 docker {
