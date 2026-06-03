@@ -59,6 +59,7 @@ dependencies {
     testImplementation(libs.testcontainers.redis)
     testImplementation(libs.mockk)
     testImplementation(libs.springmockk)
+    testImplementation(libs.archunit.junit5)
 }
 
 tasks.withType<Test> {

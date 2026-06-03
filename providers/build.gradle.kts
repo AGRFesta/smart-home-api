@@ -48,6 +48,7 @@ dependencies {
     testImplementation(libs.kotest.assertions.json)
     testImplementation(libs.mockk)
     testImplementation(libs.ktor.client.mock)
+    testImplementation(libs.archunit.junit5)
 }
 
 pitest {

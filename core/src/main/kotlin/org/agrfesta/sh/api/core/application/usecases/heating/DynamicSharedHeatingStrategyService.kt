@@ -7,9 +7,6 @@ import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 import org.agrfesta.sh.api.utils.LoggerDelegate
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Service
 import java.time.LocalTime
 
 /**
@@ -20,10 +17,8 @@ import java.time.LocalTime
  * If the key is missing, the value is invalid, or a persistence error occurs, it falls back to
  * the configured `defaultStrategy` to ensure the system remains operational.
  */
-@Primary
-@Service
 class DynamicSharedHeatingStrategyService(
-    @param:Value("\${heating.default-strategy:ECONOMY}") private val defaultStrategy: SharedHeatingStrategy,
+    private val defaultStrategy: SharedHeatingStrategy,
     strategyServices: Collection<NamedSharedHeatingAreasStrategyService>,
     private val propertyRepository: PropertyRepository
 ) : SharedHeatingAreasStrategyService {
