@@ -40,4 +40,5 @@ When bumping the project version, update all of these:
 - **Architecture & Domain:** See `docs/ARCHITECTURE.md` for rules on Ports, Adapters, Value Objects, and Error Handling.
 - **Security:** See `docs/SECURITY.md` (API Key SHA-256).
 - **Workflow:** See `docs/TDD_WORKFLOW.md` for the Red/Green/Refactor cycle.
+- **PR Review:** See `docs/REVIEW_WORKFLOW.md` for the reviewer/author loop, the marker schema, and the human gates.
 - **Domain Models:** See `docs/domain/` for domain-specific lifecycle and design decisions (e.g. `DEVICES.md` for device status semantics and synchronization flow).
