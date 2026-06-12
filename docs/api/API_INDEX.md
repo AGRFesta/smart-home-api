@@ -6,6 +6,7 @@ below. See [SECURITY.md](../SECURITY.md).
 | Method | Path     | Resource | Description                        |
 |--------|----------|----------|------------------------------------|
 | `GET`    | `/actuator/health` | [health](health.md#get-actuatorhealth) | Public health status (details when authenticated) |
+| `GET`    | `/actuator/health/liveness` | [health](health.md#get-actuatorhealthliveness) | Public liveness probe (process alive) |
 | `GET`    | `/actuator/health/readiness` | [health](health.md#get-actuatorhealthreadiness) | Public readiness probe (app + DB; Redis excluded) |
 | `GET`    | `/actuator/info` | [health](health.md#get-actuatorinfo) | Build version (authenticated) |
 | `POST`   | `/devices/synchronizations` | [devices](devices.md#post-devicessynchronizations) | Synchronise persisted devices with provider snapshot |

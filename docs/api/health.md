@@ -47,10 +47,36 @@ status alone.
 
 ---
 
+## GET /actuator/health/liveness
+
+Liveness probe — whether the application process is alive. It deliberately has **no external
+dependencies** (DB, Redis): a transient infrastructure outage must not be reported as the process
+being dead.
+
+### Authentication
+
+**Public** — no token required.
+
+### Response: `200 OK`
+
+```json
+{ "status": "UP" }
+```
+
+### HTTP Status Codes
+
+| Status | Condition |
+|--------|-----------|
+| `200`  | Application process is live (`status: UP`) |
+| `503`  | Application liveness state is broken (`status: DOWN`) |
+
+---
+
 ## GET /actuator/health/readiness
 
-Readiness probe consumed by the container healthcheck. It is intentionally **narrower** than the
-aggregate: it reports `UP` only when the application and the **database** are healthy.
+Readiness probe **intended for** a container/orchestrator readiness check. It is intentionally
+**narrower** than the aggregate: it reports `UP` only when the application and the **database** are
+healthy.
 
 ### Authentication
 
