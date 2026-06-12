@@ -28,6 +28,10 @@ class SimpleApiKeyFilter(
         val header = request.getHeader("Authorization") ?: ""
 
         if (!header.startsWith("Bearer ")) {
+            if (allowsAnonymous(request)) {
+                filterChain.doFilter(request, response)
+                return
+            }
             writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "Missing Authorization header")
             return
         }
@@ -59,6 +63,9 @@ class SimpleApiKeyFilter(
         // Token valid → continue
         filterChain.doFilter(request, response)
     }
+
+    private fun allowsAnonymous(request: HttpServletRequest): Boolean =
+        request.requestURI in PUBLIC_HEALTH_ENDPOINTS
 
     private fun writeJsonError(response: HttpServletResponse, status: Int, message: String) {
         response.status = status

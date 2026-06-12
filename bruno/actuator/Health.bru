@@ -1,0 +1,16 @@
+meta {
+  name: Health
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/actuator/health
+  body: none
+  auth: inherit
+}
+
+docs {
+  Public endpoint: status is reachable without a token.
+  Component details (db, redis, diskSpace) are shown only when authenticated (show-details=when-authorized).
+}

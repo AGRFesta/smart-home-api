@@ -6,6 +6,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
 
+/** Actuator endpoints reachable without an API key (status only; details stay gated by `show-details`). */
+internal val PUBLIC_HEALTH_ENDPOINTS = arrayOf("/actuator/health", "/actuator/health/readiness")
+
 @Configuration
 class SecurityConfig(private val simpleApiKeyFilter: SimpleApiKeyFilter) {
 
@@ -13,7 +16,10 @@ class SecurityConfig(private val simpleApiKeyFilter: SimpleApiKeyFilter) {
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .csrf { it.disable() } // stateless API
-            .authorizeHttpRequests { it.anyRequest().authenticated() }
+            .authorizeHttpRequests {
+                it.requestMatchers(*PUBLIC_HEALTH_ENDPOINTS).permitAll()
+                    .anyRequest().authenticated()
+            }
             .addFilterBefore(simpleApiKeyFilter, BasicAuthenticationFilter::class.java)
         return http.build()
     }

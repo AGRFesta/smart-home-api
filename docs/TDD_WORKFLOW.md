@@ -48,7 +48,22 @@ The project has three distinct test layers. Use the right one for the right scop
 
 ## Phase 0: PLANNING (The Test List)
 1. Before writing any code, analyze the task and create a **strictly ordered bulleted list** of test cases you plan to write.
-2. Order the list logically: start with the absolute simplest degenerate case (e.g., null inputs, empty strings, validations), then progress to base success cases, and finally complex edge cases or external API faults.
+2. **Order by RED-ability, not by complexity.** The purpose of the ordering is that each
+   test, *at the moment it is written*, can be observed failing (RED) for a genuine reason:
+   it must exercise a behaviour the current production code does not yet provide, and require
+   the **smallest possible new increment** of production code to turn GREEN.
+   - The RED must always be an **executed test failure** — an assertion mismatch, or a
+     `NotImplementedError` from a `TODO("...")` stub — **never a compilation error**. Writing
+     the minimal production scaffolding needed to compile (stubs, `TODO("...")`) is part of
+     arranging the RED, not a violation of it (consistent with Phase 1).
+   - A test that is already GREEN the moment you write it is a smell: it either belongs
+     earlier in the list, or an earlier step over-implemented (this is the same thing the
+     Phase 2 *diagnostic check* catches — ordering prevents it, the check intercepts it).
+   - Starting from degenerate cases (null/empty/validation) is a useful *heuristic* that
+     often yields the cleanest first REDs and the smallest increments — but it is a means,
+     not the rule. Where complexity ordering and RED-ability conflict, **RED-ability wins**.
+   - When two behaviours are so coupled that a later test cannot be made RED in isolation,
+     **say so explicitly in the plan** rather than forcing an artificial order.
 3. **BARRIER - STOP AND ASK:** Present this list to the user and ask for approval. **Do not write any code** until the list is approved or amended.
 
 ## Phase 1: RED (Writing ONE Single Test)
