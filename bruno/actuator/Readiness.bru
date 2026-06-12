@@ -11,6 +11,6 @@ get {
 }
 
 docs {
-  Public readiness probe used by the container healthcheck. Reports UP only when the app and the DB are healthy.
+  Public readiness probe intended for a container/orchestrator readiness check. Reports UP only when the app and the DB are healthy.
   Redis is intentionally excluded (informational only, in the full /actuator/health aggregate).
 }
