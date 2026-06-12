@@ -2,6 +2,7 @@ package org.agrfesta.sh.api
 
 import io.restassured.RestAssured.given
 import org.agrfesta.sh.api.controllers.authenticated
+import org.agrfesta.sh.api.controllers.wrongAuthentication
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
@@ -43,6 +44,28 @@ class HealthCheckIntegrationTest : AbstractIntegrationTest() {
             .statusCode(200)
             .body("status", equalTo("UP"))
             .body("components", nullValue())
+    }
+
+    @Test fun `health stays public and hides details when given an invalid token`() {
+        // When / Then — a public endpoint must not be blockable by a stray, invalid token
+        given()
+            .wrongAuthentication()
+            .`when`()
+            .get("/actuator/health")
+            .then()
+            .statusCode(200)
+            .body("status", equalTo("UP"))
+            .body("components", nullValue())
+    }
+
+    @Test fun `liveness probe is publicly reachable and reports UP without API key`() {
+        // When / Then
+        given()
+            .`when`()
+            .get("/actuator/health/liveness")
+            .then()
+            .statusCode(200)
+            .body("status", equalTo("UP"))
     }
 
     @Test fun `readiness probe is publicly reachable and reports UP without API key`() {

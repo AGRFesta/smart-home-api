@@ -7,7 +7,11 @@ import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
 
 /** Actuator endpoints reachable without an API key (status only; details stay gated by `show-details`). */
-internal val PUBLIC_HEALTH_ENDPOINTS = arrayOf("/actuator/health", "/actuator/health/readiness")
+internal val PUBLIC_HEALTH_ENDPOINTS = arrayOf(
+    "/actuator/health",
+    "/actuator/health/liveness",
+    "/actuator/health/readiness"
+)
 
 @Configuration
 class SecurityConfig(private val simpleApiKeyFilter: SimpleApiKeyFilter) {
