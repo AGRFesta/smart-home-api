@@ -1,8 +1,8 @@
 # Smart Home API
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://semver.org)
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.9.24-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.13-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://semver.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.1.21-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.14-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Arrow](https://img.shields.io/badge/Arrow-1.2.4-E91E63)](https://arrow-kt.io)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-lightblue?logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Redis](https://img.shields.io/badge/Redis-red?logo=redis&logoColor=white)](https://redis.io)
@@ -10,93 +10,111 @@
 [![Docker](https://img.shields.io/badge/Docker-blue?logo=docker&logoColor=white)](https://www.docker.com)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
----
+A Kotlin / Spring Boot backend for managing and automating smart home devices, with a focus on **climate monitoring** and **heating control**. It collects temperature and humidity readings from physical sensors, persists their history, and drives thermostats through configurable heating strategies. It integrates natively with **SwitchBot** and **Netatmo** hardware.
 
-## Architecture and Guidelines
-
-This project follows a **Pragmatic Hexagonal Architecture** (Ports and Adapters). The core business logic is fully isolated from infrastructure concerns such as Spring, JDBC, and Ktor.
-
-For a complete description of the architecture, layer rules, the Unit of Work pattern, and coding conventions, refer to:
-
-**[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
-
-Every new feature and every refactoring must comply with the principles defined in that document. In particular: services must never use `@Transactional`, all failable operations must return `Either<DomainError, T>`, and exceptions must never escape the DAO layer.
-
-For the authentication model, filter flow, configuration, and test helpers, refer to:
-
-**[docs/SECURITY.md](docs/SECURITY.md)**
+The project doubles as a reference implementation: it is built with a strict **Pragmatic Hexagonal Architecture**, functional error handling, and architectural boundaries that are *enforced by tests* rather than left to convention.
 
 ---
 
-A Kotlin-based Spring Boot application for managing and controlling smart home devices, focusing on climate monitoring and heating control. It integrates with providers like SwitchBot and Netatmo.
+## Architecture Highlights
+
+These are the engineering decisions that shape the codebase — the *why*, not just the *what*:
+
+- **Hexagonal, multi-module by design.** The domain model in `:core` is framework-free; its only concession to Spring is `spring-context` for dependency injection (`@Service` stereotypes on use cases). It knows nothing of Spring Boot, web, JDBC, or Ktor. Infrastructure lives in dedicated modules (`:persistence`, `:providers`) and the runtime is assembled in `:app`. The compiler enforces the dependency direction.
+- **Boundaries enforced, not documented.** [ArchUnit](https://www.archunit.org) tests fail the build if a layer reaches where it shouldn't — so the architecture cannot silently erode over time.
+- **Functional error handling.** Every failable operation returns `Either<DomainError, T>` (Arrow). Exceptions never escape the DAO layer, and there are no `@Transactional` services — transactional consistency is handled explicitly via a Unit of Work pattern.
+- **Domain logic proven, not just sampled.** Pure core logic is covered with [property-based testing](docs/MUTATION_TESTING.md) (Kotest Property), and mutation testing (PITest) measures whether the suite actually catches regressions.
+- **Real-time push.** `GET /home/stream` streams the full home dashboard to clients over Server-Sent Events on every polling cycle or heating configuration change — replacing client-side polling.
+
+For the full picture, see **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** (layer rules, Value Objects, Unit of Work) and **[docs/SECURITY.md](docs/SECURITY.md)** (API-key authentication model and filter flow).
+
+---
 
 ## Features
 
-- **Device Management**: Track and manage various smart home devices.
-- **Area & Room Organization**: Group devices into areas (rooms) for better management.
-- **Climate Monitoring**: Fetch and store temperature and humidity data from sensors.
-- **Heating Control**: Automated heating strategies (Comfort, Economy, Dynamic) based on sensor data and schedules.
-- **Provider Integration**: Native support for:
+- **Device Management** — track and manage smart home devices and their lifecycle (see [docs/domain/DEVICES.md](docs/domain/DEVICES.md)).
+- **Area & Room Organization** — group devices into areas (rooms) for structured control.
+- **Climate Monitoring** — fetch and persist temperature and humidity data from sensors.
+- **Heating Control** — automated strategies (Comfort, Economy, Dynamic) driven by sensor data and schedules.
+- **Provider Integration** — native support for:
   - **SwitchBot** (Meter, Hub Mini)
   - **Netatmo** (Smarther thermostats)
-- **Historical Data**: Persistent storage for sensor readings and historical analysis.
-- **Security**: API key-based security for endpoint protection.
-- **Caching**: Redis-backed and database-persistent caching mechanisms for performance and reliability.
+- **Real-time Dashboard** — SSE endpoint pushing live home state to connected clients.
+- **Historical Data** — persistent storage of sensor readings for analysis.
+- **Security** — API-key-based endpoint protection (SHA-256).
+- **Caching** — Redis-backed and database-persistent caching for performance and resilience.
 
 ## Tech Stack
 
-- **Language**: Kotlin 2.1 (JVM 21)
-- **Framework**: Spring Boot 3.4
-- **Database**: PostgreSQL
-- **Migration**: Flyway
-- **Cache**: Redis
-- **HTTP Client**: Ktor
-- **Containerization**: Docker
-- **Testing**: JUnit 5, Kotest, RestAssured, MockK, Testcontainers
+- **Language:** Kotlin 2.1 (JVM 21)
+- **Framework:** Spring Boot 3.5
+- **Functional core:** Arrow (`Either`-based error handling)
+- **Database:** PostgreSQL (JDBC / Spring Data JDBC — no JPA)
+- **Migrations:** Flyway
+- **Cache:** Redis
+- **HTTP Client:** Ktor (provider integrations)
+- **Build:** Gradle (multi-module, version catalog)
+- **Containerization:** Docker
+- **Testing:** JUnit 5, Kotest (+ Property), RestAssured, MockK, Testcontainers, ArchUnit, PITest
+
+## Module Structure
+
+This is a multi-module Gradle build that mirrors the hexagonal layers:
+
+```
+smart-home-api
+├── core         # Pure domain: models, ports, business logic (no framework deps)
+├── persistence  # Outbound adapters: JDBC/PostgreSQL DAOs, Flyway migrations
+├── providers    # Outbound adapters: SwitchBot & Netatmo integrations (Ktor)
+└── app          # Spring Boot runtime: controllers, schedulers, wiring, security
+```
+
+The dependency rule is one-directional: `app` depends on everything, the infrastructure modules depend on `core`, and `core` depends only on lightweight libraries (Arrow, `spring-context` for DI) — never on the web, persistence, or provider stacks.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Java 21
-- Docker (optional, for running with containers)
-- PostgreSQL & Redis
+- **Java 21** — required to build and run (the build targets the JVM 21 toolchain).
+- **A reachable PostgreSQL and Redis instance** — required at runtime; the app will not start without them. You can install them natively or run them via Docker.
 
 ### Configuration
 
-The application can be configured via `src/main/resources/application.properties` (or environment variables). Key configuration areas include:
+The application is configured via `app/src/main/resources/application.properties` or environment variables. Key areas:
 
-- Database connection strings
+- Database connection
 - Redis configuration
 - Provider API credentials (SwitchBot, Netatmo)
 - Security API keys
 
 ### Building and Running
 
-To build the project:
 ```bash
-./gradlew build
+./gradlew build              # Build all modules
+./gradlew :app:bootRun       # Run the application locally
+./gradlew :app:docker        # Build the Docker image
 ```
 
-To run the application:
-```bash
-./gradlew bootRun
-```
+The repository's `docker-compose.yml` describes the **production deployment** stack — the published app image behind a Caddy reverse proxy, with TimescaleDB and Redis — and expects deployment environment variables and host volume mounts. It is not a local development setup: for local work, provide your own PostgreSQL and Redis instances.
 
 ### Running Tests
 
-The project has a comprehensive test suite (270+ tests) including unit and integration tests using Testcontainers.
+The project has a comprehensive suite of 480+ unit and integration tests (the latter backed by Testcontainers), plus architectural and property-based tests.
+
 ```bash
-./gradlew test
+./gradlew test                       # All tests, all modules
+./gradlew test --tests "ClassName"   # A specific test class
 ```
 
-## Project Structure
+## Documentation
 
-- `src/main/kotlin/.../api/controllers`: REST API endpoints.
-- `src/main/kotlin/.../api/domain`: Core domain models and business logic.
-- `src/main/kotlin/.../api/providers`: Integration with external device providers (SwitchBot, Netatmo).
-- `src/main/kotlin/.../api/services`: Business services, including heating strategies.
-- `src/main/kotlin/.../api/persistence`: Data access layer (JDBC/PostgreSQL).
-- `src/main/kotlin/.../api/schedulers`: Background tasks for data fetching and climate control.
-- `src/main/resources/db/migration`: Database schema evolution scripts.
+- **[Architecture & Domain](docs/ARCHITECTURE.md)** — ports, adapters, Value Objects, error handling, Unit of Work.
+- **[Security](docs/SECURITY.md)** — authentication model, filter flow, configuration.
+- **[Mutation & Property Testing](docs/MUTATION_TESTING.md)** — testing strategy for the core domain.
+- **[TDD Workflow](docs/TDD_WORKFLOW.md)** — the Red/Green/Refactor cycle followed in this repo.
+- **[API Reference](docs/api/API_INDEX.md)** — endpoint documentation per resource.
+- **[Domain Models](docs/domain/)** — lifecycle and design decisions (e.g. device status semantics).
 
+## License
+
+Released under the [MIT License](LICENSE).
