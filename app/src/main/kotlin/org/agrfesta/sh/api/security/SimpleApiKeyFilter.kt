@@ -25,20 +25,19 @@ class SimpleApiKeyFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
+        // Public health probes are never blocked by a missing/invalid token; a valid token still
+        // elevates the caller (e.g. to see health component details).
+        val publicPath = allowsAnonymous(request)
         val header = request.getHeader("Authorization") ?: ""
 
         if (!header.startsWith("Bearer ")) {
-            if (allowsAnonymous(request)) {
-                filterChain.doFilter(request, response)
-                return
-            }
-            writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "Missing Authorization header")
+            rejectOrContinue(publicPath, "Missing Authorization header", request, response, filterChain)
             return
         }
 
         val providedToken = header.removePrefix("Bearer ").trim()
         if (providedToken.isEmpty()) {
-            writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "Empty token")
+            rejectOrContinue(publicPath, "Empty token", request, response, filterChain)
             return
         }
 
@@ -49,7 +48,7 @@ class SimpleApiKeyFilter(
 
         val providedHashHex = HashUtils.sha256Hex(providedToken)
         if (providedHashHex.lowercase() != expectedHash.lowercase()) {
-            writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token")
+            rejectOrContinue(publicPath, "Invalid token", request, response, filterChain)
             return
         }
 
@@ -64,8 +63,23 @@ class SimpleApiKeyFilter(
         filterChain.doFilter(request, response)
     }
 
+    /** On a public path, let the request through anonymously; otherwise reject with 401. */
+    private fun rejectOrContinue(
+        publicPath: Boolean,
+        message: String,
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        filterChain: FilterChain
+    ) {
+        if (publicPath) {
+            filterChain.doFilter(request, response)
+        } else {
+            writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, message)
+        }
+    }
+
     private fun allowsAnonymous(request: HttpServletRequest): Boolean =
-        request.requestURI in PUBLIC_HEALTH_ENDPOINTS
+        request.servletPath in PUBLIC_HEALTH_ENDPOINTS
 
     private fun writeJsonError(response: HttpServletResponse, status: Int, message: String) {
         response.status = status
