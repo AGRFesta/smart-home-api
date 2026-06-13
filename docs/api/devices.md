@@ -43,6 +43,63 @@ Returned when the persisted devices cannot be read.
 { "message": "Unable to retrieve devices!" }
 ```
 
+## GET /devices/{uuid}
+
+Returns the per-device **aggregate** — *our truth*, the persisted view of a single device: its base
+fields plus the relationships our model holds. This is the sibling of the diagnostics endpoint
+(*provider's truth*, realtime passthrough).
+
+Unlike the lean [`GET /devices`](#get-devices) list, this item resource is designed to grow: today it
+exposes area `assignments`; future relationships (heating schedules, actuator state, sensor history)
+can be added here as new top-level keys without changing the list contract.
+
+### Path parameters
+
+| Param  | Example                                | Description                |
+|--------|----------------------------------------|----------------------------|
+| `uuid` | `3fa85f64-5717-4562-b3fc-2c963f66afa6` | The persisted device UUID. |
+
+### Response `200 OK`
+
+`createdOn` / `updatedOn` are Unix epoch seconds (consistent with all timestamps in this API);
+`updatedOn` is `null` until the device is first updated.
+
+`assignments` lists the device's **current** area assignments (empty array when unassigned). Each entry
+is role-scoped: a device can be a `SENSOR` in one area and an `ACTUATOR` in another. Only current
+assignments are returned — disconnected (historical) sensor assignments are not included.
+
+```json
+{
+  "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "name": "Living Room Sensor",
+  "provider": "SWITCHBOT",
+  "deviceProviderId": "abc-123",
+  "status": "PAIRED",
+  "features": ["SENSOR"],
+  "createdOn": 1736499600,
+  "updatedOn": 1749751440,
+  "assignments": [
+    { "areaUuid": "a1b2c3d4-0000-0000-0000-000000000000", "areaName": "Living Room", "role": "SENSOR" }
+  ]
+}
+```
+
+| Field         | Description                                                                       |
+|---------------|-----------------------------------------------------------------------------------|
+| `assignments` | Current area assignments; each has `areaUuid`, `areaName` and `role` (`SENSOR`/`ACTUATOR`). |
+
+### Response `404 Not Found`
+
+Returned when `uuid` does not match any persisted device.
+
+### Response `500 Internal Server Error`
+
+Returned when the persisted device cannot be read.
+
+```json
+{ "message": "Unable to retrieve device '<uuid>'!" }
+```
+
 ## POST /devices/synchronizations
 
 Synchronises the persisted device list with the current snapshot from all registered providers.

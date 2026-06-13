@@ -8,6 +8,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.persistence.jdbc.repositories.ActuatorsAssignmentsJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasWithDevicesJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.DeviceAggregateJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcRepository
@@ -29,11 +30,13 @@ import org.springframework.context.annotation.Import
     ActuatorsAssignmentsJdbcAdapter::class,
     TemperatureSettingsJdbcAdapter::class,
     AreasWithDevicesRepositoryJdbcImpl::class,
+    DeviceAggregateRepositoryJdbcImpl::class,
     PropertyJdbcAdapter::class,
     SensorsHistoryDataJdbcAdapter::class,
     // Repositories
     AreasJdbcRepository::class,
     DevicesJdbcRepository::class,
+    DeviceAggregateJdbcRepository::class,
     SensorsAssignmentsJdbcRepository::class,
     ActuatorsAssignmentsJdbcRepository::class,
     TemperatureSettingRepository::class,
@@ -52,6 +55,7 @@ abstract class AbstractJdbcAdapterTest {
     @SpykBean protected lateinit var tempSettingsRepo: TemperatureSettingRepository
     @SpykBean protected lateinit var tempIntervalsRepo: TemperatureIntervalRepository
     @SpykBean protected lateinit var areasWithDevicesRepo: AreasWithDevicesJdbcRepository
+    @SpykBean protected lateinit var deviceAggregateRepo: DeviceAggregateJdbcRepository
     @SpykBean protected lateinit var propertyRepo: PropertyJdbcRepository
     @SpykBean protected lateinit var historyDataRepository: SensorsHistoryDataJdbcRepository
 

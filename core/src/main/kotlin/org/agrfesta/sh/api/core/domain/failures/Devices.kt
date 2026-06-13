@@ -10,11 +10,13 @@ sealed interface DeviceFetchFailure
 sealed interface DeviceCreationFailure
 sealed interface DeviceUpdateFailure
 sealed interface GetDevicesFailure
+sealed interface GetDeviceFailure
 
 data class DeviceNotFound(
     val missingDeviceId: UUID
 ) : DeviceFetchFailure,
     DeviceUpdateFailure,
+    GetDeviceFailure,
     SensorAssignmentFailure,
     ActuatorAssignmentFailure,
     SensorUnassignFailure,
@@ -24,4 +26,5 @@ data object DeviceRepositoryError :
     DeviceFetchFailure,
     DeviceCreationFailure,
     DeviceUpdateFailure,
-    GetDevicesFailure
+    GetDevicesFailure,
+    GetDeviceFailure
