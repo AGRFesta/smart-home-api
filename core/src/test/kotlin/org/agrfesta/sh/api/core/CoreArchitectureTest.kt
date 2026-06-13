@@ -8,7 +8,11 @@ import com.tngtech.archunit.junit.ArchTest
 import com.tngtech.archunit.lang.ArchRule
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
 
-@AnalyzeClasses(packages = ["org.agrfesta.sh.api.core.domain", "org.agrfesta.sh.api.core.application.usecases"], importOptions = [DoNotIncludeTests::class])
+@Suppress("UtilityClassWithPublicConstructor")
+@AnalyzeClasses(
+    packages = ["org.agrfesta.sh.api.core.domain", "org.agrfesta.sh.api.core.application.usecases"],
+    importOptions = [DoNotIncludeTests::class]
+)
 class CoreArchitectureTest {
 
     companion object {
@@ -31,6 +35,9 @@ class CoreArchitectureTest {
         val usecasesOnlyUseServiceAnnotation: ArchRule = noClasses()
             .that().resideInAPackage("..core.application.usecases..")
             .should().dependOnClassesThat(springClassesExceptService)
-            .because("Only @Service is permitted in core use case classes; use UnitOfWork for transactions, never @Transactional")
+            .because(
+                "Only @Service is permitted in core use case classes; " +
+                    "use UnitOfWork for transactions, never @Transactional"
+            )
     }
 }

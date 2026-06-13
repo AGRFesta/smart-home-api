@@ -29,7 +29,9 @@ class ReplaceHeatingScheduleServiceTest {
     private val homeStateRefreshPublisher: HomeStateRefreshPublisher = mockk(relaxUnitFun = true)
 
     private val sut = ReplaceHeatingScheduleService(
-        areasRepository, temperatureSettingsRepository, homeStateRefreshPublisher
+        areasRepository,
+        temperatureSettingsRepository,
+        homeStateRefreshPublisher
     )
 
     @Test

@@ -6,6 +6,7 @@ import com.tngtech.archunit.junit.ArchTest
 import com.tngtech.archunit.lang.ArchRule
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
 
+@Suppress("UtilityClassWithPublicConstructor")
 @AnalyzeClasses(packages = ["org.agrfesta.sh.api.controllers"], importOptions = [DoNotIncludeTests::class])
 class AppArchitectureTest {
 

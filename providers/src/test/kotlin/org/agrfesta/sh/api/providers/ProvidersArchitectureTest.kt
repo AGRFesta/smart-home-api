@@ -8,6 +8,7 @@ import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
 import org.springframework.context.annotation.Conditional
 import org.springframework.stereotype.Service
 
+@Suppress("UtilityClassWithPublicConstructor")
 @AnalyzeClasses(packages = ["org.agrfesta.sh.api.providers"], importOptions = [DoNotIncludeTests::class])
 class ProvidersArchitectureTest {
 

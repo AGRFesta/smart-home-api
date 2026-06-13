@@ -17,6 +17,7 @@ internal val PUBLIC_HEALTH_ENDPOINTS = arrayOf(
 class SecurityConfig(private val simpleApiKeyFilter: SimpleApiKeyFilter) {
 
     @Bean
+    @Suppress("SpreadOperator") // vararg requestMatchers; one-off copy of a small static array at startup
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .csrf { it.disable() } // stateless API

@@ -9,7 +9,11 @@ import com.tngtech.archunit.lang.ArchRule
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
 import org.springframework.stereotype.Component
 
-@AnalyzeClasses(packages = ["org.agrfesta.sh.api.persistence", "org.agrfesta.sh.api.cache"], importOptions = [DoNotIncludeTests::class])
+@Suppress("UtilityClassWithPublicConstructor")
+@AnalyzeClasses(
+    packages = ["org.agrfesta.sh.api.persistence", "org.agrfesta.sh.api.cache"],
+    importOptions = [DoNotIncludeTests::class]
+)
 class PersistenceArchitectureTest {
 
     companion object {
@@ -25,6 +29,9 @@ class PersistenceArchitectureTest {
             .that().resideInAnyPackage("..persistence..adapters..", "..cache..adapters..")
             .and().areMetaAnnotatedWith(Component::class.java)
             .should().implement(outboundPortFromCore)
-            .because("Adapter classes must implement an outbound port interface from core; misplaced helpers belong elsewhere")
+            .because(
+                "Adapter classes must implement an outbound port interface from core; " +
+                    "misplaced helpers belong elsewhere"
+            )
     }
 }

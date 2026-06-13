@@ -35,7 +35,10 @@ class FetchSensorReadingsServiceTest {
     private val homeStateRefreshPublisher: HomeStateRefreshPublisher = mockk(relaxUnitFun = true)
 
     private val sut = FetchSensorReadingsService(
-        devicesRepository, listOf(factory), readingsRepository, homeStateRefreshPublisher
+        devicesRepository,
+        listOf(factory),
+        readingsRepository,
+        homeStateRefreshPublisher
     )
 
     @Test
