@@ -8,6 +8,7 @@ import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.persistence.jdbc.entities.DeviceEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
+import org.agrfesta.sh.api.persistence.jdbc.utils.getFeatures
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getProvider
 import org.agrfesta.sh.api.persistence.jdbc.utils.getStatus
@@ -104,8 +105,7 @@ object DeviceRowMapper : RowMapper<DeviceEntity> {
             providerId = rs.getString("provider_id"),
             name = rs.getString("name"),
             status = rs.getStatus("status"),
-            features = (rs.getArray("features").array as Array<*>)
-                .map { DeviceFeature.valueOf(it as String) }.toMutableSet(),
+            features = rs.getFeatures("features").toMutableSet(),
             createdOn = rs.getInstant("created_on"),
             updatedOn = rs.findInstant("updated_on")
         )

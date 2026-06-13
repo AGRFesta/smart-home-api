@@ -1,12 +1,15 @@
 package org.agrfesta.sh.api.domain
 
 import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.DeviceAggregate
+import org.agrfesta.sh.api.core.domain.devices.DeviceAreaAssignment
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.test.mothers.aRandomUniqueString
+import java.time.Instant
 import java.util.*
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 
@@ -49,6 +52,18 @@ fun aDevice(
     name = data.name,
     features = data.features
 )
+
+fun aDeviceAggregate(
+    uuid: UUID = UUID.randomUUID(),
+    status: DeviceStatus = DeviceStatus.PAIRED,
+    providerId: String = aRandomUniqueString(),
+    provider: Provider = Provider.SWITCHBOT,
+    name: String = aRandomUniqueString(),
+    features: Set<DeviceFeature> = emptySet(),
+    createdOn: Instant = Instant.now(),
+    updatedOn: Instant? = null,
+    assignments: List<DeviceAreaAssignment> = emptyList()
+) = DeviceAggregate(uuid, status, providerId, provider, name, features, createdOn, updatedOn, assignments)
 
 fun aProviderDeviceData(
     providerId: String = aRandomUniqueString(),

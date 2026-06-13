@@ -10,6 +10,7 @@ below. See [SECURITY.md](../SECURITY.md).
 | `GET`    | `/actuator/health/readiness` | [health](health.md#get-actuatorhealthreadiness) | Public readiness probe (app + DB; Redis excluded) |
 | `GET`    | `/actuator/info` | [health](health.md#get-actuatorinfo) | Build version (authenticated) |
 | `GET`    | `/devices` | [devices](devices.md#get-devices) | List/search managed devices, filterable by provider/status/feature |
+| `GET`    | `/devices/{uuid}` | [devices](devices.md#get-devicesuuid) | Per-device aggregate — base fields + current area assignments |
 | `POST`   | `/devices/synchronizations` | [devices](devices.md#post-devicessynchronizations) | Synchronise persisted devices with provider snapshot |
 | `GET`    | `/home`  | [home](home.md#get-home) | BFF dashboard — global state + areas |
 | `GET`    | `/home/stream` | [home](home.md#get-homestream) | SSE stream — pushes the dashboard on every home-state change |

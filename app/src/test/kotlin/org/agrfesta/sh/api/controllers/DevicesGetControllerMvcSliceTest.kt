@@ -8,6 +8,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.mockk.every
 import io.mockk.verify
+import org.agrfesta.sh.api.core.application.ports.inbounds.GetDeviceUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetDevicesUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.RefreshDevicesUseCase
 import org.agrfesta.sh.api.core.domain.devices.Device
@@ -35,7 +36,8 @@ class DevicesGetControllerMvcSliceTest(
     private val objectMapper: ObjectMapper,
     @MockkBean private val getDevicesUseCase: GetDevicesUseCase,
     // Required by the @WebMvcTest(DevicesController) context but not exercised by these tests
-    @Suppress("UnusedPrivateProperty") @MockkBean private val refreshDevicesUseCase: RefreshDevicesUseCase
+    @Suppress("UnusedPrivateProperty") @MockkBean private val refreshDevicesUseCase: RefreshDevicesUseCase,
+    @Suppress("UnusedPrivateProperty") @MockkBean private val getDeviceUseCase: GetDeviceUseCase
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
