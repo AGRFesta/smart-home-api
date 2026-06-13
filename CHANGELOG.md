@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add public Actuator health and readiness/liveness probes (status only; component details require
   authentication) and an authenticated `GET /actuator/info` exposing the build version. (#176)
 
+### Security
+- Bump Spring Boot 3.5.14 → 3.5.15 (Tomcat, Netty, PostgreSQL driver CVEs). (#dependabot)
+
 ## [1.1.0] - 2026-06-01
 
 ### Added
