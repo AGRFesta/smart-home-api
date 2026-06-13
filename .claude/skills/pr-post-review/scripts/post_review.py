@@ -196,6 +196,11 @@ def post_action(action: dict, pr_number: int):
 
 
 def main():
+    # The script injects emoji/em-dash into stdout; force UTF-8 so it doesn't
+    # crash on Windows consoles defaulting to cp1252 (charmap codec).
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+
     parser = argparse.ArgumentParser(description="Post reviewer-role PR comments.")
     parser.add_argument("--input", required=True, help="Path to findings.json")
     parser.add_argument("--mode", choices=["preview", "post"], default="preview")
