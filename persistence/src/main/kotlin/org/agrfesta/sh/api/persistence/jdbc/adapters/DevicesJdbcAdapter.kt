@@ -5,13 +5,16 @@ import arrow.core.left
 import arrow.core.right
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.domain.failures.DeviceCreationFailure
 import org.agrfesta.sh.api.core.domain.failures.DeviceFetchFailure
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.DeviceUpdateFailure
+import org.agrfesta.sh.api.core.domain.failures.GetDevicesFailure
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.dao.DataAccessException
@@ -37,6 +40,17 @@ class DevicesJdbcAdapter(
         devicesRepo.getAll().map { it.toDevice() }.right()
     } catch (e: DataAccessException) {
         logger.error("Unexpected persistence error fetching all devices", e)
+        DeviceRepositoryError.left()
+    }
+
+    override fun getDevices(
+        provider: Provider?,
+        status: DeviceStatus?,
+        feature: DeviceFeature?
+    ): Either<GetDevicesFailure, Collection<Device>> = try {
+        devicesRepo.findDevices(provider, status, feature).map { it.toDevice() }.right()
+    } catch (e: DataAccessException) {
+        logger.error("Unexpected persistence error fetching devices", e)
         DeviceRepositoryError.left()
     }
 
