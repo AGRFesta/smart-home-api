@@ -4,6 +4,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.persistence.jdbc.entities.DeviceEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
@@ -33,6 +34,29 @@ class DevicesJdbcRepository(
 
     fun getAll(): Collection<DeviceEntity> = jdbcTemplate
         .query("""SELECT * FROM smart_home.device;""", DeviceRowMapper)
+
+    fun findDevices(
+        provider: Provider?,
+        status: DeviceStatus?,
+        feature: DeviceFeature?
+    ): Collection<DeviceEntity> {
+        val conditions = mutableListOf<String>()
+        val params = mutableMapOf<String, Any>()
+        provider?.let {
+            conditions += "provider = :provider"
+            params["provider"] = it.name
+        }
+        status?.let {
+            conditions += "status = :status"
+            params["status"] = it.name
+        }
+        feature?.let {
+            conditions += ":feature = ANY(features)"
+            params["feature"] = it.name
+        }
+        val where = if (conditions.isEmpty()) "" else " WHERE ${conditions.joinToString(" AND ")}"
+        return jdbcTemplate.query("SELECT * FROM smart_home.device$where;", params, DeviceRowMapper)
+    }
 
     fun persist(id: UUID, device: ProviderDeviceData, deviceStatus: DeviceStatus = DeviceStatus.PAIRED) {
         val sql = """

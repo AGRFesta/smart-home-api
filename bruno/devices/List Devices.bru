@@ -1,0 +1,17 @@
+meta {
+  name: List Devices
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{BASE_URL}}/devices
+  body: none
+  auth: inherit
+}
+
+params:query {
+  ~provider: SWITCHBOT
+  ~status: PAIRED
+  ~feature: SENSOR
+}

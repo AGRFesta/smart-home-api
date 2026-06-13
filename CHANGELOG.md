@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Add `GET /devices` endpoint to list/search managed devices, filterable by `provider`, `status` and
+  `feature` (combinable, AND semantics). (#185)
 - Add public Actuator health and readiness/liveness probes (status only; component details require
   authentication) and an authenticated `GET /actuator/info` exposing the build version. (#176)
 

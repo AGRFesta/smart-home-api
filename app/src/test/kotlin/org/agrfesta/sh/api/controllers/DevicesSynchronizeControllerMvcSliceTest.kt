@@ -8,6 +8,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
+import org.agrfesta.sh.api.core.application.ports.inbounds.GetDevicesUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.RefreshDevicesUseCase
 import org.agrfesta.sh.api.core.domain.devices.RefreshDevicesResult
 import org.agrfesta.sh.api.core.domain.failures.RefreshDevicesError
@@ -30,7 +31,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 class DevicesSynchronizeControllerMvcSliceTest(
     private val mockMvc: MockMvc,
     private val objectMapper: ObjectMapper,
-    @MockkBean private val refreshDevicesUseCase: RefreshDevicesUseCase
+    @MockkBean private val refreshDevicesUseCase: RefreshDevicesUseCase,
+    // Required by the @WebMvcTest(DevicesController) context but not exercised by these tests
+    @Suppress("UnusedPrivateProperty") @MockkBean private val getDevicesUseCase: GetDevicesUseCase
 ) {
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 

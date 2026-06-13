@@ -9,6 +9,7 @@ import java.util.UUID
 sealed interface DeviceFetchFailure
 sealed interface DeviceCreationFailure
 sealed interface DeviceUpdateFailure
+sealed interface GetDevicesFailure
 
 data class DeviceNotFound(
     val missingDeviceId: UUID
@@ -19,4 +20,8 @@ data class DeviceNotFound(
     SensorUnassignFailure,
     ActuatorUnassignFailure
 
-data object DeviceRepositoryError : DeviceFetchFailure, DeviceCreationFailure, DeviceUpdateFailure
+data object DeviceRepositoryError :
+    DeviceFetchFailure,
+    DeviceCreationFailure,
+    DeviceUpdateFailure,
+    GetDevicesFailure

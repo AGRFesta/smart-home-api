@@ -2,10 +2,18 @@ package org.agrfesta.sh.api.persistence.jdbc.adapters
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.withClue
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceStatus.DETACHED
+import org.agrfesta.sh.api.core.domain.devices.DeviceStatus.PAIRED
+import org.agrfesta.sh.api.core.domain.devices.Provider.NETATMO
+import org.agrfesta.sh.api.core.domain.devices.Provider.SWITCHBOT
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.domain.aDevice
@@ -95,6 +103,99 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
         every { devicesRepo.getAll() } throws failure
 
         sut.getAll()
+            .shouldBeLeft()
+            .shouldBe(DeviceRepositoryError)
+    }
+
+    // getDevices()
+
+    @Test
+    fun `getDevices() Returns all persisted devices when no filters provided`() {
+        every { timeProvider.now() } returns Instant.now()
+        devicesRepo.persist(UUID.randomUUID(), aProviderDeviceData())
+        devicesRepo.persist(UUID.randomUUID(), aProviderDeviceData())
+
+        sut.getDevices()
+            .shouldBeRight()
+            .shouldHaveSize(2)
+    }
+
+    @Test
+    fun `getDevices() filters by provider`() {
+        every { timeProvider.now() } returns Instant.now()
+        devicesRepo.persist(UUID.randomUUID(), aProviderDeviceData(provider = SWITCHBOT))
+        devicesRepo.persist(UUID.randomUUID(), aProviderDeviceData(provider = NETATMO))
+
+        val result = sut.getDevices(provider = SWITCHBOT).shouldBeRight()
+
+        withClue("only SWITCHBOT devices should be returned") {
+            result.map { it.provider }.shouldContainExactly(SWITCHBOT)
+        }
+    }
+
+    @Test
+    fun `getDevices() filters by status`() {
+        every { timeProvider.now() } returns Instant.now()
+        devicesRepo.persist(UUID.randomUUID(), aProviderDeviceData(), PAIRED)
+        devicesRepo.persist(UUID.randomUUID(), aProviderDeviceData(), DETACHED)
+
+        val result = sut.getDevices(status = PAIRED).shouldBeRight()
+
+        withClue("only PAIRED devices should be returned") {
+            result.map { it.status }.shouldContainExactly(PAIRED)
+        }
+    }
+
+    @Test
+    fun `getDevices() filters by feature`() {
+        every { timeProvider.now() } returns Instant.now()
+        devicesRepo.persist(UUID.randomUUID(), aProviderDeviceData(features = setOf(SENSOR)))
+        devicesRepo.persist(UUID.randomUUID(), aProviderDeviceData(features = setOf(ACTUATOR)))
+
+        val result = sut.getDevices(feature = SENSOR).shouldBeRight()
+
+        withClue("only devices exposing SENSOR should be returned") {
+            result.map { it.features }.shouldContainExactly(listOf(setOf(SENSOR)))
+        }
+    }
+
+    @Test
+    fun `getDevices() combines provider, status and feature filters with AND semantics`() {
+        every { timeProvider.now() } returns Instant.now()
+        val matchingId = UUID.randomUUID()
+        val matchingData = aProviderDeviceData(provider = SWITCHBOT, features = setOf(SENSOR))
+        devicesRepo.persist(matchingId, matchingData, PAIRED)
+        // decoys, each differing from the filter in exactly one dimension
+        devicesRepo.persist(
+            UUID.randomUUID(),
+            aProviderDeviceData(provider = NETATMO, features = setOf(SENSOR)),
+            PAIRED
+        )
+        devicesRepo.persist(
+            UUID.randomUUID(),
+            aProviderDeviceData(provider = SWITCHBOT, features = setOf(SENSOR)),
+            DETACHED
+        )
+        devicesRepo.persist(
+            UUID.randomUUID(),
+            aProviderDeviceData(provider = SWITCHBOT, features = setOf(ACTUATOR)),
+            PAIRED
+        )
+
+        val result = sut.getDevices(provider = SWITCHBOT, status = PAIRED, feature = SENSOR).shouldBeRight()
+
+        withClue("only the device matching all three filters should be returned") {
+            result.shouldContainExactly(aDevice(matchingData, matchingId, PAIRED))
+        }
+    }
+
+    @Test
+    fun `getDevices() Returns DeviceRepositoryError when fails to fetch devices`() {
+        every { timeProvider.now() } returns Instant.now()
+        val failure = DataAccessResourceFailureException("devices fetching failure")
+        every { devicesRepo.findDevices(any(), any(), any()) } throws failure
+
+        sut.getDevices()
             .shouldBeLeft()
             .shouldBe(DeviceRepositoryError)
     }

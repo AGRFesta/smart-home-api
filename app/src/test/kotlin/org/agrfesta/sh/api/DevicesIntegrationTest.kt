@@ -11,12 +11,14 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
+import org.agrfesta.sh.api.controllers.DeviceResponse
 import org.agrfesta.sh.api.controllers.DevicesRefreshResponse
 import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.controllers.toDevice
 import org.agrfesta.sh.api.controllers.toResponse
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.core.domain.devices.Provider.NETATMO
 import org.agrfesta.sh.api.core.domain.devices.Provider.SWITCHBOT
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.domain.aDevice
@@ -102,6 +104,28 @@ class DevicesIntegrationTest(
                 expectedDetachedDevice,
                 newDevice.toDevice()
             )
+    }
+
+    @Test
+    fun `GET devices returns persisted devices filtered by provider`() {
+        val switchbotId = UUID.randomUUID()
+        val switchbotData = aProviderDeviceData(provider = SWITCHBOT)
+        devicesDao.create(switchbotId, switchbotData).getOrElse { error("Failed to create device: $it") }
+        devicesDao.create(UUID.randomUUID(), aProviderDeviceData(provider = NETATMO))
+            .getOrElse { error("Failed to create device: $it") }
+
+        val response = given()
+            .contentType(ContentType.JSON)
+            .authenticated()
+            .queryParam("provider", "SWITCHBOT")
+            .`when`()
+            .get("/devices")
+            .then()
+            .statusCode(200)
+            .extract()
+            .`as`(Array<DeviceResponse>::class.java)
+
+        response.toList().shouldContainExactly(aDevice(switchbotData, switchbotId).toResponse())
     }
 
     private fun ProviderDeviceData.asSBDeviceJsonNode(): JsonNode =
