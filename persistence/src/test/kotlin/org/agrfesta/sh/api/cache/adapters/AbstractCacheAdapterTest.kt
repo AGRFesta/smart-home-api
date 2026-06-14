@@ -17,7 +17,8 @@ import org.springframework.data.redis.core.StringRedisTemplate
     TestContainersConfig::class,
     AbstractCacheAdapterTest.JacksonTestConfig::class,
     RedisCache::class,
-    SensorsCurrentReadingsCacheAdapter::class
+    SensorsCurrentReadingsCacheAdapter::class,
+    DeviceBatteryCacheAdapter::class
 )
 abstract class AbstractCacheAdapterTest {
 

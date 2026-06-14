@@ -8,16 +8,20 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DeviceBatteryRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.core.application.ports.outbounds.home.HomeStateRefreshPublisher
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
-import org.agrfesta.sh.api.core.domain.devices.BatteryValue
+import org.agrfesta.sh.api.core.domain.devices.BatteryPowered
 import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.DeviceDriver
 import org.agrfesta.sh.api.core.domain.devices.FailureByException
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.Sensor
+import org.agrfesta.sh.api.core.domain.failures.BatterySaveError
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError
 import org.agrfesta.sh.api.core.domain.failures.FetchSensorReadingsError
 import org.agrfesta.sh.api.core.domain.failures.SensorReadingsSaveError
 import org.agrfesta.sh.api.domain.aDevice
@@ -33,13 +37,21 @@ class FetchSensorReadingsServiceTest {
     }
     private val readingsRepository: SensorsCurrentReadingsRepository = mockk()
     private val homeStateRefreshPublisher: HomeStateRefreshPublisher = mockk(relaxUnitFun = true)
+    private val deviceBatteryRepository: DeviceBatteryRepository = mockk()
 
     private val sut = FetchSensorReadingsService(
         devicesRepository,
         listOf(factory),
         readingsRepository,
-        homeStateRefreshPublisher
+        homeStateRefreshPublisher,
+        deviceBatteryRepository
     )
+
+    /** A driver that is battery-powered without being a [Sensor]. */
+    private interface BatteryDriver : DeviceDriver, BatteryPowered
+
+    /** A driver that is both a [Sensor] and battery-powered. */
+    private interface SensorBatteryDriver : Sensor, BatteryPowered
 
     @Test
     fun `execute() returns Left(FetchSensorReadingsError) when getAll() fails`() {
@@ -66,25 +78,14 @@ class FetchSensorReadingsServiceTest {
         val noFeatureDevice = aDevice(features = emptySet())
         val actuator = anActuator()
         every { devicesRepository.getAll() } returns listOf(noFeatureDevice, actuator).right()
+        every { factory.createDevice(noFeatureDevice) } returns mockk<DeviceDriver>()
+        every { factory.createDevice(actuator) } returns mockk<DeviceDriver>()
 
         val result = sut.execute()
 
         result.shouldBeRight()
         verify(exactly = 0) { readingsRepository.save(any(), any()) }
-    }
-
-    @Test fun `execute() does not call save() when sensor returns non-thermo-hygro reading`() {
-        val batteryReading = object : BatteryValue { override val battery: Int = 50 }
-        val deviceRecord = aSensor()
-        val sensorDriver = mockk<Sensor>()
-        every { devicesRepository.getAll() } returns listOf(deviceRecord).right()
-        every { factory.createDevice(deviceRecord) } returns sensorDriver
-        every { sensorDriver.fetchReadings() } returns batteryReading.right()
-
-        val result = sut.execute()
-
-        result.shouldBeRight()
-        verify(exactly = 0) { readingsRepository.save(any(), any()) }
+        verify(exactly = 0) { deviceBatteryRepository.save(any(), any()) }
     }
 
     @Test fun `execute() does not call save() when sensor fetchReadings() fails`() {
@@ -122,21 +123,17 @@ class FetchSensorReadingsServiceTest {
 
     @Test fun `execute() saves only thermo-hygro results among mixed device and sensor outcomes`() {
         val thermoHygroRecord = aSensor()
-        val batteryOnlyRecord = aSensor()
         val failingRecord = aSensor()
         val noFeatureRecord = aDevice(features = emptySet())
         val thermoHygroDriver = mockk<Sensor>()
-        val batteryOnlyDriver = mockk<Sensor>()
         val failingDriver = mockk<Sensor>()
         val thermoHygro = aThermoHygroDataValue()
-        val batteryReading = object : BatteryValue { override val battery: Int = 80 }
         every { devicesRepository.getAll() } returns
-            listOf(thermoHygroRecord, batteryOnlyRecord, failingRecord, noFeatureRecord).right()
+            listOf(thermoHygroRecord, failingRecord, noFeatureRecord).right()
         every { factory.createDevice(thermoHygroRecord) } returns thermoHygroDriver
-        every { factory.createDevice(batteryOnlyRecord) } returns batteryOnlyDriver
         every { factory.createDevice(failingRecord) } returns failingDriver
+        every { factory.createDevice(noFeatureRecord) } returns mockk<DeviceDriver>()
         every { thermoHygroDriver.fetchReadings() } returns thermoHygro.right()
-        every { batteryOnlyDriver.fetchReadings() } returns batteryReading.right()
         every { failingDriver.fetchReadings() } returns FailureByException(RuntimeException()).left()
         every { readingsRepository.save(thermoHygroDriver, thermoHygro.thermoHygroData) } returns Unit.right()
 
@@ -184,6 +181,105 @@ class FetchSensorReadingsServiceTest {
         sut.execute()
 
         verify(exactly = 0) { homeStateRefreshPublisher.publish() }
+    }
+
+    @Test fun `execute() saves the battery level for a BatteryPowered device`() {
+        val deviceRecord = aSensor()
+        val driver = mockk<BatteryDriver>()
+        every { devicesRepository.getAll() } returns listOf(deviceRecord).right()
+        every { factory.createDevice(deviceRecord) } returns driver
+        every { driver.batteryLevel() } returns 88.right()
+        every { deviceBatteryRepository.save(driver, 88) } returns Unit.right()
+
+        val result = sut.execute()
+
+        result.shouldBeRight()
+        verify(exactly = 1) { deviceBatteryRepository.save(driver, 88) }
+    }
+
+    @Test fun `execute() does not save battery for a device whose driver is not BatteryPowered`() {
+        val deviceRecord = aSensor()
+        val sensorDriver = mockk<Sensor>()
+        val thermoHygro = aThermoHygroDataValue()
+        every { devicesRepository.getAll() } returns listOf(deviceRecord).right()
+        every { factory.createDevice(deviceRecord) } returns sensorDriver
+        every { sensorDriver.fetchReadings() } returns thermoHygro.right()
+        every { readingsRepository.save(sensorDriver, thermoHygro.thermoHygroData) } returns Unit.right()
+
+        val result = sut.execute()
+
+        result.shouldBeRight()
+        verify(exactly = 0) { deviceBatteryRepository.save(any(), any()) }
+    }
+
+    @Test fun `execute() collects battery for a non-sensor BatteryPowered device`() {
+        val actuatorRecord = anActuator()
+        val driver = mockk<BatteryDriver>()
+        every { devicesRepository.getAll() } returns listOf(actuatorRecord).right()
+        every { factory.createDevice(actuatorRecord) } returns driver
+        every { driver.batteryLevel() } returns 73.right()
+        every { deviceBatteryRepository.save(driver, 73) } returns Unit.right()
+
+        val result = sut.execute()
+
+        result.shouldBeRight()
+        verify(exactly = 1) { deviceBatteryRepository.save(driver, 73) }
+    }
+
+    @Test fun `execute() continues processing remaining devices when batteryLevel() fails for one`() {
+        val failingRecord = aSensor()
+        val successRecord = anActuator()
+        val failingDriver = mockk<BatteryDriver>()
+        val successDriver = mockk<BatteryDriver>()
+        every { devicesRepository.getAll() } returns listOf(failingRecord, successRecord).right()
+        every { factory.createDevice(failingRecord) } returns failingDriver
+        every { factory.createDevice(successRecord) } returns successDriver
+        every { failingDriver.batteryLevel() } returns DevicesProviderError(RuntimeException("provider error")).left()
+        every { successDriver.batteryLevel() } returns 60.right()
+        every { deviceBatteryRepository.save(successDriver, 60) } returns Unit.right()
+
+        val result = sut.execute()
+
+        result.shouldBeRight()
+        verify(exactly = 1) { deviceBatteryRepository.save(successDriver, 60) }
+        verify(exactly = 0) { deviceBatteryRepository.save(failingDriver, any()) }
+    }
+
+    @Test fun `execute() continues processing when battery save() fails for one device`() {
+        val failingSaveRecord = aSensor()
+        val successRecord = anActuator()
+        val failingSaveDriver = mockk<BatteryDriver>()
+        val successDriver = mockk<BatteryDriver>()
+        every { devicesRepository.getAll() } returns listOf(failingSaveRecord, successRecord).right()
+        every { factory.createDevice(failingSaveRecord) } returns failingSaveDriver
+        every { factory.createDevice(successRecord) } returns successDriver
+        every { failingSaveDriver.batteryLevel() } returns 20.right()
+        every { successDriver.batteryLevel() } returns 60.right()
+        every { deviceBatteryRepository.save(failingSaveDriver, 20) } returns
+            BatterySaveError(RuntimeException("cache error")).left()
+        every { deviceBatteryRepository.save(successDriver, 60) } returns Unit.right()
+
+        val result = sut.execute()
+
+        result.shouldBeRight()
+        verify(exactly = 1) { deviceBatteryRepository.save(failingSaveDriver, 20) }
+        verify(exactly = 1) { deviceBatteryRepository.save(successDriver, 60) }
+    }
+
+    @Test fun `execute() collects battery even when the same driver's fetchReadings() fails`() {
+        val deviceRecord = aSensor()
+        val driver = mockk<SensorBatteryDriver>()
+        every { devicesRepository.getAll() } returns listOf(deviceRecord).right()
+        every { factory.createDevice(deviceRecord) } returns driver
+        every { driver.fetchReadings() } returns FailureByException(RuntimeException("provider error")).left()
+        every { driver.batteryLevel() } returns 42.right()
+        every { deviceBatteryRepository.save(driver, 42) } returns Unit.right()
+
+        val result = sut.execute()
+
+        result.shouldBeRight()
+        verify(exactly = 1) { deviceBatteryRepository.save(driver, 42) }
+        verify(exactly = 0) { readingsRepository.save(any(), any()) }
     }
 
     @Test fun `execute() calls save() with thermo-hygro data when sensor returns ThermoHygroDataValue`() {
