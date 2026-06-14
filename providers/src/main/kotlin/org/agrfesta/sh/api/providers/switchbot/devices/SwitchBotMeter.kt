@@ -6,10 +6,13 @@ import arrow.core.right
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.FailureByException
+import org.agrfesta.sh.api.core.domain.devices.Inspectable
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.SensorReadings
 import org.agrfesta.sh.api.core.domain.devices.SensorReadingsFailure
+import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError
+import org.agrfesta.sh.api.core.domain.failures.DevicesProviderFailure
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotSensorReadings
 import java.util.*
@@ -19,7 +22,16 @@ class SwitchBotMeter(
     override val provider: Provider,
     override val deviceProviderId: String,
     private val client: SwitchBotDevicesClient
-) : Sensor {
+) : Sensor, Inspectable {
+
+    // Ktor ClientRequestException (not IOException) requires broad Exception catch
+    @Suppress("TooGenericExceptionCaught")
+    override fun inspect(): Either<DevicesProviderFailure, String> =
+        try {
+            runBlocking { client.getDeviceStatusRaw(deviceProviderId) }.right()
+        } catch (e: Exception) {
+            DevicesProviderError(e).left()
+        }
 
     // Ktor ClientRequestException (not IOException) + Jackson errors require broad Exception catch
     @Suppress("TooGenericExceptionCaught")

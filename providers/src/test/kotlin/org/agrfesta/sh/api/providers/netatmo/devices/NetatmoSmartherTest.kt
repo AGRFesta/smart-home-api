@@ -2,6 +2,7 @@ package org.agrfesta.sh.api.providers.netatmo.devices
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -18,6 +19,7 @@ import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.OFF
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.ON
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.UNDEFINED
 import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
+import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError
 import org.agrfesta.sh.api.providers.createMockEngine
 import org.agrfesta.sh.api.providers.netatmo.BehaviorRegistry
 import org.agrfesta.sh.api.providers.netatmo.KtorRequestFailure
@@ -78,6 +80,41 @@ class NetatmoSmartherTest {
         // Default behaviour
         cacheAsserter.givenCacheEntry(NETATMO_ACCESS_TOKEN_CACHE_KEY, accessToken)
         every { timeProvider.now() } returns now
+    }
+
+    // /// inspect() ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test
+    fun `inspect() returns the device room raw JSON extracted by roomId`() = runBlocking {
+        val roomJson = """{"id":"${config.roomId}","therm_measured_temperature":21.5,"battery_state":"high"}"""
+        val otherRoomJson = """{"id":"${aRandomUniqueString()}","therm_measured_temperature":18.0}"""
+        val rawBody =
+            """{"status":"ok","body":{"home":{"id":"${config.homeId}","rooms":[$otherRoomJson,$roomJson]}}}"""
+        clientAsserter.givenHomeStatusFetchResponse(rawBody)
+
+        val result = sut.inspect().shouldBeRight()
+
+        result shouldEqualJson roomJson
+        clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
+    }
+
+    @Test
+    fun `inspect() returns DevicesProviderError when home status fetch fails`() = runBlocking {
+        clientAsserter.givenHomeStatusFetchFailure()
+
+        sut.inspect().shouldBeLeft().shouldBeInstanceOf<DevicesProviderError>()
+
+        clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
+    }
+
+    @Test
+    fun `inspect() returns DevicesProviderError when the device room is absent from home status`() = runBlocking {
+        val rawBody = """{"body":{"home":{"id":"${config.homeId}","rooms":[{"id":"${aRandomUniqueString()}"}]}}}"""
+        clientAsserter.givenHomeStatusFetchResponse(rawBody)
+
+        sut.inspect().shouldBeLeft().shouldBeInstanceOf<DevicesProviderError>()
+
+        clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
 
     // /// fetchReadings() //////////////////////////////////////////////////////////////////////////////////////////////

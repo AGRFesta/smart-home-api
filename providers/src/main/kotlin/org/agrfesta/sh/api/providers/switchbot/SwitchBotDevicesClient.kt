@@ -43,12 +43,17 @@ class SwitchBotDevicesClient(
         return mapper.readTree(content)
     }
 
-    suspend fun getDeviceStatus(deviceId: String): JsonNode {
-        val content = client.get("${config.baseUrl}/devices/$deviceId/status") {
+    suspend fun getDeviceStatus(deviceId: String): JsonNode =
+        mapper.readTree(getDeviceStatusRaw(deviceId))
+
+    /**
+     * Returns the device status response body exactly as the provider sent it, with no parsing,
+     * so it can be passed through verbatim as the diagnostics payload.
+     */
+    suspend fun getDeviceStatusRaw(deviceId: String): String =
+        client.get("${config.baseUrl}/devices/$deviceId/status") {
             switchbotHeaders()
         }.bodyAsText()
-        return mapper.readTree(content)
-    }
 
     private fun HttpMessageBuilder.switchbotHeaders(): HeadersBuilder {
         val header = generateRequestHeader()

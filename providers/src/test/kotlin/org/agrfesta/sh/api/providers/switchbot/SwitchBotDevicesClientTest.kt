@@ -62,6 +62,36 @@ class SwitchBotDevicesClientTest {
         }
     }
 
+    @Test fun `getDeviceStatusRaw() returns the response body verbatim`() {
+        runBlocking {
+            val deviceId = aRandomUniqueString()
+            val rawBody = """{"statusCode":100,"body":{"deviceId":"$deviceId","battery":88},"message":"success"}"""
+
+            every { randomGenerator.string() } returns nonce
+            every { timeProvider.now() } returns time
+
+            val engine = MockEngine { request ->
+                request.method shouldBe HttpMethod.Get
+                request.url.toString() shouldBe "${config.baseUrl}/devices/$deviceId/status"
+
+                request.headers[HttpHeaders.Authorization] shouldBe config.token
+                request.headers["nonce"] shouldBe nonce
+                request.headers["t"] shouldBe "1723293296000"
+
+                respond(
+                    content = rawBody,
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+            val client = SwitchBotDevicesClient(config, mapper, timeProvider, randomGenerator, engine)
+
+            val result = client.getDeviceStatusRaw(deviceId)
+
+            result shouldBe rawBody
+        }
+    }
+
     @Test fun `getDeviceStatus() test`() {
         runBlocking {
             val deviceId = aRandomUniqueString()

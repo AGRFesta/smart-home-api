@@ -100,6 +100,61 @@ Returned when the persisted device cannot be read.
 { "message": "Unable to retrieve device '<uuid>'!" }
 ```
 
+## GET /devices/{uuid}/diagnostics
+
+Returns the **provider's truth** — the realtime, unfiltered raw payload the device's provider holds about
+it *right now*. This is the sibling of [`GET /devices/{uuid}`](#get-devicesuuid) (*our truth*, the persisted
+aggregate).
+
+It is a rarely-used **diagnostic passthrough**: the backend resolves the device, knows which provider to
+call (and does the signed/encrypted/token work the provider requires), and writes the provider response
+through **verbatim**. Nothing is persisted or cached — the response reflects exactly what the provider
+says at call time, **including failures** (the diagnostic value lives in not masking them).
+
+The response shape is **provider-specific** and intentionally not described by a fixed schema (e.g.
+SwitchBot returns the device status; Netatmo returns the device's room status). Fields our domain does not
+model (e.g. `hubDeviceId`, `enableCloudService`) are included as-is.
+
+### Path parameters
+
+| Param  | Example                                | Description                |
+|--------|----------------------------------------|----------------------------|
+| `uuid` | `3fa85f64-5717-4562-b3fc-2c963f66afa6` | The persisted device UUID. |
+
+### Response `200 OK`
+
+`Content-Type: application/json` — the provider's raw body, written through unchanged (no re-modelling).
+
+### Response `404 Not Found`
+
+Returned when `uuid` does not match any persisted device.
+
+### Response `501 Not Implemented`
+
+Returned when the device's provider has no diagnostics implementation (e.g. a device type that cannot be
+inspected).
+
+```json
+{ "message": "Diagnostics is not available for device '<uuid>'!" }
+```
+
+### Response `502 Bad Gateway`
+
+Returned when the provider is reached but returns an error or is unreachable; the provider's message is
+surfaced in the body.
+
+```json
+{ "message": "<provider failure message>" }
+```
+
+### Response `500 Internal Server Error`
+
+Returned when the persisted device cannot be read.
+
+```json
+{ "message": "Unable to retrieve device '<uuid>'!" }
+```
+
 ## POST /devices/synchronizations
 
 Synchronises the persisted device list with the current snapshot from all registered providers.

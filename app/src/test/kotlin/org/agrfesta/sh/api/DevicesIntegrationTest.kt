@@ -174,6 +174,27 @@ class DevicesIntegrationTest(
         )
     }
 
+    @Test
+    fun `GET device diagnostics returns the provider raw payload verbatim`() {
+        val deviceId = UUID.randomUUID()
+        val sensorData = aSensorProviderData(provider = SWITCHBOT)
+        devicesDao.create(deviceId, sensorData).getOrElse { error("Failed to create device: $it") }
+        val rawBody = """{"statusCode":100,"body":{"deviceId":"${sensorData.deviceProviderId}","battery":88}}"""
+        coEvery { switchBotDevicesClient.getDeviceStatusRaw(sensorData.deviceProviderId) } returns rawBody
+
+        val responseBody = given()
+            .authenticated()
+            .`when`()
+            .get("/devices/{uuid}/diagnostics", deviceId)
+            .then()
+            .statusCode(200)
+            .contentType(ContentType.JSON)
+            .extract()
+            .asString()
+
+        responseBody shouldBe rawBody
+    }
+
     private fun ProviderDeviceData.asSBDeviceJsonNode(): JsonNode =
         objectMapper.aSwitchBotDevice(
             deviceId = deviceProviderId,

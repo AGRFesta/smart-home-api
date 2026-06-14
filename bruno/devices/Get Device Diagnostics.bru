@@ -1,0 +1,15 @@
+meta {
+  name: Get Device Diagnostics
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{BASE_URL}}/devices/:uuid/diagnostics
+  body: none
+  auth: inherit
+}
+
+params:path {
+  uuid: 00000000-0000-0000-0000-000000000000
+}

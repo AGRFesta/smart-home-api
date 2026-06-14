@@ -11,12 +11,14 @@ sealed interface DeviceCreationFailure
 sealed interface DeviceUpdateFailure
 sealed interface GetDevicesFailure
 sealed interface GetDeviceFailure
+sealed interface InspectDeviceFailure
 
 data class DeviceNotFound(
     val missingDeviceId: UUID
 ) : DeviceFetchFailure,
     DeviceUpdateFailure,
     GetDeviceFailure,
+    InspectDeviceFailure,
     SensorAssignmentFailure,
     ActuatorAssignmentFailure,
     SensorUnassignFailure,
@@ -27,4 +29,11 @@ data object DeviceRepositoryError :
     DeviceCreationFailure,
     DeviceUpdateFailure,
     GetDevicesFailure,
-    GetDeviceFailure
+    GetDeviceFailure,
+    InspectDeviceFailure
+
+/** No diagnostics implementation is registered for the device's provider. */
+data object DiagnosticsNotSupported : InspectDeviceFailure
+
+/** The diagnostics provider was reached but failed or is unreachable; [message] surfaces the cause. */
+data class DiagnosticsProviderFailure(val message: String?) : InspectDeviceFailure
