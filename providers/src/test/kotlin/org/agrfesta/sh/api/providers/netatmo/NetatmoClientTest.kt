@@ -262,6 +262,19 @@ class NetatmoClientTest {
         }
     }
 
+    @Test fun `getHomeStatusRaw() returns the response body verbatim`() {
+        val homeId = aRandomUniqueString()
+        val rawBody = """{"body":{"home":{"id":"$homeId","rooms":[{"id":"r1","battery_state":"high"}]}}}"""
+        runBlocking {
+            clientAsserter.givenHomeStatusFetchResponse(rawBody)
+
+            val result = sut.getHomeStatusRaw(homeId)
+
+            result shouldBeRight rawBody
+            clientAsserter.verifyHomeStatusFetchRequest(accessToken, homeId)
+        }
+    }
+
     @Test fun `getHomeStatus() Returns a failure and remove cached value when access token is not valid`() {
         val homeId = aRandomUniqueString()
         runBlocking {

@@ -27,17 +27,7 @@ class NetatmoService(
 
     override fun getAllDevices(): Either<DevicesProviderFailure, Collection<ProviderDeviceData>> = runBlocking {
         netatmoClient.getHomesData()
-            .mapLeft { failure ->
-                DevicesProviderError(
-                    when (failure) {
-                        is NetatmoAuthFailure -> failure.exception
-                        is NetatmoPropertyError -> RuntimeException(failure.failure.toString())
-                        is NetatmoInvalidAccessToken -> RuntimeException("Netatmo access token is not valid")
-                        is NetatmoContractBreak -> RuntimeException("Netatmo contract break: ${failure.message}")
-                        is KtorRequestFailure -> RuntimeException("HTTP ${failure.failureStatusCode}: ${failure.body}")
-                    }
-                )
-            }
+            .mapLeft { DevicesProviderError(it.toException()) }
             .map { data ->
                 data.at("/body/homes/0/modules")
                     .map { node -> objectMapper.treeToValue(node, NetatmoModuleData::class.java) }

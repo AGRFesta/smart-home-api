@@ -3,6 +3,7 @@ package org.agrfesta.sh.api.controllers
 import arrow.core.Either
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetDeviceUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetDevicesUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.InspectDeviceUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.RefreshDevicesUseCase
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
@@ -10,11 +11,16 @@ import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.RefreshDevicesResult
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.DiagnosticsNotSupported
+import org.agrfesta.sh.api.core.domain.failures.DiagnosticsProviderFailure
 import org.agrfesta.sh.api.core.domain.failures.RefreshDevicesError
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.internalServerError
 import org.springframework.http.ResponseEntity.notFound
 import org.springframework.http.ResponseEntity.ok
+import org.springframework.http.ResponseEntity.status
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -28,7 +34,8 @@ import java.util.UUID
 class DevicesController(
     private val refreshDevicesUseCase: RefreshDevicesUseCase,
     private val getDevicesUseCase: GetDevicesUseCase,
-    private val getDeviceUseCase: GetDeviceUseCase
+    private val getDeviceUseCase: GetDeviceUseCase,
+    private val inspectDeviceUseCase: InspectDeviceUseCase
 ) {
     @GetMapping
     fun getDevices(
@@ -51,6 +58,21 @@ class DevicesController(
                 is DeviceNotFound -> notFound().build()
                 DeviceRepositoryError -> internalServerError()
                     .body(MessageResponse("Unable to retrieve device '$uuid'!"))
+            }
+        }
+
+    @GetMapping("/{uuid}/diagnostics")
+    fun diagnostics(@PathVariable uuid: UUID): ResponseEntity<Any> =
+        when (val result = inspectDeviceUseCase.execute(uuid)) {
+            is Either.Right -> ok().contentType(MediaType.APPLICATION_JSON).body(result.value)
+            is Either.Left -> when (val failure = result.value) {
+                is DeviceNotFound -> notFound().build()
+                DeviceRepositoryError -> internalServerError()
+                    .body(MessageResponse("Unable to retrieve device '$uuid'!"))
+                DiagnosticsNotSupported -> status(HttpStatus.NOT_IMPLEMENTED)
+                    .body(MessageResponse("Diagnostics is not available for device '$uuid'!"))
+                is DiagnosticsProviderFailure -> status(HttpStatus.BAD_GATEWAY)
+                    .body(MessageResponse(failure.message ?: "Diagnostics provider failed for device '$uuid'!"))
             }
         }
 

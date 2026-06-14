@@ -105,20 +105,28 @@ class NetatmoClient(
      * This endpoint permits to retrieve the actual status of all devices present into a specific home.
      */
     suspend fun getHomeStatus(homeId: String): Either<NetatmoClientFailure, NetatmoHomeStatus> =
+        getHomeStatusRaw(homeId).flatMap { content ->
+            try {
+                mapper.readTree(content).at("/body/home").let {
+                    mapper.treeToValue(it, NetatmoHomeStatus::class.java)
+                }?.right() ?: NetatmoContractBreak("Unexpected home status response", content).left()
+            } catch (e: IOException) {
+                logger.warn("Failed to parse home status response: ${e.message}", e)
+                NetatmoContractBreak("Unexpected home status response", content).left()
+            }
+        }
+
+    /**
+     * Same realtime call as [getHomeStatus] but returns the response body exactly as Netatmo sent
+     * it, with no parsing, so it can be passed through verbatim as the diagnostics payload.
+     */
+    suspend fun getHomeStatusRaw(homeId: String): Either<NetatmoClientFailure, String> =
         getToken().flatMap { token ->
             try {
-                val content = client.get("${config.baseUrl}/api/homestatus") {
+                client.get("${config.baseUrl}/api/homestatus") {
                     parameter("home_id", homeId)
                     headers { append(HttpHeaders.Authorization, "Bearer $token") }
-                }.bodyAsText()
-                try {
-                    mapper.readTree(content).at("/body/home").let {
-                        mapper.treeToValue(it, NetatmoHomeStatus::class.java)
-                    }?.right() ?: NetatmoContractBreak("Unexpected home status response", content).left()
-                } catch (e: IOException) {
-                    logger.warn("Failed to parse home status response: ${e.message}", e)
-                    NetatmoContractBreak("Unexpected home status response", content).left()
-                }
+                }.bodyAsText().right()
             } catch (e: ClientRequestException) {
                 handleClientRequestException(e).left()
             }

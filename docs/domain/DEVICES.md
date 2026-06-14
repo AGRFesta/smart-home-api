@@ -57,3 +57,35 @@ For each registered provider:
 
 The operation is **best-effort**: a failure on a single device (e.g. a DB insert error) does not abort
 the synchronization. The remaining devices are processed independently.
+
+---
+
+## Diagnostics Passthrough (provider's truth)
+
+During synchronization the system **normalizes** provider data at the adapter boundary
+(`DevicesProvider.getAllDevices()` → `ProviderDeviceData`) and discards everything it does not model.
+The diagnostics passthrough exposes the opposite: the **provider's truth**, the full unfiltered payload a
+provider holds about a single device, in realtime.
+
+See [`GET /devices/{uuid}/diagnostics`](../api/devices.md#get-devicesuuiddiagnostics). It is the sibling
+of `GET /devices/{uuid}` (our persisted *aggregate*); diagnostics is realtime-only — **never persisted nor
+cached** — and intentionally surfaces provider failures rather than masking them.
+
+### Design
+
+- **Diagnostics is a device capability, not a provider-wide port.** A device driver opts in by implementing
+  the `Inspectable` capability (`inspect(): Either<DevicesProviderFailure, String>`), sitting next to
+  `fetchReadings()` / `getActuatorStatus()` — "ask *this* device about itself, now". This is distinct (ISP)
+  from the sync snapshot.
+- **Routing reuses `ProviderDevicesFactory`.** `InspectDeviceService` resolves the persisted device, builds
+  its driver via the matching factory, and calls `inspect()` when the driver is `Inspectable`. A driver that
+  is not `Inspectable` (e.g. the SwitchBot hub) yields `501 Not Implemented` — support is per device type,
+  not per provider.
+- **Raw `String`, not a parsed tree.** The capability returns the literal provider body, keeping the core
+  free of any JSON library and avoiding a parse → re-serialize round trip that could reorder keys or drop
+  fields. The controller writes it through with `Content-Type: application/json`.
+- **Per-provider source.** Each driver decides which provider call(s) expose the device's realtime truth:
+  - **SwitchBot** (`SwitchBotMeter`) → `GET /devices/{id}/status`, body passed through byte-for-byte.
+  - **Netatmo** (`NetatmoSmarther`) → home status, from which the driver extracts **its own room** (by
+    `roomId`). Single-thermostat-per-home is assumed today, consistent with `fetchReadings()`; handling
+    multiple devices per room is deferred.

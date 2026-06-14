@@ -11,14 +11,19 @@ import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.OFF
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.ON
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.UNDEFINED
 import org.agrfesta.sh.api.core.domain.devices.Heater
+import org.agrfesta.sh.api.core.domain.devices.Inspectable
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.SensorReadings
+import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError
+import org.agrfesta.sh.api.core.domain.failures.DevicesProviderFailure
+import org.agrfesta.sh.api.providers.netatmo.NETATMO_OBJECT_MAPPER
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClient
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClientFailure
 import org.agrfesta.sh.api.providers.netatmo.NetatmoContractBreak
 import org.agrfesta.sh.api.providers.netatmo.NetatmoHomeStatusChange
 import org.agrfesta.sh.api.providers.netatmo.NetatmoRoomStatusChange
+import org.agrfesta.sh.api.providers.netatmo.toException
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import java.math.BigDecimal
 import java.time.Duration
@@ -32,9 +37,26 @@ class NetatmoSmarther(
     private val roomId: String,
     private val client: NetatmoClient,
     private val timeProvider: TimeProvider
-) : Sensor, Heater {
+) : Sensor, Heater, Inspectable {
     private val logger by LoggerDelegate()
+    private val mapper = NETATMO_OBJECT_MAPPER
     override val provider = Provider.NETATMO
+
+    // Ktor + Jackson parsing errors and room lookup must not escape the adapter as an unmapped 500
+    @Suppress("TooGenericExceptionCaught")
+    override fun inspect(): Either<DevicesProviderFailure, String> =
+        runBlocking { client.getHomeStatusRaw(homeId) }
+            .mapLeft { DevicesProviderError(it.toException()) }
+            .flatMap { body ->
+                try {
+                    mapper.readTree(body).at("/body/home/rooms")
+                        .first { it.get("id")?.asText() == roomId }
+                        .toString()
+                        .right()
+                } catch (e: Exception) {
+                    DevicesProviderError(e).left()
+                }
+            }
 
     companion object {
         internal val MIN_SET_POINT_TEMPERATURE: BigDecimal = BigDecimal("7")
