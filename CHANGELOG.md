@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-06-14
+
 ### Added
 - Add `GET /devices/{uuid}/diagnostics` endpoint returning the provider's realtime raw payload for a device
   (passthrough, no persistence): `404` unknown uuid, `502` provider failure (message surfaced), `501` when the
