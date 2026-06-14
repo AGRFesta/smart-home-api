@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetDeviceUseCase
@@ -70,6 +71,24 @@ class DevicesGetByIdControllerMvcSliceTest(
         // Then
         val response = objectMapper.readValue(responseBody, DeviceAggregateResponse::class.java)
         response shouldBe aggregate.toResponse()
+    }
+
+    @Test fun `getById() exposes the battery level in the response body`() {
+        // Given
+        val deviceId = UUID.randomUUID()
+        val aggregate = aDeviceAggregate(uuid = deviceId, batteryLevel = 64)
+        every { getDeviceUseCase.execute(deviceId) } returns aggregate.right()
+
+        // When
+        val responseBody = mockMvc.perform(get("/devices/{uuid}", deviceId).authenticated())
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        // Then
+        val response = objectMapper.readValue(responseBody, DeviceAggregateResponse::class.java)
+        withClue("GET /devices/{uuid} body should expose the aggregate's battery level") {
+            response.batteryLevel shouldBe 64
+        }
     }
 
     @Test fun `getById() returns 404 when the device does not exist`() {

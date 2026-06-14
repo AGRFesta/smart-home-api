@@ -68,6 +68,10 @@ can be added here as new top-level keys without changing the list contract.
 is role-scoped: a device can be a `SENSOR` in one area and an `ACTUATOR` in another. Only current
 assignments are returned — disconnected (historical) sensor assignments are not included.
 
+`batteryLevel` is the latest known battery percentage (0–100) for battery-powered devices, read from
+cache (refreshed each polling cycle). It is `null` when the device is not battery-powered, when no value
+has been collected yet, or when the cached value has expired (a device offline beyond the cache TTL).
+
 ```json
 {
   "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -80,13 +84,15 @@ assignments are returned — disconnected (historical) sensor assignments are no
   "updatedOn": 1749751440,
   "assignments": [
     { "areaUuid": "a1b2c3d4-0000-0000-0000-000000000000", "areaName": "Living Room", "role": "SENSOR" }
-  ]
+  ],
+  "batteryLevel": 88
 }
 ```
 
-| Field         | Description                                                                       |
-|---------------|-----------------------------------------------------------------------------------|
-| `assignments` | Current area assignments; each has `areaUuid`, `areaName` and `role` (`SENSOR`/`ACTUATOR`). |
+| Field          | Description                                                                       |
+|----------------|-----------------------------------------------------------------------------------|
+| `assignments`  | Current area assignments; each has `areaUuid`, `areaName` and `role` (`SENSOR`/`ACTUATOR`). |
+| `batteryLevel` | Latest known battery percentage (0–100) from cache; `null` when not battery-powered, not yet collected, or expired. |
 
 ### Response `404 Not Found`
 

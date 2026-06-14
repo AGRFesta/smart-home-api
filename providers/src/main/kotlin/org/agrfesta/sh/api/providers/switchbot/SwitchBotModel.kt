@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import org.agrfesta.sh.api.core.domain.commons.Percentage
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
-import org.agrfesta.sh.api.core.domain.devices.BatteryValue
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.SensorReadings
@@ -19,15 +18,13 @@ enum class SwitchBotDeviceType(val features: Set<DeviceFeature>) {
 
 data class SwitchBotSensorReadings(
     val temperature: Temperature,
-    val humidityInt: Int,
-    val batteryLevel: Int
+    val humidityInt: Int
 ) {
 
-    fun toSensorReadings(): SensorReadings = object : ThermoHygroDataValue, BatteryValue {
+    fun toSensorReadings(): SensorReadings = object : ThermoHygroDataValue {
         override val thermoHygroData = ThermoHygroData(
             temperature = temperature,
             relativeHumidity = Percentage.ofHundreds(humidityInt)
         )
-        override val battery: Int = batteryLevel
     }
 }

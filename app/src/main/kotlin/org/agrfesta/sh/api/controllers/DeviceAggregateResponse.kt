@@ -23,7 +23,8 @@ data class DeviceAggregateResponse(
     val features: Set<DeviceFeature>,
     val createdOn: Instant,
     val updatedOn: Instant?,
-    val assignments: List<AssignmentResponse>
+    val assignments: List<AssignmentResponse>,
+    val batteryLevel: Int? = null
 )
 
 data class AssignmentResponse(
@@ -41,5 +42,6 @@ fun DeviceAggregate.toResponse() = DeviceAggregateResponse(
     features = features,
     createdOn = createdOn,
     updatedOn = updatedOn,
-    assignments = assignments.map { AssignmentResponse(it.areaUuid, it.areaName, it.role) }
+    assignments = assignments.map { AssignmentResponse(it.areaUuid, it.areaName, it.role) },
+    batteryLevel = batteryLevel
 )

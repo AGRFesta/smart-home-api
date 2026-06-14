@@ -13,3 +13,10 @@ get {
 params:path {
   uuid: 00000000-0000-0000-0000-000000000000
 }
+
+docs {
+  Per-device aggregate: base fields, createdOn/updatedOn, current area assignments and batteryLevel.
+  batteryLevel is the latest known battery percentage (0-100) read from cache; null when the device is
+  not battery-powered, no value has been collected yet, or the cached value has expired. Returns 404 for
+  an unknown uuid.
+}

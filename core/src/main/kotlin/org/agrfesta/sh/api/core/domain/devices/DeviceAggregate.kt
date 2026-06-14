@@ -12,14 +12,15 @@ import java.util.UUID
 data class DeviceAggregate(
     val uuid: UUID,
     val status: DeviceStatus,
-    val deviceProviderId: String,
-    val provider: Provider,
+    override val deviceProviderId: String,
+    override val provider: Provider,
     val name: String,
     val features: Set<DeviceFeature>,
     val createdOn: Instant,
     val updatedOn: Instant?,
-    val assignments: List<DeviceAreaAssignment>
-)
+    val assignments: List<DeviceAreaAssignment>,
+    val batteryLevel: Int? = null
+) : DeviceProviderIdentity
 
 /**
  * A current area assignment of a device, scoped by the [role] under which the device participates

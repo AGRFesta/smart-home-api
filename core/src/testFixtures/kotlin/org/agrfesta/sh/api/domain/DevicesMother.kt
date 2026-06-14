@@ -62,8 +62,9 @@ fun aDeviceAggregate(
     features: Set<DeviceFeature> = emptySet(),
     createdOn: Instant = Instant.now(),
     updatedOn: Instant? = null,
-    assignments: List<DeviceAreaAssignment> = emptyList()
-) = DeviceAggregate(uuid, status, providerId, provider, name, features, createdOn, updatedOn, assignments)
+    assignments: List<DeviceAreaAssignment> = emptyList(),
+    batteryLevel: Int? = null
+) = DeviceAggregate(uuid, status, providerId, provider, name, features, createdOn, updatedOn, assignments, batteryLevel)
 
 fun aProviderDeviceData(
     providerId: String = aRandomUniqueString(),
