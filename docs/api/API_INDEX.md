@@ -13,6 +13,7 @@ below. See [SECURITY.md](../SECURITY.md).
 | `GET`    | `/devices/{uuid}` | [devices](devices.md#get-devicesuuid) | Per-device aggregate — base fields + current area assignments + cached battery level |
 | `GET`    | `/devices/{uuid}/diagnostics` | [devices](devices.md#get-devicesuuiddiagnostics) | Provider's realtime raw payload (passthrough, no persistence) |
 | `POST`   | `/devices/synchronizations` | [devices](devices.md#post-devicessynchronizations) | Synchronise persisted devices with provider snapshot |
+| `GET`    | `/alerts` | [alerts](alerts.md#get-alerts) | List alerts, defaulting to currently OPEN, filterable by status |
 | `GET`    | `/home`  | [home](home.md#get-home) | BFF dashboard — global state + areas |
 | `GET`    | `/home/stream` | [home](home.md#get-homestream) | SSE stream — pushes the dashboard on every home-state change |
 | `POST`   | `/areas` | [areas](areas.md#post-areas) | Create a new area |

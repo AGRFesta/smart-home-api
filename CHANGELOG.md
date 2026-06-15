@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Add `GET /alerts` endpoint listing alerts, defaulting to the currently `OPEN` ones and filterable by
+  `status`. Alerts are a stateful, idempotent, DB-persisted aggregate (at most one `OPEN` per
+  type+target); no automatic evaluation or concrete rules yet. (#192)
+
 ### Changed
 - Expose `batteryLevel` (latest known battery percentage, from cache) in the `GET /devices/{uuid}` response;
   `null` when not battery-powered, not yet collected, or expired. (#191)
