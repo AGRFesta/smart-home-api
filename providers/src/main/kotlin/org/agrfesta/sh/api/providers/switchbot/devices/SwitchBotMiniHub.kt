@@ -8,5 +8,5 @@ class SwitchBotMiniHub(
     override val uuid: UUID,
     override val deviceProviderId: String
 ) : DeviceDriver {
-    override val provider: Provider = Provider.NETATMO
+    override val provider: Provider = Provider.SWITCHBOT
 }

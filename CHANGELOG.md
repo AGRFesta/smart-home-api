@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expose `batteryLevel` (latest known battery percentage, from cache) in the `GET /devices/{uuid}` response;
   `null` when not battery-powered, not yet collected, or expired. (#191)
 
+### Fixed
+- Report SwitchBot hub devices with the `SWITCHBOT` provider instead of `NETATMO`. (#200)
+
 ## [1.2.0] - 2026-06-14
 
 ### Added
