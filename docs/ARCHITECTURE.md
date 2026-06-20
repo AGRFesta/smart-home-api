@@ -110,9 +110,12 @@ Never use raw `Double` or `Float` for domain quantities. Use **inline value clas
 ### Domain Model Composition
 Domain entities prefer Kotlin delegation (`by`) over deep inheritance:
 ```kotlin
-class HeatableAreaImpl(mcArea: MonitoredClimateArea, ...) 
-    : HeatableArea, MonitoredClimateArea by mcArea
+class DecoratedAggregate(private val base: Aggregate, ...)
+    : ExtendedAggregate, Aggregate by base
 ```
+Keep I/O out of domain models: they aggregate and decide over immutable inputs (snapshots/value
+objects), they do not call ports. Live device access belongs to the application layer (see the
+heating path: `EvaluateHeatingStateService` builds `HeatableAreaSnapshot`s from device drivers).
 
 ---
 
