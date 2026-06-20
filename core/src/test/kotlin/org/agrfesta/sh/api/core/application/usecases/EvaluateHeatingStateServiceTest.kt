@@ -4,12 +4,12 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.kotest.assertions.withClue
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import org.agrfesta.sh.api.core.application.areas.AreasFactory
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
@@ -64,13 +64,11 @@ class EvaluateHeatingStateServiceTest {
     private val strategySelector: HeatingStrategySelector = mockk()
     private val decide: HeatingDecider = mockk()
 
-    private val areasFactory = AreasFactory(temperatureSettingsRepository)
-
     private val sut = EvaluateHeatingStateService(
         devicesRepository,
         listOf(factory),
         areasWithDevicesRepository,
-        areasFactory,
+        temperatureSettingsRepository,
         strategySelector,
         propertyRepository,
         timeProvider
@@ -168,7 +166,7 @@ class EvaluateHeatingStateServiceTest {
 
     @Test
     fun `execute() does nothing when there are no heatable areas`() {
-        // Given — area with sensors but no actuators: resolves to MonitoredClimateArea, not HeatableArea
+        // Given — area with a resolved sensor but no heater: not heatable
         val sensorDto = aSensor()
         sensorDto.toSensorMockk(factory)
         val areaDto = anAreaDtoWithDevices(sensors = listOf(sensorDto), actuators = emptyList())
@@ -184,8 +182,8 @@ class EvaluateHeatingStateServiceTest {
 
     @Test
     fun `execute() does nothing when area actuator is missing from device registry`() {
-        // Given — actuator referenced in area DTO but absent from device registry: AreasFactory resolves
-        //         only the sensor → MonitoredClimateArea, not HeatableArea
+        // Given — actuator referenced in area DTO but absent from device registry: only the sensor
+        //         resolves, no heater → not heatable
         val sensorDto = aSensor()
         sensorDto.toSensorMockk(factory)
         val actuatorDto = anActuator()
@@ -202,8 +200,8 @@ class EvaluateHeatingStateServiceTest {
 
     @Test
     fun `execute() does nothing when area sensors are missing from device registry`() {
-        // Given — sensor referenced in area DTO but absent from device registry: AreasFactory skips it,
-        //         area has no resolved sensors → plain AreaImpl, not HeatableArea
+        // Given — sensor referenced in area DTO but absent from device registry: no sensor resolves,
+        //         area has no resolved sensors → not heatable
         val sensorDto = aSensor()
         val actuatorDto = anActuator()
         actuatorDto.toSharedHeaterMockk(factory)
@@ -220,7 +218,7 @@ class EvaluateHeatingStateServiceTest {
 
     @Test
     fun `execute() does nothing when area has no sensors (not heatable)`() {
-        // Given — area with actuator but no sensors: resolves to plain AreaImpl, not HeatableArea
+        // Given — area with a resolved heater but no sensors: not heatable
         val actuatorDto = anActuator()
         actuatorDto.toSharedHeaterMockk(factory)
         val areaDto = anAreaDtoWithDevices(sensors = emptyList(), actuators = listOf(actuatorDto))
@@ -315,6 +313,53 @@ class EvaluateHeatingStateServiceTest {
         // Then
         withClue("getActuatorStatus() failure must degrade to UNDEFINED, not throw") {
             snapshots.captured.single().heaterStatus shouldBe ActuatorStatus.UNDEFINED
+        }
+    }
+
+    @Test
+    fun `execute() averages sensor readings and ignores failing fetches in the snapshot temperature`() {
+        // Given — three sensors in one area: 10, failing, 20 -> average over the two successful readings is 15
+        val sensorDto1 = aSensor()
+        val sensor1 = sensorDto1.toSensorMockk(factory)
+        every { sensor1.fetchReadings() } returns aThermoHygroDataValue(temperature = Temperature.of("10")).right()
+        val sensorDto2 = aSensor()
+        val sensor2 = sensorDto2.toSensorMockk(factory)
+        every { sensor2.fetchReadings() } returns FailureByException(RuntimeException("unavailable")).left()
+        val sensorDto3 = aSensor()
+        val sensor3 = sensorDto3.toSensorMockk(factory)
+        every { sensor3.fetchReadings() } returns aThermoHygroDataValue(temperature = Temperature.of("20")).right()
+        val (heaterDto, _) = aStubbedHeater()
+        val areaDto = anAreaDtoWithDevices(
+            sensors = listOf(sensorDto1, sensorDto2, sensorDto3),
+            actuators = listOf(heaterDto)
+        )
+        every { devicesRepository.getAll() } returns listOf(sensorDto1, sensorDto2, sensorDto3, heaterDto).right()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(areaDto).right()
+        val snapshots = slot<Collection<HeatableAreaSnapshot>>()
+        every { decide(capture(snapshots)) } returns HeaterCommand.NONE
+
+        // When
+        sut.execute()
+
+        // Then
+        withClue("failing fetches are skipped; the average is computed over the successful readings") {
+            snapshots.captured.single().currentTemperature shouldBe Temperature.of("15")
+        }
+    }
+
+    @Test
+    fun `execute() sets the snapshot temperature to null when all sensor fetches fail`() {
+        // Given — single sensor whose fetch fails (givenHeatableArea default)
+        givenHeatableArea()
+        val snapshots = slot<Collection<HeatableAreaSnapshot>>()
+        every { decide(capture(snapshots)) } returns HeaterCommand.NONE
+
+        // When
+        sut.execute()
+
+        // Then
+        withClue("no readings available -> currentTemperature is null, not an error") {
+            snapshots.captured.single().currentTemperature.shouldBeNull()
         }
     }
 
@@ -420,7 +465,7 @@ class EvaluateHeatingStateServiceTest {
             devicesRepository,
             listOf(factory),
             areasWithDevicesRepository,
-            areasFactory,
+            temperatureSettingsRepository,
             HeatingStrategySelector(default, Percentage.of("0.5"), propertyRepository),
             propertyRepository,
             timeProvider
