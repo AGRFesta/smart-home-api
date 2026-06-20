@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `null` when not battery-powered, not yet collected, or expired. (#191)
 
 ### Fixed
-- Report SwitchBot hub devices with the `SWITCHBOT` provider instead of `NETATMO`. (#200)
+- Report SwitchBot hub devices with the `SWITCHBOT` provider instead of `NETATMO`. (#203)
 
 ## [1.2.0] - 2026-06-14
 
