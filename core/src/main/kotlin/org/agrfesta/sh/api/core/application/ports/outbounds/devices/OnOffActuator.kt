@@ -1,6 +1,7 @@
-package org.agrfesta.sh.api.core.domain.devices
+package org.agrfesta.sh.api.core.application.ports.outbounds.devices
 
 import arrow.core.Either
+import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 
 interface Actuator : DeviceDriver
 
@@ -11,5 +12,3 @@ interface OnOffActuator : Actuator {
     fun on(): Either<ActuatorOperationFailure, Unit>
     fun off(): Either<ActuatorOperationFailure, Unit>
 }
-
-enum class ActuatorStatus { ON, OFF, UNDEFINED }

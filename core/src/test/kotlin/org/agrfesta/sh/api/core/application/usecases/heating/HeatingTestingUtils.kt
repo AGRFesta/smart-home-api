@@ -3,9 +3,9 @@ package org.agrfesta.sh.api.core.application.usecases.heating
 import io.mockk.every
 import io.mockk.mockk
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.Sensor
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.SharedHeater
 import org.agrfesta.sh.api.core.domain.devices.Device
-import org.agrfesta.sh.api.core.domain.devices.Sensor
-import org.agrfesta.sh.api.core.domain.devices.SharedHeater
 
 fun Device.toSensorMockk(factory: ProviderDevicesFactory): Sensor {
     val dto = this

@@ -5,8 +5,8 @@ import arrow.core.flatMap
 import arrow.core.left
 import org.agrfesta.sh.api.core.application.ports.inbounds.InspectDeviceUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.Inspectable
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
-import org.agrfesta.sh.api.core.domain.devices.Inspectable
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError

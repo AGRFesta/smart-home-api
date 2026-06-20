@@ -6,14 +6,14 @@ import arrow.core.left
 import arrow.core.right
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.Heater
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.Inspectable
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.OFF
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.ON
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus.UNDEFINED
-import org.agrfesta.sh.api.core.domain.devices.Heater
-import org.agrfesta.sh.api.core.domain.devices.Inspectable
 import org.agrfesta.sh.api.core.domain.devices.Provider
-import org.agrfesta.sh.api.core.domain.devices.Sensor
 import org.agrfesta.sh.api.core.domain.devices.SensorReadings
 import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError
 import org.agrfesta.sh.api.core.domain.failures.DevicesProviderFailure
