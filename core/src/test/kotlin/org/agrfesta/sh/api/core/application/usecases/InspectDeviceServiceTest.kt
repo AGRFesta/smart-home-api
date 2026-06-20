@@ -8,10 +8,10 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DeviceDriver
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.Inspectable
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
-import org.agrfesta.sh.api.core.domain.devices.DeviceDriver
-import org.agrfesta.sh.api.core.domain.devices.Inspectable
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
