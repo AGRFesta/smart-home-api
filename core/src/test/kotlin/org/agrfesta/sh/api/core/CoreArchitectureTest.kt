@@ -39,5 +39,21 @@ class CoreArchitectureTest {
                 "Only @Service is permitted in core use case classes; " +
                     "use UnitOfWork for transactions, never @Transactional"
             )
+
+        @JvmField
+        @ArchTest
+        val domainIsLoggingFree: ArchRule = noClasses()
+            .that().resideInAPackage("..core.domain..")
+            .should().dependOnClassesThat().resideInAPackage("org.slf4j..")
+            .because("Logging belongs to the application/adapters, not to the domain")
+
+        @JvmField
+        @ArchTest
+        val domainDoesNotDependOnApplication: ArchRule = noClasses()
+            .that().resideInAPackage("..core.domain..")
+            .should().dependOnClassesThat().resideInAPackage("..core.application..")
+            .because(
+                "The domain layer must be completely independent of the application layer (ports and use cases)"
+            )
     }
 }

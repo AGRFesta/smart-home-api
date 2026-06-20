@@ -7,7 +7,3 @@ sealed interface SensorReadings
 interface ThermoHygroDataValue : SensorReadings {
     val thermoHygroData: ThermoHygroData
 }
-
-interface SensorReadingsFailure
-
-data class FailureByException(val reason: Exception) : SensorReadingsFailure

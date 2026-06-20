@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.providers.netatmo
 
-import org.agrfesta.sh.api.core.domain.devices.ActuatorOperationFailure
-import org.agrfesta.sh.api.core.domain.devices.SensorReadingsFailure
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ActuatorOperationFailure
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.SensorReadingsFailure
 import org.agrfesta.sh.api.core.domain.failures.GetPropertyFailure
 
 sealed interface NetatmoClientFailure : SensorReadingsFailure, ActuatorOperationFailure
