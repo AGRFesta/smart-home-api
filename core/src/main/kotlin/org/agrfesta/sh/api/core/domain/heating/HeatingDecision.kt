@@ -9,6 +9,12 @@ import java.math.RoundingMode
 private val HYSTERESIS: Temperature = Temperature.of(BigDecimal.ONE)
 
 /**
+ * A pure heating decision: maps the snapshots of the areas served by a shared heater to the desired
+ * [HeaterCommand]. No I/O, no logging.
+ */
+typealias HeatingDecider = (Collection<HeatableAreaSnapshot>) -> HeaterCommand
+
+/**
  * Pure heating decision for the COMFORT strategy.
  *
  * Returns the desired [HeaterCommand] for a shared heater given the snapshots of the areas it serves.

@@ -14,7 +14,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepositor
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
-import org.agrfesta.sh.api.core.application.usecases.heating.DynamicSharedHeatingStrategyService.Companion.HEATING_STRATEGY_KEY
+import org.agrfesta.sh.api.core.application.usecases.heating.HeatingStrategySelector.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
