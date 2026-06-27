@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `null` when not battery-powered, not yet collected, or expired. (#191)
 
 ### Fixed
+- Compare the ECONOMY demand ratio against the threshold exactly, removing the lossy scale-2 `HALF_UP`
+  rounding that could turn the shared heater ON just below the threshold (e.g. 5/8 areas with
+  `threshold = 0.63`). (#210)
 - Report SwitchBot hub devices with the `SWITCHBOT` provider instead of `NETATMO`. (#203)
 
 ## [1.2.0] - 2026-06-14
