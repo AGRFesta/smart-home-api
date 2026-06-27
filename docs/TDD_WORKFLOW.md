@@ -43,6 +43,24 @@ The project has three distinct test layers. Use the right one for the right scop
 - **HTTP testing (integration):** [RestAssured](https://rest-assured.io/).
 - **HTTP testing (slice):** Spring `MockMvc`.
 - **Infrastructure:** [Testcontainers](https://testcontainers.com/).
+- **Property-based testing:** [Kotest Property](https://kotest.io/docs/proptest/property-based-testing.html) — `checkAll`, `Arb`. Annotate the class/method with `@PropertyBasedTest`, use the shared `pbtConfig` (fixed seed, reproducible) and the domain `Arb`s in `core` test fixtures (`Arb.percentage()`, `Arb.temperature()`).
+
+### Property-Based Tests (PBT): when and how
+
+PBTs **complement, never replace** the example/table-based tests. The `pbt` tag is **excluded from pitest mutation analysis** (`excludedGroups = listOf("pbt")`), so the example tests remain the mutation oracle — every behaviour must still be pinned by at least one example test.
+
+**When to add one.** Reach for a PBT only when all of these hold; otherwise an example test is enough:
+- The subject is a **pure function, value object, or domain invariant** (no I/O, deterministic).
+- The **input space is large** and example tests cannot exhaustively cover the boundaries (e.g. rounding/precision, ordering, ranges, round-trips).
+- You can state an **invariant or contract** over that space — not just a single expected output.
+
+**How it fits the cycle.** Two legitimate roles:
+1. **RED-driving** — the property *is* the next behavioural increment: write it first, watch it fail (shrinking yields the minimal counterexample), then make it GREEN. Follows Phase 1→2 normally.
+2. **Green-on-arrival guard** — added in **Phase 3** over the most critical logic, after an example test already drove the implementation. For a PBT guard, being GREEN the moment you write it is **expected and acceptable** — it is the documented exception to the "a test that is already GREEN is a smell" rule (that rule governs the RED-ordered example list, not guards).
+
+**Avoid the tautology trap.** ❗️ The oracle must **not restate the production formula** — a PBT that recomputes the implementation expression co-evolves with its bugs and verifies nothing. Instead either:
+- use an **independent computation** (e.g. exact integer cross-multiplication to check a `BigDecimal` comparison), or
+- assert a **one-directional contract** (soundness, monotonicity, round-trip, bounds) and pin the opposite direction with an example test.
 
 ---
 
