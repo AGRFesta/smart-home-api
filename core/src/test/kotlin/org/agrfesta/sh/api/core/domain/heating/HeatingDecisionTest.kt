@@ -192,14 +192,7 @@ class HeatingDecisionTest {
     @Test
     fun `decideEconomy() returns ON when the demand ratio is exactly at the threshold`() {
         // Given
-        val areas = listOf(
-            aSnapshot(current = Temperature.of("15"), target = Temperature.of("20")), // below range -> demands heat
-            aSnapshot(
-                current = Temperature.of("20.5"),
-                target = Temperature.of("20"),
-                heaterStatus = ActuatorStatus.OFF
-            ) // in-band, heater OFF -> no demand, not above range
-        ) // demand ratio = 1/2 = 0.5
+        val areas = listOf(demandsHeat(), inBandNoDemand()) // demand ratio = 1/2 = 0.5
 
         // When
         val command = decideEconomy(areas, threshold = Percentage.of("0.5"))
@@ -211,20 +204,23 @@ class HeatingDecisionTest {
     }
 
     @Test
+    fun `decideEconomy() returns OFF when the true demand ratio is below the threshold but HALF_UP would round it up`() {
+        // Given
+        val areas = List(5) { demandsHeat() } + List(3) { inBandNoDemand() } // demand ratio = 5/8 = 0.625
+
+        // When
+        val command = decideEconomy(areas, threshold = Percentage.of("0.63"))
+
+        // Then
+        withClue("true ratio (0.625) < threshold (0.63) -> heater OFF; HALF_UP rounding to 0.63 must not flip it ON") {
+            command shouldBe HeaterCommand.OFF
+        }
+    }
+
+    @Test
     fun `decideEconomy() returns OFF when the demand ratio is below the threshold`() {
         // Given
-        val inBandNoDemand = {
-            aSnapshot(
-                current = Temperature.of("20.5"),
-                target = Temperature.of("20"),
-                heaterStatus = ActuatorStatus.OFF
-            ) // in-band, heater OFF -> no demand, not above range
-        }
-        val areas = listOf(
-            aSnapshot(current = Temperature.of("15"), target = Temperature.of("20")), // below range -> demands heat
-            inBandNoDemand(),
-            inBandNoDemand()
-        ) // demand ratio = 1/3 ≈ 0.33
+        val areas = listOf(demandsHeat(), inBandNoDemand(), inBandNoDemand()) // demand ratio = 1/3 ≈ 0.33
 
         // When
         val command = decideEconomy(areas, threshold = Percentage.of("0.5"))
@@ -242,3 +238,13 @@ private fun aSnapshot(
     heaterStatus: ActuatorStatus = ActuatorStatus.UNDEFINED,
     areaId: UUID = UUID.randomUUID()
 ) = HeatableAreaSnapshot(areaId, current, target, heaterStatus)
+
+/** An area below its target range: demands heat, contributes to the demand ratio numerator. */
+private fun demandsHeat() = aSnapshot(current = Temperature.of("15"), target = Temperature.of("20"))
+
+/** An area in-band with heater OFF: no demand and not above range, so it never forces anti-overheat OFF. */
+private fun inBandNoDemand() = aSnapshot(
+    current = Temperature.of("20.5"),
+    target = Temperature.of("20"),
+    heaterStatus = ActuatorStatus.OFF
+)

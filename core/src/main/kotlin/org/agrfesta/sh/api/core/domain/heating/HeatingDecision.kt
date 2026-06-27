@@ -4,7 +4,6 @@ import org.agrfesta.sh.api.core.domain.commons.Percentage
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import java.math.BigDecimal
-import java.math.RoundingMode
 
 private val HYSTERESIS: Temperature = Temperature.of(BigDecimal.ONE)
 
@@ -37,9 +36,9 @@ fun decideEconomy(areas: Collection<HeatableAreaSnapshot>, threshold: Percentage
     areas.isEmpty() -> HeaterCommand.NONE
     areas.any { it.isAboveRange() } -> HeaterCommand.OFF
     else -> {
-        val demandRatio = areas.count { it.requiresHeating() }.toBigDecimal()
-            .divide(areas.size.toBigDecimal(), 2, RoundingMode.HALF_UP)
-        if (demandRatio >= threshold.value) HeaterCommand.ON else HeaterCommand.OFF
+        // Exact comparison, no rounding: ON iff count / size >= threshold  <=>  count >= threshold * size
+        val demanding = areas.count { it.requiresHeating() }.toBigDecimal()
+        if (demanding >= threshold.value * areas.size.toBigDecimal()) HeaterCommand.ON else HeaterCommand.OFF
     }
 }
 
