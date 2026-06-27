@@ -77,7 +77,9 @@ class EvaluateHeatingStateService(
         areaDtos.mapNotNull { it.resolveHeatable(devicesRegistry) }
             .groupBy { it.heater }
             .forEach { (heater, areaList) ->
-                val heaterStatus = heater.getActuatorStatus().getOrElse { ActuatorStatus.UNDEFINED }
+                val heaterStatus = heater.getActuatorStatus()
+                    .onLeft { logger.warn("Unable to fetch status for heater '${heater.uuid}': $it") }
+                    .getOrElse { ActuatorStatus.UNDEFINED }
                 val snapshots = areaList.map { area ->
                     HeatableAreaSnapshot(
                         areaId = area.areaId,
@@ -90,7 +92,9 @@ class EvaluateHeatingStateService(
                 logger.info("Heating decision for heater '${heater.uuid}': $command (snapshots: $snapshots)")
                 when (command) {
                     HeaterCommand.ON -> heater.on()
+                        .onLeft { logger.error("Failed to turn heater '${heater.uuid}' ON: $it") }
                     HeaterCommand.OFF -> heater.off()
+                        .onLeft { logger.error("Failed to turn heater '${heater.uuid}' OFF: $it") }
                     HeaterCommand.NONE -> {}
                 }
             }
