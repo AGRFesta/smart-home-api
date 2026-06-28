@@ -1,6 +1,5 @@
 package org.agrfesta.sh.api.core.application.usecases
 
-import arrow.core.getOrElse
 import org.agrfesta.sh.api.core.application.ports.inbounds.EvaluateHeatingStateUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
@@ -54,8 +53,8 @@ class EvaluateHeatingStateService(
 
     override fun execute() {
         if (!isEnabled()) return
-        val deviceRecords = devicesRepository.getAll().onLeft { _ ->
-            logger.error("Device fetch failed, skipping heating evaluation.")
+        val deviceRecords = devicesRepository.getAll().onLeft {
+            logger.error("Device fetch failed, skipping heating evaluation: $it")
         }.getOrNull() ?: return
         val devicesRegistry = deviceRecords.mapNotNull { record ->
             val factory = mappedDevicesFactories[record.provider]
@@ -70,16 +69,21 @@ class EvaluateHeatingStateService(
             }
         }.associateBy { it.uuid }
         val areaDtos = areasWithDevicesRepository.getAllAreasWithDevices().onLeft {
-            logger.error("Area fetch failed, skipping heating evaluation.")
+            logger.error("Area fetch failed, skipping heating evaluation: $it")
         }.getOrNull() ?: return
         val decide = strategySelector.select()
         val currentTime = timeProvider.currentLocalTime()
         areaDtos.mapNotNull { it.resolveHeatable(devicesRegistry) }
             .groupBy { it.heater }
             .forEach { (heater, areaList) ->
-                val heaterStatus = heater.getActuatorStatus()
-                    .onLeft { logger.warn("Unable to fetch status for heater '${heater.uuid}': $it") }
-                    .getOrElse { ActuatorStatus.UNDEFINED }
+                val heaterStatus = heater.getActuatorStatus().fold(
+                    ifLeft = {
+                        logger.warn("Unable to fetch heater status for heater '${heater.uuid}', " +
+                            "defaulting to UNDEFINED: $it")
+                        ActuatorStatus.UNDEFINED
+                    },
+                    ifRight = { it }
+                )
                 val snapshots = areaList.map { area ->
                     HeatableAreaSnapshot(
                         areaId = area.areaId,
@@ -134,8 +138,8 @@ class EvaluateHeatingStateService(
     private fun ResolvedHeatableArea.currentTemperature(): Temperature? {
         val readings = sensors.mapNotNull { sensor ->
             sensor.fetchReadings().fold(
-                ifLeft = { _ ->
-                    logger.error("Unable to fetch readings by sensor '${sensor.uuid}'.")
+                ifLeft = {
+                    logger.error("Unable to fetch readings by sensor '${sensor.uuid}': $it")
                     null
                 },
                 ifRight = { it }
