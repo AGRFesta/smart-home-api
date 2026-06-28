@@ -30,17 +30,28 @@ fun decideComfort(areas: Collection<HeatableAreaSnapshot>): HeaterCommand = when
  *
  * Returns the desired [HeaterCommand] for a shared heater given the snapshots of the areas it serves
  * and the minimum [threshold] ratio of areas that must require heating to turn the heater ON.
- * No I/O, no logging.
+ *
+ * The demand ratio is computed over **decidable** areas only — those with both a current and a target
+ * temperature. Undecidable areas (missing reading or target) are excluded from the denominator so they
+ * do not dilute the ratio, mirroring [decideComfort]'s "ignore undecidable" stance. When no area is
+ * decidable, the heater is turned OFF (no demand can be established). No I/O, no logging.
  */
-fun decideEconomy(areas: Collection<HeatableAreaSnapshot>, threshold: Percentage): HeaterCommand = when {
-    areas.isEmpty() -> HeaterCommand.NONE
-    areas.any { it.isAboveRange() } -> HeaterCommand.OFF
-    else -> {
-        // Exact comparison, no rounding: ON iff count / size >= threshold  <=>  count >= threshold * size
-        val demanding = areas.count { it.requiresHeating() }.toBigDecimal()
-        if (demanding >= threshold.value * areas.size.toBigDecimal()) HeaterCommand.ON else HeaterCommand.OFF
+fun decideEconomy(areas: Collection<HeatableAreaSnapshot>, threshold: Percentage): HeaterCommand {
+    val decidable = areas.filter { it.isDecidable() }
+    return when {
+        areas.isEmpty() -> HeaterCommand.NONE
+        areas.any { it.isAboveRange() } -> HeaterCommand.OFF
+        decidable.isEmpty() -> HeaterCommand.OFF
+        else -> {
+            // Exact comparison, no rounding: ON iff count / size >= threshold  <=>  count >= threshold * size
+            val demanding = decidable.count { it.requiresHeating() }.toBigDecimal()
+            if (demanding >= threshold.value * decidable.size.toBigDecimal()) HeaterCommand.ON else HeaterCommand.OFF
+        }
     }
 }
+
+private fun HeatableAreaSnapshot.isDecidable(): Boolean =
+    currentTemperature != null && targetTemperature != null
 
 private fun HeatableAreaSnapshot.isAboveRange(): Boolean {
     val current = currentTemperature ?: return false
