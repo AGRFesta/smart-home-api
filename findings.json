@@ -1,0 +1,15 @@
+{
+  "reviewed_sha": "da446b16fb9ab87aa5cd9bb9cb5ca5ca35c2c122",
+  "round": 1,
+  "summary": "Reviewed the #214 observability change (latest commit) plus the stacked refactors it sits on (#203-#211). The refactors are guarded by ArchUnit and HeatingDecisionTest and are settled; focus here is the heating-path logging. One semantic finding: the sensor fetchReadings() failure logs at error while the analogous heater-status fetch failure (and the 'unable to determine current temperature' fallback) log at warn, even though both are tolerated degradations that continue the evaluation. That inconsistency is the one thing this 'consistent failure detail observability' branch arguably still leaves open. Changelog and API docs are correct; tests are behavior-focused with guards for the degradation paths.",
+  "comments": [
+    {
+      "path": "core/src/main/kotlin/org/agrfesta/sh/api/core/application/usecases/EvaluateHeatingStateService.kt",
+      "line": 140,
+      "side": "RIGHT",
+      "severity": "low",
+      "confidence": "high",
+      "body": "Log-level inconsistency in the heating path. After this change the code follows a sound implicit convention: failures that **abort the whole evaluation** log at `error` (device fetch L57, area fetch L72), while failures that **degrade one value and let the evaluation continue** log at `warn` (heater-status fetch → UNDEFINED at L81, and 'unable to determine current temperature' at L147). A sensor `fetchReadings()` failure here is the same kind of tolerated degradation — the reading maps to `null`, is filtered out by `mapNotNull`, and `averageTemperature()` carries on — yet it logs at `error`. Given the branch's stated goal is *consistent* failure-detail observability, this is the one remaining outlier: consider `warn` to match L81/L147. (The gemini bot flagged the same on L142.) Note this is a judgment call, not a documented rule — there is no logging-level convention in `docs/`; the call here is internal consistency with the heater-status path you just added. The 'Data inconsistency' device-not-found logs (L109/L121) also degrade-and-continue but represent persistent misconfiguration rather than a transient fetch failure, so keeping those at `error` is defensible — the fetch-failure pair is the inconsistency worth resolving."
+    }
+  ]
+}

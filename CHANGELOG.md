@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   type+target); no automatic evaluation or concrete rules yet. (#192)
 
 ### Changed
+- ECONOMY heating now computes the demand ratio over decidable areas only (those with both a current and a
+  target temperature); areas with a missing reading or target no longer dilute the ratio, and the heater
+  stays OFF when no area is decidable. (#211)
 - Expose `batteryLevel` (latest known battery percentage, from cache) in the `GET /devices/{uuid}` response;
   `null` when not battery-powered, not yet collected, or expired. (#191)
 
