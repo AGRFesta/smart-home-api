@@ -311,7 +311,7 @@ class EvaluateHeatingStateServiceTest {
         sut.execute()
 
         // Then
-        withClue("getActuatorStatus() failure must degrade to UNDEFINED, not throw") {
+        withClue("getActuatorStatus() failure is logged (warn) and degrades to UNDEFINED, not throw") {
             snapshots.captured.single().heaterStatus shouldBe ActuatorStatus.UNDEFINED
         }
     }
