@@ -211,6 +211,42 @@ class HeatingDecisionTest {
     }
 
     @Test
+    fun `decideEconomy() ignores undecidable areas when computing the demand ratio`() {
+        // Given
+        val areas = listOf(
+            aSnapshot(current = Temperature.of("15"), target = Temperature.of("20")), // decidable, below range -> demands heat
+            aSnapshot(current = null, target = Temperature.of("20")), // undecidable: reading unavailable
+            aSnapshot(current = Temperature.of("18"), target = null) // undecidable: no target configured
+        ) // demand ratio over decidable areas = 1/1 = 1.0
+
+        // When
+        val command = decideEconomy(areas, threshold = Percentage.of("0.5"))
+
+        // Then
+        withClue("undecidable areas are excluded from the denominator -> ratio 1/1 >= threshold -> heater ON") {
+            command shouldBe HeaterCommand.ON
+        }
+    }
+
+    @Test
+    fun `decideEconomy() returns OFF when every area is undecidable`() {
+        // Given
+        val areas = listOf(
+            aSnapshot(current = null, target = Temperature.of("20")), // undecidable: reading unavailable
+            aSnapshot(current = Temperature.of("18"), target = null), // undecidable: no target configured
+            aSnapshot(current = null, target = null) // undecidable: neither available
+        ) // no decidable area -> ratio over zero
+
+        // When
+        val command = decideEconomy(areas, threshold = Percentage.of("0.5"))
+
+        // Then
+        withClue("no decidable area -> heater OFF (no demand can be established)") {
+            command shouldBe HeaterCommand.OFF
+        }
+    }
+
+    @Test
     fun `decideEconomy() returns OFF when the demand ratio is below the threshold`() {
         // Given
         val inBandNoDemand = {
