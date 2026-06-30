@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-06-30
+
 ### Added
 - Add `GET /alerts` endpoint listing alerts, defaulting to the currently `OPEN` ones and filterable by
   `status`. Alerts are a stateful, idempotent, DB-persisted aggregate (at most one `OPEN` per

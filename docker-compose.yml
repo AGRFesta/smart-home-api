@@ -75,7 +75,7 @@ services:
         max-file: "3"
 
   smart-home-api:
-    image: "${APP_IMAGE_TAG:-agrfesta/smart-home-api:1.2.0}"
+    image: "${APP_IMAGE_TAG:-agrfesta/smart-home-api:1.3.0}"
     container_name: smart-home-api
     restart: unless-stopped
     mem_limit: 768M
