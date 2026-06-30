@@ -204,7 +204,7 @@ class HeatingDecisionTest {
     }
 
     @Test
-    fun `decideEconomy() returns OFF when the true demand ratio is below the threshold but HALF_UP would round it up`() {
+    fun `decideEconomy() returns OFF when true demand ratio is below threshold but HALF_UP would round it up`() {
         // Given
         val areas = List(5) { demandsHeat() } + List(3) { inBandNoDemand() } // demand ratio = 5/8 = 0.625
 
@@ -221,7 +221,11 @@ class HeatingDecisionTest {
     fun `decideEconomy() ignores undecidable areas when computing the demand ratio`() {
         // Given
         val areas = listOf(
-            aSnapshot(current = Temperature.of("15"), target = Temperature.of("20")), // decidable, below range -> demands heat
+            // decidable, below range -> demands heat
+            aSnapshot(
+                current = Temperature.of("15"),
+                target = Temperature.of("20")
+            ),
             aSnapshot(current = null, target = Temperature.of("20")), // undecidable: reading unavailable
             aSnapshot(current = Temperature.of("18"), target = null) // undecidable: no target configured
         ) // demand ratio over decidable areas = 1/1 = 1.0

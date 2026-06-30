@@ -78,8 +78,10 @@ class EvaluateHeatingStateService(
             .forEach { (heater, areaList) ->
                 val heaterStatus = heater.getActuatorStatus().fold(
                     ifLeft = {
-                        logger.warn("Unable to fetch heater status for heater '${heater.uuid}', " +
-                            "defaulting to UNDEFINED: $it")
+                        logger.warn(
+                            "Unable to fetch heater status for heater '${heater.uuid}', " +
+                                "defaulting to UNDEFINED: $it"
+                        )
                         ActuatorStatus.UNDEFINED
                     },
                     ifRight = { it }

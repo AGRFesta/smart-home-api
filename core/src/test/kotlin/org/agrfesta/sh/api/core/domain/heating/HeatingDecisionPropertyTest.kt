@@ -29,7 +29,12 @@ class HeatingDecisionPropertyTest {
     @Test
     fun `decideEconomy() turns ON exactly when the demand ratio meets the threshold, with no rounding`() {
         runBlocking {
-            checkAll(pbtConfig, Arb.int(0..12), Arb.int(0..12), Arb.percentage()) { demanding, nonDemanding, threshold ->
+            checkAll(
+                pbtConfig,
+                Arb.int(0..12),
+                Arb.int(0..12),
+                Arb.percentage()
+            ) { demanding, nonDemanding, threshold ->
                 // Given a non-empty set with a known demand count and no area above its range
                 if (demanding + nonDemanding == 0) return@checkAll
                 val areas = List(demanding) { demandsHeat() } + List(nonDemanding) { inBandNoDemand() }
