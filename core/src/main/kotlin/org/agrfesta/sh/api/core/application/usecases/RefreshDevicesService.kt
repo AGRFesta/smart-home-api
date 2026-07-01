@@ -40,7 +40,7 @@ class RefreshDevicesService(
             }
         val updatedDevices = providerDevices.mapNotNull { pd ->
             devices.find { it.deviceProviderId == pd.deviceProviderId && it.provider == pd.provider }
-                ?.copy(name = pd.name, status = DeviceStatus.PAIRED)
+                ?.copy(name = pd.name, status = DeviceStatus.PAIRED, model = pd.model)
         }
         updatedDevices.forEach { devicesRepository.update(it) }
         val detachedDevices = devices

@@ -10,6 +10,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus.DETACHED
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus.PAIRED
 import org.agrfesta.sh.api.core.domain.devices.Provider.NETATMO
@@ -203,6 +204,21 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     // create()
 
     @Test
+    fun `persist() and read back round-trips the device model`() {
+        every { timeProvider.now() } returns Instant.now()
+        val model = DeviceModel(aRandomUniqueString())
+        val device = aProviderDeviceData(model = model)
+        val deviceId = UUID.randomUUID()
+        devicesRepo.persist(deviceId, device)
+
+        val persisted = sut.getDeviceById(deviceId).shouldBeRight()
+
+        withClue("the model written on INSERT must be read back unchanged") {
+            persisted.model shouldBe model
+        }
+    }
+
+    @Test
     fun `create() Persists a device retrievable by the given UUID`() {
         every { timeProvider.now() } returns Instant.now()
         val device = aProviderDeviceData()
@@ -248,6 +264,22 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
                 it.name shouldBe updatedDevice.name
                 it.status shouldBe updatedDevice.status
             }
+    }
+
+    @Test
+    fun `update() rewrites the device model`() {
+        every { timeProvider.now() } returns Instant.now()
+        val data = aProviderDeviceData(model = DeviceModel(aRandomUniqueString()))
+        val deviceId = UUID.randomUUID()
+        devicesRepo.persist(deviceId, data)
+        val newModel = DeviceModel(aRandomUniqueString())
+        val updatedDevice = aDevice(data = data, uuid = deviceId).copy(model = newModel)
+
+        sut.update(updatedDevice).shouldBeRight()
+
+        withClue("update() must persist the refreshed model so a re-sync can repopulate it") {
+            sut.getDeviceById(deviceId).shouldBeRight().model shouldBe newModel
+        }
     }
 
     @Test

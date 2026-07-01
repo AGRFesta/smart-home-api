@@ -23,6 +23,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignm
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.domain.devices.AssignmentRole
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider.NETATMO
 import org.agrfesta.sh.api.core.domain.devices.Provider.SWITCHBOT
@@ -33,6 +34,7 @@ import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.providers.netatmo.NetatmoIntegrationAsserter
+import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType
 import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDevice
 import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDevicesListSuccessResponse
 import org.agrfesta.sh.api.providers.switchbot.toASwitchBotDeviceType
@@ -67,13 +69,16 @@ class DevicesIntegrationTest(
         val existingDetachedSBDeviceData = aProviderDeviceData(provider = SWITCHBOT)
         val orphanSBDeviceData = aProviderDeviceData(provider = SWITCHBOT)
         val newSBDeviceData = aProviderDeviceData(provider = SWITCHBOT)
+        // SWITCHBOT devices have empty features -> HUB_MINI -> this is the model the re-sync repopulates
+        val syncedModel = DeviceModel(SwitchBotDeviceType.HUB_MINI.model)
         val existingUuid = UUID.randomUUID()
         devicesDao.create(existingUuid, existingSBDeviceData).getOrElse { error("Failed to create device: $it") }
-        val expectedUpdatedDevice = aDevice(existingSBDeviceData, existingUuid)
+        val expectedUpdatedDevice = aDevice(existingSBDeviceData, existingUuid).copy(model = syncedModel)
         val detachedUuid = UUID.randomUUID()
         devicesDao.create(detachedUuid, existingDetachedSBDeviceData, DeviceStatus.DETACHED)
             .getOrElse { error("Failed to create device: $it") }
-        val expectedRePairedDevice = aDevice(existingDetachedSBDeviceData, detachedUuid, DeviceStatus.PAIRED)
+        val expectedRePairedDevice =
+            aDevice(existingDetachedSBDeviceData, detachedUuid, DeviceStatus.PAIRED).copy(model = syncedModel)
         val orphanUuid = UUID.randomUUID()
         devicesDao.create(orphanUuid, orphanSBDeviceData).getOrElse { error("Failed to create device: $it") }
         val expectedDetachedDevice = aDevice(orphanSBDeviceData, orphanUuid, DeviceStatus.DETACHED)
@@ -114,7 +119,7 @@ class DevicesIntegrationTest(
                 expectedUpdatedDevice,
                 expectedRePairedDevice,
                 expectedDetachedDevice,
-                newDevice.toDevice()
+                newDevice.toDevice().copy(model = syncedModel)
             )
     }
 
