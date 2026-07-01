@@ -3,6 +3,7 @@ package org.agrfesta.sh.api.persistence.jdbc.repositories
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
@@ -62,8 +63,8 @@ class DevicesJdbcRepository(
     fun persist(id: UUID, device: ProviderDeviceData, deviceStatus: DeviceStatus = DeviceStatus.PAIRED) {
         val sql = """
             INSERT INTO smart_home.device
-            (uuid, name, provider, status, provider_id, features, created_on, updated_on)
-            VALUES (:uuid, :name, :provider, :status, :providerId, :features, :createdOn, :updatedOn)
+            (uuid, name, provider, status, provider_id, features, model, created_on, updated_on)
+            VALUES (:uuid, :name, :provider, :status, :providerId, :features, :model, :createdOn, :updatedOn)
         """
         val params = mapOf(
             "uuid" to id,
@@ -72,6 +73,7 @@ class DevicesJdbcRepository(
             "status" to deviceStatus.name,
             "providerId" to device.deviceProviderId,
             "features" to device.features.map { it.name }.toTypedArray(),
+            "model" to device.model.value,
             "createdOn" to Timestamp.from(timeProvider.now()),
             "updatedOn" to null
         )
@@ -81,12 +83,13 @@ class DevicesJdbcRepository(
     fun update(device: Device) {
         val sql = """
             UPDATE smart_home.device
-            SET name = :name, status = :status, updated_on = :updatedOn
+            SET name = :name, status = :status, model = :model, updated_on = :updatedOn
             WHERE provider = :provider AND provider_id = :providerId
         """
         val params = mapOf(
             "name" to device.name,
             "status" to device.status.name,
+            "model" to device.model?.value,
             "updatedOn" to Timestamp.from(timeProvider.now()),
             "provider" to device.provider.name,
             "providerId" to device.deviceProviderId
@@ -107,7 +110,8 @@ object DeviceRowMapper : RowMapper<DeviceEntity> {
             status = rs.getStatus("status"),
             features = rs.getFeatures("features").toMutableSet(),
             createdOn = rs.getInstant("created_on"),
-            updatedOn = rs.findInstant("updated_on")
+            updatedOn = rs.findInstant("updated_on"),
+            model = rs.getString("model")?.let { DeviceModel(it) }
         )
     }
 }

@@ -9,11 +9,11 @@ import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.SensorReadings
 import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
 
-enum class SwitchBotDeviceType(val features: Set<DeviceFeature>) {
-    @JsonProperty("MeterPlus") METER_PLUS(setOf(SENSOR)),
-    @JsonProperty("Hub Mini") HUB_MINI(emptySet()),
-    @JsonProperty("WoIOSensor") WO_IO_SENSOR(setOf(SENSOR)),
-    @JsonProperty("Meter") METER(setOf(SENSOR))
+enum class SwitchBotDeviceType(val features: Set<DeviceFeature>, val model: String) {
+    @JsonProperty("MeterPlus") METER_PLUS(setOf(SENSOR), "switchbot/MeterPlus"),
+    @JsonProperty("Hub Mini") HUB_MINI(emptySet(), "switchbot/Hub Mini"),
+    @JsonProperty("WoIOSensor") WO_IO_SENSOR(setOf(SENSOR), "switchbot/WoIOSensor"),
+    @JsonProperty("Meter") METER(setOf(SENSOR), "switchbot/Meter")
 }
 
 data class SwitchBotSensorReadings(

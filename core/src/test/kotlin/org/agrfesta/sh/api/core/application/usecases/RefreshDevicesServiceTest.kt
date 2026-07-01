@@ -7,6 +7,7 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
@@ -121,12 +122,55 @@ class RefreshDevicesServiceTest {
 
         // Then
         result.newDevices.shouldBeEmpty()
-        withClue("updatedDevices should contain the stored device with refreshed name and PAIRED status") {
+        withClue("updatedDevices should contain the stored device with refreshed name, PAIRED status and model") {
             result.updatedDevices.shouldContainExactly(
-                storedDevice.copy(name = providerDeviceData.name, status = DeviceStatus.PAIRED)
+                storedDevice.copy(
+                    name = providerDeviceData.name,
+                    status = DeviceStatus.PAIRED,
+                    model = providerDeviceData.model
+                )
             )
         }
         result.detachedDevices.shouldBeEmpty()
+    }
+
+    @Test
+    fun `execute() a new device carries the provider model`() {
+        // Given
+        val newDeviceData = aProviderDeviceData()
+        val generatedUuid = UUID.randomUUID()
+        every { provider.getAllDevices() } returns listOf(newDeviceData).right()
+        every { randomGenerator.uuid() } returns generatedUuid
+        every { devicesRepository.create(generatedUuid, newDeviceData, any()) } returns Unit.right()
+
+        // When
+        val result = sut.execute().shouldBeRight()
+
+        // Then
+        withClue("a new device must carry the provider's model") {
+            result.newDevices.single().model shouldBe newDeviceData.model
+        }
+    }
+
+    @Test
+    fun `execute() repopulates the model of an updated device from the provider data`() {
+        // Given
+        val providerDeviceData = aProviderDeviceData()
+        val storedDevice = aDevice(
+            providerId = providerDeviceData.deviceProviderId,
+            provider = providerDeviceData.provider,
+            status = DeviceStatus.PAIRED
+        )
+        every { devicesRepository.getAll() } returns listOf(storedDevice).right()
+        every { provider.getAllDevices() } returns listOf(providerDeviceData).right()
+
+        // When
+        val result = sut.execute().shouldBeRight()
+
+        // Then
+        withClue("an updated device must carry the provider's model so a re-sync repopulates it") {
+            result.updatedDevices.single().model shouldBe providerDeviceData.model
+        }
     }
 
     @Test
@@ -166,7 +210,11 @@ class RefreshDevicesServiceTest {
         result.newDevices.shouldBeEmpty()
         withClue("detached device should be re-paired with status PAIRED") {
             result.updatedDevices.shouldContainExactly(
-                detachedDevice.copy(name = providerDeviceData.name, status = DeviceStatus.PAIRED)
+                detachedDevice.copy(
+                    name = providerDeviceData.name,
+                    status = DeviceStatus.PAIRED,
+                    model = providerDeviceData.model
+                )
             )
         }
         result.detachedDevices.shouldBeEmpty()
@@ -202,7 +250,11 @@ class RefreshDevicesServiceTest {
         }
         withClue("updatedDevices") {
             result.updatedDevices.shouldContainExactly(
-                storedMatchingDevice.copy(name = existingDeviceData.name, status = DeviceStatus.PAIRED)
+                storedMatchingDevice.copy(
+                    name = existingDeviceData.name,
+                    status = DeviceStatus.PAIRED,
+                    model = existingDeviceData.model
+                )
             )
         }
         withClue("detachedDevices") {
@@ -337,7 +389,11 @@ class RefreshDevicesServiceTest {
             provider = providerDeviceData.provider,
             status = DeviceStatus.PAIRED
         )
-        val expectedUpdatedDevice = storedDevice.copy(name = providerDeviceData.name, status = DeviceStatus.PAIRED)
+        val expectedUpdatedDevice = storedDevice.copy(
+            name = providerDeviceData.name,
+            status = DeviceStatus.PAIRED,
+            model = providerDeviceData.model
+        )
         every { devicesRepository.getAll() } returns listOf(storedDevice).right()
         every { provider.getAllDevices() } returns listOf(providerDeviceData).right()
         every { devicesRepository.update(expectedUpdatedDevice) } returns DeviceRepositoryError.left()

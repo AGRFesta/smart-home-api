@@ -74,12 +74,17 @@ For each registered provider:
 
 | Outcome       | Condition | Action |
 |---------------|-----------|--------|
-| **New**       | Device in snapshot, not in DB for that provider | Persist with status `PAIRED` |
-| **Updated**   | Device in snapshot and in DB for that provider | Refresh `name` and status → `PAIRED` |
-| **Detached**  | Device in DB for that provider, absent from snapshot | Update status → `DETACHED` |
+| **New**       | Device in snapshot, not in DB for that provider | Persist with status `PAIRED` and the provider-reported `model` |
+| **Updated**   | Device in snapshot and in DB for that provider | Refresh `name`, `model` and status → `PAIRED` |
+| **Detached**  | Device in DB for that provider, absent from snapshot | Update status → `DETACHED` (keeps last known `model`) |
 
 The operation is **best-effort**: a failure on a single device (e.g. a DB insert error) does not abort
 the synchronization. The remaining devices are processed independently.
+
+The persisted `model` is **nullable**: rows created before the `model` column existed carry `NULL`
+until the next successful sync repopulates it from the provider snapshot (for every device the provider
+reports, new and updated alike). Detached devices retain their last known `model`, since the provider no
+longer reports them.
 
 ---
 

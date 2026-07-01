@@ -8,7 +8,8 @@ data class Device(
     override val deviceProviderId: String,
     override val provider: Provider,
     val name: String,
-    val features: Set<DeviceFeature>
+    val features: Set<DeviceFeature>,
+    val model: DeviceModel? = null
 ) : DeviceProviderIdentity {
     constructor(uuid: UUID, providerData: ProviderDeviceData, status: DeviceStatus = DeviceStatus.PAIRED) : this(
         uuid = uuid,
@@ -16,10 +17,9 @@ data class Device(
         deviceProviderId = providerData.deviceProviderId,
         provider = providerData.provider,
         name = providerData.name,
-        features = providerData.features
+        features = providerData.features,
+        model = providerData.model
     )
-
-    fun asProviderData() = ProviderDeviceData(deviceProviderId, provider, name, features)
 
     fun isSensor(): Boolean = features.contains(DeviceFeature.SENSOR)
 
