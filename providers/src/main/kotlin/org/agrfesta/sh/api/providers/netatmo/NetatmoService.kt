@@ -5,6 +5,7 @@ import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesProvider
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.Provider.NETATMO
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
@@ -36,7 +37,8 @@ class NetatmoService(
                             deviceProviderId = module.id,
                             provider = provider,
                             name = module.name,
-                            features = setOf(SENSOR, ACTUATOR)
+                            features = setOf(SENSOR, ACTUATOR),
+                            model = DeviceModel("netatmo/Smarther")
                         )
                     }
             }

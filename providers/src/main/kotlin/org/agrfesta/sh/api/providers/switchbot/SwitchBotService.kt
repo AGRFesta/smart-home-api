@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesProvider
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError
@@ -32,7 +33,8 @@ class SwitchBotService(
                         deviceProviderId = it.deviceId,
                         provider = Provider.SWITCHBOT,
                         name = it.deviceName,
-                        features = it.deviceType.features
+                        features = it.deviceType.features,
+                        model = DeviceModel(it.deviceType.model)
                     )
                 }.right()
         } catch (e: Exception) {

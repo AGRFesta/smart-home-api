@@ -6,6 +6,7 @@ import org.agrfesta.sh.api.core.domain.devices.DeviceAreaAssignment
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -50,7 +51,8 @@ fun aDevice(
     deviceProviderId = data.deviceProviderId,
     provider = data.provider,
     name = data.name,
-    features = data.features
+    features = data.features,
+    model = data.model
 )
 
 fun aDeviceAggregate(
@@ -70,19 +72,22 @@ fun aProviderDeviceData(
     providerId: String = aRandomUniqueString(),
     provider: Provider = Provider.SWITCHBOT,
     name: String = aRandomUniqueString(),
-    features: Set<DeviceFeature> = emptySet()
-) = ProviderDeviceData(providerId, provider, name, features)
+    features: Set<DeviceFeature> = emptySet(),
+    model: DeviceModel = DeviceModel(aRandomUniqueString())
+) = ProviderDeviceData(providerId, provider, name, features, model)
 
 fun aSensorProviderData(
     providerId: String = aRandomUniqueString(),
     provider: Provider = Provider.SWITCHBOT,
     name: String = aRandomUniqueString(),
-    additionalFeatures: Set<DeviceFeature> = emptySet()
-) = ProviderDeviceData(providerId, provider, name, additionalFeatures + SENSOR)
+    additionalFeatures: Set<DeviceFeature> = emptySet(),
+    model: DeviceModel = DeviceModel(aRandomUniqueString())
+) = ProviderDeviceData(providerId, provider, name, additionalFeatures + SENSOR, model)
 
 fun anActuatorProviderData(
     providerId: String = aRandomUniqueString(),
     provider: Provider = Provider.SWITCHBOT,
     name: String = aRandomUniqueString(),
-    additionalFeatures: Set<DeviceFeature> = emptySet()
-) = ProviderDeviceData(providerId, provider, name, additionalFeatures + ACTUATOR)
+    additionalFeatures: Set<DeviceFeature> = emptySet(),
+    model: DeviceModel = DeviceModel(aRandomUniqueString())
+) = ProviderDeviceData(providerId, provider, name, additionalFeatures + ACTUATOR, model)
