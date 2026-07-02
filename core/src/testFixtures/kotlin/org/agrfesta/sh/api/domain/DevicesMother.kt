@@ -1,5 +1,7 @@
 package org.agrfesta.sh.api.domain
 
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DeviceDriver
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicePrototype
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceAggregate
 import org.agrfesta.sh.api.core.domain.devices.DeviceAreaAssignment
@@ -12,6 +14,7 @@ import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.test.mothers.aRandomUniqueString
 import java.time.Instant
 import java.util.*
+import kotlin.reflect.KClass
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 
 fun aDevice(
@@ -20,8 +23,9 @@ fun aDevice(
     provider: Provider = Provider.SWITCHBOT,
     status: DeviceStatus = DeviceStatus.PAIRED,
     name: String = aRandomUniqueString(),
-    features: Set<DeviceFeature> = emptySet()
-) = Device(uuid, status, providerId, provider, name, features)
+    features: Set<DeviceFeature> = emptySet(),
+    model: DeviceModel? = null
+) = Device(uuid, status, providerId, provider, name, features, model)
 
 fun aSensor(
     uuid: UUID = UUID.randomUUID(),
@@ -67,6 +71,18 @@ fun aDeviceAggregate(
     assignments: List<DeviceAreaAssignment> = emptyList(),
     batteryLevel: Int? = null
 ) = DeviceAggregate(uuid, status, providerId, provider, name, features, createdOn, updatedOn, assignments, batteryLevel)
+
+fun aDevicePrototype(
+    model: DeviceModel = DeviceModel(aRandomUniqueString()),
+    provider: Provider = Provider.SWITCHBOT,
+    driverType: KClass<out DeviceDriver> = DeviceDriver::class,
+    roles: Set<DeviceFeature> = emptySet()
+): DevicePrototype = object : DevicePrototype {
+    override val model = model
+    override val provider = provider
+    override val driverType = driverType
+    override val roles = roles
+}
 
 fun aProviderDeviceData(
     providerId: String = aRandomUniqueString(),

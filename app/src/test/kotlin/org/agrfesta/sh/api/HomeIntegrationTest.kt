@@ -15,6 +15,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepos
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.sh.api.core.application.usecases.heating.HeatingStrategySelector.Companion.HEATING_STRATEGY_KEY
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
@@ -42,7 +43,7 @@ class HomeIntegrationTest(
     @Test fun `getHome() returns area measurements populated from sensor readings in Redis`() {
         val area = anAreaDto()
         areasRepository.save(area)
-        val sensorData = aSensorProviderData()
+        val sensorData = aSensorProviderData(model = DeviceModel("switchbot/Meter"))
         val sensorId = randomGenerator.uuid()
         devicesRepository.create(sensorId, sensorData).shouldBeRight()
         assignSensorToAreaUseCase.execute(area.uuid, sensorId).shouldBeRight()

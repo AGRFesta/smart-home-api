@@ -5,6 +5,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevi
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.providers.switchbot.ConditionalOnSwitchBot
+import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.springframework.stereotype.Service
 
@@ -15,11 +16,10 @@ class SwitchBotDevicesFactory(
 ) : ProviderDevicesFactory {
     override val provider = Provider.SWITCHBOT
 
-    override fun createDevice(dto: Device): DeviceDriver {
-        return if (dto.features.isEmpty()) {
-            SwitchBotMiniHub(dto.uuid, dto.deviceProviderId)
+    override fun createDevice(record: Device): DeviceDriver =
+        if (record.model?.value == SwitchBotDeviceType.HUB_MINI.model) {
+            SwitchBotMiniHub(record.uuid, record.deviceProviderId)
         } else {
-            SwitchBotMeter(dto.uuid, dto.provider, dto.deviceProviderId, client)
+            SwitchBotMeter(record.uuid, record.provider, record.deviceProviderId, client)
         }
-    }
 }

@@ -3,10 +3,12 @@ package org.agrfesta.sh.api.core.application.usecases
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
+import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
 import org.agrfesta.sh.api.core.application.ports.inbounds.AssignActuatorToAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.ActuatorsAssignmentsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.failures.ActuatorAssignmentFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaFetchFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
@@ -23,7 +25,8 @@ import java.util.UUID
 class AssignActuatorToAreaService(
     private val areasRepository: AreasRepository,
     private val devicesRepository: DevicesRepository,
-    private val actuatorsAssignmentsRepository: ActuatorsAssignmentsRepository
+    private val actuatorsAssignmentsRepository: ActuatorsAssignmentsRepository,
+    private val catalog: DeviceModelCatalog
 ) : AssignActuatorToAreaUseCase {
 
     override fun execute(areaId: UUID, deviceId: UUID): Either<ActuatorAssignmentFailure, Unit> =
@@ -33,10 +36,11 @@ class AssignActuatorToAreaService(
                 devicesRepository.getDeviceById(deviceId)
                     .mapLeft { it.toActuatorFailure() }
                     .flatMap { device ->
-                        if (device.isActuator()) {
+                        val roles = catalog.rolesOf(device.model)
+                        if (DeviceFeature.ACTUATOR in roles) {
                             actuatorsAssignmentsRepository.assign(areaId, deviceId)
                         } else {
-                            NotAnActuator(device.uuid, device.features).left()
+                            NotAnActuator(device.uuid, roles).left()
                         }
                     }
             }
