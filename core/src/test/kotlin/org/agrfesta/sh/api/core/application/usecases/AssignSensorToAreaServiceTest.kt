@@ -48,7 +48,7 @@ class AssignSensorToAreaServiceTest {
     @Test fun `execute() returns Right(Unit) when the device model has the SENSOR role`() {
         val area = anAreaDto()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
-        val device = aDevice(model = sensorModel, features = emptySet())
+        val device = aDevice(model = sensorModel)
         every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
         every { sensorsAssignmentsRepository.assign(area.uuid, device.uuid) } returns Unit.right()
 
@@ -59,28 +59,28 @@ class AssignSensorToAreaServiceTest {
     @Test fun `execute() returns NotASensor when the device model lacks the SENSOR role`() {
         val area = anAreaDto()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
-        val device = aDevice(model = actuatorModel, features = emptySet())
+        val device = aDevice(model = actuatorModel)
         every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
 
         sut.execute(areaId = area.uuid, deviceId = device.uuid)
             .shouldBeLeft()
             .shouldBeInstanceOf<NotASensor>().also {
                 it.deviceId shouldBe device.uuid
-                it.features shouldBe setOf(ACTUATOR)
+                it.roles shouldBe setOf(ACTUATOR)
             }
     }
 
     @Test fun `execute() returns NotASensor with empty roles when the device model is unknown`() {
         val area = anAreaDto()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
-        val device = aDevice(model = DeviceModel("test/unknown"), features = emptySet())
+        val device = aDevice(model = DeviceModel("test/unknown"))
         every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
 
         sut.execute(areaId = area.uuid, deviceId = device.uuid)
             .shouldBeLeft()
             .shouldBeInstanceOf<NotASensor>().also {
                 it.deviceId shouldBe device.uuid
-                it.features shouldBe emptySet()
+                it.roles shouldBe emptySet()
             }
     }
 

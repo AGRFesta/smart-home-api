@@ -18,6 +18,7 @@ import org.agrfesta.sh.api.controllers.DevicesRefreshResponse
 import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.controllers.toDevice
 import org.agrfesta.sh.api.controllers.toResponse
+import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignmentsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
@@ -37,7 +38,6 @@ import org.agrfesta.sh.api.providers.netatmo.NetatmoIntegrationAsserter
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType
 import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDevice
 import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDevicesListSuccessResponse
-import org.agrfesta.sh.api.providers.switchbot.toASwitchBotDeviceType
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -51,7 +51,8 @@ class DevicesIntegrationTest(
     private val areasRepository: AreasRepository,
     private val sensorsAssignmentsRepository: SensorsAssignmentsRepository,
     private val objectMapper: ObjectMapper,
-    private val netatmoIntegrationAsserter: NetatmoIntegrationAsserter
+    private val netatmoIntegrationAsserter: NetatmoIntegrationAsserter,
+    private val catalog: DeviceModelCatalog
 ) : AbstractIntegrationTest() {
     private val now = Instant.now()
 
@@ -69,7 +70,7 @@ class DevicesIntegrationTest(
         val existingDetachedSBDeviceData = aProviderDeviceData(provider = SWITCHBOT)
         val orphanSBDeviceData = aProviderDeviceData(provider = SWITCHBOT)
         val newSBDeviceData = aProviderDeviceData(provider = SWITCHBOT)
-        // SWITCHBOT devices have empty features -> HUB_MINI -> this is the model the re-sync repopulates
+        // SWITCHBOT devices with an unrecognized model -> HUB_MINI -> the model the re-sync repopulates
         val syncedModel = DeviceModel(SwitchBotDeviceType.HUB_MINI.model)
         val existingUuid = UUID.randomUUID()
         devicesDao.create(existingUuid, existingSBDeviceData).getOrElse { error("Failed to create device: $it") }
@@ -108,18 +109,18 @@ class DevicesIntegrationTest(
         newDevice.deviceProviderId shouldBe newSBDeviceData.deviceProviderId
         newDevice.provider shouldBe newSBDeviceData.provider
         newDevice.name shouldBe newSBDeviceData.name
-        newDevice.features shouldBe newSBDeviceData.features
+        newDevice.features shouldBe catalog.rolesOf(syncedModel)
         result.updatedDevices.shouldContainExactlyInAnyOrder(
-            expectedUpdatedDevice.toResponse(),
-            expectedRePairedDevice.toResponse()
+            expectedUpdatedDevice.toResponse(catalog),
+            expectedRePairedDevice.toResponse(catalog)
         )
-        result.detachedDevices.shouldContainExactly(expectedDetachedDevice.toResponse())
+        result.detachedDevices.shouldContainExactly(expectedDetachedDevice.toResponse(catalog))
         devicesDao.getAll().getOrElse { error("Failed to fetch devices: $it") }
             .shouldContainExactlyInAnyOrder(
                 expectedUpdatedDevice,
                 expectedRePairedDevice,
                 expectedDetachedDevice,
-                newDevice.toDevice().copy(model = syncedModel)
+                newDevice.toDevice(syncedModel)
             )
     }
 
@@ -142,13 +143,13 @@ class DevicesIntegrationTest(
             .extract()
             .`as`(Array<DeviceResponse>::class.java)
 
-        response.toList().shouldContainExactly(aDevice(switchbotData, switchbotId).toResponse())
+        response.toList().shouldContainExactly(aDevice(switchbotData, switchbotId).toResponse(catalog))
     }
 
     @Test
     fun `GET device by id returns the persisted aggregate with its current sensor assignment`() {
         val deviceId = UUID.randomUUID()
-        val sensorData = aSensorProviderData()
+        val sensorData = aSensorProviderData(model = DeviceModel(SwitchBotDeviceType.METER.model))
         devicesDao.create(deviceId, sensorData).getOrElse { error("Failed to create device: $it") }
         val area = anAreaDto(name = aRandomUniqueString())
         areasRepository.save(area).getOrElse { error("Failed to save area: $it") }
@@ -204,6 +205,7 @@ class DevicesIntegrationTest(
         objectMapper.aSwitchBotDevice(
             deviceId = deviceProviderId,
             deviceName = name,
-            deviceType = features.toASwitchBotDeviceType()
+            deviceType = SwitchBotDeviceType.entries.firstOrNull { it.model == model.value }
+                ?: SwitchBotDeviceType.HUB_MINI
         )
 }

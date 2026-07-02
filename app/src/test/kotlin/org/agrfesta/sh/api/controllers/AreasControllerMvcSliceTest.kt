@@ -18,6 +18,8 @@ import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignActuatorFromA
 import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignSensorFromAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.UpdateAreaUseCase
 import org.agrfesta.sh.api.core.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.failures.ActuatorNotAssigned
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
@@ -454,7 +456,7 @@ class AreasControllerMvcSliceTest(
         val areaId = UUID.randomUUID()
         val device = anActuator()
         every { assignSensorToAreaUseCase.execute(areaId, device.uuid) } returns
-            NotASensor(device.uuid, device.features).left()
+            NotASensor(device.uuid, roles = setOf(ACTUATOR)).left()
 
         val responseBody: String = mockMvc.perform(
             put("/areas/$areaId/sensors/${device.uuid}").authenticated()
@@ -519,7 +521,7 @@ class AreasControllerMvcSliceTest(
         val areaId = UUID.randomUUID()
         val device = aSensor()
         every { assignActuatorToAreaUseCase.execute(areaId, device.uuid) } returns
-            NotAnActuator(device.uuid, device.features).left()
+            NotAnActuator(device.uuid, roles = setOf(SENSOR)).left()
 
         val responseBody: String = mockMvc.perform(
             put("/areas/$areaId/actuators/${device.uuid}").authenticated()

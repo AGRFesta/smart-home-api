@@ -10,8 +10,6 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import org.agrfesta.sh.api.core.domain.devices.AssignmentRole
 import org.agrfesta.sh.api.core.domain.devices.DeviceAreaAssignment
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus.PAIRED
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
@@ -50,7 +48,7 @@ class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
         val now = Instant.now().truncatedTo(ChronoUnit.MICROS)
         every { timeProvider.now() } returns now
         val deviceId = UUID.randomUUID()
-        val data = aProviderDeviceData(features = setOf(SENSOR))
+        val data = aProviderDeviceData()
         devicesRepo.persist(deviceId, data)
 
         // When
@@ -61,7 +59,7 @@ class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
         aggregate.deviceProviderId shouldBe data.deviceProviderId
         aggregate.provider shouldBe data.provider
         aggregate.name shouldBe data.name
-        aggregate.features shouldBe data.features
+        aggregate.model shouldBe data.model
         aggregate.status shouldBe PAIRED
         aggregate.createdOn shouldBe now
         aggregate.updatedOn shouldBe null
@@ -113,7 +111,7 @@ class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
         // Given
         every { timeProvider.now() } returns Instant.now()
         val deviceId = UUID.randomUUID()
-        devicesRepo.persist(deviceId, aProviderDeviceData(features = setOf(SENSOR, ACTUATOR)))
+        devicesRepo.persist(deviceId, aProviderDeviceData())
         val sensorArea = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val actuatorArea = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         sensorsAssignmentsRepo.persistAssignment(areaId = sensorArea.uuid, deviceId = deviceId)

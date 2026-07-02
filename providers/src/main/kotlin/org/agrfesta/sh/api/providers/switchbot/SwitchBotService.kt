@@ -33,7 +33,6 @@ class SwitchBotService(
                         deviceProviderId = it.deviceId,
                         provider = Provider.SWITCHBOT,
                         name = it.deviceName,
-                        features = it.deviceType.features,
                         model = DeviceModel(it.deviceType.model)
                     )
                 }.right()

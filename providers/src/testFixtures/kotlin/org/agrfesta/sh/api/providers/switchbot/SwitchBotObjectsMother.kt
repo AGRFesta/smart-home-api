@@ -3,7 +3,6 @@ package org.agrfesta.sh.api.providers.switchbot
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.agrfesta.sh.api.core.domain.commons.Temperature
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.test.mothers.aRandomIntHumidity
 import org.agrfesta.test.mothers.aRandomIntPercentage
 import org.agrfesta.test.mothers.aRandomTemperature
@@ -28,9 +27,3 @@ fun ObjectMapper.aSwitchBotDeviceStatusResponse(
             "message": "success"
         }
     """.trimIndent())
-
-fun Set<DeviceFeature>.toASwitchBotDeviceType(): SwitchBotDeviceType {
-    if (contains(DeviceFeature.ACTUATOR)) error("At moment there is no SwitchBot ACTUATOR device mapped")
-    if (isEmpty()) return SwitchBotDeviceType.HUB_MINI
-    return SwitchBotDeviceType.entries.filter { it.features.contains(DeviceFeature.SENSOR) }.random()
-}

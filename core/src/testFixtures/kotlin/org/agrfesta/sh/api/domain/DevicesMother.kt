@@ -6,8 +6,6 @@ import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceAggregate
 import org.agrfesta.sh.api.core.domain.devices.DeviceAreaAssignment
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
@@ -23,18 +21,18 @@ fun aDevice(
     provider: Provider = Provider.SWITCHBOT,
     status: DeviceStatus = DeviceStatus.PAIRED,
     name: String = aRandomUniqueString(),
-    features: Set<DeviceFeature> = emptySet(),
-    model: DeviceModel? = null
-) = Device(uuid, status, providerId, provider, name, features, model)
+    model: DeviceModel = DeviceModel(aRandomUniqueString())
+) = Device(uuid, status, providerId, provider, name, model)
 
+// Thin aliases kept for readability at call sites; roles are now derived from [model] via the catalog.
 fun aSensor(
     uuid: UUID = UUID.randomUUID(),
     providerId: String = aRandomUniqueString(),
     provider: Provider = Provider.SWITCHBOT,
     status: DeviceStatus = DeviceStatus.PAIRED,
     name: String = aRandomUniqueString(),
-    additionalFeatures: Set<DeviceFeature> = emptySet()
-) = Device(uuid, status, providerId, provider, name, additionalFeatures + SENSOR)
+    model: DeviceModel = DeviceModel(aRandomUniqueString())
+) = aDevice(uuid, providerId, provider, status, name, model)
 
 fun anActuator(
     uuid: UUID = UUID.randomUUID(),
@@ -42,8 +40,8 @@ fun anActuator(
     provider: Provider = Provider.SWITCHBOT,
     status: DeviceStatus = DeviceStatus.PAIRED,
     name: String = aRandomUniqueString(),
-    additionalFeatures: Set<DeviceFeature> = emptySet()
-) = Device(uuid, status, providerId, provider, name, additionalFeatures + ACTUATOR)
+    model: DeviceModel = DeviceModel(aRandomUniqueString())
+) = aDevice(uuid, providerId, provider, status, name, model)
 
 fun aDevice(
     data: ProviderDeviceData,
@@ -55,7 +53,6 @@ fun aDevice(
     deviceProviderId = data.deviceProviderId,
     provider = data.provider,
     name = data.name,
-    features = data.features,
     model = data.model
 )
 
@@ -65,12 +62,14 @@ fun aDeviceAggregate(
     providerId: String = aRandomUniqueString(),
     provider: Provider = Provider.SWITCHBOT,
     name: String = aRandomUniqueString(),
-    features: Set<DeviceFeature> = emptySet(),
+    model: DeviceModel = DeviceModel(aRandomUniqueString()),
     createdOn: Instant = Instant.now(),
     updatedOn: Instant? = null,
     assignments: List<DeviceAreaAssignment> = emptyList(),
     batteryLevel: Int? = null
-) = DeviceAggregate(uuid, status, providerId, provider, name, features, createdOn, updatedOn, assignments, batteryLevel)
+) = DeviceAggregate(
+    uuid, status, providerId, provider, name, model, createdOn, updatedOn, assignments, batteryLevel
+)
 
 fun aDevicePrototype(
     model: DeviceModel = DeviceModel(aRandomUniqueString()),
@@ -88,22 +87,20 @@ fun aProviderDeviceData(
     providerId: String = aRandomUniqueString(),
     provider: Provider = Provider.SWITCHBOT,
     name: String = aRandomUniqueString(),
-    features: Set<DeviceFeature> = emptySet(),
     model: DeviceModel = DeviceModel(aRandomUniqueString())
-) = ProviderDeviceData(providerId, provider, name, features, model)
+) = ProviderDeviceData(providerId, provider, name, model)
 
+// Thin aliases kept for readability at call sites; roles are now derived from [model] via the catalog.
 fun aSensorProviderData(
     providerId: String = aRandomUniqueString(),
     provider: Provider = Provider.SWITCHBOT,
     name: String = aRandomUniqueString(),
-    additionalFeatures: Set<DeviceFeature> = emptySet(),
     model: DeviceModel = DeviceModel(aRandomUniqueString())
-) = ProviderDeviceData(providerId, provider, name, additionalFeatures + SENSOR, model)
+) = ProviderDeviceData(providerId, provider, name, model)
 
 fun anActuatorProviderData(
     providerId: String = aRandomUniqueString(),
     provider: Provider = Provider.SWITCHBOT,
     name: String = aRandomUniqueString(),
-    additionalFeatures: Set<DeviceFeature> = emptySet(),
     model: DeviceModel = DeviceModel(aRandomUniqueString())
-) = ProviderDeviceData(providerId, provider, name, additionalFeatures + ACTUATOR, model)
+) = ProviderDeviceData(providerId, provider, name, model)

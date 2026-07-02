@@ -33,8 +33,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
         val device = aProviderDeviceData(
             providerId = aRandomUniqueString(),
             provider = aProvider(),
-            name = aRandomUniqueString(),
-            features = emptySet() // TODO various features
+            name = aRandomUniqueString()
         )
         val deviceId = UUID.randomUUID()
         devicesRepo.persist(deviceId, device)

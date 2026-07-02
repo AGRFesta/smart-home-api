@@ -15,7 +15,7 @@ data object SensorAlreadyAssigned : SensorAssignmentFailure
 
 data class NotAnActuator(
     val deviceId: UUID,
-    val features: Set<DeviceFeature>
+    val roles: Set<DeviceFeature>
 ) : ActuatorAssignmentFailure
 
 data object AssignmentRepositoryError :
@@ -28,5 +28,5 @@ data object SameAreaAssignment : SensorAssignmentFailure, ActuatorAssignmentFail
 
 data class NotASensor(
     val deviceId: UUID,
-    val features: Set<DeviceFeature>
+    val roles: Set<DeviceFeature>
 ) : SensorAssignmentFailure

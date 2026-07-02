@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
+import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetDeviceUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetDevicesUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.InspectDeviceUseCase
@@ -37,6 +38,7 @@ class DevicesDiagnosticsControllerMvcSliceTest(
     private val objectMapper: ObjectMapper,
     @MockkBean private val inspectDeviceUseCase: InspectDeviceUseCase,
     // Required by the @WebMvcTest(DevicesController) context but not exercised by these tests
+    @Suppress("UnusedPrivateProperty") @MockkBean private val deviceModelCatalog: DeviceModelCatalog,
     @Suppress("UnusedPrivateProperty") @MockkBean private val getDeviceUseCase: GetDeviceUseCase,
     @Suppress("UnusedPrivateProperty") @MockkBean private val getDevicesUseCase: GetDevicesUseCase,
     @Suppress("UnusedPrivateProperty") @MockkBean private val refreshDevicesUseCase: RefreshDevicesUseCase

@@ -2,14 +2,12 @@ package org.agrfesta.sh.api.persistence.jdbc.repositories
 
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.domain.devices.Device
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.persistence.jdbc.entities.DeviceEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
-import org.agrfesta.sh.api.persistence.jdbc.utils.getFeatures
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getProvider
 import org.agrfesta.sh.api.persistence.jdbc.utils.getStatus
@@ -39,8 +37,7 @@ class DevicesJdbcRepository(
 
     fun findDevices(
         provider: Provider?,
-        status: DeviceStatus?,
-        feature: DeviceFeature?
+        status: DeviceStatus?
     ): Collection<DeviceEntity> {
         val conditions = mutableListOf<String>()
         val params = mutableMapOf<String, Any>()
@@ -52,10 +49,6 @@ class DevicesJdbcRepository(
             conditions += "status = :status"
             params["status"] = it.name
         }
-        feature?.let {
-            conditions += ":feature = ANY(features)"
-            params["feature"] = it.name
-        }
         val where = if (conditions.isEmpty()) "" else " WHERE ${conditions.joinToString(" AND ")}"
         return jdbcTemplate.query("SELECT * FROM smart_home.device$where;", params, DeviceRowMapper)
     }
@@ -63,8 +56,8 @@ class DevicesJdbcRepository(
     fun persist(id: UUID, device: ProviderDeviceData, deviceStatus: DeviceStatus = DeviceStatus.PAIRED) {
         val sql = """
             INSERT INTO smart_home.device
-            (uuid, name, provider, status, provider_id, features, model, created_on, updated_on)
-            VALUES (:uuid, :name, :provider, :status, :providerId, :features, :model, :createdOn, :updatedOn)
+            (uuid, name, provider, status, provider_id, model, created_on, updated_on)
+            VALUES (:uuid, :name, :provider, :status, :providerId, :model, :createdOn, :updatedOn)
         """
         val params = mapOf(
             "uuid" to id,
@@ -72,7 +65,6 @@ class DevicesJdbcRepository(
             "provider" to device.provider.name,
             "status" to deviceStatus.name,
             "providerId" to device.deviceProviderId,
-            "features" to device.features.map { it.name }.toTypedArray(),
             "model" to device.model.value,
             "createdOn" to Timestamp.from(timeProvider.now()),
             "updatedOn" to null
@@ -89,7 +81,7 @@ class DevicesJdbcRepository(
         val params = mapOf(
             "name" to device.name,
             "status" to device.status.name,
-            "model" to device.model?.value,
+            "model" to device.model.value,
             "updatedOn" to Timestamp.from(timeProvider.now()),
             "provider" to device.provider.name,
             "providerId" to device.deviceProviderId
@@ -108,10 +100,9 @@ object DeviceRowMapper : RowMapper<DeviceEntity> {
             providerId = rs.getString("provider_id"),
             name = rs.getString("name"),
             status = rs.getStatus("status"),
-            features = rs.getFeatures("features").toMutableSet(),
             createdOn = rs.getInstant("created_on"),
             updatedOn = rs.findInstant("updated_on"),
-            model = rs.getString("model")?.let { DeviceModel(it) }
+            model = DeviceModel(rs.getString("model"))
         )
     }
 }

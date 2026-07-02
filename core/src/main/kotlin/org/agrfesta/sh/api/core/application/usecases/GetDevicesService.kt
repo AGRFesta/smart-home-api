@@ -1,6 +1,7 @@
 package org.agrfesta.sh.api.core.application.usecases
 
 import arrow.core.Either
+import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetDevicesUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.domain.devices.Device
@@ -12,7 +13,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class GetDevicesService(
-    private val devicesRepository: DevicesRepository
+    private val devicesRepository: DevicesRepository,
+    private val catalog: DeviceModelCatalog
 ) : GetDevicesUseCase {
 
     override fun execute(
@@ -20,5 +22,11 @@ class GetDevicesService(
         status: DeviceStatus?,
         feature: DeviceFeature?
     ): Either<GetDevicesFailure, Collection<Device>> =
-        devicesRepository.getDevices(provider, status, feature)
+        devicesRepository.getDevices(provider, status).map { devices ->
+            if (feature == null) {
+                devices
+            } else {
+                devices.filter { feature in catalog.rolesOf(it.model) }
+            }
+        }
 }

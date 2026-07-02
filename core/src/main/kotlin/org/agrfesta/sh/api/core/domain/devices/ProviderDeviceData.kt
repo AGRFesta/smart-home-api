@@ -4,6 +4,5 @@ data class ProviderDeviceData(
     override val deviceProviderId: String,
     override val provider: Provider,
     val name: String,
-    val features: Set<DeviceFeature>,
     val model: DeviceModel
 ) : DeviceProviderIdentity
