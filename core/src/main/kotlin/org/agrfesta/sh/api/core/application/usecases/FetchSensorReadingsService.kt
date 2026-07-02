@@ -14,7 +14,6 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.devices.Sensor
 import org.agrfesta.sh.api.core.application.ports.outbounds.home.HomeStateRefreshPublisher
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.domain.devices.Device
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.devices.ThermoHygroDataValue
 import org.agrfesta.sh.api.core.domain.failures.FetchSensorReadingsError
 import org.agrfesta.sh.api.core.domain.failures.FetchSensorReadingsFailure
@@ -47,7 +46,7 @@ class FetchSensorReadingsService(
     }
 
     private fun collectReadings(device: Device, driver: DeviceDriver) {
-        if (!device.features.contains(DeviceFeature.SENSOR) || driver !is Sensor) return
+        if (driver !is Sensor) return
         driver.fetchReadings()
             .onRight { readings ->
                 if (readings is ThermoHygroDataValue) {

@@ -14,6 +14,8 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepositor
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignmentsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
+import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.domain.anActuatorProviderData
 import org.agrfesta.sh.api.domain.anAreaDto
@@ -168,7 +170,8 @@ class AreasIntegrationTest(
         val area = anAreaDto()
         areasRepository.save(area)
         val deviceId = uuid
-        devicesRepository.create(deviceId, aSensorProviderData()).getOrElse { error("Failed to create sensor: $it") }
+        devicesRepository.create(deviceId, aSensorProviderData(model = DeviceModel("switchbot/Meter")))
+            .getOrElse { error("Failed to create sensor: $it") }
 
         given()
             .authenticated()
@@ -221,8 +224,10 @@ class AreasIntegrationTest(
         val area = anAreaDto()
         areasRepository.save(area)
         val deviceId = uuid
-        devicesRepository.create(deviceId, anActuatorProviderData())
-            .getOrElse { error("Failed to create actuator: $it") }
+        devicesRepository.create(
+            deviceId,
+            anActuatorProviderData(provider = Provider.NETATMO, model = DeviceModel("netatmo/Smarther"))
+        ).getOrElse { error("Failed to create actuator: $it") }
 
         given()
             .authenticated()
