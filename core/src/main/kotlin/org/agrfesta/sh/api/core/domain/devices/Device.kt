@@ -20,8 +20,4 @@ data class Device(
         features = providerData.features,
         model = providerData.model
     )
-
-    fun isSensor(): Boolean = features.contains(DeviceFeature.SENSOR)
-
-    fun isActuator(): Boolean = features.contains(DeviceFeature.ACTUATOR)
 }

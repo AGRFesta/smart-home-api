@@ -282,6 +282,21 @@ class FetchSensorReadingsServiceTest {
         verify(exactly = 0) { readingsRepository.save(any(), any()) }
     }
 
+    @Test fun `execute() reads from a Sensor driver even when the device record has no SENSOR feature`() {
+        val deviceRecord = aDevice(features = emptySet())
+        val sensorDriver = mockk<Sensor>()
+        val thermoHygro = aThermoHygroDataValue()
+        every { devicesRepository.getAll() } returns listOf(deviceRecord).right()
+        every { factory.createDevice(deviceRecord) } returns sensorDriver
+        every { sensorDriver.fetchReadings() } returns thermoHygro.right()
+        every { readingsRepository.save(sensorDriver, thermoHygro.thermoHygroData) } returns Unit.right()
+
+        val result = sut.execute()
+
+        result.shouldBeRight()
+        verify(exactly = 1) { readingsRepository.save(sensorDriver, thermoHygro.thermoHygroData) }
+    }
+
     @Test fun `execute() calls save() with thermo-hygro data when sensor returns ThermoHygroDataValue`() {
         val deviceRecord = aSensor()
         val sensorDriver = mockk<Sensor>()

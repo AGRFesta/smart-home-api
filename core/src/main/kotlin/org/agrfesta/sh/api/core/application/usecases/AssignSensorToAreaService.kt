@@ -3,10 +3,12 @@ package org.agrfesta.sh.api.core.application.usecases
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
+import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
 import org.agrfesta.sh.api.core.application.ports.inbounds.AssignSensorToAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignmentsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.failures.AreaFetchFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
@@ -23,7 +25,8 @@ import java.util.UUID
 class AssignSensorToAreaService(
     private val areasRepository: AreasRepository,
     private val devicesRepository: DevicesRepository,
-    private val sensorsAssignmentsRepository: SensorsAssignmentsRepository
+    private val sensorsAssignmentsRepository: SensorsAssignmentsRepository,
+    private val catalog: DeviceModelCatalog
 ) : AssignSensorToAreaUseCase {
 
     override fun execute(areaId: UUID, deviceId: UUID): Either<SensorAssignmentFailure, Unit> =
@@ -33,10 +36,11 @@ class AssignSensorToAreaService(
                 devicesRepository.getDeviceById(deviceId)
                     .mapLeft { it.toSensorFailure() }
                     .flatMap { device ->
-                        if (device.isSensor()) {
+                        val roles = catalog.rolesOf(device.model)
+                        if (DeviceFeature.SENSOR in roles) {
                             sensorsAssignmentsRepository.assign(areaId, deviceId)
                         } else {
-                            NotASensor(device.uuid, device.features).left()
+                            NotASensor(device.uuid, roles).left()
                         }
                     }
             }

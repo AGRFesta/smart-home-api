@@ -92,14 +92,19 @@ longer reports them.
 
 Synchronization is the only **producer**. Everything else is a **consumer** of persisted devices. A consumer
 that needs to talk to the physical device does **not** use the `Device` record directly: it rebuilds a live
-`DeviceDriver` via the matching `ProviderDevicesFactory` (keyed by `provider`) and then exercises the
-driver's *capabilities* (`Sensor`, `BatteryPowered`, `Inspectable`, …). The persisted `features`
-(`SENSOR` / `ACTUATOR`) gate which capability is relevant.
+`DeviceDriver` via the matching `ProviderDevicesFactory` (keyed by `provider`, discriminating on `model`) and
+then exercises the driver's *capabilities* (`Sensor`, `BatteryPowered`, `Inspectable`, …).
+
+The persisted **`model`** is the single source of truth: a `DeviceModelCatalog` of `DevicePrototype`s maps
+each `model` to its driver type and its **roles** (`SENSOR` / `ACTUATOR`). Consumers resolve the relevant
+capability from the driver itself (`driver is Sensor`) or the role from the catalog
+(`catalog.rolesOf(model)`) — never from the persisted `features`, which is retained on the record and in the
+API responses but no longer drives any logic.
 
 | Consumer | Trigger | Uses the device for |
 |----------|---------|---------------------|
 | `RefreshDevicesService` | `POST /devices/synchronizations` (manual) | **Producer** — create / update status |
-| `FetchSensorReadingsService` | `DevicesDataFetchScheduler`, cron every minute | Builds a driver per device; for `SENSOR` + `Sensor` drivers reads measurements; for `BatteryPowered` drivers stores the battery level; then publishes a home-state refresh |
+| `FetchSensorReadingsService` | `DevicesDataFetchScheduler`, cron every minute | Builds a driver per device; for `Sensor` drivers reads measurements; for `BatteryPowered` drivers stores the battery level; then publishes a home-state refresh |
 | `SnapshotSensorHistoryUseCase` | `DevicesDataHistoryScheduler`, cron every 15 min | Snapshots current sensor readings into history |
 | `GetDevicesService` | `GET /devices` | Lean list, filterable by `provider` / `status` / `feature` |
 | `GetDeviceService` | `GET /devices/{uuid}` | Full `DeviceAggregate`: base fields + area assignments + cached `batteryLevel` |

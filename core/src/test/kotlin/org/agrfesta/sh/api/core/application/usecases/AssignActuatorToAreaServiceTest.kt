@@ -8,14 +8,18 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
+import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.ActuatorsAssignmentsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
-import org.agrfesta.sh.api.domain.aSensor
-import org.agrfesta.sh.api.domain.anActuator
+import org.agrfesta.sh.api.domain.aDevice
+import org.agrfesta.sh.api.domain.aDevicePrototype
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -25,12 +29,26 @@ class AssignActuatorToAreaServiceTest {
     private val devicesRepository: DevicesRepository = mockk()
     private val actuatorsAssignmentsRepository: ActuatorsAssignmentsRepository = mockk()
 
-    private val sut = AssignActuatorToAreaService(areasRepository, devicesRepository, actuatorsAssignmentsRepository)
+    private val actuatorModel = DeviceModel("test/actuator")
+    private val sensorModel = DeviceModel("test/sensor")
+    private val catalog = DeviceModelCatalog(
+        listOf(
+            aDevicePrototype(model = actuatorModel, roles = setOf(ACTUATOR)),
+            aDevicePrototype(model = sensorModel, roles = setOf(SENSOR))
+        )
+    )
 
-    @Test fun `execute() returns Right(Unit) on success`() {
+    private val sut = AssignActuatorToAreaService(
+        areasRepository,
+        devicesRepository,
+        actuatorsAssignmentsRepository,
+        catalog
+    )
+
+    @Test fun `execute() returns Right(Unit) when the device model has the ACTUATOR role`() {
         val area = anAreaDto()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
-        val device = anActuator()
+        val device = aDevice(model = actuatorModel, features = emptySet())
         every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
         every { actuatorsAssignmentsRepository.assign(area.uuid, device.uuid) } returns Unit.right()
 
@@ -38,17 +56,31 @@ class AssignActuatorToAreaServiceTest {
             .shouldBeRight()
     }
 
-    @Test fun `execute() returns NotAnActuator when device lacks ACTUATOR feature`() {
+    @Test fun `execute() returns NotAnActuator when the device model lacks the ACTUATOR role`() {
         val area = anAreaDto()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
-        val device = aSensor()
+        val device = aDevice(model = sensorModel, features = emptySet())
         every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
 
         sut.execute(areaId = area.uuid, deviceId = device.uuid)
             .shouldBeLeft()
             .shouldBeInstanceOf<NotAnActuator>().also {
                 it.deviceId shouldBe device.uuid
-                it.features shouldBe device.features
+                it.features shouldBe setOf(SENSOR)
+            }
+    }
+
+    @Test fun `execute() returns NotAnActuator with empty roles when the device model is unknown`() {
+        val area = anAreaDto()
+        every { areasRepository.getAreaById(area.uuid) } returns area.right()
+        val device = aDevice(model = DeviceModel("test/unknown"), features = emptySet())
+        every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
+
+        sut.execute(areaId = area.uuid, deviceId = device.uuid)
+            .shouldBeLeft()
+            .shouldBeInstanceOf<NotAnActuator>().also {
+                it.deviceId shouldBe device.uuid
+                it.features shouldBe emptySet()
             }
     }
 

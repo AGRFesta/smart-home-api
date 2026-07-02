@@ -8,17 +8,20 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsHistoryDataRepository
 import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupError
 import org.agrfesta.sh.api.core.domain.failures.SensorHistoryRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.SnapshotSensorHistoryError
 import org.agrfesta.sh.api.domain.aDevice
-import org.agrfesta.sh.api.domain.aSensor
+import org.agrfesta.sh.api.domain.aDevicePrototype
 import org.agrfesta.sh.api.domain.anActuator
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.agrfesta.test.mothers.nowNoMills
@@ -30,8 +33,14 @@ class SnapshotSensorHistoryServiceTest {
     private val historyRepository: SensorsHistoryDataRepository = mockk()
     private val timeProvider: TimeProvider = mockk()
 
+    private val sensorModel = DeviceModel("test/sensor")
+    private val catalog = DeviceModelCatalog(listOf(aDevicePrototype(model = sensorModel, roles = setOf(SENSOR))))
+
     private val sut =
-        SnapshotSensorHistoryService(devicesRepository, readingsRepository, historyRepository, timeProvider)
+        SnapshotSensorHistoryService(devicesRepository, readingsRepository, historyRepository, timeProvider, catalog)
+
+    /** A device whose persisted model resolves, via the catalog, to the SENSOR role. */
+    private fun aSensorDevice() = aDevice(model = sensorModel, features = emptySet())
 
     @Test fun `execute() returns Left(SnapshotSensorHistoryError) when device repository getAll() fails`() {
         // Given
@@ -74,7 +83,7 @@ class SnapshotSensorHistoryServiceTest {
     @Test
     fun `execute() does not interact with history repository when readings lookup returns null for a sensor`() {
         // Given
-        val sensor = aSensor()
+        val sensor = aSensorDevice()
         every { devicesRepository.getAll() } returns listOf(sensor).right()
         every { readingsRepository.findBy(sensor) } returns null.right()
 
@@ -90,7 +99,7 @@ class SnapshotSensorHistoryServiceTest {
     @Test
     fun `execute() does not interact with history repository when readings lookup fails for a sensor`() {
         // Given
-        val sensor = aSensor()
+        val sensor = aSensorDevice()
         every { devicesRepository.getAll() } returns listOf(sensor).right()
         every { readingsRepository.findBy(sensor) } returns ReadingsLookupError(Exception("cache error")).left()
 
@@ -106,7 +115,7 @@ class SnapshotSensorHistoryServiceTest {
     @Test
     fun `execute() returns Right(Unit) and persists temperature and humidity when a sensor has readings available`() {
         // Given
-        val sensor = aSensor()
+        val sensor = aSensorDevice()
         val readings = aRandomThermoHygroData()
         val now = nowNoMills()
         every { devicesRepository.getAll() } returns listOf(sensor).right()
@@ -126,8 +135,8 @@ class SnapshotSensorHistoryServiceTest {
 
     @Test fun `execute() returns Right(Unit) and persists data independently for each sensor`() {
         // Given
-        val sensor1 = aSensor()
-        val sensor2 = aSensor()
+        val sensor1 = aSensorDevice()
+        val sensor2 = aSensorDevice()
         val readings1 = aRandomThermoHygroData()
         val readings2 = aRandomThermoHygroData()
         val now = nowNoMills()
@@ -153,8 +162,8 @@ class SnapshotSensorHistoryServiceTest {
 
     @Test fun `execute() continues processing remaining sensors when one has no cached readings`() {
         // Given
-        val missingSensor = aSensor()
-        val successSensor = aSensor()
+        val missingSensor = aSensorDevice()
+        val successSensor = aSensorDevice()
         val readings = aRandomThermoHygroData()
         val now = nowNoMills()
         every { devicesRepository.getAll() } returns listOf(missingSensor, successSensor).right()
@@ -179,7 +188,7 @@ class SnapshotSensorHistoryServiceTest {
 
     @Test fun `execute() does not query readings repository for non-sensor devices`() {
         // Given
-        val sensor = aSensor()
+        val sensor = aSensorDevice()
         val nonSensor = aDevice(features = emptySet())
         val readings = aRandomThermoHygroData()
         val now = nowNoMills()
@@ -201,7 +210,7 @@ class SnapshotSensorHistoryServiceTest {
 
     @Test fun `execute() continues processing when persistTemperature fails for a sensor`() {
         // Given
-        val sensor = aSensor()
+        val sensor = aSensorDevice()
         val readings = aRandomThermoHygroData()
         val now = nowNoMills()
         every { devicesRepository.getAll() } returns listOf(sensor).right()
@@ -222,7 +231,7 @@ class SnapshotSensorHistoryServiceTest {
 
     @Test fun `execute() continues processing when persistHumidity fails for a sensor`() {
         // Given
-        val sensor = aSensor()
+        val sensor = aSensorDevice()
         val readings = aRandomThermoHygroData()
         val now = nowNoMills()
         every { devicesRepository.getAll() } returns listOf(sensor).right()

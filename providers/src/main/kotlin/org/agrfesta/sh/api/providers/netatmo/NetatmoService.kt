@@ -24,6 +24,9 @@ class NetatmoService(
     companion object {
         const val NETATMO_ACCESS_TOKEN_CACHE_KEY = "provider.netatmo.access-token"
         const val NETATMO_REFRESH_TOKEN_CACHE_KEY = "provider.netatmo.refresh-token"
+
+        /** Provider-qualified model reported for the Netatmo Smarther thermostat. */
+        const val SMARTHER_MODEL = "netatmo/Smarther"
     }
 
     override fun getAllDevices(): Either<DevicesProviderFailure, Collection<ProviderDeviceData>> = runBlocking {
@@ -38,7 +41,7 @@ class NetatmoService(
                             provider = provider,
                             name = module.name,
                             features = setOf(SENSOR, ACTUATOR),
-                            model = DeviceModel("netatmo/Smarther")
+                            model = DeviceModel(SMARTHER_MODEL)
                         )
                     }
             }
