@@ -4,16 +4,20 @@ import arrow.core.right
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
+import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.verify
+import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetDeviceUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetDevicesUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.InspectDeviceUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.RefreshDevicesUseCase
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus.PAIRED
 import org.agrfesta.sh.api.core.domain.devices.Provider.SWITCHBOT
 import org.agrfesta.sh.api.domain.aDevice
@@ -36,6 +40,7 @@ class DevicesGetControllerMvcSliceTest(
     private val mockMvc: MockMvc,
     private val objectMapper: ObjectMapper,
     @MockkBean private val getDevicesUseCase: GetDevicesUseCase,
+    @MockkBean private val deviceModelCatalog: DeviceModelCatalog,
     // Required by the @WebMvcTest(DevicesController) context but not exercised by these tests
     @Suppress("UnusedPrivateProperty") @MockkBean private val refreshDevicesUseCase: RefreshDevicesUseCase,
     @Suppress("UnusedPrivateProperty") @MockkBean private val getDeviceUseCase: GetDeviceUseCase,
@@ -64,8 +69,10 @@ class DevicesGetControllerMvcSliceTest(
 
     @Test fun `getDevices() returns 200 with the devices in DeviceResponse shape`() {
         // Given
-        val device = aDevice(features = setOf(SENSOR))
+        val model = DeviceModel("test/sensor")
+        val device = aDevice(model = model)
         every { getDevicesUseCase.execute(any(), any(), any()) } returns listOf(device).right()
+        every { deviceModelCatalog.rolesOf(model) } returns setOf(SENSOR)
 
         // When
         val responseBody = mockMvc.perform(get("/devices").authenticated())
@@ -75,7 +82,27 @@ class DevicesGetControllerMvcSliceTest(
         // Then
         val response: List<DeviceResponse> =
             objectMapper.readValue(responseBody, object : TypeReference<List<DeviceResponse>>() {})
-        response.shouldContainExactly(device.toResponse())
+        response.shouldContainExactly(device.toResponse(deviceModelCatalog))
+    }
+
+    @Test fun `getDevices() derives the features field from the device model via the catalog`() {
+        // Given
+        val model = DeviceModel("test/sensor")
+        val device = aDevice(model = model) // stored features default to empty: must not be the source
+        every { getDevicesUseCase.execute(any(), any(), any()) } returns listOf(device).right()
+        every { deviceModelCatalog.rolesOf(model) } returns setOf(SENSOR)
+
+        // When
+        val responseBody = mockMvc.perform(get("/devices").authenticated())
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        // Then
+        val response: List<DeviceResponse> =
+            objectMapper.readValue(responseBody, object : TypeReference<List<DeviceResponse>>() {})
+        withClue("features must be derived from the model's catalog roles, not read from the device") {
+            response.single().features shouldBe setOf(SENSOR)
+        }
     }
 
     @Test fun `getDevices() binds provider, status and feature query params and forwards them to the use case`() {

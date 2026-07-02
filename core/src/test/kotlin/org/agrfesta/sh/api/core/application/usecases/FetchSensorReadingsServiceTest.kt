@@ -75,7 +75,7 @@ class FetchSensorReadingsServiceTest {
 
     @Test
     fun `execute() returns Right(Unit) and does not interact with readings repository when no device is a sensor`() {
-        val noFeatureDevice = aDevice(features = emptySet())
+        val noFeatureDevice = aDevice()
         val actuator = anActuator()
         every { devicesRepository.getAll() } returns listOf(noFeatureDevice, actuator).right()
         every { factory.createDevice(noFeatureDevice) } returns mockk<DeviceDriver>()
@@ -124,7 +124,7 @@ class FetchSensorReadingsServiceTest {
     @Test fun `execute() saves only thermo-hygro results among mixed device and sensor outcomes`() {
         val thermoHygroRecord = aSensor()
         val failingRecord = aSensor()
-        val noFeatureRecord = aDevice(features = emptySet())
+        val noFeatureRecord = aDevice()
         val thermoHygroDriver = mockk<Sensor>()
         val failingDriver = mockk<Sensor>()
         val thermoHygro = aThermoHygroDataValue()
@@ -283,7 +283,7 @@ class FetchSensorReadingsServiceTest {
     }
 
     @Test fun `execute() reads from a Sensor driver even when the device record has no SENSOR feature`() {
-        val deviceRecord = aDevice(features = emptySet())
+        val deviceRecord = aDevice()
         val sensorDriver = mockk<Sensor>()
         val thermoHygro = aThermoHygroDataValue()
         every { devicesRepository.getAll() } returns listOf(deviceRecord).right()

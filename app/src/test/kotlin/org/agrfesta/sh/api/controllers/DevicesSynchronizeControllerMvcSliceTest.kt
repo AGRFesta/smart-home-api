@@ -8,6 +8,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
+import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetDeviceUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetDevicesUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.InspectDeviceUseCase
@@ -34,6 +35,8 @@ class DevicesSynchronizeControllerMvcSliceTest(
     private val mockMvc: MockMvc,
     private val objectMapper: ObjectMapper,
     @MockkBean private val refreshDevicesUseCase: RefreshDevicesUseCase,
+    // Invoked when mapping synced devices to responses; relaxed so derived roles default to empty.
+    @Suppress("UnusedPrivateProperty") @MockkBean(relaxed = true) private val deviceModelCatalog: DeviceModelCatalog,
     // Required by the @WebMvcTest(DevicesController) context but not exercised by these tests
     @Suppress("UnusedPrivateProperty") @MockkBean private val getDevicesUseCase: GetDevicesUseCase,
     @Suppress("UnusedPrivateProperty") @MockkBean private val getDeviceUseCase: GetDeviceUseCase,

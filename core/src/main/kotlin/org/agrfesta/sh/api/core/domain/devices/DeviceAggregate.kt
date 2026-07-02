@@ -15,7 +15,7 @@ data class DeviceAggregate(
     override val deviceProviderId: String,
     override val provider: Provider,
     val name: String,
-    val features: Set<DeviceFeature>,
+    val model: DeviceModel,
     val createdOn: Instant,
     val updatedOn: Instant?,
     val assignments: List<DeviceAreaAssignment>,

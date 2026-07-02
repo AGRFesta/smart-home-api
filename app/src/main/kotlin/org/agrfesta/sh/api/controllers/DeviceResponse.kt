@@ -1,5 +1,6 @@
 package org.agrfesta.sh.api.controllers
 
+import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
@@ -15,4 +16,5 @@ data class DeviceResponse(
     val features: Set<DeviceFeature>
 )
 
-fun Device.toResponse() = DeviceResponse(uuid, status, deviceProviderId, provider, name, features)
+fun Device.toResponse(catalog: DeviceModelCatalog) =
+    DeviceResponse(uuid, status, deviceProviderId, provider, name, catalog.rolesOf(model))

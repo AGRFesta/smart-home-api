@@ -40,7 +40,7 @@ class SnapshotSensorHistoryServiceTest {
         SnapshotSensorHistoryService(devicesRepository, readingsRepository, historyRepository, timeProvider, catalog)
 
     /** A device whose persisted model resolves, via the catalog, to the SENSOR role. */
-    private fun aSensorDevice() = aDevice(model = sensorModel, features = emptySet())
+    private fun aSensorDevice() = aDevice(model = sensorModel)
 
     @Test fun `execute() returns Left(SnapshotSensorHistoryError) when device repository getAll() fails`() {
         // Given
@@ -70,7 +70,7 @@ class SnapshotSensorHistoryServiceTest {
     @Test
     fun `execute() returns Right(Unit) and does not interact with readings repository when no sensor is present`() {
         // Given
-        every { devicesRepository.getAll() } returns listOf(aDevice(features = emptySet()), anActuator()).right()
+        every { devicesRepository.getAll() } returns listOf(aDevice(), anActuator()).right()
 
         // When
         val result = sut.execute()
@@ -189,7 +189,7 @@ class SnapshotSensorHistoryServiceTest {
     @Test fun `execute() does not query readings repository for non-sensor devices`() {
         // Given
         val sensor = aSensorDevice()
-        val nonSensor = aDevice(features = emptySet())
+        val nonSensor = aDevice()
         val readings = aRandomThermoHygroData()
         val now = nowNoMills()
         every { devicesRepository.getAll() } returns listOf(sensor, nonSensor).right()

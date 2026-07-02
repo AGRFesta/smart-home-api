@@ -81,10 +81,9 @@ For each registered provider:
 The operation is **best-effort**: a failure on a single device (e.g. a DB insert error) does not abort
 the synchronization. The remaining devices are processed independently.
 
-The persisted `model` is **nullable**: rows created before the `model` column existed carry `NULL`
-until the next successful sync repopulates it from the provider snapshot (for every device the provider
-reports, new and updated alike). Detached devices retain their last known `model`, since the provider no
-longer reports them.
+The persisted `model` is **always set** (`NOT NULL`): it is populated from the provider snapshot on
+every sync, for every device the provider reports (new and updated alike). Detached devices retain
+their last known `model`, since the provider no longer reports them.
 
 ---
 
@@ -98,8 +97,8 @@ then exercises the driver's *capabilities* (`Sensor`, `BatteryPowered`, `Inspect
 The persisted **`model`** is the single source of truth: a `DeviceModelCatalog` of `DevicePrototype`s maps
 each `model` to its driver type and its **roles** (`SENSOR` / `ACTUATOR`). Consumers resolve the relevant
 capability from the driver itself (`driver is Sensor`) or the role from the catalog
-(`catalog.rolesOf(model)`) — never from the persisted `features`, which is retained on the record and in the
-API responses but no longer drives any logic.
+(`catalog.rolesOf(model)`). The `features` array in the API responses is a presentation-only projection of
+those roles, computed via `catalog.rolesOf(model)`.
 
 | Consumer | Trigger | Uses the device for |
 |----------|---------|---------------------|

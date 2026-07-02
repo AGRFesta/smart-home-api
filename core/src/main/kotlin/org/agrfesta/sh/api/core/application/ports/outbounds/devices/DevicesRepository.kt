@@ -2,7 +2,6 @@ package org.agrfesta.sh.api.core.application.ports.outbounds.devices
 
 import arrow.core.Either
 import org.agrfesta.sh.api.core.domain.devices.Device
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
@@ -46,14 +45,12 @@ interface DevicesRepository {
      *
      * @param provider when set, restricts the result to devices of this [Provider].
      * @param status when set, restricts the result to devices with this [DeviceStatus].
-     * @param feature when set, restricts the result to devices exposing this [DeviceFeature].
      * @return [Either.Right] with the matching [Device] collection (possibly empty),
      * or [Either.Left] with [GetDevicesFailure] if a database error occurs.
      */
     fun getDevices(
         provider: Provider? = null,
-        status: DeviceStatus? = null,
-        feature: DeviceFeature? = null
+        status: DeviceStatus? = null
     ): Either<GetDevicesFailure, Collection<Device>>
 
     /**

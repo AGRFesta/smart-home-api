@@ -3,8 +3,8 @@ package org.agrfesta.sh.api.persistence.jdbc.repositories
 import org.agrfesta.sh.api.core.domain.devices.AssignmentRole
 import org.agrfesta.sh.api.core.domain.devices.DeviceAggregate
 import org.agrfesta.sh.api.core.domain.devices.DeviceAreaAssignment
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
-import org.agrfesta.sh.api.persistence.jdbc.utils.getFeatures
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getProvider
 import org.agrfesta.sh.api.persistence.jdbc.utils.getStatus
@@ -58,7 +58,7 @@ class DeviceAggregateJdbcRepository(
                 d.provider,
                 d.provider_id,
                 d.status,
-                d.features,
+                d.model,
                 d.created_on,
                 d.updated_on,
                 asg.area_uuid AS assignment_area_uuid,
@@ -85,7 +85,7 @@ object DeviceAggregateRowMapper : RowMapper<DeviceAggregate> {
         deviceProviderId = rs.getString("provider_id"),
         provider = rs.getProvider("provider"),
         name = rs.getString("name"),
-        features = rs.getFeatures("features"),
+        model = DeviceModel(rs.getString("model")),
         createdOn = rs.getInstant("created_on"),
         updatedOn = rs.findInstant("updated_on"),
         assignments = emptyList()
