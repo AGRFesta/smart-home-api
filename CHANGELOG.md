@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Derive the `features` array on `GET /devices*` from the device `model` via the catalog; an unknown
+  model yields empty `features`. Wire shape unchanged. (#222)
+
 ## [1.3.2] - 2026-07-02
 
 ## [1.3.1] - 2026-07-01

@@ -1,5 +1,6 @@
 package org.agrfesta.sh.api.controllers
 
+import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
 import org.agrfesta.sh.api.core.domain.devices.AssignmentRole
 import org.agrfesta.sh.api.core.domain.devices.DeviceAggregate
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
@@ -33,13 +34,13 @@ data class AssignmentResponse(
     val role: AssignmentRole
 )
 
-fun DeviceAggregate.toResponse() = DeviceAggregateResponse(
+fun DeviceAggregate.toResponse(catalog: DeviceModelCatalog) = DeviceAggregateResponse(
     uuid = uuid,
     name = name,
     provider = provider,
     deviceProviderId = deviceProviderId,
     status = status,
-    features = features,
+    features = catalog.rolesOf(model),
     createdOn = createdOn,
     updatedOn = updatedOn,
     assignments = assignments.map { AssignmentResponse(it.areaUuid, it.areaName, it.role) },

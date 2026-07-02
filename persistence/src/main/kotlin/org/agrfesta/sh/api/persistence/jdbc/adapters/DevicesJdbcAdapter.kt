@@ -5,7 +5,6 @@ import arrow.core.left
 import arrow.core.right
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.domain.devices.Device
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
@@ -45,10 +44,9 @@ class DevicesJdbcAdapter(
 
     override fun getDevices(
         provider: Provider?,
-        status: DeviceStatus?,
-        feature: DeviceFeature?
+        status: DeviceStatus?
     ): Either<GetDevicesFailure, Collection<Device>> = try {
-        devicesRepo.findDevices(provider, status, feature).map { it.toDevice() }.right()
+        devicesRepo.findDevices(provider, status).map { it.toDevice() }.right()
     } catch (e: DataAccessException) {
         logger.error("Unexpected persistence error fetching devices", e)
         DeviceRepositoryError.left()

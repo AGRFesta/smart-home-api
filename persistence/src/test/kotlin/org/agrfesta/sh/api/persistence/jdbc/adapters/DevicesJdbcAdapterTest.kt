@@ -8,8 +8,6 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus.DETACHED
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus.PAIRED
@@ -48,8 +46,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
         val device = aProviderDeviceData(
             providerId = aRandomUniqueString(),
             provider = aProvider(),
-            name = aRandomUniqueString(),
-            features = emptySet() // TODO various features
+            name = aRandomUniqueString()
         )
         val deviceId = UUID.randomUUID()
         devicesRepo.persist(deviceId, device)
@@ -59,7 +56,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
                 it.deviceProviderId shouldBe device.deviceProviderId
                 it.provider shouldBe device.provider
                 it.name shouldBe device.name
-                it.features shouldBe device.features
+                it.model shouldBe device.model
             }
     }
 
@@ -148,53 +145,10 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `getDevices() filters by feature`() {
-        every { timeProvider.now() } returns Instant.now()
-        devicesRepo.persist(UUID.randomUUID(), aProviderDeviceData(features = setOf(SENSOR)))
-        devicesRepo.persist(UUID.randomUUID(), aProviderDeviceData(features = setOf(ACTUATOR)))
-
-        val result = sut.getDevices(feature = SENSOR).shouldBeRight()
-
-        withClue("only devices exposing SENSOR should be returned") {
-            result.map { it.features }.shouldContainExactly(listOf(setOf(SENSOR)))
-        }
-    }
-
-    @Test
-    fun `getDevices() combines provider, status and feature filters with AND semantics`() {
-        every { timeProvider.now() } returns Instant.now()
-        val matchingId = UUID.randomUUID()
-        val matchingData = aProviderDeviceData(provider = SWITCHBOT, features = setOf(SENSOR))
-        devicesRepo.persist(matchingId, matchingData, PAIRED)
-        // decoys, each differing from the filter in exactly one dimension
-        devicesRepo.persist(
-            UUID.randomUUID(),
-            aProviderDeviceData(provider = NETATMO, features = setOf(SENSOR)),
-            PAIRED
-        )
-        devicesRepo.persist(
-            UUID.randomUUID(),
-            aProviderDeviceData(provider = SWITCHBOT, features = setOf(SENSOR)),
-            DETACHED
-        )
-        devicesRepo.persist(
-            UUID.randomUUID(),
-            aProviderDeviceData(provider = SWITCHBOT, features = setOf(ACTUATOR)),
-            PAIRED
-        )
-
-        val result = sut.getDevices(provider = SWITCHBOT, status = PAIRED, feature = SENSOR).shouldBeRight()
-
-        withClue("only the device matching all three filters should be returned") {
-            result.shouldContainExactly(aDevice(matchingData, matchingId, PAIRED))
-        }
-    }
-
-    @Test
     fun `getDevices() Returns DeviceRepositoryError when fails to fetch devices`() {
         every { timeProvider.now() } returns Instant.now()
         val failure = DataAccessResourceFailureException("devices fetching failure")
-        every { devicesRepo.findDevices(any(), any(), any()) } throws failure
+        every { devicesRepo.findDevices(any(), any()) } throws failure
 
         sut.getDevices()
             .shouldBeLeft()
@@ -231,7 +185,7 @@ class DevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
                 it.deviceProviderId shouldBe device.deviceProviderId
                 it.provider shouldBe device.provider
                 it.name shouldBe device.name
-                it.features shouldBe device.features
+                it.model shouldBe device.model
             }
     }
 

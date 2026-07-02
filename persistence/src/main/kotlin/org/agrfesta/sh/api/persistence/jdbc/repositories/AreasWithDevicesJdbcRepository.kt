@@ -2,7 +2,7 @@ package org.agrfesta.sh.api.persistence.jdbc.repositories
 
 import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
 import org.agrfesta.sh.api.core.domain.devices.Device
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.springframework.jdbc.core.ResultSetExtractor
@@ -60,18 +60,13 @@ class AreasWithDevicesJdbcRepository(
             provider = Provider.valueOf(rs.getString("provider")),
             deviceProviderId = rs.getString("provider_id"),
             status = DeviceStatus.valueOf(rs.getString("status")),
-            features = parseFeatures(rs.getArray("features"))
+            model = DeviceModel(rs.getString("model"))
         )
         if (rs.getString("device_kind") == "ACTUATOR") {
             builder.actuators.add(device)
         } else { // treat SENSOR and any other/NULL as sensor
             builder.sensors.add(device)
         }
-    }
-
-    private fun parseFeatures(array: java.sql.Array): Set<DeviceFeature> {
-        val objArray = array.array as Array<*>
-        return objArray.mapNotNull { it?.toString()?.let(DeviceFeature::valueOf) }.toSet()
     }
 
     companion object {
@@ -85,7 +80,7 @@ class AreasWithDevicesJdbcRepository(
                 d.provider,
                 d.provider_id,
                 d.status,
-                d.features,
+                d.model,
                 ad.device_kind
             FROM smart_home.area a
             LEFT JOIN (

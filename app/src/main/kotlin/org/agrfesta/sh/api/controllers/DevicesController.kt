@@ -1,6 +1,7 @@
 package org.agrfesta.sh.api.controllers
 
 import arrow.core.Either
+import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetDeviceUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetDevicesUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.InspectDeviceUseCase
@@ -35,7 +36,8 @@ class DevicesController(
     private val refreshDevicesUseCase: RefreshDevicesUseCase,
     private val getDevicesUseCase: GetDevicesUseCase,
     private val getDeviceUseCase: GetDeviceUseCase,
-    private val inspectDeviceUseCase: InspectDeviceUseCase
+    private val inspectDeviceUseCase: InspectDeviceUseCase,
+    private val catalog: DeviceModelCatalog
 ) {
     @GetMapping
     fun getDevices(
@@ -47,13 +49,13 @@ class DevicesController(
             is Either.Left -> when (result.value) {
                 DeviceRepositoryError -> internalServerError().body(MessageResponse("Unable to retrieve devices!"))
             }
-            is Either.Right -> ok(result.value.map { it.toResponse() })
+            is Either.Right -> ok(result.value.map { it.toResponse(catalog) })
         }
 
     @GetMapping("/{uuid}")
     fun getById(@PathVariable uuid: UUID): ResponseEntity<Any> =
         when (val result = getDeviceUseCase.execute(uuid)) {
-            is Either.Right -> ok(result.value.toResponse())
+            is Either.Right -> ok(result.value.toResponse(catalog))
             is Either.Left -> when (result.value) {
                 is DeviceNotFound -> notFound().build()
                 DeviceRepositoryError -> internalServerError()
@@ -82,7 +84,7 @@ class DevicesController(
             is Either.Left -> when (result.value) {
                 RefreshDevicesError -> internalServerError().body(MessageResponse("Device synchronization failed!"))
             }
-            is Either.Right -> ok(result.value.toResponse())
+            is Either.Right -> ok(result.value.toResponse(catalog))
         }
 }
 
@@ -92,8 +94,8 @@ data class DevicesRefreshResponse(
     val detachedDevices: Collection<DeviceResponse> = emptyList()
 )
 
-fun RefreshDevicesResult.toResponse() = DevicesRefreshResponse(
-    newDevices = newDevices.map { it.toResponse() },
-    updatedDevices = updatedDevices.map { it.toResponse() },
-    detachedDevices = detachedDevices.map { it.toResponse() }
+fun RefreshDevicesResult.toResponse(catalog: DeviceModelCatalog) = DevicesRefreshResponse(
+    newDevices = newDevices.map { it.toResponse(catalog) },
+    updatedDevices = updatedDevices.map { it.toResponse(catalog) },
+    detachedDevices = detachedDevices.map { it.toResponse(catalog) }
 )

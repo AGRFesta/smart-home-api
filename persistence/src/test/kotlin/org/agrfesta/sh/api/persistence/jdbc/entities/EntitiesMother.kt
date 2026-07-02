@@ -1,8 +1,6 @@
 package org.agrfesta.sh.api.persistence.jdbc.entities
 
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
-import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.SensorDataType
@@ -27,21 +25,22 @@ fun aDeviceEntity(
     provider: Provider = Provider.entries.toTypedArray().random(),
     status: DeviceStatus = DeviceStatus.entries.toTypedArray().random(),
     providerId: String = aRandomUniqueString(),
-    features: MutableSet<DeviceFeature> = mutableSetOf(),
     createdOn: Instant = Instant.now(),
-    updatedOn: Instant? = null
-) = DeviceEntity(uuid, providerId, provider, name, status, features, createdOn, updatedOn)
+    updatedOn: Instant? = null,
+    model: DeviceModel = DeviceModel(aRandomUniqueString())
+) = DeviceEntity(uuid, providerId, provider, name, status, createdOn, updatedOn, model)
 
+// Thin aliases kept for readability at call sites; roles are now derived from [model] via the catalog.
 fun aSensorEntity(
     uuid: UUID = UUID.randomUUID(),
     name: String = aRandomUniqueString(),
     provider: Provider = Provider.entries.toTypedArray().random(),
     status: DeviceStatus = DeviceStatus.entries.toTypedArray().random(),
     providerId: String = aRandomUniqueString(),
-    features: MutableSet<DeviceFeature> = mutableSetOf(SENSOR),
     createdOn: Instant = Instant.now(),
-    updatedOn: Instant? = null
-) = aDeviceEntity(uuid, name, provider, status, providerId, features, createdOn, updatedOn)
+    updatedOn: Instant? = null,
+    model: DeviceModel = DeviceModel(aRandomUniqueString())
+) = aDeviceEntity(uuid, name, provider, status, providerId, createdOn, updatedOn, model)
 
 fun anActuatorEntity(
     uuid: UUID = UUID.randomUUID(),
@@ -49,10 +48,10 @@ fun anActuatorEntity(
     provider: Provider = Provider.entries.toTypedArray().random(),
     status: DeviceStatus = DeviceStatus.entries.toTypedArray().random(),
     providerId: String = aRandomUniqueString(),
-    features: MutableSet<DeviceFeature> = mutableSetOf(ACTUATOR),
     createdOn: Instant = Instant.now(),
-    updatedOn: Instant? = null
-) = aDeviceEntity(uuid, name, provider, status, providerId, features, createdOn, updatedOn)
+    updatedOn: Instant? = null,
+    model: DeviceModel = DeviceModel(aRandomUniqueString())
+) = aDeviceEntity(uuid, name, provider, status, providerId, createdOn, updatedOn, model)
 
 fun aSensorAssignmentEntity(
     uuid: UUID = UUID.randomUUID(),
