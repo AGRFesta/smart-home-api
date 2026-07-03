@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Return a typed failure or a per-heater outcome report from the heating evaluation instead of
+  swallowing every error in logs; the heating scheduler now logs an error when the evaluation fails. (#201)
+
 ## [1.3.3] - 2026-07-03
 
 ### Changed
