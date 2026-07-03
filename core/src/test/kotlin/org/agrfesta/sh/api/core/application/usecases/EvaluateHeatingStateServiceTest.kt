@@ -12,7 +12,6 @@ import io.mockk.slot
 import io.mockk.verify
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
-import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ActuatorOperationFailure
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.FailureByException
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
@@ -32,13 +31,20 @@ import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.Provider
+import org.agrfesta.sh.api.core.domain.failures.ActuatorOperationFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.AreasUnavailable
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.DevicesUnavailable
+import org.agrfesta.sh.api.core.domain.failures.HeatingFlagUnavailable
 import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
+import org.agrfesta.sh.api.core.domain.heating.ActuationOutcome
 import org.agrfesta.sh.api.core.domain.heating.HeatableAreaSnapshot
+import org.agrfesta.sh.api.core.domain.heating.HeaterActionOutcome
 import org.agrfesta.sh.api.core.domain.heating.HeaterCommand
 import org.agrfesta.sh.api.core.domain.heating.HeatingDecider
+import org.agrfesta.sh.api.core.domain.heating.HeatingEvaluationReport
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.COMFORT
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.ECONOMY
@@ -84,88 +90,104 @@ class EvaluateHeatingStateServiceTest {
     }
 
     @Test
-    fun `execute() does nothing when heating is disabled`() {
+    fun `execute() returns Skipped and does not act when heating is disabled`() {
         // Given
         every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PropertyEntry("false").right()
 
         // When
-        sut.execute()
+        val result = sut.execute()
 
         // Then
+        result shouldBe HeatingEvaluationReport.Skipped.right()
         verify(exactly = 0) { devicesRepository.getAll() }
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
         verify(exactly = 0) { decide(any()) }
     }
 
     @Test
-    fun `execute() does nothing when HEATING_ENABLED_KEY fetch fails`() {
+    fun `execute() returns HeatingFlagUnavailable and does not act when the enabled-flag fetch fails`() {
         // Given
         every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PropertyRepositoryError.left()
 
         // When
-        sut.execute()
+        val result = sut.execute()
 
         // Then
+        withClue("an unreadable heating.enabled flag must surface as a failure, not as a silent skip") {
+            result shouldBe HeatingFlagUnavailable.left()
+        }
         verify(exactly = 0) { devicesRepository.getAll() }
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
         verify(exactly = 0) { decide(any()) }
     }
 
     @Test
-    fun `execute() does nothing when HEATING_ENABLED_KEY is missing`() {
+    fun `execute() returns Skipped and does not act when HEATING_ENABLED_KEY is missing`() {
         // Given
         every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns null.right()
 
         // When
-        sut.execute()
+        val result = sut.execute()
 
         // Then
+        withClue("a missing heating.enabled flag means heating is disabled, not a failure") {
+            result shouldBe HeatingEvaluationReport.Skipped.right()
+        }
         verify(exactly = 0) { devicesRepository.getAll() }
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
         verify(exactly = 0) { decide(any()) }
     }
 
     @Test
-    fun `execute() does nothing when HEATING_ENABLED_KEY is not a boolean string`() {
+    fun `execute() returns Skipped and does not act when HEATING_ENABLED_KEY is not a boolean string`() {
         // Given
         every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PropertyEntry(aRandomUniqueString()).right()
 
         // When
-        sut.execute()
+        val result = sut.execute()
 
         // Then
+        withClue("a non-boolean heating.enabled flag means heating is disabled, not a failure") {
+            result shouldBe HeatingEvaluationReport.Skipped.right()
+        }
         verify(exactly = 0) { devicesRepository.getAll() }
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
         verify(exactly = 0) { decide(any()) }
     }
 
     @Test
-    fun `execute() does nothing when device fetch fails`() {
+    fun `execute() returns DevicesUnavailable and does not act when device fetch fails`() {
         // Given
         every { devicesRepository.getAll() } returns DeviceRepositoryError.left()
 
         // When
-        sut.execute()
+        val result = sut.execute()
 
         // Then
+        withClue("a failed device fetch must surface as a failure, not as a silent skip") {
+            result shouldBe DevicesUnavailable.left()
+        }
         verify(exactly = 0) { areasWithDevicesRepository.getAllAreasWithDevices() }
         verify(exactly = 0) { decide(any()) }
     }
 
     @Test
-    fun `execute() does nothing when area fetch fails`() {
+    fun `execute() returns AreasUnavailable and does not act when area fetch fails`() {
         // Given
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns AreaRepositoryError.left()
 
         // When
-        sut.execute()
+        val result = sut.execute()
 
         // Then
+        withClue("a failed area fetch must surface as a failure, not as a silent skip") {
+            result shouldBe AreasUnavailable.left()
+        }
         verify(exactly = 0) { decide(any()) }
     }
 
     @Test
-    fun `execute() does nothing when there are no heatable areas`() {
+    fun `execute() returns Evaluated with no outcomes when there are no heatable areas`() {
         // Given — area with a resolved sensor but no heater: not heatable
         val sensorDto = aSensor()
         sensorDto.toSensorMockk(factory)
@@ -174,9 +196,12 @@ class EvaluateHeatingStateServiceTest {
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(areaDto).right()
 
         // When
-        sut.execute()
+        val result = sut.execute()
 
         // Then
+        withClue("no heatable areas is a successful evaluation with an empty report, not a failure") {
+            result shouldBe HeatingEvaluationReport.Evaluated(emptyList()).right()
+        }
         verify(exactly = 0) { decide(any()) }
     }
 
@@ -230,6 +255,79 @@ class EvaluateHeatingStateServiceTest {
 
         // Then
         verify(exactly = 0) { decide(any()) }
+    }
+
+    @Test
+    fun `execute() reports Issued with the command when the heater actuation succeeds`() {
+        // Given
+        val heater = givenHeatableArea().heater
+        every { decide(any()) } returns HeaterCommand.ON
+        every { heater.on() } returns Unit.right()
+
+        // When
+        val result = sut.execute()
+
+        // Then
+        withClue("a successful actuation must be reported per heater with the issued command") {
+            result shouldBe HeatingEvaluationReport.Evaluated(
+                listOf(HeaterActionOutcome(heater.uuid, HeaterCommand.ON, ActuationOutcome.Issued))
+            ).right()
+        }
+    }
+
+    @Test
+    fun `execute() reports Failed with the actuation cause when the heater actuation fails`() {
+        // Given
+        val heater = givenHeatableArea().heater
+        every { decide(any()) } returns HeaterCommand.ON
+        val failure = object : ActuatorOperationFailure {}
+        every { heater.on() } returns failure.left()
+
+        // When
+        val result = sut.execute()
+
+        // Then
+        withClue("a failed actuation is a partial outcome in the report, carrying its cause") {
+            result shouldBe HeatingEvaluationReport.Evaluated(
+                listOf(HeaterActionOutcome(heater.uuid, HeaterCommand.ON, ActuationOutcome.Failed(failure)))
+            ).right()
+        }
+    }
+
+    @Test
+    fun `execute() reports Failed with the actuation cause when the heater OFF actuation fails`() {
+        // Given
+        val heater = givenHeatableArea().heater
+        every { decide(any()) } returns HeaterCommand.OFF
+        val failure = object : ActuatorOperationFailure {}
+        every { heater.off() } returns failure.left()
+
+        // When
+        val result = sut.execute()
+
+        // Then
+        withClue("a failed OFF actuation must be reported as Failed with its cause, exactly like a failed ON") {
+            result shouldBe HeatingEvaluationReport.Evaluated(
+                listOf(HeaterActionOutcome(heater.uuid, HeaterCommand.OFF, ActuationOutcome.Failed(failure)))
+            ).right()
+        }
+    }
+
+    @Test
+    fun `execute() reports NotNeeded when the decision is NONE`() {
+        // Given
+        val heater = givenHeatableArea().heater
+        every { decide(any()) } returns HeaterCommand.NONE
+
+        // When
+        val result = sut.execute()
+
+        // Then
+        withClue("a NONE decision issues no command, and the report must say so") {
+            result shouldBe HeatingEvaluationReport.Evaluated(
+                listOf(HeaterActionOutcome(heater.uuid, HeaterCommand.NONE, ActuationOutcome.NotNeeded))
+            ).right()
+        }
     }
 
     @Test

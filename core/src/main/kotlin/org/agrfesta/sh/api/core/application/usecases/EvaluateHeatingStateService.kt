@@ -1,5 +1,7 @@
 package org.agrfesta.sh.api.core.application.usecases
 
+import arrow.core.Either
+import arrow.core.raise.either
 import org.agrfesta.sh.api.core.application.ports.inbounds.EvaluateHeatingStateUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
@@ -15,9 +17,16 @@ import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.averageTemperature
-import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.ActuatorOperationFailure
+import org.agrfesta.sh.api.core.domain.failures.AreasUnavailable
+import org.agrfesta.sh.api.core.domain.failures.DevicesUnavailable
+import org.agrfesta.sh.api.core.domain.failures.EvaluateHeatingStateFailure
+import org.agrfesta.sh.api.core.domain.failures.HeatingFlagUnavailable
+import org.agrfesta.sh.api.core.domain.heating.ActuationOutcome
 import org.agrfesta.sh.api.core.domain.heating.HeatableAreaSnapshot
+import org.agrfesta.sh.api.core.domain.heating.HeaterActionOutcome
 import org.agrfesta.sh.api.core.domain.heating.HeaterCommand
+import org.agrfesta.sh.api.core.domain.heating.HeatingEvaluationReport
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.stereotype.Service
 import java.time.LocalTime
@@ -51,11 +60,12 @@ class EvaluateHeatingStateService(
         val heater: Heater
     )
 
-    override fun execute() {
-        if (!isEnabled()) return
-        val deviceRecords = devicesRepository.getAll().onLeft {
-            logger.error("Device fetch failed, skipping heating evaluation: $it")
-        }.getOrNull() ?: return
+    override fun execute(): Either<EvaluateHeatingStateFailure, HeatingEvaluationReport> = either {
+        if (isEnabled().bind()) evaluateHeatableAreas().bind() else HeatingEvaluationReport.Skipped
+    }
+
+    private fun evaluateHeatableAreas(): Either<EvaluateHeatingStateFailure, HeatingEvaluationReport> = either {
+        val deviceRecords = devicesRepository.getAll().mapLeft { DevicesUnavailable }.bind()
         val devicesRegistry = deviceRecords.mapNotNull { record ->
             val factory = mappedDevicesFactories[record.provider]
             if (factory == null) {
@@ -68,14 +78,12 @@ class EvaluateHeatingStateService(
                 factory.createDevice(record)
             }
         }.associateBy { it.uuid }
-        val areaDtos = areasWithDevicesRepository.getAllAreasWithDevices().onLeft {
-            logger.error("Area fetch failed, skipping heating evaluation: $it")
-        }.getOrNull() ?: return
+        val areaDtos = areasWithDevicesRepository.getAllAreasWithDevices().mapLeft { AreasUnavailable }.bind()
         val decide = strategySelector.select()
         val currentTime = timeProvider.currentLocalTime()
-        areaDtos.mapNotNull { it.resolveHeatable(devicesRegistry) }
+        val outcomes = areaDtos.mapNotNull { it.resolveHeatable(devicesRegistry) }
             .groupBy { it.heater }
-            .forEach { (heater, areaList) ->
+            .map { (heater, areaList) ->
                 val heaterStatus = heater.getActuatorStatus().fold(
                     ifLeft = {
                         logger.warn(
@@ -96,15 +104,20 @@ class EvaluateHeatingStateService(
                 }
                 val command = decide(snapshots)
                 logger.info("Heating decision for heater '${heater.uuid}': $command (snapshots: $snapshots)")
-                when (command) {
-                    HeaterCommand.ON -> heater.on()
-                        .onLeft { logger.error("Failed to turn heater '${heater.uuid}' ON: $it") }
-                    HeaterCommand.OFF -> heater.off()
-                        .onLeft { logger.error("Failed to turn heater '${heater.uuid}' OFF: $it") }
-                    HeaterCommand.NONE -> {}
+                val outcome = when (command) {
+                    HeaterCommand.ON -> heater.on().toActuationOutcome()
+                    HeaterCommand.OFF -> heater.off().toActuationOutcome()
+                    HeaterCommand.NONE -> ActuationOutcome.NotNeeded
                 }
+                HeaterActionOutcome(heater.uuid, command, outcome)
             }
+        HeatingEvaluationReport.Evaluated(outcomes)
     }
+
+    private fun Either<ActuatorOperationFailure, Unit>.toActuationOutcome(): ActuationOutcome = fold(
+        ifLeft = { ActuationOutcome.Failed(it) },
+        ifRight = { ActuationOutcome.Issued }
+    )
 
     private fun AreaDtoWithDevices.resolveHeatable(devicesRegistry: Map<UUID, DeviceDriver>): ResolvedHeatableArea? {
         val resolvedSensors = sensors.mapNotNull { device ->
@@ -157,14 +170,8 @@ class EvaluateHeatingStateService(
             .getOrNull()
             ?.targetTemperatureAt(currentTime)
 
-    private fun isEnabled(): Boolean = propertyRepository.findEntry(HEATING_ENABLED_KEY).fold(
-        ifLeft = {
-            when (it) {
-                PropertyRepositoryError ->
-                    logger.error("Failed to fetch $HEATING_ENABLED_KEY. Considered disabled.")
-            }
-            false
-        },
-        ifRight = { it?.value?.equals("true", ignoreCase = true) ?: false }
-    )
+    private fun isEnabled(): Either<EvaluateHeatingStateFailure, Boolean> =
+        propertyRepository.findEntry(HEATING_ENABLED_KEY)
+            .mapLeft { HeatingFlagUnavailable }
+            .map { it?.value?.equals("true", ignoreCase = true) ?: false }
 }
