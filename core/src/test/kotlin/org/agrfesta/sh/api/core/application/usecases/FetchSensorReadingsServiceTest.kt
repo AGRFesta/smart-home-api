@@ -8,6 +8,8 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
+import org.agrfesta.sh.api.core.application.ports.inbounds.EvaluateAlertsUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.BatteryPowered
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DeviceBatteryRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DeviceDriver
@@ -38,13 +40,15 @@ class FetchSensorReadingsServiceTest {
     private val readingsRepository: SensorsCurrentReadingsRepository = mockk()
     private val homeStateRefreshPublisher: HomeStateRefreshPublisher = mockk(relaxUnitFun = true)
     private val deviceBatteryRepository: DeviceBatteryRepository = mockk()
+    private val evaluateAlertsUseCase: EvaluateAlertsUseCase = mockk(relaxUnitFun = true)
 
     private val sut = FetchSensorReadingsService(
         devicesRepository,
         listOf(factory),
         readingsRepository,
         homeStateRefreshPublisher,
-        deviceBatteryRepository
+        deviceBatteryRepository,
+        evaluateAlertsUseCase
     )
 
     /** A driver that is battery-powered without being a [Sensor]. */
@@ -181,6 +185,33 @@ class FetchSensorReadingsServiceTest {
         sut.execute()
 
         verify(exactly = 0) { homeStateRefreshPublisher.publish() }
+    }
+
+    /**
+     * Regression guard (#193): a failed polling cycle must trigger no alert evaluation — evaluating on
+     * stale data could open or resolve alerts on conditions that no longer hold.
+     */
+    @Test fun `execute() does not evaluate alerts when the fetch cycle fails`() {
+        every { devicesRepository.getAll() } returns DeviceRepositoryError.left()
+
+        sut.execute()
+
+        verify(exactly = 0) { evaluateAlertsUseCase.execute(any()) }
+    }
+
+    @Test fun `execute() evaluates alerts on the fetched devices before publishing the home state refresh`() {
+        // Given a device without a registered factory: irrelevant to readings, still part of the cycle
+        val device = aDevice(provider = Provider.NETATMO)
+        every { devicesRepository.getAll() } returns listOf(device).right()
+
+        // When
+        sut.execute()
+
+        // Then: the SSE snapshot pushed by this cycle must already reflect the alert transitions
+        verifyOrder {
+            evaluateAlertsUseCase.execute(listOf(device))
+            homeStateRefreshPublisher.publish()
+        }
     }
 
     @Test fun `execute() saves the battery level for a BatteryPowered device`() {

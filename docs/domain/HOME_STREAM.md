@@ -55,6 +55,10 @@ On connection, `HomeController.getHomeStream()` calls `HomeStreamBroadcaster.reg
 A trigger only fires on the **success** path of the originating operation. If a polling cycle fails, no event is
 published and clients retain their last received state.
 
+On the polling cycle, alert evaluation runs **before** the publish (see [ALERTS.md](ALERTS.md)): the snapshot
+pushed by a cycle already reflects the alert transitions that cycle produced, so polling-driven alert changes
+need no dedicated trigger — they ride the existing one.
+
 ---
 
 ## Update Frequency

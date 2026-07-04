@@ -26,7 +26,8 @@ A JSON array of alerts. An empty result is returned as an empty array (`[]`), no
 
 `type` is an extensible enum (`BATTERY_LOW`, `DEVICE_DETACHED`, ...). `scope` describes how to read
 `target`: device uuid for `DEVICE`, provider id for `PROVIDER`, absent (`null`) for `GLOBAL`. `details` is
-a small, free-form payload describing what tripped the alert (`null` when not set).
+a small, free-form payload describing what tripped the alert (`null` when not set); it is a snapshot taken
+when the alert opened, not the current value of the monitored condition.
 
 ```json
 [
