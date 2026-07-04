@@ -2,6 +2,7 @@ package org.agrfesta.sh.api.controllers
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import org.agrfesta.sh.api.core.domain.alerts.AlertType
 import org.agrfesta.sh.api.core.domain.commons.FieldFailure
 import org.agrfesta.sh.api.core.domain.commons.FieldResult
 import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
@@ -43,7 +44,8 @@ data class MeasurementsResponse(
 data class AreaDashboardResponse(
     val id: UUID,
     val name: String,
-    val measurements: MeasurementsResponse
+    val measurements: MeasurementsResponse,
+    val activeAlerts: FieldResultResponse<Set<AlertType>>
 )
 
 data class GlobalStateResponse(
@@ -81,7 +83,8 @@ private fun GlobalStateDto.toResponse() = GlobalStateResponse(
 private fun AreaDashboardDto.toResponse() = AreaDashboardResponse(
     id = id,
     name = name,
-    measurements = measurements.toResponse()
+    measurements = measurements.toResponse(),
+    activeAlerts = activeAlerts.toResponse()
 )
 
 private fun MeasurementsDto.toResponse() = MeasurementsResponse(

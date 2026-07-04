@@ -1,5 +1,6 @@
 package org.agrfesta.sh.api.core.domain.home
 
+import org.agrfesta.sh.api.core.domain.alerts.AlertType
 import org.agrfesta.sh.api.core.domain.commons.FieldResult
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
@@ -23,7 +24,8 @@ data class MeasurementsDto(
 data class AreaDashboardDto(
     val id: UUID,
     val name: String,
-    val measurements: MeasurementsDto
+    val measurements: MeasurementsDto,
+    val activeAlerts: FieldResult<Set<AlertType>>
 )
 
 data class GlobalStateDto(

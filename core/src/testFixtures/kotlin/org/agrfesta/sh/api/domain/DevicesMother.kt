@@ -2,6 +2,7 @@ package org.agrfesta.sh.api.domain
 
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DeviceDriver
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicePrototype
+import org.agrfesta.sh.api.core.domain.alerts.AlertType
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceAggregate
 import org.agrfesta.sh.api.core.domain.devices.DeviceAreaAssignment
@@ -66,9 +67,10 @@ fun aDeviceAggregate(
     createdOn: Instant = Instant.now(),
     updatedOn: Instant? = null,
     assignments: List<DeviceAreaAssignment> = emptyList(),
-    batteryLevel: Int? = null
+    batteryLevel: Int? = null,
+    activeAlerts: Set<AlertType>? = null
 ) = DeviceAggregate(
-    uuid, status, providerId, provider, name, model, createdOn, updatedOn, assignments, batteryLevel
+    uuid, status, providerId, provider, name, model, createdOn, updatedOn, assignments, batteryLevel, activeAlerts
 )
 
 fun aDevicePrototype(

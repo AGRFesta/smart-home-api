@@ -11,17 +11,24 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
+import org.agrfesta.sh.api.core.application.ports.outbounds.alerts.AlertsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.sh.api.core.application.usecases.heating.HeatingStrategySelector.Companion.HEATING_STRATEGY_KEY
+import org.agrfesta.sh.api.core.domain.alerts.AlertStatus
+import org.agrfesta.sh.api.core.domain.alerts.AlertTarget
+import org.agrfesta.sh.api.core.domain.alerts.AlertType
 import org.agrfesta.sh.api.core.domain.commons.FieldFailure
 import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.commons.average
+import org.agrfesta.sh.api.core.domain.devices.Provider
+import org.agrfesta.sh.api.core.domain.failures.AlertRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.DashboardRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
@@ -30,12 +37,15 @@ import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupError
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 import org.agrfesta.sh.api.domain.aSensor
 import org.agrfesta.sh.api.domain.aTemperatureInterval
+import org.agrfesta.sh.api.domain.anActuator
+import org.agrfesta.sh.api.domain.anAlert
 import org.agrfesta.sh.api.domain.anAreaDtoWithDevices
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.junit.jupiter.api.Test
 import java.time.LocalTime
+import java.util.UUID
 
 class GetHomeDashboardServiceTest {
     private val propertyRepository: PropertyRepository = mockk()
@@ -43,13 +53,15 @@ class GetHomeDashboardServiceTest {
     private val sensorsCurrentReadingsRepository: SensorsCurrentReadingsRepository = mockk()
     private val temperatureSettingsRepository: TemperatureSettingsRepository = mockk()
     private val timeProvider: TimeProvider = mockk()
+    private val alertsRepository: AlertsRepository = mockk()
 
     private val sut = GetHomeDashboardService(
         propertyRepository,
         areasWithDevicesRepository,
         sensorsCurrentReadingsRepository,
         temperatureSettingsRepository,
-        timeProvider
+        timeProvider,
+        alertsRepository
     )
 
     init {
@@ -57,7 +69,9 @@ class GetHomeDashboardServiceTest {
         every { propertyRepository.findEntry(HEATING_STRATEGY_KEY) } returns null.right()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns emptyList<Nothing>().right()
         every { temperatureSettingsRepository.findAreaSetting(any()) } returns null.right()
+        every { sensorsCurrentReadingsRepository.findBy(any()) } returns null.right()
         every { timeProvider.currentLocalTime() } returns LocalTime.NOON
+        every { alertsRepository.getAlerts(AlertStatus.OPEN) } returns emptyList<Nothing>().right()
     }
 
     // heatingActive ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -527,5 +541,91 @@ class GetHomeDashboardServiceTest {
                 .measurements.humidity.shouldNotBeNull()
                 .relative shouldBe FieldSuccess(data.relativeHumidity.value)
         }
+    }
+
+    // activeAlerts ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test fun `execute() area activeAlerts is an empty set when there are no open alerts`() {
+        val area = anAreaDtoWithDevices()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
+        every { alertsRepository.getAlerts(AlertStatus.OPEN) } returns emptyList<Nothing>().right()
+
+        val result = sut.execute().shouldBeRight()
+
+        withClue("activeAlerts") {
+            result.areas.shouldNotBeEmpty().first().activeAlerts shouldBe FieldSuccess(emptySet<AlertType>())
+        }
+    }
+
+    @Test fun `execute() area activeAlerts contains the alert type when an open alert targets a sensor of the area`() {
+        val sensor = aSensor()
+        val area = anAreaDtoWithDevices(sensors = listOf(sensor))
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
+        every { alertsRepository.getAlerts(AlertStatus.OPEN) } returns
+            listOf(anAlert(type = AlertType.BATTERY_LOW, target = AlertTarget.Device(sensor.uuid))).right()
+
+        val result = sut.execute().shouldBeRight()
+
+        withClue("activeAlerts") {
+            result.areas.shouldNotBeEmpty().first().activeAlerts shouldBe FieldSuccess(setOf(AlertType.BATTERY_LOW))
+        }
+    }
+
+    @Test fun `execute() area activeAlerts excludes open alerts not targeting a device of the area`() {
+        val sensor = aSensor()
+        val area = anAreaDtoWithDevices(sensors = listOf(sensor))
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
+        every { alertsRepository.getAlerts(AlertStatus.OPEN) } returns listOf(
+            anAlert(target = AlertTarget.Device(UUID.randomUUID())),
+            anAlert(target = AlertTarget.Provider(Provider.SWITCHBOT)),
+            anAlert(target = AlertTarget.Global)
+        ).right()
+
+        val result = sut.execute().shouldBeRight()
+
+        withClue("activeAlerts") {
+            result.areas.shouldNotBeEmpty().first().activeAlerts shouldBe FieldSuccess(emptySet<AlertType>())
+        }
+    }
+
+    @Test
+    fun `execute() area activeAlerts contains the alert type when an open alert targets an actuator of the area`() {
+        val actuator = anActuator()
+        val area = anAreaDtoWithDevices(actuators = listOf(actuator))
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
+        every { alertsRepository.getAlerts(AlertStatus.OPEN) } returns
+            listOf(anAlert(type = AlertType.BATTERY_LOW, target = AlertTarget.Device(actuator.uuid))).right()
+
+        val result = sut.execute().shouldBeRight()
+
+        withClue("activeAlerts") {
+            result.areas.shouldNotBeEmpty().first().activeAlerts shouldBe FieldSuccess(setOf(AlertType.BATTERY_LOW))
+        }
+    }
+
+    @Test fun `execute() area activeAlerts is a FieldFailure on every area when open alerts lookup fails`() {
+        val area1 = anAreaDtoWithDevices(sensors = listOf(aSensor()))
+        val area2 = anAreaDtoWithDevices()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area1, area2).right()
+        every { alertsRepository.getAlerts(AlertStatus.OPEN) } returns AlertRepositoryError.left()
+
+        val result = sut.execute().shouldBeRight()
+
+        withClue("activeAlerts") {
+            result.areas.shouldNotBeEmpty().forEach { area ->
+                area.activeAlerts shouldBe FieldFailure("Unable to retrieve active alerts")
+            }
+        }
+    }
+
+    @Test fun `execute() reads open alerts once regardless of the number of areas and devices`() {
+        val area1 = anAreaDtoWithDevices(sensors = listOf(aSensor()))
+        val area2 = anAreaDtoWithDevices(sensors = listOf(aSensor()), actuators = listOf(anActuator()))
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area1, area2).right()
+        every { alertsRepository.getAlerts(AlertStatus.OPEN) } returns emptyList<Nothing>().right()
+
+        sut.execute().shouldBeRight()
+
+        verify(exactly = 1) { alertsRepository.getAlerts(AlertStatus.OPEN) }
     }
 }

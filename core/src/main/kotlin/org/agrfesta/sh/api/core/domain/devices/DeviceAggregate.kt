@@ -1,5 +1,6 @@
 package org.agrfesta.sh.api.core.domain.devices
 
+import org.agrfesta.sh.api.core.domain.alerts.AlertType
 import java.time.Instant
 import java.util.UUID
 
@@ -7,6 +8,10 @@ import java.util.UUID
  * The persisted aggregate for a single device: its base fields plus the relationships our model
  * holds. Today the only relationship is [assignments]; future links (heating schedules, actuator
  * state, sensor history) can be added as new fields without affecting the lean device list.
+ *
+ * @property activeAlerts the types of the OPEN alerts targeting this device — a minimal read-time
+ * projection from the alert store (see `docs/domain/ALERTS.md`). `null` means the lookup failed
+ * ("unknown"), never to be confused with an empty set ("no open alerts").
  */
 @Suppress("LongParameterList")
 data class DeviceAggregate(
@@ -19,7 +24,8 @@ data class DeviceAggregate(
     val createdOn: Instant,
     val updatedOn: Instant?,
     val assignments: List<DeviceAreaAssignment>,
-    val batteryLevel: Int? = null
+    val batteryLevel: Int? = null,
+    val activeAlerts: Set<AlertType>? = null
 ) : DeviceProviderIdentity
 
 /**

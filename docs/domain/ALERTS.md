@@ -152,5 +152,20 @@ a `HomeStateRefresh` itself, the same way config-change use cases already do.
 `GET /alerts` is the canonical, detailed representation of alert state and the single source of truth on the
 read side (it defaults to the currently `OPEN` alerts). Other read models — home dashboard, device status —
 do **not** re-derive or duplicate alerts: they expose a minimal projection computed at read time from the
-same `AlertRepository`. This keeps one source of truth and avoids pushing domain knowledge onto the
-frontend. See [alerts API](../api/alerts.md).
+same `AlertsRepository`. This keeps one source of truth and avoids pushing domain knowledge (which device
+belongs to which area) onto the frontend. See [alerts API](../api/alerts.md).
+
+Two projections exist, both additive and limited to the `OPEN` alert **types** (no severity — the indicator
+derives from presence; for the detail clients follow `GET /alerts`):
+
+- **Home dashboard** (`GET /home` and the [SSE stream](HOME_STREAM.md)): each area carries
+  `activeAlerts: FieldResult<AlertType[]>` — the types of the open alerts targeting the area's devices
+  (sensors and actuators; `PROVIDER`/`GLOBAL` alerts are not attributed to areas, and neither are alerts on
+  devices with no current area assignment — the former surface only in `GET /alerts`, the latter in
+  `GET /alerts` and the device detail projection below). The open alerts are read
+  in a **single batched query** per dashboard build (no N+1), and a lookup failure degrades to a field
+  failure — never a false "no alerts". Within the polling cycle the indicator rides the existing
+  `HomeStateRefresh` publish, since alert evaluation runs before it (see *Evaluation* above).
+- **Device detail** (`GET /devices/{uuid}`): the aggregate carries `activeAlerts: Set<AlertType>?` — the
+  types of the open alerts targeting the device. `null` means the lookup failed ("unknown"), an empty set
+  means none: absence of data ≠ no alerts, consistently with skip-on-absent.

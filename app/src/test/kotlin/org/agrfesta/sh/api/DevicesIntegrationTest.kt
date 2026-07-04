@@ -3,6 +3,7 @@ package org.agrfesta.sh.api
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
@@ -19,9 +20,12 @@ import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.controllers.toDevice
 import org.agrfesta.sh.api.controllers.toResponse
 import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
+import org.agrfesta.sh.api.core.application.ports.outbounds.alerts.AlertsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignmentsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.domain.alerts.AlertTarget
+import org.agrfesta.sh.api.core.domain.alerts.AlertType
 import org.agrfesta.sh.api.core.domain.devices.AssignmentRole
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceModel
@@ -32,6 +36,7 @@ import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.agrfesta.sh.api.domain.aSensorProviderData
+import org.agrfesta.sh.api.domain.anAlert
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.providers.netatmo.NetatmoIntegrationAsserter
@@ -50,6 +55,7 @@ class DevicesIntegrationTest(
     private val devicesRepository: DevicesJdbcRepository,
     private val areasRepository: AreasRepository,
     private val sensorsAssignmentsRepository: SensorsAssignmentsRepository,
+    private val alertsRepository: AlertsRepository,
     private val objectMapper: ObjectMapper,
     private val netatmoIntegrationAsserter: NetatmoIntegrationAsserter,
     private val catalog: DeviceModelCatalog
@@ -178,6 +184,30 @@ class DevicesIntegrationTest(
         response.assignments.shouldContainExactly(
             AssignmentResponse(areaUuid = area.uuid, areaName = area.name, role = AssignmentRole.SENSOR)
         )
+    }
+
+    @Test
+    fun `GET device by id reports the device open alert types resolved from the alert store`() {
+        val deviceId = UUID.randomUUID()
+        val sensorData = aSensorProviderData(model = DeviceModel(SwitchBotDeviceType.METER.model))
+        devicesDao.create(deviceId, sensorData).getOrElse { error("Failed to create device: $it") }
+        alertsRepository.create(anAlert(type = AlertType.BATTERY_LOW, target = AlertTarget.Device(deviceId)))
+            .getOrElse { error("Failed to create alert: $it") }
+
+        val responseBody = given()
+            .contentType(ContentType.JSON)
+            .authenticated()
+            .`when`()
+            .get("/devices/{uuid}", deviceId)
+            .then()
+            .statusCode(200)
+            .extract()
+            .asString()
+
+        val response = objectMapper.readValue(responseBody, DeviceAggregateResponse::class.java)
+        withClue("activeAlerts should carry the open alert types resolved from the alert store") {
+            response.activeAlerts shouldBe setOf(AlertType.BATTERY_LOW)
+        }
     }
 
     @Test

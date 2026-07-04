@@ -3,12 +3,18 @@ package org.agrfesta.sh.api.core.application.usecases
 import arrow.core.Either
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHomeDashboardUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
+import org.agrfesta.sh.api.core.application.ports.outbounds.alerts.AlertsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.sh.api.core.application.usecases.heating.HeatingStrategySelector.Companion.HEATING_STRATEGY_KEY
+import org.agrfesta.sh.api.core.domain.alerts.Alert
+import org.agrfesta.sh.api.core.domain.alerts.AlertStatus
+import org.agrfesta.sh.api.core.domain.alerts.AlertTarget
+import org.agrfesta.sh.api.core.domain.alerts.AlertType
+import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
 import org.agrfesta.sh.api.core.domain.commons.FieldFailure
 import org.agrfesta.sh.api.core.domain.commons.FieldResult
 import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
@@ -16,6 +22,7 @@ import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.core.domain.commons.average
 import org.agrfesta.sh.api.core.domain.failures.DashboardRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.GetAlertsFailure
 import org.agrfesta.sh.api.core.domain.failures.GetHomeDashboardFailure
 import org.agrfesta.sh.api.core.domain.failures.ReadingsLookupFailure
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
@@ -36,7 +43,8 @@ class GetHomeDashboardService(
     private val areasWithDevicesRepository: AreasWithDevicesRepository,
     private val sensorsCurrentReadingsRepository: SensorsCurrentReadingsRepository,
     private val temperatureSettingsRepository: TemperatureSettingsRepository,
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    private val alertsRepository: AlertsRepository
 ) : GetHomeDashboardUseCase {
 
     override fun execute(): Either<GetHomeDashboardFailure, HomeDashboardDto> {
@@ -45,6 +53,7 @@ class GetHomeDashboardService(
         return areasWithDevicesRepository.getAllAreasWithDevices()
             .mapLeft { DashboardRepositoryError }
             .map { areas ->
+                val openAlerts = alertsRepository.getAlerts(AlertStatus.OPEN)
                 HomeDashboardDto(
                     globalState = GlobalStateDto(
                         heatingActive = heatingActive,
@@ -67,12 +76,30 @@ class GetHomeDashboardService(
                                 humidity = HumidityDto(
                                     relative = resolveRelativeHumidity(readings)
                                 )
-                            )
+                            ),
+                            activeAlerts = resolveActiveAlerts(area, openAlerts)
                         )
                     }
                 )
             }
     }
+
+    private fun resolveActiveAlerts(
+        area: AreaDtoWithDevices,
+        openAlerts: Either<GetAlertsFailure, Collection<Alert>>
+    ): FieldResult<Set<AlertType>> =
+        openAlerts.fold(
+            { FieldFailure("Unable to retrieve active alerts") },
+            { alerts ->
+                val areaDeviceIds = (area.sensors + area.actuators).map { it.uuid }.toSet()
+                FieldSuccess(
+                    alerts
+                        .filter { (it.target as? AlertTarget.Device)?.deviceId in areaDeviceIds }
+                        .map { it.type }
+                        .toSet()
+                )
+            }
+        )
 
     private fun resolveHeatingActive(): FieldResult<Boolean> =
         propertyRepository.findEntry(HEATING_ENABLED_KEY)

@@ -10,7 +10,7 @@ below. See [SECURITY.md](../SECURITY.md).
 | `GET`    | `/actuator/health/readiness` | [health](health.md#get-actuatorhealthreadiness) | Public readiness probe (app + DB; Redis excluded) |
 | `GET`    | `/actuator/info` | [health](health.md#get-actuatorinfo) | Build version (authenticated) |
 | `GET`    | `/devices` | [devices](devices.md#get-devices) | List/search managed devices, filterable by provider/status/feature |
-| `GET`    | `/devices/{uuid}` | [devices](devices.md#get-devicesuuid) | Per-device aggregate — base fields + current area assignments + cached battery level |
+| `GET`    | `/devices/{uuid}` | [devices](devices.md#get-devicesuuid) | Per-device aggregate — base fields + current area assignments + cached battery level + open alert types |
 | `GET`    | `/devices/{uuid}/diagnostics` | [devices](devices.md#get-devicesuuiddiagnostics) | Provider's realtime raw payload (passthrough, no persistence) |
 | `POST`   | `/devices/synchronizations` | [devices](devices.md#post-devicessynchronizations) | Synchronise persisted devices with provider snapshot |
 | `GET`    | `/alerts` | [alerts](alerts.md#get-alerts) | List alerts, defaulting to currently OPEN, filterable by status |
