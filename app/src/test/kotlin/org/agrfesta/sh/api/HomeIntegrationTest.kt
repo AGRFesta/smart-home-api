@@ -10,13 +10,17 @@ import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.core.application.ports.inbounds.AssignSensorToAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.outbounds.alerts.AlertsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.sh.api.core.application.usecases.heating.HeatingStrategySelector.Companion.HEATING_STRATEGY_KEY
+import org.agrfesta.sh.api.core.domain.alerts.AlertTarget
+import org.agrfesta.sh.api.core.domain.alerts.AlertType
 import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.domain.aSensorProviderData
+import org.agrfesta.sh.api.domain.anAlert
 import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
 import org.agrfesta.test.mothers.aRandomThermoHygroData
@@ -35,7 +39,8 @@ class HomeIntegrationTest(
     private val devicesRepository: DevicesRepository,
     private val assignSensorToAreaUseCase: AssignSensorToAreaUseCase,
     private val readingsRepository: SensorsCurrentReadingsRepository,
-    private val propertyRepository: PropertyJdbcRepository
+    private val propertyRepository: PropertyJdbcRepository,
+    private val alertsRepository: AlertsRepository
 ) : AbstractIntegrationTest() {
 
     // /// getHome //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,6 +75,31 @@ class HomeIntegrationTest(
         withClue("relative humidity is resolved from cache") {
             json.getString("areas[0].measurements.humidity.relative.type") shouldBe "success"
             json.get<Any?>("areas[0].measurements.humidity.relative.value").shouldNotBeNull()
+        }
+    }
+
+    @Test fun `getHome() reports the area active alert types resolved from the alert store`() {
+        val area = anAreaDto()
+        areasRepository.save(area)
+        val sensorData = aSensorProviderData(model = DeviceModel("switchbot/Meter"))
+        val sensorId = randomGenerator.uuid()
+        devicesRepository.create(sensorId, sensorData).shouldBeRight()
+        assignSensorToAreaUseCase.execute(area.uuid, sensorId).shouldBeRight()
+        alertsRepository.create(
+            anAlert(type = AlertType.BATTERY_LOW, target = AlertTarget.Device(sensorId))
+        ).shouldBeRight()
+
+        val json = given()
+            .authenticated()
+            .`when`()
+            .get("/home")
+            .then()
+            .statusCode(200)
+            .extract().body().jsonPath()
+
+        withClue("the area activeAlerts should be resolved from the alert store") {
+            json.getString("areas[0].activeAlerts.type") shouldBe "success"
+            json.getList<String>("areas[0].activeAlerts.value") shouldBe listOf("BATTERY_LOW")
         }
     }
 

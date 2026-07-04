@@ -72,6 +72,11 @@ assignments are returned — disconnected (historical) sensor assignments are no
 cache (refreshed each polling cycle). It is `null` when the device is not battery-powered, when no value
 has been collected yet, or when the cached value has expired (a device offline beyond the cache TTL).
 
+`activeAlerts` lists the types of the device's currently `OPEN` alerts (e.g. `BATTERY_LOW`), resolved at
+read time from the same alert store as [`GET /alerts`](alerts.md) — a minimal projection; for the full
+alert detail follow `GET /alerts`. An empty array means no open alerts; `null` means the alert lookup
+failed ("unknown", never to be confused with "no alerts").
+
 ```json
 {
   "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -85,7 +90,8 @@ has been collected yet, or when the cached value has expired (a device offline b
   "assignments": [
     { "areaUuid": "a1b2c3d4-0000-0000-0000-000000000000", "areaName": "Living Room", "role": "SENSOR" }
   ],
-  "batteryLevel": 88
+  "batteryLevel": 88,
+  "activeAlerts": ["BATTERY_LOW"]
 }
 ```
 
@@ -93,6 +99,7 @@ has been collected yet, or when the cached value has expired (a device offline b
 |----------------|-----------------------------------------------------------------------------------|
 | `assignments`  | Current area assignments; each has `areaUuid`, `areaName` and `role` (`SENSOR`/`ACTUATOR`). |
 | `batteryLevel` | Latest known battery percentage (0–100) from cache; `null` when not battery-powered, not yet collected, or expired. |
+| `activeAlerts` | Types of the device's `OPEN` alerts, from the alert store; `[]` when none, `null` when the lookup failed. |
 
 ### Response `404 Not Found`
 

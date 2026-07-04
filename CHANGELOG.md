@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Return a typed failure or a per-heater outcome report from the heating evaluation instead of
   swallowing every error in logs; the heating scheduler now logs an error when the evaluation fails. (#201)
+- Surface per-area active alert types in the home dashboard as an additive `activeAlerts` field
+  (`FieldResult<AlertType[]>`), on both `GET /home` and the SSE stream. (#196)
+- Expose the device's open alert types as an additive `activeAlerts` field in `GET /devices/{uuid}`;
+  `null` means the alert lookup failed, `[]` means no open alerts. (#196)
 
 ## [1.3.3] - 2026-07-03
 

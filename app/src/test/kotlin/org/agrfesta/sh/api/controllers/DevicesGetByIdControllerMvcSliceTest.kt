@@ -12,6 +12,7 @@ import org.agrfesta.sh.api.core.application.ports.inbounds.GetDeviceUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetDevicesUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.InspectDeviceUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.RefreshDevicesUseCase
+import org.agrfesta.sh.api.core.domain.alerts.AlertType
 import org.agrfesta.sh.api.core.domain.devices.AssignmentRole
 import org.agrfesta.sh.api.core.domain.devices.DeviceAreaAssignment
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
@@ -114,6 +115,24 @@ class DevicesGetByIdControllerMvcSliceTest(
         val response = objectMapper.readValue(responseBody, DeviceAggregateResponse::class.java)
         withClue("GET /devices/{uuid} body should expose the aggregate's battery level") {
             response.batteryLevel shouldBe 64
+        }
+    }
+
+    @Test fun `getById() exposes the device open alert types in the response body`() {
+        // Given
+        val deviceId = UUID.randomUUID()
+        val aggregate = aDeviceAggregate(uuid = deviceId, activeAlerts = setOf(AlertType.BATTERY_LOW))
+        every { getDeviceUseCase.execute(deviceId) } returns aggregate.right()
+
+        // When
+        val responseBody = mockMvc.perform(get("/devices/{uuid}", deviceId).authenticated())
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        // Then
+        val response = objectMapper.readValue(responseBody, DeviceAggregateResponse::class.java)
+        withClue("GET /devices/{uuid} body should expose the aggregate's open alert types") {
+            response.activeAlerts shouldBe setOf(AlertType.BATTERY_LOW)
         }
     }
 

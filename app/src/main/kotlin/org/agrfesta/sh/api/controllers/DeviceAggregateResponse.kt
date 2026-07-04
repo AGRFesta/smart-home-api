@@ -1,6 +1,7 @@
 package org.agrfesta.sh.api.controllers
 
 import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
+import org.agrfesta.sh.api.core.domain.alerts.AlertType
 import org.agrfesta.sh.api.core.domain.devices.AssignmentRole
 import org.agrfesta.sh.api.core.domain.devices.DeviceAggregate
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
@@ -13,6 +14,9 @@ import java.util.UUID
  * Per-device detail: the base device fields plus the relationships our model holds. Today the only
  * relationship is [assignments]; future links can be added as new fields without affecting the lean
  * device list.
+ *
+ * @property activeAlerts the types of the device's OPEN alerts; `null` when the alert lookup failed
+ * ("unknown"), empty when no alert is open. For the full alert detail clients follow `GET /alerts`.
  */
 @Suppress("LongParameterList")
 data class DeviceAggregateResponse(
@@ -25,7 +29,8 @@ data class DeviceAggregateResponse(
     val createdOn: Instant,
     val updatedOn: Instant?,
     val assignments: List<AssignmentResponse>,
-    val batteryLevel: Int? = null
+    val batteryLevel: Int? = null,
+    val activeAlerts: Set<AlertType>? = null
 )
 
 data class AssignmentResponse(
@@ -44,5 +49,6 @@ fun DeviceAggregate.toResponse(catalog: DeviceModelCatalog) = DeviceAggregateRes
     createdOn = createdOn,
     updatedOn = updatedOn,
     assignments = assignments.map { AssignmentResponse(it.areaUuid, it.areaName, it.role) },
-    batteryLevel = batteryLevel
+    batteryLevel = batteryLevel,
+    activeAlerts = activeAlerts
 )

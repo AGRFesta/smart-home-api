@@ -10,6 +10,7 @@ import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHomeDashboardUseCase
+import org.agrfesta.sh.api.core.domain.alerts.AlertType
 import org.agrfesta.sh.api.core.domain.commons.FieldFailure
 import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
 import org.agrfesta.sh.api.core.domain.failures.GetHomeDashboardFailure
@@ -80,7 +81,8 @@ class HomeControllerMvcSliceTest(
                             targetTemperature = FieldSuccess(targetTemp)
                         ),
                         humidity = HumidityDto(relative = FieldSuccess(BigDecimal("45.5")))
-                    )
+                    ),
+                    activeAlerts = FieldSuccess(emptySet())
                 )
             )
         )
@@ -131,6 +133,41 @@ class HomeControllerMvcSliceTest(
         withClue("globalState.strategy is a field failure") {
             json["globalState"]["strategy"]["type"].asText() shouldBe "failure"
             json["globalState"]["strategy"]["error"].asText() shouldBe "Unable to retrieve heating strategy"
+        }
+    }
+
+    @Test fun `getHome() serializes area activeAlerts in the response`() {
+        val dashboard = HomeDashboardDto(
+            globalState = GlobalStateDto(
+                heatingActive = FieldSuccess(false),
+                strategy = FieldSuccess(null)
+            ),
+            areas = listOf(
+                AreaDashboardDto(
+                    id = UUID.randomUUID(),
+                    name = "Living Room",
+                    measurements = MeasurementsDto(heating = null, humidity = null),
+                    activeAlerts = FieldSuccess(setOf(AlertType.BATTERY_LOW))
+                )
+            )
+        )
+        every { getHomeDashboardUseCase.execute() } returns dashboard.right()
+
+        val responseBody: String = mockMvc.perform(get("/home").authenticated())
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        val json = objectMapper.readTree(responseBody)
+
+        val area = json["areas"][0]
+        withClue("the area should expose an activeAlerts field") {
+            area.has("activeAlerts") shouldBe true
+        }
+        withClue("activeAlerts should be a success FieldResultResponse") {
+            area["activeAlerts"]["type"].asText() shouldBe "success"
+        }
+        withClue("activeAlerts value should carry the open alert types of the area") {
+            area["activeAlerts"]["value"].map { it.asText() } shouldBe listOf("BATTERY_LOW")
         }
     }
 

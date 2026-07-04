@@ -30,7 +30,8 @@ Bearer token required. Returns `401 Unauthorized` if the token is missing or inv
         "humidity": {
           "relative": { "type": "success", "value": 45.5 }
         }
-      }
+      },
+      "activeAlerts": { "type": "success", "value": ["BATTERY_LOW"] }
     }
   ]
 }
@@ -49,6 +50,7 @@ Bearer token required. Returns `401 Unauthorized` if the token is missing or inv
 | `areas[].measurements.heating.targetTemperature` | `FieldResult<number \| null>` | Celsius, 2 decimal places; `null` if no target configured |
 | `areas[].measurements.humidity` | `HumidityMeasurements \| null` | `null` if no humidity device assigned to the area |
 | `areas[].measurements.humidity.relative` | `FieldResult<number \| null>` | Relative humidity %; `null` if no reading available |
+| `areas[].activeAlerts` | `FieldResult<AlertType[]>` | Types of the `OPEN` alerts targeting the area's devices (e.g. `BATTERY_LOW`); empty array when none. A minimal projection of the [alert store](alerts.md) — for the full detail follow `GET /alerts` |
 
 ### Response: `500 Internal Server Error`
 
