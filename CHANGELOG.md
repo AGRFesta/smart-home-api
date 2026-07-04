@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Open and resolve `BATTERY_LOW` alerts automatically on the polling cycle, driven by global hysteresis
+  thresholds (`alerts.battery-low.trigger`/`clear`); low-battery devices now surface in `GET /alerts`
+  without manual intervention. (#193)
+
 ### Changed
 - Return a typed failure or a per-heater outcome report from the heating evaluation instead of
   swallowing every error in logs; the heating scheduler now logs an error when the evaluation fails. (#201)

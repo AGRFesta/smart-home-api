@@ -65,6 +65,64 @@ levels:
 
 ---
 
+## Evaluation: rules and the polling hook
+
+Alert state is driven by an **evaluation engine** (`EvaluateAlertsService`) that runs on the **success
+path of the polling cycle** (`FetchSensorReadingsService`), right **before** the `HomeStateRefresh`
+publish — so the snapshot pushed over SSE in the same cycle already reflects the just-opened/resolved
+alerts (see [HOME_STREAM.md](HOME_STREAM.md)). There is no dedicated timer: the cadence is inherited from
+the polling scheduler, and a **failed polling cycle triggers no evaluation** — no transitions on stale
+data.
+
+The engine is a pure consumer of state: it reads battery values from the cache port and open alerts from
+the repository; it never calls device drivers. If the open alerts cannot be read, the whole evaluation is
+skipped for that cycle (without the current state a safe diff is impossible); a single device whose
+lookup fails is skipped without stopping the others.
+
+The inbound port (`EvaluateAlertsUseCase`) deliberately returns `Unit`: every failure is a tolerated
+degradation on the polling success path and the caller has no meaningful branch to take today. This is a
+conscious exception to the `Either`-returning port rule, scoped to #193 — a typed outcome report
+(mirroring the heating evaluation design of #201) is planned for #195 together with the rule abstraction,
+so the report is designed once for N rules.
+
+`details` is a **snapshot at open time** (the value that tripped the rule), not current state: an
+`Unchanged` transition never touches storage, so the payload is not refreshed while the alert stays open.
+
+### `BATTERY_LOW` rule
+
+The first concrete rule compares the cached battery level (numeric %, SwitchBot semantics — see #191 for
+the deferred Netatmo normalization) against a **global** two-threshold hysteresis band, configured via
+Spring properties:
+
+| Property                     | Default | Meaning                                              |
+|------------------------------|---------|------------------------------------------------------|
+| `alerts.battery-low.trigger` | `15`    | The alert opens at this level or below.              |
+| `alerts.battery-low.clear`   | `25`    | An open alert resolves only at this level or above.  |
+
+Inside the band an open alert stays open: this stickiness prevents open/resolve flapping around a single
+threshold. `clear > trigger` is enforced at startup. Per-device overrides are deferred to a later issue.
+
+### Skip-on-absent
+
+**Absence of a cached value ⇒ "not evaluable" ⇒ skip — never "condition cleared".** Redis gives no
+presence guarantee (cold start, eviction, TTL), so a missing battery value must not resolve an open alert
+(it would close → reopen → re-notify in a loop). Transitions happen **only on a fresh, confirmed
+reading**: an alert (DB) can outlive the value that created it (cache) and stays `OPEN` until a reading
+proves the level crossed `clear`. Same principle as [DEVICES.md](DEVICES.md): absence of data ≠ condition
+ceased.
+
+Consequence for `DETACHED` devices: their readings stop refreshing, so skip-on-absent **freezes** their
+battery alerts in place — no resolve, no churn. "Device offline" is a distinct condition, owned by the
+future `DEVICE_DETACHED` rule, not conflated with battery.
+
+### Invariant for out-of-cycle transitions
+
+Within the polling cycle no extra SSE trigger is needed: alert changes ride the existing publish. Any
+alert transition introduced **outside** the polling cycle (e.g. a future manual ack/snooze) must publish
+a `HomeStateRefresh` itself, the same way config-change use cases already do.
+
+---
+
 ## Persistence
 
 - Table `smart_home.alert`, all timestamps stored with time zone (`TIMESTAMPTZ`).
@@ -72,6 +130,8 @@ levels:
 - Outbound port `AlertsRepository` with a JDBC adapter (no JPA), following the existing persistence
   conventions; infrastructure exceptions are caught at the adapter boundary and mapped to typed failures
   (`AlertRepositoryError`, `AlertAlreadyOpen`).
+- `resolve` projects an `AlertTransition.Resolved` onto storage (updates `status` and `resolved_at`);
+  resolving a row that no longer exists is a typed failure, never a silent no-op.
 
 ---
 

@@ -4,6 +4,7 @@ import arrow.core.Either
 import org.agrfesta.sh.api.core.domain.alerts.Alert
 import org.agrfesta.sh.api.core.domain.alerts.AlertStatus
 import org.agrfesta.sh.api.core.domain.failures.AlertCreationFailure
+import org.agrfesta.sh.api.core.domain.failures.AlertResolutionFailure
 import org.agrfesta.sh.api.core.domain.failures.GetAlertsFailure
 
 /**
@@ -32,4 +33,14 @@ interface AlertsRepository {
      * or [Either.Left] with [AlertCreationFailure] if the alert could not be created.
      */
     fun create(alert: Alert): Either<AlertCreationFailure, Unit>
+
+    /**
+     * Persists the resolution of an existing alert.
+     *
+     * @param alert the alert in its resolved state (its lifecycle must be
+     * [org.agrfesta.sh.api.core.domain.alerts.AlertLifecycle.Resolved]).
+     * @return [Either.Right] with [Unit] on success,
+     * or [Either.Left] with [AlertResolutionFailure] if the resolution could not be persisted.
+     */
+    fun resolve(alert: Alert): Either<AlertResolutionFailure, Unit>
 }

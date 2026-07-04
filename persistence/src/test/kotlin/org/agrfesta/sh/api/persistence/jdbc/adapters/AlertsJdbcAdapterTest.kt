@@ -108,6 +108,46 @@ class AlertsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
+    fun `resolve() marks a persisted OPEN alert as RESOLVED with its resolution instant`() {
+        // Given
+        val now = Instant.now().truncatedTo(ChronoUnit.MICROS)
+        val openAlert = anAlert(lifecycle = AlertLifecycle.Open, openedAt = now)
+        sut.create(openAlert).shouldBeRight()
+        val resolved = openAlert.copy(lifecycle = AlertLifecycle.Resolved(now.plusSeconds(60)))
+
+        // When
+        sut.resolve(resolved).shouldBeRight()
+
+        // Then
+        sut.getAlerts()
+            .shouldBeRight()
+            .shouldContainExactly(resolved)
+    }
+
+    @Test
+    fun `resolve() returns AlertRepositoryError when the alert does not exist`() {
+        // Given an alert that was never persisted
+        val ghost = anAlert(lifecycle = AlertLifecycle.Resolved(Instant.now().truncatedTo(ChronoUnit.MICROS)))
+
+        // When / Then
+        sut.resolve(ghost)
+            .shouldBeLeft()
+            .shouldBe(AlertRepositoryError)
+    }
+
+    @Test
+    fun `resolve() returns AlertRepositoryError when persistence fails`() {
+        // Given
+        every { alertsRepo.updateResolution(any()) } throws
+            DataAccessResourceFailureException("alert resolution failure")
+
+        // When / Then
+        sut.resolve(anAlert(lifecycle = AlertLifecycle.Resolved(Instant.now())))
+            .shouldBeLeft()
+            .shouldBe(AlertRepositoryError)
+    }
+
+    @Test
     fun `getAlerts() returns AlertRepositoryError when a persisted row cannot be mapped to the domain`() {
         // Given a DEVICE-scoped row whose target is not a valid UUID
         jdbcTemplate.update(

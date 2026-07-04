@@ -46,6 +46,22 @@ class AlertsJdbcRepository(
         )
         jdbcTemplate.update(sql, params)
     }
+
+    /** Updates the lifecycle columns of an existing alert row; returns the number of affected rows. */
+    fun updateResolution(alert: Alert): Int {
+        val sql = """
+            UPDATE smart_home.alert
+            SET status = :status, resolved_at = :resolvedAt
+            WHERE uuid = :uuid
+        """
+        val resolvedAt = (alert.lifecycle as? AlertLifecycle.Resolved)?.resolvedAt
+        val params = mapOf(
+            "uuid" to alert.uuid,
+            "status" to alert.lifecycle.status.name,
+            "resolvedAt" to resolvedAt?.let { Timestamp.from(it) }
+        )
+        return jdbcTemplate.update(sql, params)
+    }
 }
 
 object AlertRowMapper : RowMapper<AlertEntity> {

@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
+import org.agrfesta.sh.api.core.application.ports.inbounds.EvaluateAlertsUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.FetchSensorReadingsUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.BatteryPowered
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DeviceBatteryRepository
@@ -26,7 +27,8 @@ class FetchSensorReadingsService(
     providerDevicesFactories: Collection<ProviderDevicesFactory>,
     private val readingsRepository: SensorsCurrentReadingsRepository,
     private val homeStateRefreshPublisher: HomeStateRefreshPublisher,
-    private val deviceBatteryRepository: DeviceBatteryRepository
+    private val deviceBatteryRepository: DeviceBatteryRepository,
+    private val evaluateAlertsUseCase: EvaluateAlertsUseCase
 ) : FetchSensorReadingsUseCase {
 
     private val logger by LoggerDelegate()
@@ -41,6 +43,9 @@ class FetchSensorReadingsService(
             collectReadings(device, driver)
             collectBattery(device, driver)
         }
+        // Evaluate before publishing: the snapshot pushed over SSE by this cycle must already
+        // reflect the alert transitions driven by the readings just refreshed.
+        evaluateAlertsUseCase.execute(devices)
         homeStateRefreshPublisher.publish()
         return Unit.right()
     }

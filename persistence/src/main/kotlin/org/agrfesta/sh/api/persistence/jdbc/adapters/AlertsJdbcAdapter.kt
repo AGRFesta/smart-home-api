@@ -9,6 +9,7 @@ import org.agrfesta.sh.api.core.domain.alerts.AlertStatus
 import org.agrfesta.sh.api.core.domain.failures.AlertAlreadyOpen
 import org.agrfesta.sh.api.core.domain.failures.AlertCreationFailure
 import org.agrfesta.sh.api.core.domain.failures.AlertRepositoryError
+import org.agrfesta.sh.api.core.domain.failures.AlertResolutionFailure
 import org.agrfesta.sh.api.core.domain.failures.GetAlertsFailure
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AlertsJdbcRepository
 import org.agrfesta.sh.api.utils.LoggerDelegate
@@ -43,6 +44,18 @@ class AlertsJdbcAdapter(
         AlertAlreadyOpen.left()
     } catch (e: DataAccessException) {
         logger.error("Unexpected persistence error creating alert '${alert.uuid}'", e)
+        AlertRepositoryError.left()
+    }
+
+    override fun resolve(alert: Alert): Either<AlertResolutionFailure, Unit> = try {
+        if (alertsRepo.updateResolution(alert) == 0) {
+            logger.error("Unable to resolve alert '${alert.uuid}': no such row")
+            AlertRepositoryError.left()
+        } else {
+            Unit.right()
+        }
+    } catch (e: DataAccessException) {
+        logger.error("Unexpected persistence error resolving alert '${alert.uuid}'", e)
         AlertRepositoryError.left()
     }
 }

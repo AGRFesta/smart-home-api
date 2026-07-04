@@ -13,11 +13,18 @@ class SwitchBotClientAsserter(
     private val mapper: ObjectMapper
 ) {
 
-    fun givenSensorData(sensorProviderId: String, data: ThermoHygroData) {
+    // battery defaults to a deterministic full charge: a random default would make any test that
+    // triggers a polling cycle nondeterministically cross the BATTERY_LOW hysteresis band.
+    fun givenSensorData(
+        sensorProviderId: String,
+        data: ThermoHygroData,
+        battery: Int = 100
+    ) {
         coEvery { switchBotDevicesClient.getDeviceStatus(sensorProviderId) } returns
                 mapper.aSwitchBotDeviceStatusResponse(
                     humidity = data.relativeHumidity.value.movePointRight(2).toInt(),
-                    temperature = data.temperature
+                    temperature = data.temperature,
+                    battery = battery
                 )
     }
 
