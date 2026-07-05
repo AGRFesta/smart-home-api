@@ -1,4 +1,4 @@
-package org.agrfesta.sh.api.core.domain.commons
+package org.agrfesta.sh.api.core.application.readmodels.commons
 
 sealed interface FieldResult<out T>
 data class FieldSuccess<out T>(val value: T) : FieldResult<T>

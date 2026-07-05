@@ -11,8 +11,8 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepositor
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.domain.aTemperatureInterval
-import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
+import org.agrfesta.sh.api.domain.anAreaView
 import org.agrfesta.test.mothers.aDailyTime
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.junit.jupiter.api.Test
@@ -26,7 +26,7 @@ class AreaHeatingScheduleIntegrationTest(
     // /// GET /areas/{areaId}/heating-schedule /////////////////////////////////////////////////////////////////////////
 
     @Test fun `getHeatingSchedule() returns 200 with schedule when area has a heating schedule`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         areasRepository.save(area)
         val defaultTemperature = aRandomTemperature()
         temperatureSettingsRepository.createSetting(
@@ -54,7 +54,7 @@ class AreaHeatingScheduleIntegrationTest(
     }
 
     @Test fun `getHeatingSchedule() returns 200 with default empty structure when area has no schedule`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         areasRepository.save(area)
 
         val response = given()
@@ -73,7 +73,7 @@ class AreaHeatingScheduleIntegrationTest(
     // /// PUT /areas/{areaId}/heating-schedule /////////////////////////////////////////////////////////////////////////
 
     @Test fun `replaceHeatingSchedule() creates schedule and returns 200 with interval IDs`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         areasRepository.save(area)
         val defaultTemperature = aRandomTemperature()
         val intA = TemperatureInterval(aRandomTemperature(), LocalTime.of(8, 0), LocalTime.of(10, 0))
@@ -109,7 +109,7 @@ class AreaHeatingScheduleIntegrationTest(
     }
 
     @Test fun `replaceHeatingSchedule() replaces existing schedule`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         areasRepository.save(area)
         temperatureSettingsRepository.createSetting(
             anAreaTemperatureSetting(
@@ -151,7 +151,7 @@ class AreaHeatingScheduleIntegrationTest(
     // /// DELETE /areas/{areaId}/heating-schedule //////////////////////////////////////////////////////////////////////
 
     @Test fun `deleteHeatingSchedule() deletes schedule and returns 204`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         areasRepository.save(area)
         temperatureSettingsRepository.createSetting(anAreaTemperatureSetting(areaId = area.uuid))
 

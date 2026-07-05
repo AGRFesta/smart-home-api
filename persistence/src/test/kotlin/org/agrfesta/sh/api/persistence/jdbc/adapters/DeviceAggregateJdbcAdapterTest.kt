@@ -16,7 +16,7 @@ import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
 import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.domain.anActuatorProviderData
-import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaView
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -72,7 +72,7 @@ class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
         every { timeProvider.now() } returns Instant.now()
         val deviceId = UUID.randomUUID()
         devicesRepo.persist(deviceId, aSensorProviderData())
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         sensorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = deviceId)
 
         // When
@@ -92,7 +92,7 @@ class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
         every { timeProvider.now() } returns Instant.now()
         val deviceId = UUID.randomUUID()
         devicesRepo.persist(deviceId, anActuatorProviderData())
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         actuatorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = deviceId)
 
         // When
@@ -112,8 +112,8 @@ class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
         every { timeProvider.now() } returns Instant.now()
         val deviceId = UUID.randomUUID()
         devicesRepo.persist(deviceId, aProviderDeviceData())
-        val sensorArea = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
-        val actuatorArea = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val sensorArea = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val actuatorArea = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         sensorsAssignmentsRepo.persistAssignment(areaId = sensorArea.uuid, deviceId = deviceId)
         actuatorsAssignmentsRepo.persistAssignment(areaId = actuatorArea.uuid, deviceId = deviceId)
 
@@ -135,7 +135,7 @@ class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
         every { timeProvider.now() } returns Instant.now()
         val deviceId = UUID.randomUUID()
         devicesRepo.persist(deviceId, aSensorProviderData())
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         sensorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = deviceId)
         sensorsAssignmentsRepo.disconnectSensor(areaId = area.uuid, deviceId = deviceId)
 

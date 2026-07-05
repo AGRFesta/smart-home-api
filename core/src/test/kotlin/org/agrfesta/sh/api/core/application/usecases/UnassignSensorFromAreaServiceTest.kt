@@ -15,7 +15,7 @@ import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.SensorNotAssigned
 import org.agrfesta.sh.api.domain.aSensor
-import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaView
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -27,7 +27,7 @@ class UnassignSensorFromAreaServiceTest {
     private val sut = UnassignSensorFromAreaService(areasRepository, devicesRepository, sensorsAssignmentsRepository)
 
     @Test fun `execute() returns Right(Unit) on success`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
         val device = aSensor()
         every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
@@ -38,7 +38,7 @@ class UnassignSensorFromAreaServiceTest {
     }
 
     @Test fun `execute() returns SensorNotAssigned when no active assignment found for this area`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
         val device = aSensor()
         every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
@@ -50,7 +50,7 @@ class UnassignSensorFromAreaServiceTest {
     }
 
     @Test fun `execute() returns DeviceNotFound when device does not exist`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
         val deviceId = UUID.randomUUID()
         every { devicesRepository.getDeviceById(deviceId) } returns DeviceNotFound(deviceId).left()

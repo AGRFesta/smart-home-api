@@ -11,7 +11,7 @@ import io.mockk.mockk
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
-import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaView
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -23,7 +23,7 @@ class GetAreaByIdServiceTest {
     @Test
     fun `execute() Returns the area when found`() {
         // Given
-        val area = anAreaDto()
+        val area = anAreaView()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
 
         // When

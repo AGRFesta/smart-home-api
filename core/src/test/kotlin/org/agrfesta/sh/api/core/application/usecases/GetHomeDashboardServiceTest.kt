@@ -18,13 +18,13 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevic
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
+import org.agrfesta.sh.api.core.application.readmodels.commons.FieldFailure
+import org.agrfesta.sh.api.core.application.readmodels.commons.FieldSuccess
 import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.sh.api.core.application.usecases.heating.HeatingStrategySelector.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.sh.api.core.domain.alerts.AlertStatus
 import org.agrfesta.sh.api.core.domain.alerts.AlertTarget
 import org.agrfesta.sh.api.core.domain.alerts.AlertType
-import org.agrfesta.sh.api.core.domain.commons.FieldFailure
-import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.commons.average
 import org.agrfesta.sh.api.core.domain.devices.Provider
@@ -39,8 +39,8 @@ import org.agrfesta.sh.api.domain.aSensor
 import org.agrfesta.sh.api.domain.aTemperatureInterval
 import org.agrfesta.sh.api.domain.anActuator
 import org.agrfesta.sh.api.domain.anAlert
-import org.agrfesta.sh.api.domain.anAreaDtoWithDevices
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
+import org.agrfesta.sh.api.domain.anAreaWithDevicesView
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.junit.jupiter.api.Test
@@ -181,8 +181,8 @@ class GetHomeDashboardServiceTest {
     }
 
     @Test fun `execute() areas contains id and name for each area`() {
-        val area1 = anAreaDtoWithDevices()
-        val area2 = anAreaDtoWithDevices()
+        val area1 = anAreaWithDevicesView()
+        val area2 = anAreaWithDevicesView()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area1, area2).right()
 
         val result = sut.execute().shouldBeRight()
@@ -198,7 +198,7 @@ class GetHomeDashboardServiceTest {
     // heating — currentTemperature ////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `execute() area heating currentTemperature is null when area has no sensors`() {
-        val area = anAreaDtoWithDevices(sensors = emptyList())
+        val area = anAreaWithDevicesView(sensors = emptyList())
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
 
         val result = sut.execute().shouldBeRight()
@@ -214,7 +214,7 @@ class GetHomeDashboardServiceTest {
     fun `execute() area heating currentTemperature is the sensor temperature when area has one sensor with readings`() {
         val sensor = aSensor()
         val data = aRandomThermoHygroData()
-        val area = anAreaDtoWithDevices(sensors = listOf(sensor))
+        val area = anAreaWithDevicesView(sensors = listOf(sensor))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { sensorsCurrentReadingsRepository.findBy(sensor) } returns data.right()
 
@@ -229,7 +229,7 @@ class GetHomeDashboardServiceTest {
 
     @Test fun `execute() area heating currentTemperature is null when sensor has no cached readings`() {
         val sensor = aSensor()
-        val area = anAreaDtoWithDevices(sensors = listOf(sensor))
+        val area = anAreaWithDevicesView(sensors = listOf(sensor))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { sensorsCurrentReadingsRepository.findBy(sensor) } returns null.right()
 
@@ -248,7 +248,7 @@ class GetHomeDashboardServiceTest {
         val sensor2 = aSensor()
         val data1 = aRandomThermoHygroData()
         val data2 = aRandomThermoHygroData()
-        val area = anAreaDtoWithDevices(sensors = listOf(sensor1, sensor2))
+        val area = anAreaWithDevicesView(sensors = listOf(sensor1, sensor2))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { sensorsCurrentReadingsRepository.findBy(sensor1) } returns data1.right()
         every { sensorsCurrentReadingsRepository.findBy(sensor2) } returns data2.right()
@@ -267,7 +267,7 @@ class GetHomeDashboardServiceTest {
         val sensor1 = aSensor()
         val sensor2 = aSensor()
         val data = aRandomThermoHygroData()
-        val area = anAreaDtoWithDevices(sensors = listOf(sensor1, sensor2))
+        val area = anAreaWithDevicesView(sensors = listOf(sensor1, sensor2))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { sensorsCurrentReadingsRepository.findBy(sensor1) } returns data.right()
         every { sensorsCurrentReadingsRepository.findBy(sensor2) } returns null.right()
@@ -283,7 +283,7 @@ class GetHomeDashboardServiceTest {
 
     @Test fun `execute() area heating currentTemperature is a FieldFailure when sensor readings lookup fails`() {
         val sensor = aSensor()
-        val area = anAreaDtoWithDevices(sensors = listOf(sensor))
+        val area = anAreaWithDevicesView(sensors = listOf(sensor))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { sensorsCurrentReadingsRepository.findBy(sensor) } returns
             ReadingsLookupError(Exception("cache error")).left()
@@ -301,7 +301,7 @@ class GetHomeDashboardServiceTest {
         val failingSensor = aSensor()
         val workingSensor = aSensor()
         val data = aRandomThermoHygroData()
-        val area = anAreaDtoWithDevices(sensors = listOf(failingSensor, workingSensor))
+        val area = anAreaWithDevicesView(sensors = listOf(failingSensor, workingSensor))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { sensorsCurrentReadingsRepository.findBy(failingSensor) } returns
             ReadingsLookupError(Exception("cache error")).left()
@@ -319,7 +319,7 @@ class GetHomeDashboardServiceTest {
     // heating — targetTemperature /////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `execute() area heating targetTemperature is null when no temperature setting exists for the area`() {
-        val area = anAreaDtoWithDevices()
+        val area = anAreaWithDevicesView()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { temperatureSettingsRepository.findAreaSetting(area.uuid) } returns null.right()
         every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PropertyEntry("true").right()
@@ -335,7 +335,7 @@ class GetHomeDashboardServiceTest {
 
     @Test
     fun `execute() area heating targetTemperature is the default temperature when no interval matches`() {
-        val area = anAreaDtoWithDevices()
+        val area = anAreaWithDevicesView()
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = emptySet())
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { temperatureSettingsRepository.findAreaSetting(area.uuid) } returns setting.right()
@@ -352,7 +352,7 @@ class GetHomeDashboardServiceTest {
     }
 
     @Test fun `execute() area heating targetTemperature is the interval temperature when a matching interval exists`() {
-        val area = anAreaDtoWithDevices()
+        val area = anAreaWithDevicesView()
         val intervalTemp = aRandomTemperature()
         val interval = aTemperatureInterval(
             temperature = intervalTemp,
@@ -375,7 +375,7 @@ class GetHomeDashboardServiceTest {
     }
 
     @Test fun `execute() area heating targetTemperature is a FieldFailure when temperature settings lookup fails`() {
-        val area = anAreaDtoWithDevices()
+        val area = anAreaWithDevicesView()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { temperatureSettingsRepository.findAreaSetting(area.uuid) } returns
             HeatingScheduleRepositoryError.left()
@@ -391,7 +391,7 @@ class GetHomeDashboardServiceTest {
     }
 
     @Test fun `execute() area heating targetTemperature is null when heating is disabled`() {
-        val area = anAreaDtoWithDevices()
+        val area = anAreaWithDevicesView()
         val setting = anAreaTemperatureSetting(areaId = area.uuid)
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { temperatureSettingsRepository.findAreaSetting(area.uuid) } returns setting.right()
@@ -407,7 +407,7 @@ class GetHomeDashboardServiceTest {
     }
 
     @Test fun `execute() area heating targetTemperature is null when heating state cannot be determined`() {
-        val area = anAreaDtoWithDevices()
+        val area = anAreaWithDevicesView()
         val setting = anAreaTemperatureSetting(areaId = area.uuid)
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { temperatureSettingsRepository.findAreaSetting(area.uuid) } returns setting.right()
@@ -427,7 +427,7 @@ class GetHomeDashboardServiceTest {
     // humidity — relative /////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `execute() area humidity relative is null when area has no sensors`() {
-        val area = anAreaDtoWithDevices(sensors = emptyList())
+        val area = anAreaWithDevicesView(sensors = emptyList())
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
 
         val result = sut.execute().shouldBeRight()
@@ -442,7 +442,7 @@ class GetHomeDashboardServiceTest {
     @Test fun `execute() area humidity relative is the sensor humidity when area has one sensor with readings`() {
         val sensor = aSensor()
         val data = aRandomThermoHygroData()
-        val area = anAreaDtoWithDevices(sensors = listOf(sensor))
+        val area = anAreaWithDevicesView(sensors = listOf(sensor))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { sensorsCurrentReadingsRepository.findBy(sensor) } returns data.right()
 
@@ -457,7 +457,7 @@ class GetHomeDashboardServiceTest {
 
     @Test fun `execute() area humidity relative is null when sensor has no cached readings`() {
         val sensor = aSensor()
-        val area = anAreaDtoWithDevices(sensors = listOf(sensor))
+        val area = anAreaWithDevicesView(sensors = listOf(sensor))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { sensorsCurrentReadingsRepository.findBy(sensor) } returns null.right()
 
@@ -475,7 +475,7 @@ class GetHomeDashboardServiceTest {
         val sensor2 = aSensor()
         val data1 = aRandomThermoHygroData()
         val data2 = aRandomThermoHygroData()
-        val area = anAreaDtoWithDevices(sensors = listOf(sensor1, sensor2))
+        val area = anAreaWithDevicesView(sensors = listOf(sensor1, sensor2))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { sensorsCurrentReadingsRepository.findBy(sensor1) } returns data1.right()
         every { sensorsCurrentReadingsRepository.findBy(sensor2) } returns data2.right()
@@ -494,7 +494,7 @@ class GetHomeDashboardServiceTest {
         val sensor1 = aSensor()
         val sensor2 = aSensor()
         val data = aRandomThermoHygroData()
-        val area = anAreaDtoWithDevices(sensors = listOf(sensor1, sensor2))
+        val area = anAreaWithDevicesView(sensors = listOf(sensor1, sensor2))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { sensorsCurrentReadingsRepository.findBy(sensor1) } returns data.right()
         every { sensorsCurrentReadingsRepository.findBy(sensor2) } returns null.right()
@@ -510,7 +510,7 @@ class GetHomeDashboardServiceTest {
 
     @Test fun `execute() area humidity relative is a FieldFailure when sensor readings lookup fails`() {
         val sensor = aSensor()
-        val area = anAreaDtoWithDevices(sensors = listOf(sensor))
+        val area = anAreaWithDevicesView(sensors = listOf(sensor))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { sensorsCurrentReadingsRepository.findBy(sensor) } returns
             ReadingsLookupError(Exception("cache error")).left()
@@ -528,7 +528,7 @@ class GetHomeDashboardServiceTest {
         val failingSensor = aSensor()
         val workingSensor = aSensor()
         val data = aRandomThermoHygroData()
-        val area = anAreaDtoWithDevices(sensors = listOf(failingSensor, workingSensor))
+        val area = anAreaWithDevicesView(sensors = listOf(failingSensor, workingSensor))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { sensorsCurrentReadingsRepository.findBy(failingSensor) } returns
             ReadingsLookupError(Exception("cache error")).left()
@@ -546,7 +546,7 @@ class GetHomeDashboardServiceTest {
     // activeAlerts ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `execute() area activeAlerts is an empty set when there are no open alerts`() {
-        val area = anAreaDtoWithDevices()
+        val area = anAreaWithDevicesView()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { alertsRepository.getAlerts(AlertStatus.OPEN) } returns emptyList<Nothing>().right()
 
@@ -559,7 +559,7 @@ class GetHomeDashboardServiceTest {
 
     @Test fun `execute() area activeAlerts contains the alert type when an open alert targets a sensor of the area`() {
         val sensor = aSensor()
-        val area = anAreaDtoWithDevices(sensors = listOf(sensor))
+        val area = anAreaWithDevicesView(sensors = listOf(sensor))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { alertsRepository.getAlerts(AlertStatus.OPEN) } returns
             listOf(anAlert(type = AlertType.BATTERY_LOW, target = AlertTarget.Device(sensor.uuid))).right()
@@ -573,7 +573,7 @@ class GetHomeDashboardServiceTest {
 
     @Test fun `execute() area activeAlerts excludes open alerts not targeting a device of the area`() {
         val sensor = aSensor()
-        val area = anAreaDtoWithDevices(sensors = listOf(sensor))
+        val area = anAreaWithDevicesView(sensors = listOf(sensor))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { alertsRepository.getAlerts(AlertStatus.OPEN) } returns listOf(
             anAlert(target = AlertTarget.Device(UUID.randomUUID())),
@@ -591,7 +591,7 @@ class GetHomeDashboardServiceTest {
     @Test
     fun `execute() area activeAlerts contains the alert type when an open alert targets an actuator of the area`() {
         val actuator = anActuator()
-        val area = anAreaDtoWithDevices(actuators = listOf(actuator))
+        val area = anAreaWithDevicesView(actuators = listOf(actuator))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area).right()
         every { alertsRepository.getAlerts(AlertStatus.OPEN) } returns
             listOf(anAlert(type = AlertType.BATTERY_LOW, target = AlertTarget.Device(actuator.uuid))).right()
@@ -604,8 +604,8 @@ class GetHomeDashboardServiceTest {
     }
 
     @Test fun `execute() area activeAlerts is a FieldFailure on every area when open alerts lookup fails`() {
-        val area1 = anAreaDtoWithDevices(sensors = listOf(aSensor()))
-        val area2 = anAreaDtoWithDevices()
+        val area1 = anAreaWithDevicesView(sensors = listOf(aSensor()))
+        val area2 = anAreaWithDevicesView()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area1, area2).right()
         every { alertsRepository.getAlerts(AlertStatus.OPEN) } returns AlertRepositoryError.left()
 
@@ -619,8 +619,8 @@ class GetHomeDashboardServiceTest {
     }
 
     @Test fun `execute() reads open alerts once regardless of the number of areas and devices`() {
-        val area1 = anAreaDtoWithDevices(sensors = listOf(aSensor()))
-        val area2 = anAreaDtoWithDevices(sensors = listOf(aSensor()), actuators = listOf(anActuator()))
+        val area1 = anAreaWithDevicesView(sensors = listOf(aSensor()))
+        val area2 = anAreaWithDevicesView(sensors = listOf(aSensor()), actuators = listOf(anActuator()))
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area1, area2).right()
         every { alertsRepository.getAlerts(AlertStatus.OPEN) } returns emptyList<Nothing>().right()
 

@@ -17,7 +17,7 @@ import org.agrfesta.sh.api.core.application.ports.inbounds.GetAreasUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignActuatorFromAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignSensorFromAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.UpdateAreaUseCase
-import org.agrfesta.sh.api.core.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.application.readmodels.areas.AreaView
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.failures.ActuatorNotAssigned
@@ -33,7 +33,7 @@ import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
 import org.agrfesta.sh.api.core.domain.failures.SensorNotAssigned
 import org.agrfesta.sh.api.domain.aSensor
 import org.agrfesta.sh.api.domain.anActuator
-import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaView
 import org.agrfesta.sh.api.security.SecurityConfig
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
@@ -116,7 +116,7 @@ class AreasControllerMvcSliceTest(
         val uuid = UUID.randomUUID()
         every {
             createAreaUseCase.execute(name, null)
-        } returns AreaDto(uuid = uuid, name = name, isIndoor = true).right()
+        } returns AreaView(uuid = uuid, name = name, isIndoor = true).right()
 
         val responseBody: String = mockMvc.perform(
             post("/areas")
@@ -138,7 +138,7 @@ class AreasControllerMvcSliceTest(
         val uuid = UUID.randomUUID()
         every {
             createAreaUseCase.execute(name, true)
-        } returns AreaDto(uuid = uuid, name = name, isIndoor = true).right()
+        } returns AreaView(uuid = uuid, name = name, isIndoor = true).right()
 
         val responseBody: String = mockMvc.perform(
             post("/areas")
@@ -160,7 +160,7 @@ class AreasControllerMvcSliceTest(
         val uuid = UUID.randomUUID()
         every {
             createAreaUseCase.execute(name, false)
-        } returns AreaDto(uuid = uuid, name = name, isIndoor = false).right()
+        } returns AreaView(uuid = uuid, name = name, isIndoor = false).right()
 
         val responseBody: String = mockMvc.perform(
             post("/areas")
@@ -236,7 +236,7 @@ class AreasControllerMvcSliceTest(
     }
 
     @Test fun `update() returns 200 with updated area body on success`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         val newName = aRandomUniqueString()
         val updated = area.copy(name = newName, isIndoor = false)
         every { updateAreaUseCase.execute(area.uuid, newName, false) } returns updated.right()
@@ -331,7 +331,7 @@ class AreasControllerMvcSliceTest(
     }
 
     @Test fun `getById() returns 200 with area body on success`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         every { getAreaByIdUseCase.execute(area.uuid) } returns area.right()
 
         val responseBody: String = mockMvc.perform(
@@ -355,7 +355,7 @@ class AreasControllerMvcSliceTest(
     }
 
     @Test fun `getAll() returns 200 with empty array when no areas exist`() {
-        every { getAreasUseCase.execute() } returns emptyList<AreaDto>().right()
+        every { getAreasUseCase.execute() } returns emptyList<AreaView>().right()
 
         val responseBody: String = mockMvc.perform(
             get("/areas").authenticated()
@@ -381,8 +381,8 @@ class AreasControllerMvcSliceTest(
     }
 
     @Test fun `getAll() returns 200 with areas array on success`() {
-        val area1 = anAreaDto()
-        val area2 = anAreaDto()
+        val area1 = anAreaView()
+        val area2 = anAreaView()
         every { getAreasUseCase.execute() } returns listOf(area1, area2).right()
 
         val responseBody: String = mockMvc.perform(

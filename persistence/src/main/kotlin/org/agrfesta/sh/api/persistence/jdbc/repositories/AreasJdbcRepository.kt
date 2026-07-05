@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
-import org.agrfesta.sh.api.core.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.application.readmodels.areas.AreaView
 import org.agrfesta.sh.api.persistence.SameNameAreaException
 import org.agrfesta.sh.api.persistence.jdbc.entities.AreaEntity
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
@@ -22,7 +22,7 @@ class AreasJdbcRepository(
     private val timeProvider: TimeProvider
 ) {
 
-    fun persist(area: AreaDto) {
+    fun persist(area: AreaView) {
         val sql = """
             INSERT INTO smart_home.area (uuid, name, created_on, updated_on)
             VALUES (:uuid, :name, :createdOn, :updatedOn)
@@ -60,7 +60,7 @@ class AreasJdbcRepository(
 
     fun getAll(): Collection<AreaEntity> = jdbcTemplate.query("""SELECT * FROM smart_home.area""", AreaRowMapper)
 
-    fun update(area: AreaDto): Int {
+    fun update(area: AreaView): Int {
         val sql = """
             UPDATE smart_home.area
             SET name = :name, is_indoor = :isIndoor, updated_on = :updatedOn

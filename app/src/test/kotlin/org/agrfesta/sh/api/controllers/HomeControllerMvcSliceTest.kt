@@ -10,17 +10,17 @@ import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHomeDashboardUseCase
+import org.agrfesta.sh.api.core.application.readmodels.commons.FieldFailure
+import org.agrfesta.sh.api.core.application.readmodels.commons.FieldSuccess
+import org.agrfesta.sh.api.core.application.readmodels.home.AreaDashboardView
+import org.agrfesta.sh.api.core.application.readmodels.home.GlobalStateView
+import org.agrfesta.sh.api.core.application.readmodels.home.HeatingView
+import org.agrfesta.sh.api.core.application.readmodels.home.HomeDashboardView
+import org.agrfesta.sh.api.core.application.readmodels.home.HumidityView
+import org.agrfesta.sh.api.core.application.readmodels.home.MeasurementsView
 import org.agrfesta.sh.api.core.domain.alerts.AlertType
-import org.agrfesta.sh.api.core.domain.commons.FieldFailure
-import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
 import org.agrfesta.sh.api.core.domain.failures.GetHomeDashboardFailure
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
-import org.agrfesta.sh.api.core.domain.home.AreaDashboardDto
-import org.agrfesta.sh.api.core.domain.home.GlobalStateDto
-import org.agrfesta.sh.api.core.domain.home.HeatingDto
-import org.agrfesta.sh.api.core.domain.home.HomeDashboardDto
-import org.agrfesta.sh.api.core.domain.home.HumidityDto
-import org.agrfesta.sh.api.core.domain.home.MeasurementsDto
 import org.agrfesta.sh.api.home.DefaultSseEmitterFactory
 import org.agrfesta.sh.api.home.HomeStreamBroadcaster
 import org.agrfesta.sh.api.security.SecurityConfig
@@ -66,21 +66,21 @@ class HomeControllerMvcSliceTest(
         val areaId = UUID.randomUUID()
         val currentTemp = aRandomTemperature()
         val targetTemp = aRandomTemperature()
-        val dashboard = HomeDashboardDto(
-            globalState = GlobalStateDto(
+        val dashboard = HomeDashboardView(
+            globalState = GlobalStateView(
                 heatingActive = FieldSuccess(true),
                 strategy = FieldSuccess(SharedHeatingStrategy.COMFORT)
             ),
             areas = listOf(
-                AreaDashboardDto(
+                AreaDashboardView(
                     id = areaId,
                     name = "Living Room",
-                    measurements = MeasurementsDto(
-                        heating = HeatingDto(
+                    measurements = MeasurementsView(
+                        heating = HeatingView(
                             currentTemperature = FieldSuccess(currentTemp),
                             targetTemperature = FieldSuccess(targetTemp)
                         ),
-                        humidity = HumidityDto(relative = FieldSuccess(BigDecimal("45.5")))
+                        humidity = HumidityView(relative = FieldSuccess(BigDecimal("45.5")))
                     ),
                     activeAlerts = FieldSuccess(emptySet())
                 )
@@ -115,8 +115,8 @@ class HomeControllerMvcSliceTest(
     }
 
     @Test fun `getHome() serializes field failures in the response`() {
-        val dashboard = HomeDashboardDto(
-            globalState = GlobalStateDto(
+        val dashboard = HomeDashboardView(
+            globalState = GlobalStateView(
                 heatingActive = FieldSuccess(false),
                 strategy = FieldFailure("Unable to retrieve heating strategy")
             ),
@@ -137,16 +137,16 @@ class HomeControllerMvcSliceTest(
     }
 
     @Test fun `getHome() serializes area activeAlerts in the response`() {
-        val dashboard = HomeDashboardDto(
-            globalState = GlobalStateDto(
+        val dashboard = HomeDashboardView(
+            globalState = GlobalStateView(
                 heatingActive = FieldSuccess(false),
                 strategy = FieldSuccess(null)
             ),
             areas = listOf(
-                AreaDashboardDto(
+                AreaDashboardView(
                     id = UUID.randomUUID(),
                     name = "Living Room",
-                    measurements = MeasurementsDto(heating = null, humidity = null),
+                    measurements = MeasurementsView(heating = null, humidity = null),
                     activeAlerts = FieldSuccess(setOf(AlertType.BATTERY_LOW))
                 )
             )
@@ -187,8 +187,8 @@ class HomeControllerMvcSliceTest(
     // /// getHomeStream ////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `getHomeStream() returns 200 text event-stream with the initial dashboard event`() {
-        val dashboard = HomeDashboardDto(
-            globalState = GlobalStateDto(
+        val dashboard = HomeDashboardView(
+            globalState = GlobalStateView(
                 heatingActive = FieldSuccess(true),
                 strategy = FieldSuccess(SharedHeatingStrategy.COMFORT)
             ),

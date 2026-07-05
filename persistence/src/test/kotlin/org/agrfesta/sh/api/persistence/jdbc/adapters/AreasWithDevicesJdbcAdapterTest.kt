@@ -8,7 +8,7 @@ import io.mockk.every
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.domain.anActuatorProviderData
-import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaView
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,8 +34,8 @@ class AreasWithDevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `getAllAreasWithDevices() Returns all areas without devices`() {
         every { timeProvider.now() } returns Instant.now()
-        areasRepo.persist(anAreaDto(name = aRandomUniqueString()))
-        areasRepo.persist(anAreaDto(name = aRandomUniqueString()))
+        areasRepo.persist(anAreaView(name = aRandomUniqueString()))
+        areasRepo.persist(anAreaView(name = aRandomUniqueString()))
 
         sut.getAllAreasWithDevices()
             .shouldBeRight()
@@ -45,7 +45,7 @@ class AreasWithDevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `getAllAreasWithDevices() Returns area with assigned sensor`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val sensorId = UUID.randomUUID()
         devicesRepo.persist(sensorId, aSensorProviderData())
         sensorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = sensorId)
@@ -64,7 +64,7 @@ class AreasWithDevicesJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `getAllAreasWithDevices() Returns area with assigned actuator`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val actuatorId = UUID.randomUUID()
         devicesRepo.persist(actuatorId, anActuatorProviderData())
         actuatorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = actuatorId)

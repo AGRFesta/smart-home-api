@@ -1,6 +1,6 @@
 package org.agrfesta.sh.api.controllers
 
-import org.agrfesta.sh.api.core.domain.areas.HeatingScheduleDto
+import org.agrfesta.sh.api.core.application.readmodels.areas.HeatingScheduleView
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT
 import java.math.BigDecimal
 import java.time.format.DateTimeFormatter
@@ -18,7 +18,7 @@ data class IntervalResponse(
     val endTime: String
 )
 
-fun HeatingScheduleDto.toResponse() = HeatingScheduleResponse(
+fun HeatingScheduleView.toResponse() = HeatingScheduleResponse(
     defaultTemperature = defaultTemperature.value,
     intervals = intervals.map {
         IntervalResponse(

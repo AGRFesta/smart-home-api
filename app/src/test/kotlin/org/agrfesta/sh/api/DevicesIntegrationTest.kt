@@ -37,7 +37,7 @@ import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.domain.anAlert
-import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaView
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.providers.netatmo.NetatmoIntegrationAsserter
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType
@@ -157,7 +157,7 @@ class DevicesIntegrationTest(
         val deviceId = UUID.randomUUID()
         val sensorData = aSensorProviderData(model = DeviceModel(SwitchBotDeviceType.METER.model))
         devicesDao.create(deviceId, sensorData).getOrElse { error("Failed to create device: $it") }
-        val area = anAreaDto(name = aRandomUniqueString())
+        val area = anAreaView(name = aRandomUniqueString())
         areasRepository.save(area).getOrElse { error("Failed to save area: $it") }
         sensorsAssignmentsRepository.assign(areaId = area.uuid, sensorId = deviceId)
             .getOrElse { error("Failed to assign sensor: $it") }

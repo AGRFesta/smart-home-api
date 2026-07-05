@@ -15,7 +15,7 @@ import org.agrfesta.sh.api.core.domain.failures.ActuatorNotAssigned
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.domain.anActuator
-import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaView
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -31,7 +31,7 @@ class UnassignActuatorFromAreaServiceTest {
     )
 
     @Test fun `execute() returns Right(Unit) on success`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
         val device = anActuator()
         every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
@@ -42,7 +42,7 @@ class UnassignActuatorFromAreaServiceTest {
     }
 
     @Test fun `execute() returns ActuatorNotAssigned when no assignment found for this area`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
         val device = anActuator()
         every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
@@ -54,7 +54,7 @@ class UnassignActuatorFromAreaServiceTest {
     }
 
     @Test fun `execute() returns DeviceNotFound when device does not exist`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
         val deviceId = UUID.randomUUID()
         every { devicesRepository.getDeviceById(deviceId) } returns DeviceNotFound(deviceId).left()

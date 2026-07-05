@@ -55,5 +55,16 @@ class CoreArchitectureTest {
             .because(
                 "The domain layer must be completely independent of the application layer (ports and use cases)"
             )
+
+        @JvmField
+        @ArchTest
+        val noDtosOrViewsInDomain: ArchRule = noClasses()
+            .that().resideInAPackage("..core.domain..")
+            .should().haveSimpleNameEndingWith("Dto")
+            .orShould().haveSimpleNameEndingWith("View")
+            .because(
+                "DTOs and read-models are application concerns; " +
+                    "they belong in core.application.readmodels, not in the domain"
+            )
     }
 }

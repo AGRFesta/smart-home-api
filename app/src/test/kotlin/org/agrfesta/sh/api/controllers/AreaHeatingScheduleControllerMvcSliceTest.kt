@@ -10,8 +10,8 @@ import io.mockk.every
 import org.agrfesta.sh.api.core.application.ports.inbounds.DeleteHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingScheduleUseCase
-import org.agrfesta.sh.api.core.domain.areas.HeatingScheduleDto
-import org.agrfesta.sh.api.core.domain.areas.IntervalDto
+import org.agrfesta.sh.api.core.application.readmodels.areas.HeatingScheduleView
+import org.agrfesta.sh.api.core.application.readmodels.areas.IntervalView
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
@@ -54,12 +54,12 @@ class AreaHeatingScheduleControllerMvcSliceTest(
 
     @Test fun `getHeatingSchedule() returns 200 with schedule when area has a heating schedule`() {
         val areaId = UUID.randomUUID()
-        val returnedInterval = IntervalDto(
+        val returnedInterval = IntervalView(
             temperature = aRandomTemperature(),
             startTime = aDailyTime(hour = 8),
             endTime = aDailyTime(hour = 22)
         )
-        val returnedSchedule = HeatingScheduleDto(
+        val returnedSchedule = HeatingScheduleView(
             defaultTemperature = aRandomTemperature(),
             intervals = listOf(returnedInterval)
         )
@@ -194,12 +194,12 @@ class AreaHeatingScheduleControllerMvcSliceTest(
     @Test fun `replaceHeatingSchedule() returns 200 with updated schedule on success`() {
         val areaId = UUID.randomUUID()
         val temp = aRandomTemperature().value
-        val returnedInterval = IntervalDto(
+        val returnedInterval = IntervalView(
             temperature = aRandomTemperature(),
             startTime = aDailyTime(hour = 8),
             endTime = aDailyTime(hour = 22)
         )
-        val returnedSchedule = HeatingScheduleDto(
+        val returnedSchedule = HeatingScheduleView(
             defaultTemperature = aRandomTemperature(),
             intervals = listOf(returnedInterval)
         )

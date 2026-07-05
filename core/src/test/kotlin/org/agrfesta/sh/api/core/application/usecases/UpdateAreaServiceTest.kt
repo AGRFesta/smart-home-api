@@ -12,7 +12,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepositor
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
-import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaView
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import java.util.*
@@ -23,9 +23,9 @@ class UpdateAreaServiceTest {
     private val sut = UpdateAreaService(areasRepository)
 
     @Test
-    fun `execute() Returns updated AreaDto on success`() {
+    fun `execute() Returns updated AreaView on success`() {
         // Given
-        val existing = anAreaDto()
+        val existing = anAreaView()
         val updatedArea = existing.copy(name = aRandomUniqueString(), isIndoor = !existing.isIndoor)
         every { areasRepository.update(updatedArea) } returns updatedArea.right()
 

@@ -15,7 +15,7 @@ import org.agrfesta.sh.api.core.domain.areas.AreaTemperatureSetting
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
-import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaView
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.junit.jupiter.api.Test
 import java.time.LocalTime
@@ -43,7 +43,7 @@ class GetHeatingScheduleServiceTest {
     @Test
     fun `execute() returns HeatingScheduleRepositoryError when findAreaSetting fails`() {
         val areaId = UUID.randomUUID()
-        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { areasRepository.getAreaById(areaId) } returns anAreaView(uuid = areaId).right()
         every { temperatureSettingsRepository.findAreaSetting(areaId) } returns HeatingScheduleRepositoryError.left()
 
         sut.execute(areaId)
@@ -54,20 +54,20 @@ class GetHeatingScheduleServiceTest {
     @Test
     fun `execute() returns null when area exists but has no schedule`() {
         val areaId = UUID.randomUUID()
-        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { areasRepository.getAreaById(areaId) } returns anAreaView(uuid = areaId).right()
         every { temperatureSettingsRepository.findAreaSetting(areaId) } returns null.right()
 
         sut.execute(areaId).shouldBeRight().shouldBe(null)
     }
 
     @Test
-    fun `execute() returns HeatingScheduleDto with correct data when schedule exists`() {
+    fun `execute() returns HeatingScheduleView with correct data when schedule exists`() {
         val areaId = UUID.randomUUID()
         val defaultTemperature = aRandomTemperature()
         val interval1 = TemperatureInterval(aRandomTemperature(), LocalTime.of(8, 0), LocalTime.of(10, 0))
         val interval2 = TemperatureInterval(aRandomTemperature(), LocalTime.of(12, 0), LocalTime.of(14, 0))
 
-        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { areasRepository.getAreaById(areaId) } returns anAreaView(uuid = areaId).right()
         every { temperatureSettingsRepository.findAreaSetting(areaId) } returns AreaTemperatureSetting(
             areaId = areaId,
             defaultTemperature = defaultTemperature,
@@ -91,11 +91,11 @@ class GetHeatingScheduleServiceTest {
     }
 
     @Test
-    fun `execute() returns HeatingScheduleDto with empty intervals when schedule has no intervals`() {
+    fun `execute() returns HeatingScheduleView with empty intervals when schedule has no intervals`() {
         val areaId = UUID.randomUUID()
         val defaultTemperature = aRandomTemperature()
 
-        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { areasRepository.getAreaById(areaId) } returns anAreaView(uuid = areaId).right()
         every { temperatureSettingsRepository.findAreaSetting(areaId) } returns AreaTemperatureSetting(
             areaId = areaId,
             defaultTemperature = defaultTemperature,

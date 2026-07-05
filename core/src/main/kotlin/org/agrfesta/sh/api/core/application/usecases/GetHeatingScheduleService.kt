@@ -5,8 +5,8 @@ import arrow.core.flatMap
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
-import org.agrfesta.sh.api.core.domain.areas.HeatingScheduleDto
-import org.agrfesta.sh.api.core.domain.areas.IntervalDto
+import org.agrfesta.sh.api.core.application.readmodels.areas.HeatingScheduleView
+import org.agrfesta.sh.api.core.application.readmodels.areas.IntervalView
 import org.agrfesta.sh.api.core.domain.failures.AreaFetchFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
@@ -21,16 +21,16 @@ class GetHeatingScheduleService(
     private val temperatureSettingsRepository: TemperatureSettingsRepository
 ) : GetHeatingScheduleUseCase {
 
-    override fun execute(areaId: UUID): Either<TemperatureSettingRetrievalFailure, HeatingScheduleDto?> =
+    override fun execute(areaId: UUID): Either<TemperatureSettingRetrievalFailure, HeatingScheduleView?> =
         areasRepository.getAreaById(areaId)
             .mapLeft { it.toRetrievalFailure() }
             .flatMap { _ ->
                 temperatureSettingsRepository.findAreaSetting(areaId).map { setting ->
                     setting?.let {
-                        HeatingScheduleDto(
+                        HeatingScheduleView(
                             defaultTemperature = it.defaultTemperature,
                             intervals = it.temperatureSchedule.map { interval ->
-                                IntervalDto(
+                                IntervalView(
                                     temperature = interval.temperature,
                                     startTime = interval.startTime,
                                     endTime = interval.endTime
