@@ -18,12 +18,12 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevi
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.SharedHeater
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
+import org.agrfesta.sh.api.core.application.readmodels.areas.AreaWithDevicesView
 import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.sh.api.core.application.usecases.heating.HeatingStrategySelector
 import org.agrfesta.sh.api.core.application.usecases.heating.HeatingStrategySelector.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.sh.api.core.application.usecases.heating.toSensorMockk
 import org.agrfesta.sh.api.core.application.usecases.heating.toSharedHeaterMockk
-import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
 import org.agrfesta.sh.api.core.domain.areas.AreaTemperatureSetting
 import org.agrfesta.sh.api.core.domain.commons.Percentage
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
@@ -50,7 +50,7 @@ import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.COMFORT
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.ECONOMY
 import org.agrfesta.sh.api.domain.aSensor
 import org.agrfesta.sh.api.domain.anActuator
-import org.agrfesta.sh.api.domain.anAreaDtoWithDevices
+import org.agrfesta.sh.api.domain.anAreaWithDevicesView
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.aThermoHygroDataValue
 import org.junit.jupiter.api.Test
@@ -84,7 +84,7 @@ class EvaluateHeatingStateServiceTest {
         every { timeProvider.currentLocalTime() } returns LocalTime.now()
         every { propertyRepository.findEntry(HEATING_ENABLED_KEY) } returns PropertyEntry("true").right()
         every { devicesRepository.getAll() } returns emptyList<Device>().right()
-        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns emptyList<AreaDtoWithDevices>().right()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns emptyList<AreaWithDevicesView>().right()
         every { temperatureSettingsRepository.findAreaSetting(any()) } returns null.right()
         every { strategySelector.select() } returns decide
     }
@@ -191,7 +191,7 @@ class EvaluateHeatingStateServiceTest {
         // Given — area with a resolved sensor but no heater: not heatable
         val sensorDto = aSensor()
         sensorDto.toSensorMockk(factory)
-        val areaDto = anAreaDtoWithDevices(sensors = listOf(sensorDto), actuators = emptyList())
+        val areaDto = anAreaWithDevicesView(sensors = listOf(sensorDto), actuators = emptyList())
         every { devicesRepository.getAll() } returns listOf(sensorDto).right()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(areaDto).right()
 
@@ -212,7 +212,7 @@ class EvaluateHeatingStateServiceTest {
         val sensorDto = aSensor()
         sensorDto.toSensorMockk(factory)
         val actuatorDto = anActuator()
-        val areaDto = anAreaDtoWithDevices(sensors = listOf(sensorDto), actuators = listOf(actuatorDto))
+        val areaDto = anAreaWithDevicesView(sensors = listOf(sensorDto), actuators = listOf(actuatorDto))
         every { devicesRepository.getAll() } returns listOf(sensorDto).right() // actuatorDto absent from registry
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(areaDto).right()
 
@@ -230,7 +230,7 @@ class EvaluateHeatingStateServiceTest {
         val sensorDto = aSensor()
         val actuatorDto = anActuator()
         actuatorDto.toSharedHeaterMockk(factory)
-        val areaDto = anAreaDtoWithDevices(sensors = listOf(sensorDto), actuators = listOf(actuatorDto))
+        val areaDto = anAreaWithDevicesView(sensors = listOf(sensorDto), actuators = listOf(actuatorDto))
         every { devicesRepository.getAll() } returns listOf(actuatorDto).right() // sensorDto absent from registry
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(areaDto).right()
 
@@ -246,7 +246,7 @@ class EvaluateHeatingStateServiceTest {
         // Given — area with a resolved heater but no sensors: not heatable
         val actuatorDto = anActuator()
         actuatorDto.toSharedHeaterMockk(factory)
-        val areaDto = anAreaDtoWithDevices(sensors = emptyList(), actuators = listOf(actuatorDto))
+        val areaDto = anAreaWithDevicesView(sensors = emptyList(), actuators = listOf(actuatorDto))
         every { devicesRepository.getAll() } returns listOf(actuatorDto).right()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(areaDto).right()
 
@@ -427,7 +427,7 @@ class EvaluateHeatingStateServiceTest {
         val sensor3 = sensorDto3.toSensorMockk(factory)
         every { sensor3.fetchReadings() } returns aThermoHygroDataValue(temperature = Temperature.of("20")).right()
         val (heaterDto, _) = aStubbedHeater()
-        val areaDto = anAreaDtoWithDevices(
+        val areaDto = anAreaWithDevicesView(
             sensors = listOf(sensorDto1, sensorDto2, sensorDto3),
             actuators = listOf(heaterDto)
         )
@@ -467,8 +467,8 @@ class EvaluateHeatingStateServiceTest {
         val sensor1 = aStubbedSensorDto()
         val sensor2 = aStubbedSensorDto()
         val (heaterDto, heater) = aStubbedHeater()
-        val area1 = anAreaDtoWithDevices(sensors = listOf(sensor1), actuators = listOf(heaterDto))
-        val area2 = anAreaDtoWithDevices(sensors = listOf(sensor2), actuators = listOf(heaterDto))
+        val area1 = anAreaWithDevicesView(sensors = listOf(sensor1), actuators = listOf(heaterDto))
+        val area2 = anAreaWithDevicesView(sensors = listOf(sensor2), actuators = listOf(heaterDto))
         every { devicesRepository.getAll() } returns listOf(sensor1, sensor2, heaterDto).right()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area1, area2).right()
         every { decide(any()) } returns HeaterCommand.ON
@@ -490,8 +490,8 @@ class EvaluateHeatingStateServiceTest {
         val sensor2 = aStubbedSensorDto()
         val (heater1Dto, heater1) = aStubbedHeater()
         val (heater2Dto, heater2) = aStubbedHeater()
-        val area1 = anAreaDtoWithDevices(sensors = listOf(sensor1), actuators = listOf(heater1Dto))
-        val area2 = anAreaDtoWithDevices(sensors = listOf(sensor2), actuators = listOf(heater2Dto))
+        val area1 = anAreaWithDevicesView(sensors = listOf(sensor1), actuators = listOf(heater1Dto))
+        val area2 = anAreaWithDevicesView(sensors = listOf(sensor2), actuators = listOf(heater2Dto))
         every { devicesRepository.getAll() } returns listOf(sensor1, sensor2, heater1Dto, heater2Dto).right()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(area1, area2).right()
         every { decide(any()) } returns HeaterCommand.ON
@@ -587,11 +587,11 @@ class EvaluateHeatingStateServiceTest {
         heaterDto: Device,
         current: Temperature,
         target: Temperature
-    ): Pair<Device, AreaDtoWithDevices> {
+    ): Pair<Device, AreaWithDevicesView> {
         val sensorDto = aSensor()
         val sensor = sensorDto.toSensorMockk(factory)
         every { sensor.fetchReadings() } returns aThermoHygroDataValue(temperature = current).right()
-        val areaDto = anAreaDtoWithDevices(sensors = listOf(sensorDto), actuators = listOf(heaterDto))
+        val areaDto = anAreaWithDevicesView(sensors = listOf(sensorDto), actuators = listOf(heaterDto))
         every { temperatureSettingsRepository.findAreaSetting(areaDto.uuid) } returns
             AreaTemperatureSetting(areaDto.uuid, target, emptySet()).right()
         return sensorDto to areaDto
@@ -631,7 +631,7 @@ class EvaluateHeatingStateServiceTest {
         val actuatorDto = anActuator()
         val heater = actuatorDto.toSharedHeaterMockk(factory)
         every { heater.getActuatorStatus() } returns heaterStatus
-        val areaDto = anAreaDtoWithDevices(sensors = listOf(sensorDto), actuators = listOf(actuatorDto))
+        val areaDto = anAreaWithDevicesView(sensors = listOf(sensorDto), actuators = listOf(actuatorDto))
         targetTemperature?.let {
             every { temperatureSettingsRepository.findAreaSetting(areaDto.uuid) } returns
                 AreaTemperatureSetting(areaDto.uuid, it, emptySet()).right()

@@ -20,7 +20,7 @@ import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.NotAnActuator
 import org.agrfesta.sh.api.domain.aDevice
 import org.agrfesta.sh.api.domain.aDevicePrototype
-import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaView
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -46,7 +46,7 @@ class AssignActuatorToAreaServiceTest {
     )
 
     @Test fun `execute() returns Right(Unit) when the device model has the ACTUATOR role`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
         val device = aDevice(model = actuatorModel)
         every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
@@ -57,7 +57,7 @@ class AssignActuatorToAreaServiceTest {
     }
 
     @Test fun `execute() returns NotAnActuator when the device model lacks the ACTUATOR role`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
         val device = aDevice(model = sensorModel)
         every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
@@ -71,7 +71,7 @@ class AssignActuatorToAreaServiceTest {
     }
 
     @Test fun `execute() returns NotAnActuator with empty roles when the device model is unknown`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
         val device = aDevice(model = DeviceModel("test/unknown"))
         every { devicesRepository.getDeviceById(device.uuid) } returns device.right()
@@ -85,7 +85,7 @@ class AssignActuatorToAreaServiceTest {
     }
 
     @Test fun `execute() returns DeviceNotFound when device does not exist`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         every { areasRepository.getAreaById(area.uuid) } returns area.right()
         val deviceId = UUID.randomUUID()
         every { devicesRepository.getDeviceById(deviceId) } returns DeviceNotFound(deviceId).left()

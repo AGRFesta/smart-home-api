@@ -1,6 +1,6 @@
 package org.agrfesta.sh.api.persistence.jdbc.entities
 
-import org.agrfesta.sh.api.core.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.application.readmodels.areas.AreaView
 import java.time.Instant
 import java.util.*
 
@@ -11,5 +11,5 @@ class AreaEntity(
     val createdOn: Instant,
     var updatedOn: Instant? = null
 ) {
-    fun asArea() = AreaDto(uuid, name, isIndoor = isIndoor)
+    fun asArea() = AreaView(uuid, name, isIndoor = isIndoor)
 }

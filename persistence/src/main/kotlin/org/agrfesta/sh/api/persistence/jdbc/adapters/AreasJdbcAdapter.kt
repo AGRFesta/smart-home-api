@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
-import org.agrfesta.sh.api.core.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.application.readmodels.areas.AreaView
 import org.agrfesta.sh.api.core.domain.failures.AreaCreationFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaDeletionFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaFetchFailure
@@ -27,7 +27,7 @@ class AreasJdbcAdapter(
 
     private val logger by LoggerDelegate()
 
-    override fun getAreaById(areaId: UUID): Either<AreaFetchFailure, AreaDto> = try {
+    override fun getAreaById(areaId: UUID): Either<AreaFetchFailure, AreaView> = try {
         areasRepo.findAreaById(areaId)?.asArea()?.right()
             ?: AreaNotFound(missingAreaId = areaId).left()
     } catch (e: DataAccessException) {
@@ -35,14 +35,14 @@ class AreasJdbcAdapter(
         AreaRepositoryError.left()
     }
 
-    override fun findAreaByName(name: String): Either<AreaRepositoryError, AreaDto?> = try {
+    override fun findAreaByName(name: String): Either<AreaRepositoryError, AreaView?> = try {
         areasRepo.findAreaByName(name)?.asArea().right()
     } catch (e: DataAccessException) {
         logger.error("Unexpected persistence error in AreasJdbcAdapter", e)
         AreaRepositoryError.left()
     }
 
-    override fun save(area: AreaDto): Either<AreaCreationFailure, Unit> = try {
+    override fun save(area: AreaView): Either<AreaCreationFailure, Unit> = try {
         areasRepo.persist(area).right()
     } catch (_: SameNameAreaException) {
         AreaNameConflict.left()
@@ -51,14 +51,14 @@ class AreasJdbcAdapter(
         AreaRepositoryError.left()
     }
 
-    override fun getAll(): Either<GetAreasFailure, Collection<AreaDto>> = try {
+    override fun getAll(): Either<GetAreasFailure, Collection<AreaView>> = try {
         areasRepo.getAll().map { it.asArea() }.right()
     } catch (e: DataAccessException) {
         logger.error("Unexpected persistence error in AreasJdbcAdapter", e)
         AreaRepositoryError.left()
     }
 
-    override fun update(area: AreaDto): Either<AreaUpdateFailure, AreaDto> = try {
+    override fun update(area: AreaView): Either<AreaUpdateFailure, AreaView> = try {
         if (areasRepo.update(area) == 0) { AreaNotFound(missingAreaId = area.uuid).left() } else { area.right() }
     } catch (_: SameNameAreaException) {
         AreaNameConflict.left()

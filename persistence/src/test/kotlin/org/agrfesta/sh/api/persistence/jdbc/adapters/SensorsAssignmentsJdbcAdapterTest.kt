@@ -13,7 +13,7 @@ import org.agrfesta.sh.api.core.domain.failures.SensorAlreadyAssigned
 import org.agrfesta.sh.api.core.domain.failures.SensorNotAssigned
 import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.agrfesta.sh.api.domain.aSensorProviderData
-import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaView
 import org.agrfesta.test.mothers.aProvider
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
@@ -47,7 +47,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `assign() Returns AssignmentRepositoryError when device is missing`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(
+        val area = anAreaView(
             name = aRandomUniqueString(),
             isIndoor = true
         ).also { areasRepo.persist(it) }
@@ -61,7 +61,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `assign() Returns SameAreaAssignment when sensor is already assigned to that area`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val sensorId = UUID.randomUUID()
         devicesRepo.persist(sensorId, aSensorProviderData())
         sensorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = sensorId)
@@ -74,8 +74,8 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `assign() Returns SensorAlreadyAssigned when sensor is already assigned to another area`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
-        val anotherArea = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val anotherArea = anAreaView(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val sensorId = UUID.randomUUID()
         devicesRepo.persist(sensorId, aSensorProviderData())
         sensorsAssignmentsRepo.persistAssignment(areaId = anotherArea.uuid, deviceId = sensorId)
@@ -111,7 +111,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `unassign() Returns Right(Unit) and disconnectedOn is set on success`() {
         val now = Instant.now().truncatedTo(ChronoUnit.MICROS)
         every { timeProvider.now() } returns now
-        val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val sensorId = UUID.randomUUID()
         devicesRepo.persist(sensorId, aSensorProviderData())
         sensorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = sensorId)
@@ -125,7 +125,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `unassign() Returns SensorNotAssigned when no active assignment exists for this area`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val sensorId = UUID.randomUUID()
         devicesRepo.persist(sensorId, aSensorProviderData())
 
@@ -138,7 +138,7 @@ class SensorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `assign() Assigns sensor to area`() {
         val now = Instant.now().truncatedTo(ChronoUnit.MICROS)
         every { timeProvider.now() } returns now
-        val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val sensorId = UUID.randomUUID()
         devicesRepo.persist(sensorId, aSensorProviderData())
 

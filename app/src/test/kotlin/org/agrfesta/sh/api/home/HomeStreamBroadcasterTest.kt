@@ -10,10 +10,10 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import org.agrfesta.sh.api.core.application.ports.inbounds.GetHomeDashboardUseCase
-import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
+import org.agrfesta.sh.api.core.application.readmodels.commons.FieldSuccess
+import org.agrfesta.sh.api.core.application.readmodels.home.GlobalStateView
+import org.agrfesta.sh.api.core.application.readmodels.home.HomeDashboardView
 import org.agrfesta.sh.api.core.domain.failures.GetHomeDashboardFailure
-import org.agrfesta.sh.api.core.domain.home.GlobalStateDto
-import org.agrfesta.sh.api.core.domain.home.HomeDashboardDto
 import org.junit.jupiter.api.Test
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.io.IOException
@@ -25,8 +25,8 @@ class HomeStreamBroadcasterTest {
 
     private val sut = HomeStreamBroadcaster(getHomeDashboardUseCase, sseEmitterFactory)
 
-    private val aDashboard = HomeDashboardDto(
-        globalState = GlobalStateDto(heatingActive = FieldSuccess(false), strategy = FieldSuccess(null)),
+    private val aDashboard = HomeDashboardView(
+        globalState = GlobalStateView(heatingActive = FieldSuccess(false), strategy = FieldSuccess(null)),
         areas = emptyList()
     )
 

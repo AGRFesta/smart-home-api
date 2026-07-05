@@ -12,8 +12,8 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevi
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.Sensor
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
+import org.agrfesta.sh.api.core.application.readmodels.areas.AreaWithDevicesView
 import org.agrfesta.sh.api.core.application.usecases.heating.HeatingStrategySelector
-import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.averageTemperature
@@ -119,7 +119,7 @@ class EvaluateHeatingStateService(
         ifRight = { ActuationOutcome.Issued }
     )
 
-    private fun AreaDtoWithDevices.resolveHeatable(devicesRegistry: Map<UUID, DeviceDriver>): ResolvedHeatableArea? {
+    private fun AreaWithDevicesView.resolveHeatable(devicesRegistry: Map<UUID, DeviceDriver>): ResolvedHeatableArea? {
         val resolvedSensors = sensors.mapNotNull { device ->
             (
                 devicesRegistry[device.uuid] ?: run {

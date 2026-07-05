@@ -12,8 +12,8 @@ import io.mockk.every
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.domain.aTemperatureInterval
-import org.agrfesta.sh.api.domain.anAreaDto
 import org.agrfesta.sh.api.domain.anAreaTemperatureSetting
+import org.agrfesta.sh.api.domain.anAreaView
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
@@ -43,7 +43,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `createSetting() Creates setting without intervals`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = emptySet())
 
         sut.createSetting(setting).shouldBeRight()
@@ -57,7 +57,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `createSetting() Creates setting with intervals`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val interval1 = aTemperatureInterval()
         val interval2 = aTemperatureInterval()
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = setOf(interval1, interval2))
@@ -71,7 +71,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `createSetting() Replaces existing setting for area`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val originalSetting = anAreaTemperatureSetting(
             areaId = area.uuid,
             temperatureSchedule = setOf(aTemperatureInterval())
@@ -97,7 +97,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `findAreaSetting() Returns null when no setting exists for area`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
 
         sut.findAreaSetting(area.uuid)
             .shouldBeRight()
@@ -107,7 +107,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `findAreaSetting() Returns setting with no intervals`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = emptySet())
         sut.createSetting(setting).shouldBeRight()
 
@@ -123,7 +123,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `findAreaSetting() Returns setting with intervals`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val interval1 = aTemperatureInterval()
         val interval2 = aTemperatureInterval()
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = setOf(interval1, interval2))
@@ -152,7 +152,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `deleteAreaSetting() Deletes existing setting`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = setOf(aTemperatureInterval()))
         sut.createSetting(setting).shouldBeRight()
 
@@ -182,7 +182,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `existsByAreaId() Returns false when no setting exists for area`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
 
         sut.existsByAreaId(area.uuid)
             .shouldBeRight()
@@ -192,7 +192,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `existsByAreaId() Returns true when setting exists for area`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = emptySet())
         sut.createSetting(setting).shouldBeRight()
 
@@ -225,7 +225,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `persistAreaTemperatureSetting() Persists setting root without intervals`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = emptySet())
 
         sut.persistAreaTemperatureSetting(setting).shouldBeRight()
@@ -239,7 +239,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `persistAreaTemperatureSetting() Persists setting root and intervals`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val interval1 = aTemperatureInterval()
         val interval2 = aTemperatureInterval()
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = setOf(interval1, interval2))
@@ -266,7 +266,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `persistAreaTemperatureSetting() returns HeatingScheduleRepositoryError on db error while persisting root`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = emptySet())
         every { tempSettingsRepo.save(any()) } throws object : DataAccessException("db error") {}
 
@@ -278,7 +278,7 @@ class TemperatureSettingsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `persistAreaTemperatureSetting() returns HeatingScheduleRepositoryError on db error persisting an interval`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
         val setting = anAreaTemperatureSetting(areaId = area.uuid, temperatureSchedule = setOf(aTemperatureInterval()))
         every { tempIntervalsRepo.save(any()) } throws object : DataAccessException("db error") {}
 

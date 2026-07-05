@@ -7,9 +7,9 @@ import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingSchedul
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.home.HomeStateRefreshPublisher
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
+import org.agrfesta.sh.api.core.application.readmodels.areas.HeatingScheduleView
+import org.agrfesta.sh.api.core.application.readmodels.areas.IntervalView
 import org.agrfesta.sh.api.core.domain.areas.AreaTemperatureSetting
-import org.agrfesta.sh.api.core.domain.areas.HeatingScheduleDto
-import org.agrfesta.sh.api.core.domain.areas.IntervalDto
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.core.domain.areas.hasOverlap
 import org.agrfesta.sh.api.core.domain.commons.Temperature
@@ -33,7 +33,7 @@ class ReplaceHeatingScheduleService(
         areaId: UUID,
         defaultTemperature: Temperature,
         intervals: Collection<TemperatureInterval>
-    ): Either<TemperatureSettingCreationFailure, HeatingScheduleDto> {
+    ): Either<TemperatureSettingCreationFailure, HeatingScheduleView> {
         if (intervals.hasOverlap()) return OverlappingIntervals.left()
 
         return areasRepository.getAreaById(areaId)
@@ -48,10 +48,10 @@ class ReplaceHeatingScheduleService(
                 )
             }
             .map {
-                HeatingScheduleDto(
+                HeatingScheduleView(
                     defaultTemperature = defaultTemperature,
                     intervals = intervals.sortedBy { it.startTime }.map { interval ->
-                        IntervalDto(
+                        IntervalView(
                             temperature = interval.temperature,
                             startTime = interval.startTime,
                             endTime = interval.endTime

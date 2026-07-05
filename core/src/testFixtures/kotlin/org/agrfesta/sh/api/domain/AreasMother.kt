@@ -1,24 +1,24 @@
 package org.agrfesta.sh.api.domain
 
 import java.util.*
-import org.agrfesta.sh.api.core.domain.areas.AreaDto
-import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
+import org.agrfesta.sh.api.core.application.readmodels.areas.AreaView
+import org.agrfesta.sh.api.core.application.readmodels.areas.AreaWithDevicesView
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.test.mothers.aRandomUniqueString
 
-fun anAreaDto(
+fun anAreaView(
     uuid: UUID = UUID.randomUUID(),
     name: String = aRandomUniqueString(),
     isIndoor: Boolean = true
-) = AreaDto(uuid, name, isIndoor)
+) = AreaView(uuid, name, isIndoor)
 
-fun anAreaDtoWithDevices(
+fun anAreaWithDevicesView(
     uuid: UUID = UUID.randomUUID(),
     name: String = aRandomUniqueString(),
     sensors: Collection<Device> = emptyList(),
     actuators: Collection<Device> = emptyList(),
     isIndoor: Boolean = true
-) = AreaDtoWithDevices(
+) = AreaWithDevicesView(
     uuid = uuid,
     name = name,
     sensors = sensors,

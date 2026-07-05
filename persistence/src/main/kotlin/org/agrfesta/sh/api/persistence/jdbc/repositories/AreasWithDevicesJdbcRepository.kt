@@ -1,6 +1,6 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
-import org.agrfesta.sh.api.core.domain.areas.AreaDtoWithDevices
+import org.agrfesta.sh.api.core.application.readmodels.areas.AreaWithDevicesView
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
@@ -23,10 +23,10 @@ class AreasWithDevicesJdbcRepository(
         val actuators: MutableList<Device>
     )
 
-    fun getAll(): Collection<AreaDtoWithDevices> =
+    fun getAll(): Collection<AreaWithDevicesView> =
         jdbcTemplate.query(QUERY, extractAreas()) ?: emptyList()
 
-    private fun extractAreas() = ResultSetExtractor<Collection<AreaDtoWithDevices>> { rs ->
+    private fun extractAreas() = ResultSetExtractor<Collection<AreaWithDevicesView>> { rs ->
         val areaMap = LinkedHashMap<UUID, MutableAreaBuilder>()
         while (rs.next()) {
             val areaUuid = UUID.fromString(rs.getString("area_uuid"))
@@ -42,7 +42,7 @@ class AreasWithDevicesJdbcRepository(
             addDeviceToBuilder(rs, builder)
         }
         areaMap.values.map { b ->
-            AreaDtoWithDevices(
+            AreaWithDevicesView(
                 uuid = b.uuid,
                 name = b.name,
                 sensors = b.sensors.toList(),

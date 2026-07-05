@@ -14,7 +14,7 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.settings.Temperature
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
-import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaView
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -57,7 +57,7 @@ class DeleteHeatingScheduleServiceTest {
     @Test
     fun `execute() returns HeatingScheduleRepositoryError when deleteAreaSetting fails`() {
         val areaId = UUID.randomUUID()
-        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { areasRepository.getAreaById(areaId) } returns anAreaView(uuid = areaId).right()
         every { temperatureSettingsRepository.deleteAreaSetting(areaId) } returns HeatingScheduleRepositoryError.left()
 
         sut.execute(areaId)
@@ -68,7 +68,7 @@ class DeleteHeatingScheduleServiceTest {
     @Test
     fun `execute() returns Unit when area exists and deletion succeeds`() {
         val areaId = UUID.randomUUID()
-        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { areasRepository.getAreaById(areaId) } returns anAreaView(uuid = areaId).right()
         every { temperatureSettingsRepository.deleteAreaSetting(areaId) } returns Unit.right()
 
         sut.execute(areaId).shouldBeRight()
@@ -77,7 +77,7 @@ class DeleteHeatingScheduleServiceTest {
     @Test
     fun `execute() publishes home state refresh after a successful deletion`() {
         val areaId = UUID.randomUUID()
-        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { areasRepository.getAreaById(areaId) } returns anAreaView(uuid = areaId).right()
         every { temperatureSettingsRepository.deleteAreaSetting(areaId) } returns Unit.right()
 
         sut.execute(areaId)
@@ -88,7 +88,7 @@ class DeleteHeatingScheduleServiceTest {
     @Test
     fun `execute() does not publish home state refresh when the deletion fails`() {
         val areaId = UUID.randomUUID()
-        every { areasRepository.getAreaById(areaId) } returns anAreaDto(uuid = areaId).right()
+        every { areasRepository.getAreaById(areaId) } returns anAreaView(uuid = areaId).right()
         every { temperatureSettingsRepository.deleteAreaSetting(areaId) } returns HeatingScheduleRepositoryError.left()
 
         sut.execute(areaId)

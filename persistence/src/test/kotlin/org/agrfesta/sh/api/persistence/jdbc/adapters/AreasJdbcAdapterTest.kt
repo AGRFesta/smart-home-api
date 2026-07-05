@@ -11,7 +11,7 @@ import io.mockk.every
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
-import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaView
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,7 +39,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `getAreaById() Returns area`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(
+        val area = anAreaView(
             name = aRandomUniqueString(),
             isIndoor = true
         ).also { areasRepo.persist(it) }
@@ -68,7 +68,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `findAreaByName() Returns area when found`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
 
         sut.findAreaByName(area.name)
             .shouldBeRight().also {
@@ -102,7 +102,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `save() Persists area successfully`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString())
+        val area = anAreaView(name = aRandomUniqueString())
 
         sut.save(area).shouldBeRight()
 
@@ -116,9 +116,9 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `save() Returns AreaNameConflict when area with same name already exists`() {
         every { timeProvider.now() } returns Instant.now()
         val name = aRandomUniqueString()
-        areasRepo.persist(anAreaDto(name = name))
+        areasRepo.persist(anAreaView(name = name))
 
-        sut.save(anAreaDto(name = name))
+        sut.save(anAreaView(name = name))
             .shouldBeLeft()
             .shouldBeInstanceOf<AreaNameConflict>()
     }
@@ -129,7 +129,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
         val failure = DataAccessResourceFailureException("area creation failure")
         every { areasRepo.persist(any()) } throws failure
 
-        sut.save(anAreaDto())
+        sut.save(anAreaView())
             .shouldBeLeft()
             .shouldBe(AreaRepositoryError)
     }
@@ -148,8 +148,8 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `getAll() Returns all persisted areas`() {
         every { timeProvider.now() } returns Instant.now()
-        areasRepo.persist(anAreaDto(name = aRandomUniqueString()))
-        areasRepo.persist(anAreaDto(name = aRandomUniqueString()))
+        areasRepo.persist(anAreaView(name = aRandomUniqueString()))
+        areasRepo.persist(anAreaView(name = aRandomUniqueString()))
 
         sut.getAll()
             .shouldBeRight()
@@ -172,7 +172,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `update() Returns AreaRepositoryError when repository throws DataAccessException`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString())
+        val area = anAreaView(name = aRandomUniqueString())
         val failure = DataAccessResourceFailureException("update failure")
         every { areasRepo.update(area) } throws failure
 
@@ -185,8 +185,8 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `update() Returns AreaNameConflict when new name clashes`() {
         every { timeProvider.now() } returns Instant.now()
         val existingName = aRandomUniqueString()
-        areasRepo.persist(anAreaDto(name = existingName))
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        areasRepo.persist(anAreaView(name = existingName))
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
 
         sut.update(area.copy(name = existingName))
             .shouldBeLeft()
@@ -198,7 +198,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
         every { timeProvider.now() } returns Instant.now()
         val missingAreaId = UUID.randomUUID()
 
-        sut.update(anAreaDto(uuid = missingAreaId, name = aRandomUniqueString()))
+        sut.update(anAreaView(uuid = missingAreaId, name = aRandomUniqueString()))
             .shouldBeLeft()
             .shouldBeInstanceOf<AreaNotFound>()
             .missingAreaId shouldBe missingAreaId
@@ -207,7 +207,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `update() Updates area successfully`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val updated = area.copy(name = aRandomUniqueString(), isIndoor = false)
 
         val result = sut.update(updated)
@@ -227,7 +227,7 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `deleteAreaById() Deletes area successfully`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaDto(name = aRandomUniqueString()).also { areasRepo.persist(it) }
+        val area = anAreaView(name = aRandomUniqueString()).also { areasRepo.persist(it) }
 
         sut.deleteAreaById(area.uuid).shouldBeRight()
 

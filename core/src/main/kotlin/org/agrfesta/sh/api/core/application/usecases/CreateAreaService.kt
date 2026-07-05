@@ -4,7 +4,7 @@ import arrow.core.Either
 import org.agrfesta.sh.api.core.application.ports.inbounds.CreateAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
-import org.agrfesta.sh.api.core.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.application.readmodels.areas.AreaView
 import org.agrfesta.sh.api.core.domain.failures.AreaCreationFailure
 import org.springframework.stereotype.Service
 
@@ -14,8 +14,8 @@ class CreateAreaService(
     private val randomGenerator: RandomGenerator
 ) : CreateAreaUseCase {
 
-    override fun execute(name: String, isIndoor: Boolean?): Either<AreaCreationFailure, AreaDto> {
-        val area = AreaDto(
+    override fun execute(name: String, isIndoor: Boolean?): Either<AreaCreationFailure, AreaView> {
+        val area = AreaView(
             uuid = randomGenerator.uuid(),
             name = name,
             isIndoor = isIndoor ?: true

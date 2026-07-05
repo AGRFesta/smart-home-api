@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.core.application.ports.inbounds
 
 import arrow.core.Either
-import org.agrfesta.sh.api.core.domain.areas.AreaDto
+import org.agrfesta.sh.api.core.application.readmodels.areas.AreaView
 import org.agrfesta.sh.api.core.domain.failures.AreaCreationFailure
 
 interface CreateAreaUseCase {
@@ -13,8 +13,8 @@ interface CreateAreaUseCase {
      *
      * @param name the display name of the area to create.
      * @param isIndoor whether the area is indoors; defaults to `true` when `null`.
-     * @return [Either.Right] containing the persisted [AreaDto], or [Either.Left] with an [AreaCreationFailure]
+     * @return [Either.Right] containing the persisted [AreaView], or [Either.Left] with an [AreaCreationFailure]
      *         if the area could not be saved (e.g. a duplicate name conflict).
      */
-    fun execute(name: String, isIndoor: Boolean? = null): Either<AreaCreationFailure, AreaDto>
+    fun execute(name: String, isIndoor: Boolean? = null): Either<AreaCreationFailure, AreaView>
 }

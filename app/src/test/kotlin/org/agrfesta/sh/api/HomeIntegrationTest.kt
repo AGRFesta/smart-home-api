@@ -21,7 +21,7 @@ import org.agrfesta.sh.api.core.domain.alerts.AlertType
 import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.domain.anAlert
-import org.agrfesta.sh.api.domain.anAreaDto
+import org.agrfesta.sh.api.domain.anAreaView
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
 import org.agrfesta.test.mothers.aRandomThermoHygroData
 import org.agrfesta.test.mothers.aRandomUniqueString
@@ -46,7 +46,7 @@ class HomeIntegrationTest(
     // /// getHome //////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `getHome() returns area measurements populated from sensor readings in Redis`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         areasRepository.save(area)
         val sensorData = aSensorProviderData(model = DeviceModel("switchbot/Meter"))
         val sensorId = randomGenerator.uuid()
@@ -79,7 +79,7 @@ class HomeIntegrationTest(
     }
 
     @Test fun `getHome() reports the area active alert types resolved from the alert store`() {
-        val area = anAreaDto()
+        val area = anAreaView()
         areasRepository.save(area)
         val sensorData = aSensorProviderData(model = DeviceModel("switchbot/Meter"))
         val sensorId = randomGenerator.uuid()

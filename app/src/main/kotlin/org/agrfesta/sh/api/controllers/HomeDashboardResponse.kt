@@ -2,18 +2,18 @@ package org.agrfesta.sh.api.controllers
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import org.agrfesta.sh.api.core.application.readmodels.commons.FieldFailure
+import org.agrfesta.sh.api.core.application.readmodels.commons.FieldResult
+import org.agrfesta.sh.api.core.application.readmodels.commons.FieldSuccess
+import org.agrfesta.sh.api.core.application.readmodels.home.AreaDashboardView
+import org.agrfesta.sh.api.core.application.readmodels.home.GlobalStateView
+import org.agrfesta.sh.api.core.application.readmodels.home.HeatingView
+import org.agrfesta.sh.api.core.application.readmodels.home.HomeDashboardView
+import org.agrfesta.sh.api.core.application.readmodels.home.HumidityView
+import org.agrfesta.sh.api.core.application.readmodels.home.MeasurementsView
 import org.agrfesta.sh.api.core.domain.alerts.AlertType
-import org.agrfesta.sh.api.core.domain.commons.FieldFailure
-import org.agrfesta.sh.api.core.domain.commons.FieldResult
-import org.agrfesta.sh.api.core.domain.commons.FieldSuccess
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
-import org.agrfesta.sh.api.core.domain.home.AreaDashboardDto
-import org.agrfesta.sh.api.core.domain.home.GlobalStateDto
-import org.agrfesta.sh.api.core.domain.home.HeatingDto
-import org.agrfesta.sh.api.core.domain.home.HomeDashboardDto
-import org.agrfesta.sh.api.core.domain.home.HumidityDto
-import org.agrfesta.sh.api.core.domain.home.MeasurementsDto
 import java.math.BigDecimal
 import java.util.UUID
 
@@ -70,33 +70,33 @@ private fun FieldResult<Temperature?>.toTemperatureResponse(): FieldResultRespon
     is FieldFailure -> FieldResultResponse.Failure(error)
 }
 
-fun HomeDashboardDto.toResponse() = HomeDashboardResponse(
+fun HomeDashboardView.toResponse() = HomeDashboardResponse(
     globalState = globalState.toResponse(),
     areas = areas.map { it.toResponse() }
 )
 
-private fun GlobalStateDto.toResponse() = GlobalStateResponse(
+private fun GlobalStateView.toResponse() = GlobalStateResponse(
     heatingActive = heatingActive.toResponse(),
     strategy = strategy.toResponse()
 )
 
-private fun AreaDashboardDto.toResponse() = AreaDashboardResponse(
+private fun AreaDashboardView.toResponse() = AreaDashboardResponse(
     id = id,
     name = name,
     measurements = measurements.toResponse(),
     activeAlerts = activeAlerts.toResponse()
 )
 
-private fun MeasurementsDto.toResponse() = MeasurementsResponse(
+private fun MeasurementsView.toResponse() = MeasurementsResponse(
     heating = heating?.toResponse(),
     humidity = humidity?.toResponse()
 )
 
-private fun HeatingDto.toResponse() = HeatingResponse(
+private fun HeatingView.toResponse() = HeatingResponse(
     currentTemperature = currentTemperature.toTemperatureResponse(),
     targetTemperature = targetTemperature.toTemperatureResponse()
 )
 
-private fun HumidityDto.toResponse() = HumidityResponse(
+private fun HumidityView.toResponse() = HumidityResponse(
     relative = relative.toResponse()
 )
