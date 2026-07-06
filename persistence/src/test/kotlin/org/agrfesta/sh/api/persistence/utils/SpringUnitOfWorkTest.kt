@@ -12,7 +12,7 @@ import io.mockk.every
 import org.agrfesta.sh.api.CleanSmartHomeDatabase
 import org.agrfesta.sh.api.TestContainersConfig
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
-import org.agrfesta.sh.api.domain.anAreaView
+import org.agrfesta.sh.api.domain.anArea
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
@@ -45,7 +45,7 @@ class SpringUnitOfWorkTest {
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     fun `execute() Commits transaction and returns Right when block succeeds`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaView(name = aRandomUniqueString())
+        val area = anArea(name = aRandomUniqueString())
 
         val result = sut.execute {
             areasRepo.persist(area)
@@ -60,7 +60,7 @@ class SpringUnitOfWorkTest {
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     fun `execute() Rolls back transaction and returns Left when block fails`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaView(name = aRandomUniqueString())
+        val area = anArea(name = aRandomUniqueString())
         val failure = "persistence-failure"
 
         val result = sut.execute {

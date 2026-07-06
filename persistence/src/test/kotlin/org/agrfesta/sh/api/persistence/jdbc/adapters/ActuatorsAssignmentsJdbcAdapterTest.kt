@@ -10,7 +10,7 @@ import org.agrfesta.sh.api.core.domain.failures.ActuatorNotAssigned
 import org.agrfesta.sh.api.core.domain.failures.AssignmentRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.SameAreaAssignment
 import org.agrfesta.sh.api.domain.anActuatorProviderData
-import org.agrfesta.sh.api.domain.anAreaView
+import org.agrfesta.sh.api.domain.anArea
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +37,7 @@ class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `assign() Returns AssignmentRepositoryError when device is missing`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaView(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val area = anArea(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val missingActuatorId = UUID.randomUUID()
 
         sut.assign(area.uuid, missingActuatorId)
@@ -48,7 +48,7 @@ class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `assign() Returns SameAreaAssignment when actuator is already assigned to that area`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaView(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val area = anArea(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val actuatorId = UUID.randomUUID()
         devicesRepo.persist(actuatorId, anActuatorProviderData())
         actuatorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = actuatorId)
@@ -83,7 +83,7 @@ class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `unassign() Returns Right(Unit) and the row is deleted on success`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaView(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val area = anArea(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val actuatorId = UUID.randomUUID()
         devicesRepo.persist(actuatorId, anActuatorProviderData())
         actuatorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = actuatorId)
@@ -96,7 +96,7 @@ class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `unassign() Returns ActuatorNotAssigned when no assignment row exists for this area`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaView(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val area = anArea(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val actuatorId = UUID.randomUUID()
         devicesRepo.persist(actuatorId, anActuatorProviderData())
 
@@ -108,7 +108,7 @@ class ActuatorsAssignmentsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     @Test
     fun `assign() Assigns actuator to area`() {
         every { timeProvider.now() } returns Instant.now()
-        val area = anAreaView(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
+        val area = anArea(name = aRandomUniqueString(), isIndoor = true).also { areasRepo.persist(it) }
         val actuatorId = UUID.randomUUID()
         devicesRepo.persist(actuatorId, anActuatorProviderData())
 

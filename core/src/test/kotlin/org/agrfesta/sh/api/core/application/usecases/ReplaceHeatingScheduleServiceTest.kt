@@ -16,7 +16,7 @@ import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.HeatingScheduleRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.OverlappingIntervals
-import org.agrfesta.sh.api.domain.anAreaView
+import org.agrfesta.sh.api.domain.anArea
 import org.agrfesta.test.mothers.aRandomTemperature
 import org.junit.jupiter.api.Test
 import java.time.LocalTime
@@ -64,7 +64,7 @@ class ReplaceHeatingScheduleServiceTest {
     @Test
     fun `execute() Returns HeatingScheduleRepositoryError when createSetting fails`() {
         val areaId = UUID.randomUUID()
-        every { areasRepository.getAreaById(areaId) } returns anAreaView(uuid = areaId).right()
+        every { areasRepository.getAreaById(areaId) } returns anArea(uuid = areaId).right()
         every { temperatureSettingsRepository.createSetting(any()) } returns HeatingScheduleRepositoryError.left()
 
         sut.execute(areaId, aRandomTemperature(), emptyList())
@@ -79,7 +79,7 @@ class ReplaceHeatingScheduleServiceTest {
         val interval1 = TemperatureInterval(aRandomTemperature(), LocalTime.of(8, 0), LocalTime.of(10, 0))
         val interval2 = TemperatureInterval(aRandomTemperature(), LocalTime.of(12, 0), LocalTime.of(14, 0))
 
-        every { areasRepository.getAreaById(areaId) } returns anAreaView(uuid = areaId).right()
+        every { areasRepository.getAreaById(areaId) } returns anArea(uuid = areaId).right()
         every { temperatureSettingsRepository.createSetting(any()) } returns Unit.right()
 
         val result = sut.execute(areaId, defaultTemperature, listOf(interval1, interval2)).shouldBeRight()
@@ -101,7 +101,7 @@ class ReplaceHeatingScheduleServiceTest {
     @Test
     fun `execute() publishes home state refresh after a successful save`() {
         val areaId = UUID.randomUUID()
-        every { areasRepository.getAreaById(areaId) } returns anAreaView(uuid = areaId).right()
+        every { areasRepository.getAreaById(areaId) } returns anArea(uuid = areaId).right()
         every { temperatureSettingsRepository.createSetting(any()) } returns Unit.right()
 
         sut.execute(areaId, aRandomTemperature(), emptyList())
@@ -112,7 +112,7 @@ class ReplaceHeatingScheduleServiceTest {
     @Test
     fun `execute() does not publish home state refresh when the save fails`() {
         val areaId = UUID.randomUUID()
-        every { areasRepository.getAreaById(areaId) } returns anAreaView(uuid = areaId).right()
+        every { areasRepository.getAreaById(areaId) } returns anArea(uuid = areaId).right()
         every { temperatureSettingsRepository.createSetting(any()) } returns HeatingScheduleRepositoryError.left()
 
         sut.execute(areaId, aRandomTemperature(), emptyList())
@@ -125,7 +125,7 @@ class ReplaceHeatingScheduleServiceTest {
         val areaId = UUID.randomUUID()
         val defaultTemperature = aRandomTemperature()
 
-        every { areasRepository.getAreaById(areaId) } returns anAreaView(uuid = areaId).right()
+        every { areasRepository.getAreaById(areaId) } returns anArea(uuid = areaId).right()
         every { temperatureSettingsRepository.createSetting(any()) } returns Unit.right()
 
         val result = sut.execute(areaId, defaultTemperature, emptyList()).shouldBeRight()

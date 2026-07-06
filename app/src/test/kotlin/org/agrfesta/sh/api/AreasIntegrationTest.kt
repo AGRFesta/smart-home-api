@@ -13,12 +13,12 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.areas.ActuatorsAssig
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignmentsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
-import org.agrfesta.sh.api.core.application.readmodels.areas.AreaView
+import org.agrfesta.sh.api.core.domain.areas.Area
 import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.domain.anActuatorProviderData
-import org.agrfesta.sh.api.domain.anAreaView
+import org.agrfesta.sh.api.domain.anArea
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -55,7 +55,7 @@ class AreasIntegrationTest(
 
         result.message shouldBe "Area '$name' successfully created!"
         result.resourceId shouldBe uuid.toString()
-        val expectedArea = AreaView(
+        val expectedArea = Area(
             uuid = uuid,
             name = name,
             isIndoor = true
@@ -68,7 +68,7 @@ class AreasIntegrationTest(
     // /// getById //////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `getById() returns 200 with the correct area`() {
-        val area = anAreaView()
+        val area = anArea()
         areasRepository.save(area)
 
         val response: Map<String, Any> = given()
@@ -90,7 +90,7 @@ class AreasIntegrationTest(
     // /// delete ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `delete() returns 204 and area is no longer retrievable`() {
-        val area = anAreaView()
+        val area = anArea()
         areasRepository.save(area)
 
         given()
@@ -113,8 +113,8 @@ class AreasIntegrationTest(
     // /// getAll ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `getAll() returns 200 with persisted areas`() {
-        val area1 = anAreaView()
-        val area2 = anAreaView()
+        val area1 = anArea()
+        val area2 = anArea()
         areasRepository.save(area1)
         areasRepository.save(area2)
 
@@ -138,7 +138,7 @@ class AreasIntegrationTest(
     // /// update ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `update() returns 200 and area is updated in DB`() {
-        val area = anAreaView()
+        val area = anArea()
         areasRepository.save(area)
         val newName = aRandomUniqueString()
 
@@ -167,7 +167,7 @@ class AreasIntegrationTest(
     // /// assignSensorToArea //////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `assignSensorToArea() returns 204 on success`() {
-        val area = anAreaView()
+        val area = anArea()
         areasRepository.save(area)
         val deviceId = uuid
         devicesRepository.create(deviceId, aSensorProviderData(model = DeviceModel("switchbot/Meter")))
@@ -184,7 +184,7 @@ class AreasIntegrationTest(
     // /// unassignSensorFromArea //////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `unassignSensorFromArea() returns 204 on success`() {
-        val area = anAreaView()
+        val area = anArea()
         areasRepository.save(area)
         val deviceId = uuid
         devicesRepository.create(deviceId, aSensorProviderData()).getOrElse { error("Failed to create sensor: $it") }
@@ -201,7 +201,7 @@ class AreasIntegrationTest(
     // /// unassignActuatorFromArea ////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `unassignActuatorFromArea() returns 204 on success`() {
-        val area = anAreaView()
+        val area = anArea()
         areasRepository.save(area)
         val deviceId = uuid
         devicesRepository.create(
@@ -221,7 +221,7 @@ class AreasIntegrationTest(
     // /// assignActuatorToArea ////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `assignActuatorToArea() returns 204 on success`() {
-        val area = anAreaView()
+        val area = anArea()
         areasRepository.save(area)
         val deviceId = uuid
         devicesRepository.create(
