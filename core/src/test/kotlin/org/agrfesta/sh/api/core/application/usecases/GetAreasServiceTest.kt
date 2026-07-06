@@ -10,9 +10,9 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
-import org.agrfesta.sh.api.core.application.readmodels.areas.AreaView
+import org.agrfesta.sh.api.core.domain.areas.Area
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
-import org.agrfesta.sh.api.domain.anAreaView
+import org.agrfesta.sh.api.domain.anArea
 import org.junit.jupiter.api.Test
 
 class GetAreasServiceTest {
@@ -23,7 +23,7 @@ class GetAreasServiceTest {
     @Test
     fun `execute() Returns empty collection when no areas exist`() {
         // Given
-        every { areasRepository.getAll() } returns emptyList<AreaView>().right()
+        every { areasRepository.getAll() } returns emptyList<Area>().right()
 
         // When
         val result = sut.execute()
@@ -35,8 +35,8 @@ class GetAreasServiceTest {
     @Test
     fun `execute() Returns all areas when repository has data`() {
         // Given
-        val area1 = anAreaView()
-        val area2 = anAreaView()
+        val area1 = anArea()
+        val area2 = anArea()
         every { areasRepository.getAll() } returns listOf(area1, area2).right()
 
         // When

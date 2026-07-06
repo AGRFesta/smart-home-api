@@ -81,7 +81,7 @@ Infrastructure components that trigger the Inbound Ports.
 Interfaces defined in the Core used by the domain to communicate with the external world (Databases, Third-party APIs).
 - **Examples:** `AreasRepository`, `DevicesProvider`, `UnitOfWork`.
 - **Rules:** Must only accept and return Domain Entities, Value Objects, or primitive types. Must not throw technical exceptions; use monadic types like `Either` to explicitly declare expected domain errors.
-- **Read-models (exception):** Some ports return read-models instead of domain aggregates (e.g. `AreasWithDevicesRepository`, consumed by the home dashboard query and the heating evaluation snapshot). Read-model types live in `core/application/readmodels/`, are named `*View`, and must never appear in `core/domain/` (ArchUnit-enforced). Known deviation: `AreasRepository.save`/`update` still accept `AreaView` as write input — the area write path lacks a dedicated domain entity; extracting one is tracked as a follow-up issue.
+- **Read-models (exception):** Some ports return read-models instead of domain aggregates (e.g. `AreasWithDevicesRepository`, consumed by the home dashboard query and the heating evaluation snapshot). Read-model types live in `core/application/readmodels/`, are named `*View`, and must never appear in `core/domain/` (ArchUnit-enforced). Read-models are query result shapes only: they are **never accepted as input** by outbound-port methods (ArchUnit-enforced) — write inputs are domain types, value objects or primitives.
 
 ### Outbound Adapters (Persistence & API)
 Technological implementations of the Outbound Ports.

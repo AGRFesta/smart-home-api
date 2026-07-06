@@ -74,7 +74,7 @@ class AreasController(
     @GetMapping("/{id}")
     fun getById(@PathVariable id: UUID): ResponseEntity<Any> =
         when (val result = getAreaByIdUseCase.execute(id)) {
-            is Right -> ok(result.value)
+            is Right -> ok(result.value.toResponse())
             is Left -> when (result.value) {
                 is AreaNotFound -> ResponseEntity.notFound().build()
                 AreaRepositoryError -> internalServerError()
@@ -85,7 +85,7 @@ class AreasController(
     @PutMapping("/{id}")
     fun update(@PathVariable id: UUID, @RequestBody request: UpdateAreaRequest): ResponseEntity<Any> =
         when (val result = updateAreaUseCase.execute(id, request.name, request.isIndoor)) {
-            is Right -> ok(result.value)
+            is Right -> ok(result.value.toResponse())
             is Left -> when (result.value) {
                 is AreaNotFound -> ResponseEntity.notFound().build()
                 AreaNameConflict -> badRequest()
@@ -109,7 +109,7 @@ class AreasController(
     @GetMapping
     fun getAll(): ResponseEntity<Any> =
         when (val result = getAreasUseCase.execute()) {
-            is Right -> ok(result.value)
+            is Right -> ok(result.value.map { it.toResponse() })
             is Left -> internalServerError()
                 .body(MessageResponse("Unable to retrieve areas!"))
         }
