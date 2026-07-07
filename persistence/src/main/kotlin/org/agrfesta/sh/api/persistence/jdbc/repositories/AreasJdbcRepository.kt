@@ -24,12 +24,13 @@ class AreasJdbcRepository(
 
     fun persist(area: Area) {
         val sql = """
-            INSERT INTO smart_home.area (uuid, name, created_on, updated_on)
-            VALUES (:uuid, :name, :createdOn, :updatedOn)
+            INSERT INTO smart_home.area (uuid, name, is_indoor, created_on, updated_on)
+            VALUES (:uuid, :name, :isIndoor, :createdOn, :updatedOn)
         """
         val params = mapOf(
             "uuid" to area.uuid,
             "name" to area.name,
+            "isIndoor" to area.isIndoor,
             "createdOn" to Timestamp.from(timeProvider.now()),
             "updatedOn" to null
         )
