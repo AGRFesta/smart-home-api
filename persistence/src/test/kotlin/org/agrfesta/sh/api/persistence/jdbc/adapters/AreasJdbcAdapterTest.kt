@@ -2,6 +2,7 @@ package org.agrfesta.sh.api.persistence.jdbc.adapters
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.withClue
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
@@ -110,6 +111,34 @@ class AreasJdbcAdapterTest : AbstractJdbcAdapterTest() {
             .shouldBeRight().also {
                 it.name shouldBe area.name
             }
+    }
+
+    @Test
+    fun `save() Persists area with isIndoor false`() {
+        every { timeProvider.now() } returns Instant.now()
+        val area = anArea(name = aRandomUniqueString(), isIndoor = false)
+
+        sut.save(area).shouldBeRight()
+
+        withClue("persisted area should keep isIndoor = false") {
+            sut.getAreaById(area.uuid)
+                .shouldBeRight()
+                .isIndoor shouldBe false
+        }
+    }
+
+    @Test
+    fun `save() Persists area with isIndoor true`() {
+        every { timeProvider.now() } returns Instant.now()
+        val area = anArea(name = aRandomUniqueString(), isIndoor = true)
+
+        sut.save(area).shouldBeRight()
+
+        withClue("persisted area should keep isIndoor = true") {
+            sut.getAreaById(area.uuid)
+                .shouldBeRight()
+                .isIndoor shouldBe true
+        }
     }
 
     @Test

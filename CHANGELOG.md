@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expose the device's open alert types as an additive `activeAlerts` field in `GET /devices/{uuid}`;
   `null` means the alert lookup failed, `[]` means no open alerts. (#196)
 
+### Fixed
+- Persist the `isIndoor` flag on `POST /areas`; the INSERT omitted the column, so every created area
+  was stored as indoor regardless of the request value. (#233)
+
 ## [1.3.3] - 2026-07-03
 
 ### Changed
