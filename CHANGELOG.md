@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   without manual intervention. (#193)
 
 ### Changed
+- Return `intervals` sorted by `startTime` ascending on `GET /areas/{areaId}/heating-schedule`,
+  matching the PUT response; ordering was previously unspecified. (#232)
 - Return a typed failure or a per-heater outcome report from the heating evaluation instead of
   swallowing every error in logs; the heating scheduler now logs an error when the evaluation fails. (#201)
 - Surface per-area active alert types in the home dashboard as an additive `activeAlerts` field

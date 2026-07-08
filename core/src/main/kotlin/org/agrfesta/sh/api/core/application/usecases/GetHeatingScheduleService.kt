@@ -6,7 +6,6 @@ import org.agrfesta.sh.api.core.application.ports.inbounds.GetHeatingScheduleUse
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.application.readmodels.areas.HeatingScheduleView
-import org.agrfesta.sh.api.core.application.readmodels.areas.IntervalView
 import org.agrfesta.sh.api.core.domain.failures.AreaFetchFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
@@ -27,15 +26,9 @@ class GetHeatingScheduleService(
             .flatMap { _ ->
                 temperatureSettingsRepository.findAreaSetting(areaId).map { setting ->
                     setting?.let {
-                        HeatingScheduleView(
+                        HeatingScheduleView.from(
                             defaultTemperature = it.defaultTemperature,
-                            intervals = it.temperatureSchedule.map { interval ->
-                                IntervalView(
-                                    temperature = interval.temperature,
-                                    startTime = interval.startTime,
-                                    endTime = interval.endTime
-                                )
-                            }
+                            intervals = it.temperatureSchedule
                         )
                     }
                 }

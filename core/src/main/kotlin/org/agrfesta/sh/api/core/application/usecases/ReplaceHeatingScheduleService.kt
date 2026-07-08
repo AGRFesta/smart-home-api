@@ -8,7 +8,6 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepositor
 import org.agrfesta.sh.api.core.application.ports.outbounds.home.HomeStateRefreshPublisher
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.TemperatureSettingsRepository
 import org.agrfesta.sh.api.core.application.readmodels.areas.HeatingScheduleView
-import org.agrfesta.sh.api.core.application.readmodels.areas.IntervalView
 import org.agrfesta.sh.api.core.domain.areas.AreaTemperatureSetting
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.core.domain.areas.hasOverlap
@@ -48,15 +47,9 @@ class ReplaceHeatingScheduleService(
                 )
             }
             .map {
-                HeatingScheduleView(
+                HeatingScheduleView.from(
                     defaultTemperature = defaultTemperature,
-                    intervals = intervals.sortedBy { it.startTime }.map { interval ->
-                        IntervalView(
-                            temperature = interval.temperature,
-                            startTime = interval.startTime,
-                            endTime = interval.endTime
-                        )
-                    }
+                    intervals = intervals
                 )
             }
             .onRight { homeStateRefreshPublisher.publish() }
