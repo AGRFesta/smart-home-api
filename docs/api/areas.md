@@ -448,6 +448,8 @@ Bearer token required. Returns `401 Unauthorized` if the token is missing or inv
 
 ### Response: `200 OK` — schedule exists
 
+`intervals` are always sorted by `startTime` ascending.
+
 ```json
 {
   "defaultTemperature": 21.5,
@@ -532,7 +534,8 @@ Bearer token required. Returns `401 Unauthorized` if the token is missing or inv
 
 ### Response: `200 OK`
 
-Returns the saved schedule.
+Returns the saved schedule. `intervals` are always sorted by `startTime` ascending, regardless of
+the order they were submitted in.
 
 ```json
 {

@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -88,6 +89,31 @@ class GetHeatingScheduleServiceTest {
         dto2.temperature shouldBe interval2.temperature
         dto2.startTime shouldBe interval2.startTime
         dto2.endTime shouldBe interval2.endTime
+    }
+
+    @Test
+    fun `execute() returns intervals sorted by startTime ascending regardless of repository order`() {
+        // Given
+        val areaId = UUID.randomUUID()
+        val noon = TemperatureInterval(aRandomTemperature(), LocalTime.of(12, 0), LocalTime.of(14, 0))
+        val morning = TemperatureInterval(aRandomTemperature(), LocalTime.of(8, 0), LocalTime.of(10, 0))
+        val evening = TemperatureInterval(aRandomTemperature(), LocalTime.of(18, 0), LocalTime.of(20, 0))
+        every { areasRepository.getAreaById(areaId) } returns anArea(uuid = areaId).right()
+        every { temperatureSettingsRepository.findAreaSetting(areaId) } returns AreaTemperatureSetting(
+            areaId = areaId,
+            defaultTemperature = aRandomTemperature(),
+            temperatureSchedule = linkedSetOf(noon, morning, evening)
+        ).right()
+
+        // When
+        val result = sut.execute(areaId).shouldBeRight()!!
+
+        // Then
+        withClue("intervals should be sorted by startTime ascending") {
+            result.intervals.map { it.startTime } shouldBe listOf(
+                morning.startTime, noon.startTime, evening.startTime
+            )
+        }
     }
 
     @Test
