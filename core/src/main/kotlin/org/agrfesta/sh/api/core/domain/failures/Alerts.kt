@@ -15,8 +15,14 @@ sealed interface AlertCreationFailure
  */
 sealed interface AlertResolutionFailure
 
+/**
+ * Groups all causes of a failure while tracking the instant an alert was last notified.
+ */
+sealed interface AlertNotificationTrackingFailure
+
 /** Infrastructure-level failure while accessing alert persistence. */
-data object AlertRepositoryError : GetAlertsFailure, AlertCreationFailure, AlertResolutionFailure
+data object AlertRepositoryError :
+    GetAlertsFailure, AlertCreationFailure, AlertResolutionFailure, AlertNotificationTrackingFailure
 
 /** An OPEN alert already exists for the same `(type, target)`: idempotency guard at the storage layer. */
 data object AlertAlreadyOpen : AlertCreationFailure

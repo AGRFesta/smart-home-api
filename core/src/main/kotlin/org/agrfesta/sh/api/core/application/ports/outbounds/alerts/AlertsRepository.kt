@@ -4,8 +4,11 @@ import arrow.core.Either
 import org.agrfesta.sh.api.core.domain.alerts.Alert
 import org.agrfesta.sh.api.core.domain.alerts.AlertStatus
 import org.agrfesta.sh.api.core.domain.failures.AlertCreationFailure
+import org.agrfesta.sh.api.core.domain.failures.AlertNotificationTrackingFailure
 import org.agrfesta.sh.api.core.domain.failures.AlertResolutionFailure
 import org.agrfesta.sh.api.core.domain.failures.GetAlertsFailure
+import java.time.Instant
+import java.util.UUID
 
 /**
  * Outbound Port for [Alert] persistence operations.
@@ -43,4 +46,13 @@ interface AlertsRepository {
      * or [Either.Left] with [AlertResolutionFailure] if the resolution could not be persisted.
      */
     fun resolve(alert: Alert): Either<AlertResolutionFailure, Unit>
+
+    /**
+     * Persists [at] as the instant the alert [uuid] was last successfully notified, enforcing the
+     * reminder cadence (see `docs/domain/ALERTS.md`).
+     *
+     * @return [Either.Right] with [Unit] on success,
+     * or [Either.Left] with [AlertNotificationTrackingFailure] if the update could not be persisted.
+     */
+    fun updateLastNotifiedAt(uuid: UUID, at: Instant): Either<AlertNotificationTrackingFailure, Unit>
 }

@@ -14,6 +14,8 @@ import java.util.UUID
  * [lifecycle] couples status and `resolvedAt`.
  *
  * @property details a small, free-form payload describing what tripped the alert (e.g. the offending value).
+ * @property lastNotifiedAt when the alert was last successfully notified (`null` = never): delivery
+ * bookkeeping enforcing the reminder cadence, not domain state — see `docs/domain/ALERTS.md`.
  */
 data class Alert(
     val uuid: UUID,
@@ -21,5 +23,6 @@ data class Alert(
     val target: AlertTarget,
     val openedAt: Instant,
     val lifecycle: AlertLifecycle,
-    val details: String? = null
+    val details: String? = null,
+    val lastNotifiedAt: Instant? = null
 )

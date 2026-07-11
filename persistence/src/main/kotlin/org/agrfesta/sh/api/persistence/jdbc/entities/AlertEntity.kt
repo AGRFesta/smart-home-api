@@ -18,7 +18,8 @@ class AlertEntity(
     val status: AlertStatus,
     val openedAt: Instant,
     val resolvedAt: Instant?,
-    val details: String?
+    val details: String?,
+    val lastNotifiedAt: Instant?
 ) {
     fun toAlert() = Alert(
         uuid = uuid,
@@ -31,6 +32,7 @@ class AlertEntity(
                 requireNotNull(resolvedAt) { "RESOLVED alert '$uuid' requires resolvedAt" }
             )
         },
-        details = details
+        details = details,
+        lastNotifiedAt = lastNotifiedAt
     )
 }

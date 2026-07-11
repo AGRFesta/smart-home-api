@@ -8,6 +8,7 @@ import org.agrfesta.sh.api.core.domain.alerts.Alert
 import org.agrfesta.sh.api.core.domain.alerts.AlertStatus
 import org.agrfesta.sh.api.core.domain.failures.AlertAlreadyOpen
 import org.agrfesta.sh.api.core.domain.failures.AlertCreationFailure
+import org.agrfesta.sh.api.core.domain.failures.AlertNotificationTrackingFailure
 import org.agrfesta.sh.api.core.domain.failures.AlertRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.AlertResolutionFailure
 import org.agrfesta.sh.api.core.domain.failures.GetAlertsFailure
@@ -16,6 +17,8 @@ import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.dao.DataAccessException
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.time.Instant
+import java.util.UUID
 
 @Service
 class AlertsJdbcAdapter(
@@ -44,6 +47,18 @@ class AlertsJdbcAdapter(
         AlertAlreadyOpen.left()
     } catch (e: DataAccessException) {
         logger.error("Unexpected persistence error creating alert '${alert.uuid}'", e)
+        AlertRepositoryError.left()
+    }
+
+    override fun updateLastNotifiedAt(uuid: UUID, at: Instant): Either<AlertNotificationTrackingFailure, Unit> = try {
+        if (alertsRepo.updateLastNotifiedAt(uuid, at) == 0) {
+            logger.error("Unable to track last_notified_at for alert '$uuid': no such row")
+            AlertRepositoryError.left()
+        } else {
+            Unit.right()
+        }
+    } catch (e: DataAccessException) {
+        logger.error("Unexpected persistence error tracking last_notified_at for alert '$uuid'", e)
         AlertRepositoryError.left()
     }
 
