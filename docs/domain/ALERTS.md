@@ -23,6 +23,7 @@ are deliberately excluded.
 | `openedAt`  | When the condition first became true. |
 | `lifecycle` | Sealed `AlertLifecycle`: `Open`, or `Resolved(resolvedAt)`. Exposes the derived `status` (`OPEN` / `RESOLVED`). |
 | `details`   | Small free-form payload describing what tripped the alert (e.g. the offending value). |
+| `lastNotifiedAt` | When the alert was last successfully notified (`null` = never). Delivery bookkeeping enforcing the reminder cadence — not domain state (see *Notifications* below). |
 
 **Illegal states are unrepresentable by construction:** `target` couples scope and reference (a `Global`
 alert cannot carry a reference, nor a `Device` one lack a uuid), and `lifecycle` couples status and
@@ -125,7 +126,10 @@ a `HomeStateRefresh` itself, the same way config-change use cases already do.
 
 ## Persistence
 
-- Table `smart_home.alert`, all timestamps stored with time zone (`TIMESTAMPTZ`).
+- Table `smart_home.alert`, all timestamps stored with time zone (`TIMESTAMPTZ`); `last_notified_at`
+  is the nullable delivery-bookkeeping column backing the reminder cadence.
+- Table `smart_home.notification` (FK to `alert`, indexed on `sent_at`) backs the persisted delivery
+  channel; unlike alerts it is pruned by the retention policy.
 - Partial unique index `uq_alert_open_per_target` on `(type, COALESCE(target, ''))` where `status = 'OPEN'`.
 - Outbound port `AlertsRepository` with a JDBC adapter (no JPA), following the existing persistence
   conventions; infrastructure exceptions are caught at the adapter boundary and mapped to typed failures
@@ -144,6 +148,64 @@ a `HomeStateRefresh` itself, the same way config-change use cases already do.
   **cascade-resolve (or delete) that device's alerts**. `target` is polymorphic (device uuid / provider id /
   none), so there is no literal FK; the cleanup must be done explicitly in the delete use case (or by
   introducing a FK with the chosen on-delete behaviour).
+
+---
+
+## Notifications: the delivery projection
+
+A **notification** is the ephemeral delivery projection of an alert transition — an event/record, not
+a domain state. The alert remains the source of truth; notifications answer "what was notified, and
+when". Three events exist (`NotificationEvent`):
+
+| Event      | Emitted when |
+|------------|--------------|
+| `OPENED`   | The first time the alert opens — immediately, on the success path of the open. |
+| `REMINDER` | Periodically while the alert stays `OPEN`, at the configured cadence — **not** on every polling cycle. |
+| `RESOLVED` | When the alert resolves — on the success path of the resolution. |
+
+Dispatch always sits on the **success path of the corresponding alert transition save**: a failed save
+produces no notification (nothing to announce), and a failed dispatch never blocks the transition
+(delivery is a tolerated degradation, compensated by the cadence — see below).
+
+### Delivery channel
+
+Delivery sits behind the `NotificationDispatcher` outbound port, mirroring how `HomeStateRefreshPublisher`
+abstracts its delivery mechanism. The only implementation today is the **persisted channel**
+(`PersistedNotificationDispatcher`): "delivering" means recording the notification on the
+`smart_home.notification` table, inspectable via the paginated
+[`GET /notifications`](../api/notifications.md). Real channels (push / email / Telegram) are #195
+implementations of the same port. The `payload` is the alert `details` **at emission time** — for
+reminders that is still the open-time snapshot, since `Unchanged` transitions never refresh `details`.
+
+### Reminder cadence
+
+The cadence is enforced via `last_notified_at` on the alert, a pure domain decision (`reminderDue`):
+a reminder is due when the elapsed time since `last_notified_at` reaches the cadence (boundary
+included), or when `last_notified_at` is `NULL`. `NULL` means "never successfully notified": the
+field is written **only after a successful dispatch** (on the `OPENED` emission and on every
+`REMINDER`), so a lost `opened` emission is compensated by the next scan.
+
+**Delivery guarantees are asymmetric by design:** `OPENED` and `REMINDER` are **at-least-once**
+(the scan compensates a lost emission), while `RESOLVED` is **at-most-once** — a resolved alert
+leaves the OPEN scan, so a failed `RESOLVED` dispatch is never retried and the notification trail
+can permanently end while the alert is in fact resolved. This is accepted today because the alert
+is the source of truth and `GET /alerts` reflects the resolution regardless; compensation for lost
+`RESOLVED` emissions becomes relevant with real channels and belongs to the #195 scope.
+
+A thin scheduler (`AlertRemindersScheduler`, cron → `SendAlertRemindersUseCase`) scans every 15
+minutes; the scan frequency only bounds the notification latency — the cadence itself comes from
+configuration. A failed reminder dispatch leaves `last_notified_at` untouched, so the next scan
+retries.
+
+### Retention
+
+The notification table is unbounded over time: a daily scheduler (`NotificationsRetentionScheduler`,
+cron → `PruneNotificationsUseCase`) deletes the notifications older than the retention window.
+
+| Property                                  | Default | Meaning |
+|-------------------------------------------|---------|---------|
+| `alerts.notifications.reminder-interval`  | `PT24H` | Minimum interval between two notifications for the same OPEN alert (ISO-8601). |
+| `alerts.notifications.retention`          | `P90D`  | Notifications older than this window are pruned (ISO-8601). |
 
 ---
 

@@ -125,6 +125,51 @@ class AlertsJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
+    fun `updateLastNotifiedAt() persists the instant retrievable via getAlerts()`() {
+        // Given
+        val alert = anAlert(lifecycle = AlertLifecycle.Open, openedAt = Instant.now().truncatedTo(ChronoUnit.MICROS))
+        sut.create(alert).shouldBeRight()
+        val notifiedAt = Instant.now().truncatedTo(ChronoUnit.MICROS)
+
+        // When
+        sut.updateLastNotifiedAt(alert.uuid, notifiedAt).shouldBeRight()
+
+        // Then
+        withClue("the persisted alert should carry the tracked last_notified_at") {
+            sut.getAlerts()
+                .shouldBeRight()
+                .shouldContainExactly(alert.copy(lastNotifiedAt = notifiedAt))
+        }
+    }
+
+    @Test
+    fun `updateLastNotifiedAt() returns AlertRepositoryError when the alert does not exist`() {
+        // Given an alert that was never persisted
+        val ghostUuid = UUID.randomUUID()
+
+        // When / Then
+        withClue("tracking last_notified_at on a missing alert must be a typed failure, not a silent no-op") {
+            sut.updateLastNotifiedAt(ghostUuid, Instant.now().truncatedTo(ChronoUnit.MICROS))
+                .shouldBeLeft()
+                .shouldBe(AlertRepositoryError)
+        }
+    }
+
+    @Test
+    fun `updateLastNotifiedAt() returns AlertRepositoryError when persistence fails`() {
+        // Given
+        every { alertsRepo.updateLastNotifiedAt(any(), any()) } throws
+            DataAccessResourceFailureException("last_notified_at tracking failure")
+
+        // When / Then
+        withClue("a tracking exception must surface as the typed AlertRepositoryError, never propagate") {
+            sut.updateLastNotifiedAt(UUID.randomUUID(), Instant.now())
+                .shouldBeLeft()
+                .shouldBe(AlertRepositoryError)
+        }
+    }
+
+    @Test
     fun `resolve() returns AlertRepositoryError when the alert does not exist`() {
         // Given an alert that was never persisted
         val ghost = anAlert(lifecycle = AlertLifecycle.Resolved(Instant.now().truncatedTo(ChronoUnit.MICROS)))

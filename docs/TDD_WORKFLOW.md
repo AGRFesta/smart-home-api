@@ -89,6 +89,13 @@ PBTs **complement, never replace** the example/table-based tests. The `pbt` tag 
 2. Write the code for this **SINGLE test only**. Do not write tests for the other items on the list yet, strictly following the **Test Writing Guidelines** above. Do not touch production code beyond the bare minimum required to make the test compile. If you use Kotlin's `TODO()`, **always provide a descriptive message** (e.g., `TODO("Implement validation for negative amount")`) so the test fails with a specific `NotImplementedError`, confirming the correct execution path was hit.
 3. **BARRIER - STOP AND ASK:** Ask the user: *"I have written the test for the first case. Could you please run it locally to verify it fails (RED) for the expected domain reason, or do you grant me permission to run it?"*
 4. **Do not proceed** until the user confirms the single test is RED in the right way.
+5. **Batch exception (micro-variants):** when the next tests on the Phase 0 list are near-identical
+   variants of the same increment shape (e.g. infrastructure failure → typed error mapping across the
+   methods of one adapter), the author MAY propose writing them as a single batch with one grouped RED
+   verification. The batch must be **explicitly proposed and approved by the user first** — never
+   inferred; each test in the batch must still fail for its own genuine reason, and a test that turns
+   out GREEN (or RED for the wrong reason) inside the batch must be pulled out and re-run through the
+   normal single-test cycle.
 
 ## Phase 2: GREEN (Minimal Implementation)
 1. Once approved, write the production code to make **only that specific test pass**.

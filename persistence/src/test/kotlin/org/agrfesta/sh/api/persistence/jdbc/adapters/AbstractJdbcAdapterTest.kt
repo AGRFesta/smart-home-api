@@ -11,6 +11,7 @@ import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasWithDevicesJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DeviceAggregateJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.NotificationsJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsAssignmentsJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.SensorsHistoryDataJdbcRepository
@@ -28,6 +29,8 @@ import org.springframework.context.annotation.Import
     AreasJdbcAdapter::class,
     DevicesJdbcAdapter::class,
     AlertsJdbcAdapter::class,
+    PersistedNotificationDispatcher::class,
+    NotificationsJdbcAdapter::class,
     SensorsAssignmentsJdbcAdapter::class,
     ActuatorsAssignmentsJdbcAdapter::class,
     TemperatureSettingsJdbcAdapter::class,
@@ -39,6 +42,7 @@ import org.springframework.context.annotation.Import
     AreasJdbcRepository::class,
     DevicesJdbcRepository::class,
     AlertsJdbcRepository::class,
+    NotificationsJdbcRepository::class,
     DeviceAggregateJdbcRepository::class,
     SensorsAssignmentsJdbcRepository::class,
     ActuatorsAssignmentsJdbcRepository::class,
@@ -54,6 +58,7 @@ abstract class AbstractJdbcAdapterTest {
     @SpykBean protected lateinit var areasRepo: AreasJdbcRepository
     @SpykBean protected lateinit var devicesRepo: DevicesJdbcRepository
     @SpykBean protected lateinit var alertsRepo: AlertsJdbcRepository
+    @SpykBean protected lateinit var notificationsRepo: NotificationsJdbcRepository
     @SpykBean protected lateinit var sensorsAssignmentsRepo: SensorsAssignmentsJdbcRepository
     @SpykBean protected lateinit var actuatorsAssignmentsRepo: ActuatorsAssignmentsJdbcRepository
     @SpykBean protected lateinit var tempSettingsRepo: TemperatureSettingRepository

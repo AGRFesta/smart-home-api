@@ -15,6 +15,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import java.sql.ResultSet
 import java.sql.Timestamp
+import java.time.Instant
+import java.util.UUID
 
 @Repository
 class AlertsJdbcRepository(
@@ -47,6 +49,12 @@ class AlertsJdbcRepository(
         jdbcTemplate.update(sql, params)
     }
 
+    /** Updates the last_notified_at column of an existing alert row; returns the number of affected rows. */
+    fun updateLastNotifiedAt(uuid: UUID, at: Instant): Int {
+        val sql = "UPDATE smart_home.alert SET last_notified_at = :at WHERE uuid = :uuid"
+        return jdbcTemplate.update(sql, mapOf("uuid" to uuid, "at" to Timestamp.from(at)))
+    }
+
     /** Updates the lifecycle columns of an existing alert row; returns the number of affected rows. */
     fun updateResolution(alert: Alert): Int {
         val sql = """
@@ -73,6 +81,7 @@ object AlertRowMapper : RowMapper<AlertEntity> {
         status = rs.getAlertStatus("status"),
         openedAt = rs.getInstant("opened_at"),
         resolvedAt = rs.findInstant("resolved_at"),
-        details = rs.getString("details")
+        details = rs.getString("details"),
+        lastNotifiedAt = rs.findInstant("last_notified_at")
     )
 }

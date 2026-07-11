@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Emit `OPENED`/`REMINDER`/`RESOLVED` notifications on alert transitions: one on open, one on resolve,
+  and periodic reminders while the alert stays open, at a configurable cadence
+  (`alerts.notifications.reminder-interval`, default daily). Notifications are persisted and pruned
+  after a configurable retention window (`alerts.notifications.retention`, default 90 days). (#194)
+- Add `GET /notifications` paginated endpoint to inspect the emitted notifications. (#194)
 - Open and resolve `BATTERY_LOW` alerts automatically on the polling cycle, driven by global hysteresis
   thresholds (`alerts.battery-low.trigger`/`clear`); low-battery devices now surface in `GET /alerts`
   without manual intervention. (#193)

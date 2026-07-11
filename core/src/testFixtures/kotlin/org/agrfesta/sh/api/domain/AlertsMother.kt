@@ -14,8 +14,9 @@ fun anAlert(
     target: AlertTarget = AlertTarget.Device(UUID.randomUUID()),
     openedAt: Instant = Instant.now(),
     lifecycle: AlertLifecycle = AlertLifecycle.Open,
-    details: String? = null
-) = Alert(uuid, type, target, openedAt, lifecycle, details)
+    details: String? = null,
+    lastNotifiedAt: Instant? = null
+) = Alert(uuid, type, target, openedAt, lifecycle, details, lastNotifiedAt)
 
 fun anAlertSubject(
     type: AlertType = AlertType.BATTERY_LOW,
