@@ -12,6 +12,7 @@ import com.tngtech.archunit.lang.ConditionEvents
 import com.tngtech.archunit.lang.SimpleConditionEvent
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
+import com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices
 
 @Suppress("UtilityClassWithPublicConstructor")
 @AnalyzeClasses(
@@ -59,6 +60,17 @@ class CoreArchitectureTest {
             .should().dependOnClassesThat().resideInAPackage("..core.application..")
             .because(
                 "The domain layer must be completely independent of the application layer (ports and use cases)"
+            )
+
+        @JvmField
+        @ArchTest
+        val domainPackagesAreFreeOfCycles = slices()
+            .matching("..core.domain.(*)..")
+            .should().beFreeOfCycles()
+            .`as`("domain packages should be free of cycles")
+            .because(
+                "cyclic dependencies between domain packages blur the subdomain boundaries " +
+                    "(e.g. the devices ↔ alerts cycle removed by #240)"
             )
 
         @JvmField

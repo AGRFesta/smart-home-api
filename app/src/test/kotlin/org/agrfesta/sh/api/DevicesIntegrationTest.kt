@@ -13,8 +13,8 @@ import io.mockk.every
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.agrfesta.sh.api.controllers.AssignmentResponse
-import org.agrfesta.sh.api.controllers.DeviceAggregateResponse
 import org.agrfesta.sh.api.controllers.DeviceResponse
+import org.agrfesta.sh.api.controllers.DeviceViewResponse
 import org.agrfesta.sh.api.controllers.DevicesRefreshResponse
 import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.controllers.toDevice
@@ -24,9 +24,9 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.alerts.AlertsReposit
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.SensorsAssignmentsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.application.readmodels.devices.AssignmentRole
 import org.agrfesta.sh.api.core.domain.alerts.AlertTarget
 import org.agrfesta.sh.api.core.domain.alerts.AlertType
-import org.agrfesta.sh.api.core.domain.devices.AssignmentRole
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
@@ -172,7 +172,7 @@ class DevicesIntegrationTest(
             .extract()
             .asString()
 
-        val response = objectMapper.readValue(responseBody, DeviceAggregateResponse::class.java)
+        val response = objectMapper.readValue(responseBody, DeviceViewResponse::class.java)
         response.uuid shouldBe deviceId
         response.deviceProviderId shouldBe sensorData.deviceProviderId
         response.provider shouldBe sensorData.provider
@@ -204,7 +204,7 @@ class DevicesIntegrationTest(
             .extract()
             .asString()
 
-        val response = objectMapper.readValue(responseBody, DeviceAggregateResponse::class.java)
+        val response = objectMapper.readValue(responseBody, DeviceViewResponse::class.java)
         withClue("activeAlerts should carry the open alert types resolved from the alert store") {
             response.activeAlerts shouldBe setOf(AlertType.BATTERY_LOW)
         }

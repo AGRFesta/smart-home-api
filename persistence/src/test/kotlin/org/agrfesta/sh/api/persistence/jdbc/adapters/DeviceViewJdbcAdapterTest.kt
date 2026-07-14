@@ -8,8 +8,8 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import org.agrfesta.sh.api.core.domain.devices.AssignmentRole
-import org.agrfesta.sh.api.core.domain.devices.DeviceAreaAssignment
+import org.agrfesta.sh.api.core.application.readmodels.devices.AssignmentRole
+import org.agrfesta.sh.api.core.application.readmodels.devices.DeviceAreaAssignment
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus.PAIRED
 import org.agrfesta.sh.api.core.domain.failures.DeviceNotFound
 import org.agrfesta.sh.api.core.domain.failures.DeviceRepositoryError
@@ -25,9 +25,9 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
+class DeviceViewJdbcAdapterTest : AbstractJdbcAdapterTest() {
 
-    @Autowired private lateinit var sut: DeviceAggregateRepositoryJdbcImpl
+    @Autowired private lateinit var sut: DeviceViewRepositoryJdbcImpl
 
     // findById()
 
@@ -43,7 +43,7 @@ class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
     }
 
     @Test
-    fun `findById() returns the aggregate with base fields and empty assignments for an unassigned device`() {
+    fun `findById() returns the view with base fields and empty assignments for an unassigned device`() {
         // Given
         val now = Instant.now().truncatedTo(ChronoUnit.MICROS)
         every { timeProvider.now() } returns now
@@ -52,18 +52,18 @@ class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
         devicesRepo.persist(deviceId, data)
 
         // When
-        val aggregate = sut.findById(deviceId).shouldBeRight()
+        val view = sut.findById(deviceId).shouldBeRight()
 
         // Then
-        aggregate.uuid shouldBe deviceId
-        aggregate.deviceProviderId shouldBe data.deviceProviderId
-        aggregate.provider shouldBe data.provider
-        aggregate.name shouldBe data.name
-        aggregate.model shouldBe data.model
-        aggregate.status shouldBe PAIRED
-        aggregate.createdOn shouldBe now
-        aggregate.updatedOn shouldBe null
-        aggregate.assignments.shouldBeEmpty()
+        view.uuid shouldBe deviceId
+        view.deviceProviderId shouldBe data.deviceProviderId
+        view.provider shouldBe data.provider
+        view.name shouldBe data.name
+        view.model shouldBe data.model
+        view.status shouldBe PAIRED
+        view.createdOn shouldBe now
+        view.updatedOn shouldBe null
+        view.assignments.shouldBeEmpty()
     }
 
     @Test
@@ -76,11 +76,11 @@ class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
         sensorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = deviceId)
 
         // When
-        val aggregate = sut.findById(deviceId).shouldBeRight()
+        val view = sut.findById(deviceId).shouldBeRight()
 
         // Then
         withClue("expected the device's current sensor assignment to '${area.name}' with role SENSOR") {
-            aggregate.assignments.shouldContainExactly(
+            view.assignments.shouldContainExactly(
                 DeviceAreaAssignment(areaUuid = area.uuid, areaName = area.name, role = AssignmentRole.SENSOR)
             )
         }
@@ -96,11 +96,11 @@ class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
         actuatorsAssignmentsRepo.persistAssignment(areaId = area.uuid, deviceId = deviceId)
 
         // When
-        val aggregate = sut.findById(deviceId).shouldBeRight()
+        val view = sut.findById(deviceId).shouldBeRight()
 
         // Then
         withClue("expected the device's actuator assignment to '${area.name}' with role ACTUATOR") {
-            aggregate.assignments.shouldContainExactly(
+            view.assignments.shouldContainExactly(
                 DeviceAreaAssignment(areaUuid = area.uuid, areaName = area.name, role = AssignmentRole.ACTUATOR)
             )
         }
@@ -118,11 +118,11 @@ class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
         actuatorsAssignmentsRepo.persistAssignment(areaId = actuatorArea.uuid, deviceId = deviceId)
 
         // When
-        val aggregate = sut.findById(deviceId).shouldBeRight()
+        val view = sut.findById(deviceId).shouldBeRight()
 
         // Then
-        withClue("expected both the current SENSOR and ACTUATOR assignments folded into one aggregate") {
-            aggregate.assignments.shouldContainExactlyInAnyOrder(
+        withClue("expected both the current SENSOR and ACTUATOR assignments folded into one view") {
+            view.assignments.shouldContainExactlyInAnyOrder(
                 DeviceAreaAssignment(sensorArea.uuid, sensorArea.name, AssignmentRole.SENSOR),
                 DeviceAreaAssignment(actuatorArea.uuid, actuatorArea.name, AssignmentRole.ACTUATOR)
             )
@@ -140,11 +140,11 @@ class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
         sensorsAssignmentsRepo.disconnectSensor(areaId = area.uuid, deviceId = deviceId)
 
         // When
-        val aggregate = sut.findById(deviceId).shouldBeRight()
+        val view = sut.findById(deviceId).shouldBeRight()
 
         // Then
         withClue("a disconnected sensor assignment is historical and must not be returned") {
-            aggregate.assignments.shouldBeEmpty()
+            view.assignments.shouldBeEmpty()
         }
     }
 
@@ -152,8 +152,8 @@ class DeviceAggregateJdbcAdapterTest : AbstractJdbcAdapterTest() {
     fun `findById() returns DeviceRepositoryError when the query fails`() {
         // Given
         val deviceId = UUID.randomUUID()
-        every { deviceAggregateRepo.findAggregateById(deviceId) } throws
-            DataAccessResourceFailureException("device aggregate fetching failure")
+        every { deviceViewRepo.findViewById(deviceId) } throws
+            DataAccessResourceFailureException("device view fetching failure")
 
         // When / Then
         sut.findById(deviceId)

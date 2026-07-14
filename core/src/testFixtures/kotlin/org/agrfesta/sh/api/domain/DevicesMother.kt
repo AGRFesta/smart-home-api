@@ -2,10 +2,10 @@ package org.agrfesta.sh.api.domain
 
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DeviceDriver
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicePrototype
+import org.agrfesta.sh.api.core.application.readmodels.devices.DeviceAreaAssignment
+import org.agrfesta.sh.api.core.application.readmodels.devices.DeviceView
 import org.agrfesta.sh.api.core.domain.alerts.AlertType
 import org.agrfesta.sh.api.core.domain.devices.Device
-import org.agrfesta.sh.api.core.domain.devices.DeviceAggregate
-import org.agrfesta.sh.api.core.domain.devices.DeviceAreaAssignment
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
@@ -57,7 +57,7 @@ fun aDevice(
     model = data.model
 )
 
-fun aDeviceAggregate(
+fun aDeviceView(
     uuid: UUID = UUID.randomUUID(),
     status: DeviceStatus = DeviceStatus.PAIRED,
     providerId: String = aRandomUniqueString(),
@@ -69,7 +69,7 @@ fun aDeviceAggregate(
     assignments: List<DeviceAreaAssignment> = emptyList(),
     batteryLevel: Int? = null,
     activeAlerts: Set<AlertType>? = null
-) = DeviceAggregate(
+) = DeviceView(
     uuid, status, providerId, provider, name, model, createdOn, updatedOn, assignments, batteryLevel, activeAlerts
 )
 

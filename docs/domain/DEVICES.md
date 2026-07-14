@@ -106,19 +106,19 @@ those roles, computed via `catalog.rolesOf(model)`.
 | `FetchSensorReadingsService` | `DevicesDataFetchScheduler`, cron every minute | Builds a driver per device; for `Sensor` drivers reads measurements; for `BatteryPowered` drivers stores the battery level; then publishes a home-state refresh |
 | `SnapshotSensorHistoryUseCase` | `DevicesDataHistoryScheduler`, cron every 15 min | Snapshots current sensor readings into history |
 | `GetDevicesService` | `GET /devices` | Lean list, filterable by `provider` / `status` / `feature` |
-| `GetDeviceService` | `GET /devices/{uuid}` | Full `DeviceAggregate`: base fields + area assignments + cached `batteryLevel` |
+| `GetDeviceService` | `GET /devices/{uuid}` | Full `DeviceView` read-model: base fields + area assignments + cached `batteryLevel` |
 | `InspectDeviceService` | `GET /devices/{uuid}/diagnostics` | Realtime provider truth via the `Inspectable` capability (see below) |
 
-### Relationships held by the aggregate
+### Relationships held by the read-model
 
-The lean `Device` is just the device's own fields. The `DeviceAggregate` (returned by `GET /devices/{uuid}`)
-adds the relationships our model holds:
+The lean `Device` is just the device's own fields. The `DeviceView` read-model (returned by
+`GET /devices/{uuid}`, in `core/application/readmodels/devices`) adds the relationships our model holds:
 
 - **Area assignments** (`DeviceAreaAssignment`) — a device participates in an area under a `role`
   (`SENSOR` / `ACTUATOR`). This is how a device becomes usable by area-scoped features.
 - **Battery level** — last value cached by the readings fetch cycle, not part of the device identity.
 
-Future links (heating schedules, actuator state, richer sensor history) attach here as new aggregate fields,
+Future links (heating schedules, actuator state, richer sensor history) attach here as new view fields,
 keeping the device list lean.
 
 ---
@@ -131,7 +131,7 @@ The diagnostics passthrough exposes the opposite: the **provider's truth**, the 
 provider holds about a single device, in realtime.
 
 See [`GET /devices/{uuid}/diagnostics`](../api/devices.md#get-devicesuuiddiagnostics). It is the sibling
-of `GET /devices/{uuid}` (our persisted *aggregate*); diagnostics is realtime-only — **never persisted nor
+of `GET /devices/{uuid}` (our persisted *view*); diagnostics is realtime-only — **never persisted nor
 cached** — and intentionally surfaces provider failures rather than masking them.
 
 ### Design

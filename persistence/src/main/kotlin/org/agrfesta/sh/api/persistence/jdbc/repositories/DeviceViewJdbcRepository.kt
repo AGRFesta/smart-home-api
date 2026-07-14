@@ -1,8 +1,8 @@
 package org.agrfesta.sh.api.persistence.jdbc.repositories
 
-import org.agrfesta.sh.api.core.domain.devices.AssignmentRole
-import org.agrfesta.sh.api.core.domain.devices.DeviceAggregate
-import org.agrfesta.sh.api.core.domain.devices.DeviceAreaAssignment
+import org.agrfesta.sh.api.core.application.readmodels.devices.AssignmentRole
+import org.agrfesta.sh.api.core.application.readmodels.devices.DeviceAreaAssignment
+import org.agrfesta.sh.api.core.application.readmodels.devices.DeviceView
 import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.persistence.jdbc.utils.findInstant
 import org.agrfesta.sh.api.persistence.jdbc.utils.getInstant
@@ -17,25 +17,25 @@ import java.sql.ResultSet
 import java.util.UUID
 
 @Repository
-class DeviceAggregateJdbcRepository(
+class DeviceViewJdbcRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate
 ) {
 
     /**
-     * Loads the [DeviceAggregate] for [deviceId] — base device fields plus its current area
+     * Loads the [DeviceView] for [deviceId] — base device fields plus its current area
      * assignments — or `null` when no device matches [deviceId].
      */
-    fun findAggregateById(deviceId: UUID): DeviceAggregate? = jdbcTemplate.query(
+    fun findViewById(deviceId: UUID): DeviceView? = jdbcTemplate.query(
         QUERY,
         mapOf("deviceUuid" to deviceId),
-        extractAggregate()
+        extractView()
     )
 
-    private fun extractAggregate() = ResultSetExtractor<DeviceAggregate?> { rs ->
-        var base: DeviceAggregate? = null
+    private fun extractView() = ResultSetExtractor<DeviceView?> { rs ->
+        var base: DeviceView? = null
         val assignments = mutableListOf<DeviceAreaAssignment>()
         while (rs.next()) {
-            if (base == null) base = DeviceAggregateRowMapper.mapRow(rs, 0)
+            if (base == null) base = DeviceViewRowMapper.mapRow(rs, 0)
             addAssignment(rs, assignments)
         }
         base?.copy(assignments = assignments)
@@ -78,8 +78,8 @@ class DeviceAggregateJdbcRepository(
     }
 }
 
-object DeviceAggregateRowMapper : RowMapper<DeviceAggregate> {
-    override fun mapRow(rs: ResultSet, rowNum: Int) = DeviceAggregate(
+object DeviceViewRowMapper : RowMapper<DeviceView> {
+    override fun mapRow(rs: ResultSet, rowNum: Int) = DeviceView(
         uuid = rs.getUuid("uuid"),
         status = rs.getStatus("status"),
         deviceProviderId = rs.getString("provider_id"),

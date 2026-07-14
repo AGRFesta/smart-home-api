@@ -45,7 +45,7 @@ Returned when the persisted devices cannot be read.
 
 ## GET /devices/{uuid}
 
-Returns the per-device **aggregate** — *our truth*, the persisted view of a single device: its base
+Returns the per-device **view** — *our truth*, the persisted read-model of a single device: its base
 fields plus the relationships our model holds. This is the sibling of the diagnostics endpoint
 (*provider's truth*, realtime passthrough).
 
@@ -117,7 +117,7 @@ Returned when the persisted device cannot be read.
 
 Returns the **provider's truth** — the realtime, unfiltered raw payload the device's provider holds about
 it *right now*. This is the sibling of [`GET /devices/{uuid}`](#get-devicesuuid) (*our truth*, the persisted
-aggregate).
+view).
 
 It is a rarely-used **diagnostic passthrough**: the backend resolves the device, knows which provider to
 call (and does the signed/encrypted/token work the provider requires), and writes the provider response

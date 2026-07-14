@@ -1,9 +1,9 @@
 package org.agrfesta.sh.api.controllers
 
 import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
+import org.agrfesta.sh.api.core.application.readmodels.devices.AssignmentRole
+import org.agrfesta.sh.api.core.application.readmodels.devices.DeviceView
 import org.agrfesta.sh.api.core.domain.alerts.AlertType
-import org.agrfesta.sh.api.core.domain.devices.AssignmentRole
-import org.agrfesta.sh.api.core.domain.devices.DeviceAggregate
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
@@ -19,7 +19,7 @@ import java.util.UUID
  * ("unknown"), empty when no alert is open. For the full alert detail clients follow `GET /alerts`.
  */
 @Suppress("LongParameterList")
-data class DeviceAggregateResponse(
+data class DeviceViewResponse(
     val uuid: UUID,
     val name: String,
     val provider: Provider,
@@ -39,7 +39,7 @@ data class AssignmentResponse(
     val role: AssignmentRole
 )
 
-fun DeviceAggregate.toResponse(catalog: DeviceModelCatalog) = DeviceAggregateResponse(
+fun DeviceView.toResponse(catalog: DeviceModelCatalog) = DeviceViewResponse(
     uuid = uuid,
     name = name,
     provider = provider,
