@@ -21,7 +21,7 @@
 - **Error Handling:** Functional via `Either<Failure, T>`.
 
 ## Conventions
-- **API Docs:** When adding or modifying an endpoint, update `docs/api/<resource>.md` and the table in `docs/api/API_INDEX.md`.
+- **API Docs:** When adding or modifying an endpoint, update `docs/api/<resource>.md`, the table in `docs/api/API_INDEX.md`, and the Bruno collection (`bruno/<resource>/`, one `.bru` file per endpoint).
 - **Changelog:** At the end of every issue, add an entry to `CHANGELOG.md` under `## [Unreleased]`. Use these sections:
   - `Added` — new endpoints or observable behaviours
   - `Changed` — modified contracts or behaviours

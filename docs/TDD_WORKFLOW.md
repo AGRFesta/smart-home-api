@@ -1,8 +1,8 @@
 # TDD Methodology (Test-Driven Development)
 
-This project strictly follows TDD. You are not allowed to write tests and implementation at the same time. You must follow the incremental cycle (Phase 0 to Phase 3) respecting the established barriers.
+This project strictly follows TDD. You are not allowed to write tests and implementation at the same time. You must follow the incremental cycle (Phase 0 to Phase 3).
 
-**GOLDEN RULE:** Never proceed to the next phase without explicit user approval. To save execution resources and avoid environment issues, **never run tests automatically**. Always ask the user to run them or ask for explicit permission to execute them yourself.
+**GOLDEN RULE:** The only human gate is the **Phase 0 test list**. Once the list is approved, you run the RED → GREEN → REFACTOR loop **autonomously**: you execute the tests yourself, you judge every cycle against its **pre-declared expectation** (see Execution Harness), and you stop early only when an escalation condition is met. Never proceed past a cycle whose observed outcome does not match its pre-declared expectation.
 
 ## Test Writing Guidelines & Conventions
 When generating or modifying tests, you must adhere to the following rules:
@@ -64,7 +64,36 @@ PBTs **complement, never replace** the example/table-based tests. The `pbt` tag 
 
 ---
 
-## Phase 0: PLANNING (The Test List)
+## Execution Harness (On-the-Loop Mode)
+
+The user supervises **outcomes** ("on the loop"), not individual phases ("in the loop"). The user still owns: the Phase 0 gate, git (commits, branches, pushes), PRs, and issue definitions. Everything else in the loop is yours — under these mechanical, auditable rules:
+
+### Preflight (before the first cycle)
+- If the Phase 0 list includes persistence-slice or integration tests, verify Docker is running (Testcontainers requires it) **before starting**. If it is not available, STOP and report — do not start the loop and burn cycles on infrastructural failures.
+
+### Per-cycle test execution
+- Run only the test class(es) relevant to the current cycle: `./gradlew test --tests "ClassName"`.
+- The full suite runs **once**, at the Definition of Done — never per cycle.
+
+### Pre-declared RED (the substitute for human confirmation)
+- **Before** running a newly written test, state the exact expected failure: the failing test name and the failure kind — a specific assertion mismatch, or a `NotImplementedError` from a specific `TODO("...")`.
+- A RED is valid **only if** the observed output matches the declaration.
+  - A **compilation error is never a valid RED**.
+  - A test failing for a **different reason** than declared is not a valid RED — diagnose before proceeding.
+  - A test that is **GREEN on arrival** is the over-implementation smell (see Phase 2 diagnostic check): stop and resolve it, never silently cross it off.
+
+### Audit trail
+- After each cycle, report a one-line summary with the relevant evidence (observed RED reason / GREEN confirmation), so the user can audit any cycle after the fact without having gated it.
+
+### Escalation conditions — STOP and return to the user when:
+- A planned test **cannot be made RED as declared** after one diagnosis attempt (wrong-reason RED twice in a row, or GREEN on arrival that is not explained by simple over-implementation): the Phase 0 list is probably wrong — present an **amended list for re-approval**.
+- A test looks **wrong as a spec** (its expectation contradicts the approved plan or the domain docs). Never bend a test to fit the implementation, and never bend the plan silently.
+- A failure is **infrastructural** (Docker down, container startup, port clash, flaky environment): it is neither a RED nor a broken GREEN — report it.
+- The **Definition of Done** fails in a way whose fix would require new behaviour not covered by the approved list.
+
+---
+
+## Phase 0: PLANNING (The Test List) — HUMAN GATE
 1. Before writing any code, analyze the task and create a **strictly ordered bulleted list** of test cases you plan to write.
 2. **Order by RED-ability, not by complexity.** The purpose of the ordering is that each
    test, *at the moment it is written*, can be observed failing (RED) for a genuine reason:
@@ -82,32 +111,53 @@ PBTs **complement, never replace** the example/table-based tests. The `pbt` tag 
      not the rule. Where complexity ordering and RED-ability conflict, **RED-ability wins**.
    - When two behaviours are so coupled that a later test cannot be made RED in isolation,
      **say so explicitly in the plan** rather than forcing an artificial order.
-3. **BARRIER - STOP AND ASK:** Present this list to the user and ask for approval. **Do not write any code** until the list is approved or amended.
+3. **Batch proposals live here.** If some consecutive tests are near-identical micro-variants of the
+   same increment shape (e.g. infrastructure failure → typed error mapping across the methods of one
+   adapter), propose them **in the list, explicitly marked as a batch**. Batch approval happens at this
+   gate — it is never inferred mid-loop.
+4. **BARRIER — STOP AND ASK:** Present this list to the user and ask for approval. **Do not write any
+   code** until the list is approved or amended. This is the **only** barrier in the workflow: once the
+   list is approved, the RED → GREEN → REFACTOR loop below runs autonomously through the whole list,
+   ending with the Definition of Done.
 
 ## Phase 1: RED (Writing ONE Single Test)
 1. Pick ONLY the **first uncompleted test** from the Phase 0 list.
 2. Write the code for this **SINGLE test only**. Do not write tests for the other items on the list yet, strictly following the **Test Writing Guidelines** above. Do not touch production code beyond the bare minimum required to make the test compile. If you use Kotlin's `TODO()`, **always provide a descriptive message** (e.g., `TODO("Implement validation for negative amount")`) so the test fails with a specific `NotImplementedError`, confirming the correct execution path was hit.
-3. **BARRIER - STOP AND ASK:** Ask the user: *"I have written the test for the first case. Could you please run it locally to verify it fails (RED) for the expected domain reason, or do you grant me permission to run it?"*
-4. **Do not proceed** until the user confirms the single test is RED in the right way.
-5. **Batch exception (micro-variants):** when the next tests on the Phase 0 list are near-identical
-   variants of the same increment shape (e.g. infrastructure failure → typed error mapping across the
-   methods of one adapter), the author MAY propose writing them as a single batch with one grouped RED
-   verification. The batch must be **explicitly proposed and approved by the user first** — never
-   inferred; each test in the batch must still fail for its own genuine reason, and a test that turns
-   out GREEN (or RED for the wrong reason) inside the batch must be pulled out and re-run through the
-   normal single-test cycle.
+3. **Pre-declare the expected failure** (see Execution Harness), then run the test yourself, scoped to its class.
+4. **Judge the RED yourself:** proceed to Phase 2 only if the observed failure matches the declaration.
+   On a mismatch, diagnose and fix the *arrangement* of the RED (test setup, stub placement) — if it
+   still mismatches, or the test is GREEN on arrival, follow the **escalation conditions**.
+5. **Batch execution (micro-variants):** only for batches **approved in the Phase 0 list**. Write the
+   batch, pre-declare the expected failure of **each** test, and verify them in one grouped run. A test
+   that turns out GREEN or RED for the wrong reason inside the batch must be pulled out and re-run
+   through the normal single-test cycle.
 
 ## Phase 2: GREEN (Minimal Implementation)
-1. Once approved, write the production code to make **only that specific test pass**.
+1. Write the production code to make **only that specific test pass**.
 2. **Constraint:** Write *only* the simplest, minimal code necessary. Do not optimize, do not abstract, do not anticipate future test cases from your Phase 0 list.
    - Do **not** add `if/when` branches that are not exercised by the current test.
    - Do **not** propagate `Either` results through multiple cases if the current test only verifies one — use a hardcoded return or `TODO()` for untested branches.
-   - **Diagnostic check:** If the *next* test on the Phase 0 list is already GREEN before you write it, you over-implemented. Stop, revert the excess, and re-introduce it only when its test demands it.
-3. **BARRIER - STOP AND ASK:** Ask the user: *"I have written the minimal implementation. Could you please run the tests to verify they pass (GREEN)?"*
-4. **Do not proceed** until the user confirms the tests are GREEN.
+   - **Diagnostic check:** If the *next* test on the Phase 0 list is GREEN on arrival in its own Phase 1, you over-implemented here. Stop, revert the excess, and re-introduce it only when its test demands it.
+3. **Verify GREEN yourself:** run the scoped test class and confirm it passes. If it does not, iterate
+   on the **implementation** — the test is the spec. If the test itself looks wrong, that is an
+   escalation, not a test edit.
 
 ## Phase 3: REFACTOR & LOOP (Cleanup and Next Steps)
 1. Once GREEN, analyze both the newly written production code **and** the test code. Refactor to eliminate duplication and ensure compliance with `docs/ARCHITECTURE.md`.
 2. **Constraint (No Behavior Change):** During refactoring, you are **strictly forbidden** from adding new business logic, new validations, or new conditional branches. You can only restructure existing code to improve readability and remove duplication.
-3. Remind the user to run the test suite after modifications.
-4. **LOOP:** Once refactoring is approved, explicitly **cross off the completed test** from the Phase 0 list, announce the next test on the list, and loop back to **Phase 1** for that specific test.
+3. **Re-run the scoped test class(es)** touched by the refactoring and confirm they are still GREEN.
+4. **LOOP:** Cross off the completed test from the Phase 0 list, report the cycle's one-line audit
+   summary, announce the next test, and loop back to **Phase 1**. When the list is exhausted, run the
+   **Definition of Done**.
+
+## Definition of Done (end of flow)
+Run all of these after the last cycle, before handing back to the user:
+1. `./gradlew build` — full build, all modules, all tests (this is the only full-suite run of the flow).
+2. `./gradlew detekt` — run it **explicitly** (do not assume `build` covers it) and leave it clean. If a
+   finding can only be fixed by changing behaviour, escalate instead of fixing.
+3. **Docs & changelog** per `CLAUDE.md` conventions: if an endpoint was added or changed, update
+   `docs/api/<resource>.md`, the `API_INDEX.md` table, **and the Bruno collection** (`bruno/<resource>/`
+   — one `.bru` file per endpoint, mirroring the existing folder structure); then add the
+   `CHANGELOG.md` entry under `## [Unreleased]`.
+4. **Final report to the user:** the completed test list with each cycle's outcome, any deviation from
+   the approved plan, and the build/detekt results. The user takes it from here (git, PR).
