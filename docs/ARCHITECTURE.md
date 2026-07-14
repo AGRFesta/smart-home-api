@@ -118,6 +118,27 @@ Keep I/O out of domain models: they aggregate and decide over immutable inputs (
 objects), they do not call ports. Live device access belongs to the application layer (see the
 heating path: `EvaluateHeatingStateService` builds `HeatableAreaSnapshot`s from device drivers).
 
+### Domain Dependency Matrix
+The packages under `core/domain/` map the subdomain landscape (see `docs/SUBDOMAINS.md`); their
+mutual dependencies are the bounded-context boundaries of the monolith and are frozen by
+`DomainDependencyMatrixTest` (ArchUnit):
+
+| Package | May depend on (within `core/domain`) |
+|---|---|
+| `commons` | nothing — shared kernel |
+| `devices` | `commons` |
+| `areas` | `commons` |
+| `alerts` | `commons`, `devices` |
+| `heating` | `commons`, `areas`, `devices`, `failures` |
+| `notifications` | `commons`, `alerts` |
+| `failures` | any — cross-cutting failure catalogue |
+
+Additional guarantees enforced by the same test:
+- `core/domain` slices are free of cycles (this also covers cycles through `failures`, whose
+  outgoing dependencies are otherwise unrestricted).
+- Every `core/domain` class must live in one of the packages listed above: introducing a new
+  subdomain package requires adding its row to the matrix first.
+
 ---
 
 ## 4. Unit of Work Pattern
