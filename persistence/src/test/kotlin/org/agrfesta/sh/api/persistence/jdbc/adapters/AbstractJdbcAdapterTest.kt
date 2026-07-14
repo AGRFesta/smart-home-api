@@ -9,7 +9,7 @@ import org.agrfesta.sh.api.persistence.jdbc.repositories.ActuatorsAssignmentsJdb
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AlertsJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.AreasWithDevicesJdbcRepository
-import org.agrfesta.sh.api.persistence.jdbc.repositories.DeviceAggregateJdbcRepository
+import org.agrfesta.sh.api.persistence.jdbc.repositories.DeviceViewJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.NotificationsJdbcRepository
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
@@ -35,7 +35,7 @@ import org.springframework.context.annotation.Import
     ActuatorsAssignmentsJdbcAdapter::class,
     TemperatureSettingsJdbcAdapter::class,
     AreasWithDevicesRepositoryJdbcImpl::class,
-    DeviceAggregateRepositoryJdbcImpl::class,
+    DeviceViewRepositoryJdbcImpl::class,
     PropertyJdbcAdapter::class,
     SensorsHistoryDataJdbcAdapter::class,
     // Repositories
@@ -43,7 +43,7 @@ import org.springframework.context.annotation.Import
     DevicesJdbcRepository::class,
     AlertsJdbcRepository::class,
     NotificationsJdbcRepository::class,
-    DeviceAggregateJdbcRepository::class,
+    DeviceViewJdbcRepository::class,
     SensorsAssignmentsJdbcRepository::class,
     ActuatorsAssignmentsJdbcRepository::class,
     TemperatureSettingRepository::class,
@@ -64,7 +64,7 @@ abstract class AbstractJdbcAdapterTest {
     @SpykBean protected lateinit var tempSettingsRepo: TemperatureSettingRepository
     @SpykBean protected lateinit var tempIntervalsRepo: TemperatureIntervalRepository
     @SpykBean protected lateinit var areasWithDevicesRepo: AreasWithDevicesJdbcRepository
-    @SpykBean protected lateinit var deviceAggregateRepo: DeviceAggregateJdbcRepository
+    @SpykBean protected lateinit var deviceViewRepo: DeviceViewJdbcRepository
     @SpykBean protected lateinit var propertyRepo: PropertyJdbcRepository
     @SpykBean protected lateinit var historyDataRepository: SensorsHistoryDataJdbcRepository
 
