@@ -2,10 +2,10 @@ package org.agrfesta.sh.api.controllers
 
 import arrow.core.Either
 import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetDeviceUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetDevicesUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.InspectDeviceUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.RefreshDevicesUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.devices.GetDeviceUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.devices.GetDevicesUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.devices.InspectDeviceUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.devices.RefreshDevicesUseCase
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider

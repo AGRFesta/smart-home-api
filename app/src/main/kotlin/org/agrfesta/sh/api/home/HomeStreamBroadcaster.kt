@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.home
 
 import org.agrfesta.sh.api.controllers.toResponse
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetHomeDashboardUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.home.GetHomeDashboardUseCase
 import org.springframework.context.event.EventListener
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component

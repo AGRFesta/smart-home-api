@@ -8,7 +8,7 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.verify
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetNotificationsUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.notifications.GetNotificationsUseCase
 import org.agrfesta.sh.api.core.application.readmodels.notifications.NotificationsPageView
 import org.agrfesta.sh.api.core.domain.failures.NotificationRepositoryError
 import org.agrfesta.sh.api.domain.aNotification

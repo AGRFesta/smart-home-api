@@ -2,15 +2,15 @@ package org.agrfesta.sh.api.controllers
 
 import arrow.core.Either.Left
 import arrow.core.Either.Right
-import org.agrfesta.sh.api.core.application.ports.inbounds.AssignActuatorToAreaUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.AssignSensorToAreaUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.CreateAreaUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.DeleteAreaUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetAreaByIdUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetAreasUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignActuatorFromAreaUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.UnassignSensorFromAreaUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.UpdateAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.areas.AssignActuatorToAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.areas.AssignSensorToAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.areas.CreateAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.areas.DeleteAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.areas.GetAreaByIdUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.areas.GetAreasUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.areas.UnassignActuatorFromAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.areas.UnassignSensorFromAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.areas.UpdateAreaUseCase
 import org.agrfesta.sh.api.core.domain.failures.ActuatorNotAssigned
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound

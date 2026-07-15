@@ -1,0 +1,32 @@
+package org.agrfesta.sh.api.core.application.usecases.devices
+
+import arrow.core.Either
+import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
+import org.agrfesta.sh.api.core.application.ports.inbounds.devices.GetDevicesUseCase
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
+import org.agrfesta.sh.api.core.domain.devices.Device
+import org.agrfesta.sh.api.core.domain.devices.DeviceFeature
+import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.core.domain.devices.Provider
+import org.agrfesta.sh.api.core.domain.failures.GetDevicesFailure
+import org.springframework.stereotype.Service
+
+@Service
+class GetDevicesService(
+    private val devicesRepository: DevicesRepository,
+    private val catalog: DeviceModelCatalog
+) : GetDevicesUseCase {
+
+    override fun execute(
+        provider: Provider?,
+        status: DeviceStatus?,
+        feature: DeviceFeature?
+    ): Either<GetDevicesFailure, Collection<Device>> =
+        devicesRepository.getDevices(provider, status).map { devices ->
+            if (feature == null) {
+                devices
+            } else {
+                devices.filter { feature in catalog.rolesOf(it.model) }
+            }
+        }
+}

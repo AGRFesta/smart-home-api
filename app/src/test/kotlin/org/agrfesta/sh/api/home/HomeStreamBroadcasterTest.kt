@@ -9,7 +9,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetHomeDashboardUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.home.GetHomeDashboardUseCase
 import org.agrfesta.sh.api.core.application.readmodels.commons.FieldSuccess
 import org.agrfesta.sh.api.core.application.readmodels.home.GlobalStateView
 import org.agrfesta.sh.api.core.application.readmodels.home.HomeDashboardView

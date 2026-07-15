@@ -9,7 +9,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetHomeDashboardUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.home.GetHomeDashboardUseCase
 import org.agrfesta.sh.api.core.application.readmodels.commons.FieldFailure
 import org.agrfesta.sh.api.core.application.readmodels.commons.FieldSuccess
 import org.agrfesta.sh.api.core.application.readmodels.home.AreaDashboardView

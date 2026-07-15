@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.controllers
 
 import arrow.core.Either
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetAlertsUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.alerts.GetAlertsUseCase
 import org.agrfesta.sh.api.core.domain.alerts.AlertStatus
 import org.agrfesta.sh.api.core.domain.failures.AlertRepositoryError
 import org.springframework.http.ResponseEntity

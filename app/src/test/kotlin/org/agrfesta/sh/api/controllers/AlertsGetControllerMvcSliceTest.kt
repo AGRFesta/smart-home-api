@@ -10,7 +10,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.verify
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetAlertsUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.alerts.GetAlertsUseCase
 import org.agrfesta.sh.api.core.domain.alerts.Alert
 import org.agrfesta.sh.api.core.domain.alerts.AlertStatus
 import org.agrfesta.sh.api.core.domain.failures.AlertRepositoryError

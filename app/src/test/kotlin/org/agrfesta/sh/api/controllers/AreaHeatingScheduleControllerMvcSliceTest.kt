@@ -7,9 +7,9 @@ import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import org.agrfesta.sh.api.core.application.ports.inbounds.DeleteHeatingScheduleUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetHeatingScheduleUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingScheduleUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.heating.DeleteHeatingScheduleUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.heating.GetHeatingScheduleUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.heating.ReplaceHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.application.readmodels.areas.HeatingScheduleView
 import org.agrfesta.sh.api.core.application.readmodels.areas.IntervalView
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT

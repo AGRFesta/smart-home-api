@@ -1,8 +1,8 @@
 package org.agrfesta.sh.api.controllers
 
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetPropertyUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.UpsertPropertyBatchUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.UpsertPropertyUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.settings.GetPropertyUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.settings.UpsertPropertyBatchUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.settings.UpsertPropertyUseCase
 import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.sh.api.core.domain.failures.DuplicatePropertyKeys
 import org.agrfesta.sh.api.core.domain.failures.EmptyPropertyBatch
