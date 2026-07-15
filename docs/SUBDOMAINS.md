@@ -159,10 +159,17 @@ only, hence healthy.
 
 ## Architectural observation ❗️
 
-Today the layering is hexagonal but *flat*: `application/usecases` is a single bucket of ~28
-services crossing every subdomain (only `heating` has its own folder). At the current size this
-is fine; but if Alerting/Notifications keeps growing (FCM push is on its way), the natural step
-is reorganizing `:core` **package-by-subdomain** — as already done for the outbound ports, which
-are split into `alerts/`, `areas/`, `devices/`, `sensors/`, ... — turning the subdomains into
-explicit bounded contexts inside the monolith. It is the near-zero-cost precursor of a possible
-future extraction, and ArchUnit could enforce those boundaries as well.
+`:core` is packaged **by subdomain** across the whole application layer: inbound ports
+(`application/ports/inbounds/{alerts,areas,devices,heating,home,notifications,sensors,settings}`),
+their service implementations (`application/usecases/<subdomain>/`, same-named subpackage as the
+interface each service implements) and the outbound ports (`application/ports/outbounds/...`)
+follow the same partition — with two asymmetries on the outbound side: four cross-cutting ports
+(`Cache`, `RandomGenerator`, `TimeProvider`, `UnitOfWork`) stay loose at the top level, and there
+is no `heating` subpackage. Only the inbound side bans loose top-level interfaces. This makes the
+subdomains explicit bounded contexts inside the monolith and is the near-zero-cost precursor of a
+possible future extraction; ArchUnit enforces the domain dependency matrix, and a rule pairing
+each use case package with its subdomain is a possible follow-up. Known debt for that rule:
+`usecases/home` reads the heating property keys from the companions of `usecases/heating` service
+classes (`EvaluateHeatingStateService.HEATING_ENABLED_KEY`,
+`HeatingStrategySelector.HEATING_STRATEGY_KEY`) — a cross-subdomain service→service dependency to
+relocate (or explicitly exempt) before that rule lands.

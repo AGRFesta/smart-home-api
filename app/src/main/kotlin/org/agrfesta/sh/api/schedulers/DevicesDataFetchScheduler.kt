@@ -1,6 +1,6 @@
 package org.agrfesta.sh.api.schedulers
 
-import org.agrfesta.sh.api.core.application.ports.inbounds.FetchSensorReadingsUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.sensors.FetchSensorReadingsUseCase
 import org.agrfesta.sh.api.utils.LoggerDelegate
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled

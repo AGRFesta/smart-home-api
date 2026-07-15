@@ -2,7 +2,7 @@ package org.agrfesta.sh.api.controllers
 
 import arrow.core.Either.Left
 import arrow.core.Either.Right
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetHomeDashboardUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.home.GetHomeDashboardUseCase
 import org.agrfesta.sh.api.home.HomeStreamBroadcaster
 import org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE
 import org.springframework.http.ResponseEntity

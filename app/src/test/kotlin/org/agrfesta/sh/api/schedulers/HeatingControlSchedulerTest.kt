@@ -10,7 +10,7 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import org.agrfesta.sh.api.core.application.ports.inbounds.EvaluateHeatingStateUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.heating.EvaluateHeatingStateUseCase
 import org.agrfesta.sh.api.core.domain.failures.ActuatorOperationFailure
 import org.agrfesta.sh.api.core.domain.failures.HeatingFlagUnavailable
 import org.agrfesta.sh.api.core.domain.heating.ActuationOutcome

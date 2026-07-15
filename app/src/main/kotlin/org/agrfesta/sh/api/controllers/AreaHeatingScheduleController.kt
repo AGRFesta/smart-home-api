@@ -1,8 +1,8 @@
 package org.agrfesta.sh.api.controllers
 
-import org.agrfesta.sh.api.core.application.ports.inbounds.DeleteHeatingScheduleUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetHeatingScheduleUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.ReplaceHeatingScheduleUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.heating.DeleteHeatingScheduleUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.heating.GetHeatingScheduleUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.heating.ReplaceHeatingScheduleUseCase
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval
 import org.agrfesta.sh.api.core.domain.areas.TemperatureInterval.Companion.INTERVAL_TIME_FORMAT
 import org.agrfesta.sh.api.core.domain.commons.Temperature

@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetPropertyUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.UpsertPropertyBatchUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.UpsertPropertyUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.settings.GetPropertyUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.settings.UpsertPropertyBatchUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.settings.UpsertPropertyUseCase
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.commons.PropertyUpsertEntry
 import org.agrfesta.sh.api.core.domain.failures.DuplicatePropertyKeys

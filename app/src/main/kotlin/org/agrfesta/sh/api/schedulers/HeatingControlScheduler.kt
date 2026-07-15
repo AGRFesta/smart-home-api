@@ -1,6 +1,6 @@
 package org.agrfesta.sh.api.schedulers
 
-import org.agrfesta.sh.api.core.application.ports.inbounds.EvaluateHeatingStateUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.heating.EvaluateHeatingStateUseCase
 import org.agrfesta.sh.api.core.domain.heating.ActuationOutcome
 import org.agrfesta.sh.api.core.domain.heating.HeatingEvaluationReport
 import org.agrfesta.sh.api.utils.LoggerDelegate

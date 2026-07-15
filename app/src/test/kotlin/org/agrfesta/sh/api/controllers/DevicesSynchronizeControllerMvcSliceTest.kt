@@ -9,10 +9,10 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import org.agrfesta.sh.api.core.application.devices.DeviceModelCatalog
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetDeviceUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetDevicesUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.InspectDeviceUseCase
-import org.agrfesta.sh.api.core.application.ports.inbounds.RefreshDevicesUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.devices.GetDeviceUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.devices.GetDevicesUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.devices.InspectDeviceUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.devices.RefreshDevicesUseCase
 import org.agrfesta.sh.api.core.domain.devices.RefreshDevicesResult
 import org.agrfesta.sh.api.core.domain.failures.RefreshDevicesError
 import org.agrfesta.sh.api.domain.aDevice

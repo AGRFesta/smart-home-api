@@ -12,7 +12,7 @@ import io.restassured.http.ContentType
 import org.agrfesta.sh.api.controllers.AlertResponse
 import org.agrfesta.sh.api.controllers.authenticated
 import org.agrfesta.sh.api.controllers.toResponse
-import org.agrfesta.sh.api.core.application.ports.inbounds.FetchSensorReadingsUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.sensors.FetchSensorReadingsUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.alerts.AlertsRepository
 import org.agrfesta.sh.api.core.domain.alerts.AlertLifecycle
 import org.agrfesta.sh.api.core.domain.alerts.AlertScope

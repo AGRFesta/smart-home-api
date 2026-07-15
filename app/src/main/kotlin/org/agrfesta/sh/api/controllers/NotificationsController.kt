@@ -1,7 +1,7 @@
 package org.agrfesta.sh.api.controllers
 
 import arrow.core.Either
-import org.agrfesta.sh.api.core.application.ports.inbounds.GetNotificationsUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.notifications.GetNotificationsUseCase
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.badRequest
 import org.springframework.http.ResponseEntity.internalServerError

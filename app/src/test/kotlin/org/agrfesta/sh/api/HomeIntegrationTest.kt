@@ -9,12 +9,12 @@ import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.agrfesta.sh.api.controllers.authenticated
-import org.agrfesta.sh.api.core.application.ports.inbounds.AssignSensorToAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.inbounds.areas.AssignSensorToAreaUseCase
 import org.agrfesta.sh.api.core.application.ports.outbounds.alerts.AlertsRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.sensors.SensorsCurrentReadingsRepository
-import org.agrfesta.sh.api.core.application.usecases.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
+import org.agrfesta.sh.api.core.application.usecases.heating.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.sh.api.core.application.usecases.heating.HeatingStrategySelector.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.sh.api.core.domain.alerts.AlertTarget
 import org.agrfesta.sh.api.core.domain.alerts.AlertType
