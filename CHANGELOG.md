@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Add hOn (Haier) provider transport: Salesforce OAuth login + authenticated API client,
+  behind `providers.hon.enabled`. (#247)
+
 ## [1.3.4] - 2026-07-11
 
 ### Added
