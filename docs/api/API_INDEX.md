@@ -13,6 +13,7 @@ below. See [SECURITY.md](../SECURITY.md).
 | `GET`    | `/devices/{uuid}` | [devices](devices.md#get-devicesuuid) | Per-device aggregate — base fields + current area assignments + cached battery level + open alert types |
 | `GET`    | `/devices/{uuid}/diagnostics` | [devices](devices.md#get-devicesuuiddiagnostics) | Provider's realtime raw payload (passthrough, no persistence) |
 | `POST`   | `/devices/synchronizations` | [devices](devices.md#post-devicessynchronizations) | Synchronise persisted devices with provider snapshot |
+| `GET`    | `/providers/{provider}/diagnostics` | [providers](providers.md#get-providersproviderdiagnostics) | Run a named read-only probe against the provider's cloud, raw passthrough (diagnostic contract, no schema guarantee) |
 | `GET`    | `/alerts` | [alerts](alerts.md#get-alerts) | List alerts, defaulting to currently OPEN, filterable by status |
 | `GET`    | `/notifications` | [notifications](notifications.md#get-notifications) | Paginated list of the emitted alert notifications, most recent first |
 | `GET`    | `/home`  | [home](home.md#get-home) | BFF dashboard — global state + areas |

@@ -143,6 +143,10 @@ The **`/home` dashboard + SSE stream** is not counted as a subdomain: it is a re
 concern (it lives in `application/readmodels`, never in `core/domain` — ArchUnit-enforced).
 That is solution space, not problem space.
 
+The provider **diagnostics** surface (`application/ports/{inbounds,outbounds}/diagnostics`,
+`usecases/diagnostics`) is likewise not a subdomain: it is a technical inspection surface over
+the provider anticorruption layer — solution space as well.
+
 ---
 
 ## Summary
@@ -160,7 +164,7 @@ only, hence healthy.
 ## Architectural observation ❗️
 
 `:core` is packaged **by subdomain** across the whole application layer: inbound ports
-(`application/ports/inbounds/{alerts,areas,devices,heating,home,notifications,sensors,settings}`),
+(`application/ports/inbounds/{alerts,areas,devices,diagnostics,heating,home,notifications,sensors,settings}`),
 their service implementations (`application/usecases/<subdomain>/`, same-named subpackage as the
 interface each service implements) and the outbound ports (`application/ports/outbounds/...`)
 follow the same partition — with two asymmetries on the outbound side: four cross-cutting ports

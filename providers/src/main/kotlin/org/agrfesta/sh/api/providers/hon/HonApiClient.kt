@@ -162,7 +162,34 @@ class HonApiClient(
         }
     }
 
+    /**
+     * Raw body of `POST /unified-api/v1/view/appliance-list`, **verbatim**, for provider
+     * diagnostics: no parsing, no payload scoping.
+     */
+    suspend fun rawApplianceList(): Either<HonFailure, String> {
+        val body = json.createObjectNode().put("deviceId", mobileId())
+        return postRaw("/unified-api/v1/view/appliance-list", body)
+    }
+
+    /** Raw body of `GET /commands/v1/context`, **verbatim**, for provider diagnostics. */
+    suspend fun rawContext(params: Map<String, String>): Either<HonFailure, String> =
+        getRaw("/commands/v1/context", params)
+
+    /** Raw body of `GET /commands/v1/retrieve`, **verbatim**, for provider diagnostics. */
+    suspend fun rawCommands(params: Map<String, String>): Either<HonFailure, String> =
+        getRaw("/commands/v1/retrieve", params)
+
+    /** Raw body of `GET /commands/v1/appliance-model`, **verbatim**, for provider diagnostics. */
+    suspend fun rawApplianceModel(params: Map<String, String>): Either<HonFailure, String> =
+        getRaw("/commands/v1/appliance-model", params)
+
     private suspend fun get(path: String, params: Map<String, String>): Either<HonFailure, JsonNode> =
+        getRaw(path, params).flatMap { it.parsed() }
+
+    private suspend fun post(path: String, body: JsonNode): Either<HonFailure, JsonNode> =
+        postRaw(path, body).flatMap { it.parsed() }
+
+    private suspend fun getRaw(path: String, params: Map<String, String>): Either<HonFailure, String> =
         request {
             http.get(config.apiUrl + path) {
                 authHeaders()
@@ -170,7 +197,7 @@ class HonApiClient(
             }
         }
 
-    private suspend fun post(path: String, body: JsonNode): Either<HonFailure, JsonNode> =
+    private suspend fun postRaw(path: String, body: JsonNode): Either<HonFailure, String> =
         request {
             http.post(config.apiUrl + path) {
                 authHeaders()
@@ -191,7 +218,7 @@ class HonApiClient(
      */
     private suspend fun request(
         exec: suspend () -> HttpResponse,
-    ): Either<HonFailure, JsonNode> =
+    ): Either<HonFailure, String> =
         try {
             requestFlow(exec)
         } catch (e: IOException) {
@@ -202,7 +229,7 @@ class HonApiClient(
     @Suppress("ReturnCount")
     private suspend fun requestFlow(
         exec: suspend () -> HttpResponse,
-    ): Either<HonFailure, JsonNode> {
+    ): Either<HonFailure, String> {
         ensureAuthenticated().getOrElse { return it.left() }
         var resp = exec()
         if (resp.status.value in RETRY_STATUSES) {
@@ -211,12 +238,14 @@ class HonApiClient(
         }
         if (resp.status.value in RETRY_STATUSES) return HonUnauthorized.left()
         if (resp.status.value >= HTTP_BAD_REQUEST) return HonServerError(resp.status.value).left()
-        // bodyAsText() is suspend: keep it OUT of runCatching so a CancellationException is
-        // not swallowed as a parse failure. Only the (non-suspend) parse is guarded.
-        val bodyText = resp.bodyAsText()
-        return runCatching { json.readTree(bodyText) }
-            .fold({ it.right() }, { HonNonJsonResponse.left() })
+        return resp.bodyAsText().right()
     }
+
+    // The parse is NOT suspend: guarding only it with runCatching keeps a CancellationException
+    // (raised by the suspend bodyAsText upstream) from being swallowed as a parse failure.
+    private fun String.parsed(): Either<HonFailure, JsonNode> =
+        runCatching { json.readTree(this) }
+            .fold({ it.right() }, { HonNonJsonResponse.left() })
 
     override fun close() {
         http.close()

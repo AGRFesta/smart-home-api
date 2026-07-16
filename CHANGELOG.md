@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add hOn (Haier) provider transport: Salesforce OAuth login + authenticated API client,
   behind `providers.hon.enabled`. (#247)
+- Add `GET /providers/{provider}/diagnostics` endpoint running named read-only probes against the
+  provider's cloud with raw passthrough (diagnostic contract, no schema guarantee); hOn probes:
+  `appliance-list`, `context`, `commands`, `appliance-model`. (#248)
 
 ## [1.3.4] - 2026-07-11
 
