@@ -1,0 +1,23 @@
+meta {
+  name: Get Provider Diagnostics
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/providers/:provider/diagnostics?probe=appliance-list
+  body: none
+  auth: inherit
+}
+
+params:query {
+  probe: appliance-list
+  ~macAddress: 00-00-00-00-00-00
+  ~applianceType: WM
+  ~applianceModelId: 0
+  ~code: 0
+}
+
+params:path {
+  provider: hon
+}
