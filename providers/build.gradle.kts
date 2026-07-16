@@ -28,6 +28,7 @@ dependencies {
     implementation(libs.ktor.jackson)
 
     testFixturesImplementation(platform(libs.spring.boot.bom))
+    testFixturesImplementation(libs.arrow.core)
     testFixturesImplementation(project(":core"))
     testFixturesImplementation(testFixtures(project(":core")))
     testFixturesImplementation("org.springframework:spring-context")
