@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-07-17
+
 ### Fixed
 - Follow the href on the Salesforce ProgressiveLogin interstitial to reach the hOn token page;
   the flow re-fetched the interstitial itself and failed the login with "incomplete OAuth
