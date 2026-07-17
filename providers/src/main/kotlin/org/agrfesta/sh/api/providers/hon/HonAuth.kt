@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.node.TextNode
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
 import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
@@ -81,7 +80,7 @@ internal class HonAuth(
         get() = timeProvider.now() >= fetchedAt.plus(Duration.ofHours(TOKEN_RENEW_HOURS))
 
     private val json = HON_OBJECT_MAPPER
-    private val cookies = AcceptAllCookiesStorage()
+    private val cookies = LenientCookiesStorage()
 
     // "Normal" client (follows redirects) and a no-redirect twin for the two manual
     // hops of the flow: they share the cookies binding the Salesforce session.

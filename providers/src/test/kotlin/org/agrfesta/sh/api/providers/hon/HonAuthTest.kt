@@ -7,9 +7,11 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.ktor.http.CookieEncoding
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.decodeCookieValue
 import io.ktor.http.headersOf
 import io.mockk.every
 import io.mockk.mockk
@@ -56,9 +58,10 @@ class HonAuthTest {
     /**
      * The 6-step happy flow: authorize page -> two manual redirects -> login page
      * (fwuid) -> aura credential POST -> token page -> cognito exchange.
+     * [authorizeResponse] lets a test decorate the first hop (e.g. with Set-Cookie headers).
      */
-    private fun givenHappyLoginFlow() {
-        givenLoginFlowUpToAura()
+    private fun givenHappyLoginFlow(authorizeResponse: ResponseSpec = defaultAuthorizePage()) {
+        givenLoginFlowUpToAura(authorizeResponse)
         givenAuraResponse("""{"events":[{"attributes":{"values":{"url":"/postlogin"}}}]}""")
         givenGet("/postlogin", page("""<a href="/finaltok">continue</a>"""))
         givenGet("/finaltok", page("access_token=AAA&refresh_token=RRR&id_token=III&x=1"))
@@ -68,12 +71,12 @@ class HonAuthTest {
         )
     }
 
+    private fun defaultAuthorizePage() =
+        page("""window.location.href ='/s/login/legacy?startURL=%2Fsetup%3Fsource%3DABC';""")
+
     /** Steps 1-3: authorize page, two manual redirect hops, login page with fwuid. */
-    private fun givenLoginFlowUpToAura() {
-        givenGet(
-            "/services/oauth2/authorize/expid_Login",
-            page("""window.location.href ='/s/login/legacy?startURL=%2Fsetup%3Fsource%3DABC';"""),
-        )
+    private fun givenLoginFlowUpToAura(authorizeResponse: ResponseSpec = defaultAuthorizePage()) {
+        givenGet("/services/oauth2/authorize/expid_Login", authorizeResponse)
         givenGet("/s/login/legacy", redirect("/hop1"))
         givenGet("/hop1", redirect("/hop2?startURL=%2Fsetup%3Fsource%3DABC"))
         givenGet(
@@ -101,6 +104,66 @@ class HonAuthTest {
         status = HttpStatusCode.Found,
         headers = headersOf(HttpHeaders.Location, location),
     )
+
+    // /// authenticate() — cookie replay hardening /////////////////////////////////////////////////////////////////
+
+    @Test fun `authenticate survives a Set-Cookie value not RAW-encodable and replays it quoted`() {
+        // Given: the authorize page sets a cookie whose value has a space — Salesforce
+        // consent/bot-detection cookies do this in production, and Ktor cannot re-send
+        // it in RAW encoding: it must be replayed in the RFC 6265 quoted form.
+        givenHappyLoginFlow(
+            authorizeResponse = ResponseSpec(
+                """window.location.href ='/s/login/legacy?startURL=%2Fsetup%3Fsource%3DABC';""",
+                headers = headersOf(
+                    HttpHeaders.ContentType to listOf("text/html"),
+                    HttpHeaders.SetCookie to listOf("dd=a b; Path=/"),
+                ),
+            ),
+        )
+
+        // When
+        val result = runBlocking { sut.authenticate(mobileId) }
+
+        // Then
+        result.shouldBeRight()
+        runBlocking {
+            registry.verifyRequest(HttpMethod.Get, "/s/login/legacy") { request ->
+                withClue("the cookie must be preserved and replayed quoted, never dropped") {
+                    request.headers[HttpHeaders.Cookie] shouldContain "dd=\"a b\""
+                }
+            }
+        }
+    }
+
+    @Test fun `authenticate survives a Set-Cookie value with double quotes, replaying it URL-encoded`() {
+        // Given: a cookie value containing a double quote — not even the RFC 6265 quoted
+        // form can carry it: the last resort is URL-encoding (decodable by the server).
+        givenHappyLoginFlow(
+            authorizeResponse = ResponseSpec(
+                """window.location.href ='/s/login/legacy?startURL=%2Fsetup%3Fsource%3DABC';""",
+                headers = headersOf(
+                    HttpHeaders.ContentType to listOf("text/html"),
+                    HttpHeaders.SetCookie to listOf("""q=a "b; Path=/"""),
+                ),
+            ),
+        )
+
+        // When
+        val result = runBlocking { sut.authenticate(mobileId) }
+
+        // Then
+        result.shouldBeRight()
+        runBlocking {
+            registry.verifyRequest(HttpMethod.Get, "/s/login/legacy") { request ->
+                val cookieHeader = request.headers[HttpHeaders.Cookie].orEmpty()
+                withClue("the cookie must survive URL-encoded, decodable back to the original") {
+                    cookieHeader shouldContain "q="
+                    val value = cookieHeader.substringAfter("q=").substringBefore(";")
+                    decodeCookieValue(value, CookieEncoding.URI_ENCODING) shouldBe """a "b"""
+                }
+            }
+        }
+    }
 
     // /// authenticate() — hardening (review #253) ////////////////////////////////////////////////////////////////
 
