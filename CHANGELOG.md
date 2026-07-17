@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Add SwitchBot (`devices`) and Netatmo (`home-status`) probes to `GET /providers/{provider}/diagnostics`. (#254)
+
 ## [1.4.3] - 2026-07-17
 
 ### Fixed

@@ -9,6 +9,7 @@ import org.agrfesta.sh.api.core.domain.failures.InspectProviderFailure
 import org.agrfesta.sh.api.core.domain.failures.MissingProbeParams
 import org.agrfesta.sh.api.core.domain.failures.ProviderInspectionFailure
 import org.agrfesta.sh.api.core.domain.failures.UnknownProbe
+import org.agrfesta.sh.api.providers.asJsonPayload
 import org.springframework.stereotype.Service
 
 /**
@@ -54,17 +55,6 @@ class HonProviderInspector(
             .map { it.asJsonPayload() }
             .mapLeft { ProviderInspectionFailure(it.toString()) }
     }
-
-    /**
-     * The endpoint promises `application/json`: a body the cloud sent as non-JSON (e.g. an HTML
-     * maintenance page) is wrapped in a JSON envelope instead of being dropped — on a diagnostic
-     * surface the weird body is exactly what the caller wants to see.
-     */
-    private fun String.asJsonPayload(): String =
-        runCatching { HON_OBJECT_MAPPER.readTree(this) }.fold(
-            { this },
-            { HON_OBJECT_MAPPER.createObjectNode().put("nonJsonBody", this).toString() },
-        )
 
     /** Adds each default entry only when the caller has not provided that key. */
     private fun Map<String, String>.withDefaults(vararg defaults: Pair<String, String>): Map<String, String> =

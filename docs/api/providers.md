@@ -31,7 +31,7 @@ any environment, without deploying ad-hoc code.
 | Param   | Example          | Description                                                    |
 |---------|------------------|----------------------------------------------------------------|
 | `probe` | `appliance-list` | **Required.** The probe to run.                                |
-| *(any)* | `macAddress=...` | Probe-specific parameters, passed through to the backing call. |
+| *(any)* | `macAddress=...` | Probe-specific parameters. hOn probes forward any extra params to the backing call; SwitchBot and Netatmo probes use only their listed params. |
 
 ### Probes — hOn
 
@@ -42,8 +42,22 @@ any environment, without deploying ad-hoc code.
 | `commands`        | `macAddress`, `applianceType`, `applianceModelId`, `code` | `GET /commands/v1/retrieve` (`os`/`appVersion` defaulted; optional `firmwareId`, `fwVersion`, `series` passed through) |
 | `appliance-model` | `macAddress`, `code`                                   | `GET /commands/v1/appliance-model`            |
 
-SwitchBot and Netatmo do not expose provider-level probes yet — a retrofit is tracked as a
-follow-up issue; their device-level diagnostics remain available via `GET /devices/{uuid}/diagnostics`.
+### Probes — SwitchBot
+
+| Probe     | Required params | Backing call                     |
+|-----------|-----------------|----------------------------------|
+| `devices` | —               | `GET /devices` (account devices) |
+
+### Probes — Netatmo
+
+| Probe         | Required params | Backing call                    |
+|---------------|-----------------|---------------------------------|
+| `home-status` | `homeId`        | `GET /api/homestatus?home_id=…` |
+
+The body is returned verbatim, with no room scoping — scoping to the configured room is the
+device-level diagnostics' job (`GET /devices/{uuid}/diagnostics`).
+`homeId` is always explicit — the probe never falls back to the configured home, so what you
+probe is always what you asked for.
 
 ### Walkthrough — querying hOn step by step
 

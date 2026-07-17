@@ -16,8 +16,16 @@ params:query {
   ~applianceType: WM
   ~applianceModelId: 0
   ~code: 0
+  ~homeId: 00:00:00:00:00:00
 }
 
 params:path {
   provider: hon
+}
+
+docs {
+  Probes per provider:
+  - hon: appliance-list, context, commands, appliance-model
+  - switchbot: devices
+  - netatmo: home-status (requires homeId)
 }
