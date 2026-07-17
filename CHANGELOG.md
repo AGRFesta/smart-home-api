@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-07-17
+
 ### Fixed
 - Replay Salesforce cookies whose value Ktor cannot re-encode in RAW form (spaces, commas,
   quotes) using the RFC 6265 quoted form or URL-encoding, instead of breaking the hOn login
