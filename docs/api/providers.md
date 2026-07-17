@@ -45,6 +45,60 @@ any environment, without deploying ad-hoc code.
 SwitchBot and Netatmo do not expose provider-level probes yet — a retrofit is tracked as a
 follow-up issue; their device-level diagnostics remain available via `GET /devices/{uuid}/diagnostics`.
 
+### Walkthrough — querying hOn step by step
+
+Everything starts from `appliance-list`: it needs no parameters, and its response carries every
+value the other probes ask for. The typical session:
+
+**1. Discover the appliances** (replace `$TOKEN` and host):
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "https://<host>/providers/hon/diagnostics?probe=appliance-list"
+```
+
+The appliances live at `modules.applianceList.payload.appliances[]` (observed shape, 2026-07 —
+**no guarantee**, that is the point of this endpoint). Each entry carries the fields the other
+probes need. Note the trap: the `applianceType` *parameter* comes from the **`applianceTypeName`**
+field (e.g. `"WM"`, `"AC"`, `"REF"`), not from the payload's `applianceType`.
+
+| Probe param        | Field in the `appliances[]` entry |
+|--------------------|-----------------------------------|
+| `macAddress`       | `macAddress`                      |
+| `applianceType`    | `applianceTypeName`               |
+| `applianceModelId` | `applianceModelId`                |
+| `code`             | `code`                            |
+| `firmwareId` *(opt)* | `firmwareId`                    |
+| `fwVersion` *(opt)*  | `fwVersion`                     |
+| `series` *(opt)*     | `series`                        |
+
+**2. Current state of an appliance** (the polling call — live attribute values):
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "https://<host>/providers/hon/diagnostics?probe=context&macAddress=<mac>&applianceType=WM"
+```
+
+**3. Command/program catalog** (what the appliance can do; the optional identifiers narrow the
+catalog to the exact firmware — pass them when the appliance entry has them):
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "https://<host>/providers/hon/diagnostics?probe=commands&macAddress=<mac>&applianceType=WM&applianceModelId=<id>&code=<code>&series=<series>"
+```
+
+**4. Model sheet** (static description of the model):
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "https://<host>/providers/hon/diagnostics?probe=appliance-model&macAddress=<mac>&code=<code>"
+```
+
+A wrong or misspelled probe name answers `400` listing the available probes; missing params answer
+`400` listing the expected set — the endpoint is self-describing, so when in doubt just call it.
+The Bruno collection (`bruno/providers/`) has a ready-made request with all the optional params
+pre-wired as disabled entries.
+
 ### Response `200 OK`
 
 `Content-Type: application/json` — the provider's raw body, written through unchanged. If the
