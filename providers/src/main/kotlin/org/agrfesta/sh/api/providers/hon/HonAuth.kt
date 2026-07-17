@@ -271,15 +271,22 @@ internal class HonAuth(
         return url.asText().right()
     }
 
+    // Guard clauses: missing href, OTP short-circuit, missing progressive href, success.
+    @Suppress("ReturnCount")
     private suspend fun fetchTokens(redirectUrl: String): Either<HonAuthFailure, Unit> {
         val resp = http.get(HonAuthHelpers.absolutize(config.authApiUrl, redirectUrl)) { ua() }
-        val href = HREF_RE.find(resp.bodyAsText())?.groupValues?.get(1)
+        var href = HREF_RE.find(resp.bodyAsText())?.groupValues?.get(1)
             ?: return HonLoginFlowBroken("redirect href not found in token page").left()
         if ("ProgressiveLogin" in href) {
             val progText = http.get(HonAuthHelpers.absolutize(config.authApiUrl, href)) { ua() }
                 .bodyAsText()
             // With email 2FA enabled THIS page is the OTP step: unattainable unattended.
             if (HonAuthHelpers.isProgressiveOtp(progText)) return HonMfaRequired.left()
+            // Without OTP the interstitial's own href leads on to the token page (addhOn:
+            // _HREF_RE_PROGRESSIVE, tolerant of an empty href, which the flow accepts) —
+            // re-parsing the interstitial itself yields no tokens (live-verified 2026-07-17).
+            href = HREF_RE_PROGRESSIVE.find(progText)?.groupValues?.get(1)
+                ?: return HonLoginFlowBroken("progressive page: no follow-up href").left()
         }
         val tokenPage = http.get(HonAuthHelpers.absolutize(config.authApiUrl, href)) { ua() }
             .bodyAsText()
@@ -347,6 +354,9 @@ internal class HonAuth(
 
         private val FWUID_RE = Regex("\"fwuid\":\"(.*?)\",\"loaded\":(\\{.*?})")
         private val HREF_RE = Regex("href\\s*=\\s*[\"'](.+?)[\"']")
+
+        // ProgressiveLogin variant: `(.*?)` also matches an empty href, which the flow accepts.
+        private val HREF_RE_PROGRESSIVE = Regex("href\\s*=\\s*[\"'](.*?)[\"']")
         private const val REQUEST_TIMEOUT_MILLIS = 30_000L
         private const val CONNECT_TIMEOUT_MILLIS = 10_000L
         private const val HTTP_BAD_REQUEST = 400

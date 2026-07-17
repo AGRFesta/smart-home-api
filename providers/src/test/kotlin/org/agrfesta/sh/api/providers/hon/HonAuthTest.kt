@@ -320,6 +320,56 @@ class HonAuthTest {
         }
     }
 
+    @Test fun `authenticate follows the href on the ProgressiveLogin page to the token page`() {
+        // Given: the post-login redirect lands on a ProgressiveLogin interstitial WITHOUT
+        // the OTP markers — the flow must follow ITS href onward (live-verified 2026-07-17:
+        // re-parsing the interstitial itself was the "missing: all tokens" 502).
+        // The interstitial is stubbed twice: the buggy flow re-fetches it as the token page.
+        givenLoginFlowUpToAura()
+        givenAuraResponse("""{"events":[{"attributes":{"values":{"url":"/postlogin"}}}]}""")
+        givenGet("/postlogin", page("""<a href="/apex/ProgressiveLogin?x=1">continue</a>"""))
+        registry.given(
+            { it.method == HttpMethod.Get && it.url.encodedPath == "/apex/ProgressiveLogin" },
+            page("""<a href="/finaltok">go on</a>"""),
+            page("""<a href="/finaltok">go on</a>"""),
+        )
+        givenGet("/finaltok", page("access_token=AAA&refresh_token=RRR&id_token=III&x=1"))
+        registry.given(
+            { it.method == HttpMethod.Post && it.url.encodedPath == "/auth/v1/login" },
+            ResponseSpec("""{"cognitoUser":{"Token":"COG"}}"""),
+        )
+
+        // When
+        val result = runBlocking { sut.authenticate(mobileId) }
+
+        // Then
+        result.shouldBeRight()
+        withClue("tokens adopted from the page the ProgressiveLogin href points to") {
+            sut.accessToken shouldBe "AAA"
+            sut.refreshToken shouldBe "RRR"
+            sut.idToken shouldBe "III"
+            sut.cognitoToken shouldBe "COG"
+        }
+    }
+
+    @Test fun `authenticate fails gracefully when the ProgressiveLogin page has no follow-up href`() {
+        // Given: a non-OTP interstitial without any href — the flow must fail pointing
+        // at the broken step instead of parsing the wrong page
+        givenLoginFlowUpToAura()
+        givenAuraResponse("""{"events":[{"attributes":{"values":{"url":"/postlogin"}}}]}""")
+        givenGet("/postlogin", page("""<a href="/apex/ProgressiveLogin?x=1">continue</a>"""))
+        givenGet("/apex/ProgressiveLogin", page("<html>no links here</html>"))
+
+        // When
+        val result = runBlocking { sut.authenticate(mobileId) }
+
+        // Then
+        val failure = result.shouldBeLeft().shouldBeInstanceOf<HonLoginFlowBroken>()
+        withClue("failure should point at the ProgressiveLogin step") {
+            failure.reason shouldContain "progressive"
+        }
+    }
+
     @Test fun `authenticate fails with HonMfaRequired on ProgressiveLogin OTP page`() {
         // Given: post-login redirect lands on the 2FA email-OTP page
         givenLoginFlowUpToAura()
