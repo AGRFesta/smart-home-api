@@ -52,6 +52,7 @@ The raw token goes in the `Authorization` header at call time; only the hex dige
 - **No token expiry or revocation** — rotation requires changing `security.api-token-hash` in config and redeploying. There is no blacklist.
 - **All routes protected except public health probes** — `SecurityConfig` applies `.anyRequest().authenticated()`, with `permitAll()` only for the `PUBLIC_HEALTH_ENDPOINTS` (health/liveness/readiness probes). The same list drives the anonymous bypass in `SimpleApiKeyFilter`, so the two stay in sync. Adding any other endpoint automatically inherits the authenticated requirement; no extra annotation is needed.
 - **Public probes are token-agnostic** — a missing, empty, or invalid token on a public health probe is ignored (the probe still returns its public status), never `401`. A *valid* token on `/actuator/health` still elevates the caller to see component details.
+- **Container ERROR dispatches are permitted** — `SecurityConfig` allows `DispatcherType.ERROR`, so an unhandled exception renders the standard `/error` `500` body instead of being masked as an entry-point `403` (the API-key filter skips error dispatches by `OncePerRequestFilter` default). Direct client requests to `/error` are REQUEST dispatches and stay authenticated.
 
 ---
 

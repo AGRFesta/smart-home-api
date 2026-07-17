@@ -1,5 +1,6 @@
 package org.agrfesta.sh.api.security
 
+import jakarta.servlet.DispatcherType
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -22,7 +23,12 @@ class SecurityConfig(private val simpleApiKeyFilter: SimpleApiKeyFilter) {
         http
             .csrf { it.disable() } // stateless API
             .authorizeHttpRequests {
-                it.requestMatchers(*PUBLIC_HEALTH_ENDPOINTS).permitAll()
+                // Container-internal ERROR dispatches to /error must render: the API-key filter
+                // skips them (OncePerRequestFilter default) and blocking them would mask every
+                // unhandled 500 as an entry-point 403. Direct client requests to /error are
+                // REQUEST dispatches and stay authenticated.
+                it.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+                    .requestMatchers(*PUBLIC_HEALTH_ENDPOINTS).permitAll()
                     .anyRequest().authenticated()
             }
             .addFilterBefore(simpleApiKeyFilter, BasicAuthenticationFilter::class.java)
