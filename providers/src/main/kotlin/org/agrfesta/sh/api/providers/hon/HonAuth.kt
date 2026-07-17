@@ -293,7 +293,15 @@ internal class HonAuth(
      * future recovery to a full credential login.
      */
     private fun adopt(tokens: HonOAuthTokens): Either<HonAuthFailure, Unit> {
-        if (!tokens.complete) return HonLoginFlowBroken("incomplete OAuth tokens").left()
+        if (!tokens.complete) {
+            // Pinpointing the missing tokens turns a production 502 into a diagnosis.
+            val missing = listOfNotNull(
+                "access_token".takeIf { tokens.accessToken.isEmpty() },
+                "refresh_token".takeIf { tokens.refreshToken.isEmpty() },
+                "id_token".takeIf { tokens.idToken.isEmpty() },
+            )
+            return HonLoginFlowBroken("incomplete OAuth tokens (missing: ${missing.joinToString()})").left()
+        }
         accessToken = tokens.accessToken
         refreshToken = tokens.refreshToken
         idToken = tokens.idToken

@@ -118,6 +118,59 @@ class HonAuthHelpersTest {
         tokens.refreshToken shouldBe "5Aep+861.abc"
     }
 
+    @Test fun `parseTokenFragment captures the last fragment field at end of text`() {
+        // Given: the real done-URL ends with id_token as the LAST field, no trailing
+        // delimiter (live-verified 2026-07-17: the "incomplete OAuth tokens" 502)
+        val page = "hon://mobilesdk/detect/oauth/done#access_token=aaa.bbb&" +
+            "refresh_token=5Aep%2Babc&id_token=eyJx"
+
+        // When
+        val tokens = HonAuthHelpers.parseTokenFragment(page)
+
+        // Then
+        tokens shouldBe HonOAuthTokens(
+            accessToken = "aaa.bbb",
+            refreshToken = "5Aep+abc",
+            idToken = "eyJx",
+            complete = true,
+        )
+    }
+
+    @Test fun `parseTokenFragment stops at a double quote closing a JS redirect url`() {
+        // Given: the fragment inside a JS string, more page text (with '&') after it —
+        // the capture must stop at the closing quote, not swallow up to the next '&'
+        val page = """window.location.replace("hon://mobilesdk/detect/oauth/done#""" +
+            """access_token=aaa&refresh_token=rrr&id_token=eyJx");</script><a href="/x?a=1&b=2">"""
+
+        // When
+        val tokens = HonAuthHelpers.parseTokenFragment(page)
+
+        // Then
+        tokens shouldBe HonOAuthTokens(
+            accessToken = "aaa",
+            refreshToken = "rrr",
+            idToken = "eyJx",
+            complete = true,
+        )
+    }
+
+    @Test fun `parseTokenFragment stops at a single quote closing a JS redirect url`() {
+        // Given: same trap with the single-quote style (`href ='...'`)
+        val page = "window.location.href ='hon://oauth/done#access_token=aaa&" +
+            "refresh_token=rrr&id_token=eyJx';var leftover=1&more=2"
+
+        // When
+        val tokens = HonAuthHelpers.parseTokenFragment(page)
+
+        // Then
+        tokens shouldBe HonOAuthTokens(
+            accessToken = "aaa",
+            refreshToken = "rrr",
+            idToken = "eyJx",
+            complete = true,
+        )
+    }
+
     @Test fun `parseTokenFragment flags incomplete extraction when a token is missing`() {
         // Given: no id_token in the fragment
         val page = "oauth/done#access_token=aaa&refresh_token=rrr&x=y"

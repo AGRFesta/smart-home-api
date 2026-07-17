@@ -70,13 +70,19 @@ internal object HonAuthHelpers {
     /**
      * Extracts the three tokens from the OAuth redirect fragment
      * (`...oauth/done#access_token=...&refresh_token=...&id_token=...`).
-     * Rules inherited from addhOn: the regex requires the trailing `&` (a token at the
-     * end of the text without `&` is not captured) and ONLY the refresh_token is
-     * url-decoded — protecting literal `+` (URLDecoder would treat it as a space,
-     * urllib.unquote, the reference, does not).
+     *
+     * Each value is captured up to the first delimiter — `&` (next param), `"`/`'` (end of
+     * the JS string embedding the url), whitespace, `)`, `<` — **or the end of the text**:
+     * OAuth token charsets contain none of these. addhOn's regex required a trailing `&`,
+     * but the real done-URL ends with `id_token` as the last field (live-verified
+     * 2026-07-17: the "incomplete OAuth tokens" 502; addhOn itself appends `'&'` before
+     * parsing in its post-2FA path for the same reason).
+     *
+     * ONLY the refresh_token is url-decoded — protecting literal `+` (URLDecoder would
+     * treat it as a space, urllib.unquote, the reference, does not).
      */
     fun parseTokenFragment(text: String): HonOAuthTokens {
-        fun match(name: String) = Regex("$name=(.*?)&").find(text)?.groupValues?.get(1)
+        fun match(name: String) = Regex("$name=([^&\"'\\s<)]*)").find(text)?.groupValues?.get(1)
         val access = match("access_token")
         val refresh = match("refresh_token")
         val id = match("id_token")

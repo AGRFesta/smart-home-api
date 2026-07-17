@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Capture the last field of the hOn OAuth redirect fragment: the parser required a trailing
+  `&`, so a done-URL ending with `id_token` failed the login with "incomplete OAuth tokens";
+  the failure reason now also pinpoints which tokens are missing. (#248)
+
 ## [1.4.1] - 2026-07-17
 
 ### Fixed

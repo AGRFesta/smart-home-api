@@ -185,6 +185,24 @@ class HonAuthTest {
         failure.reason shouldContain "fwuid"
     }
 
+    @Test fun `authenticate failure reason lists the missing tokens`() {
+        // Given: a token page whose fragment lacks the refresh_token — the 502 body must
+        // pinpoint the missing token, not just say "incomplete"
+        givenLoginFlowUpToAura()
+        givenAuraResponse("""{"events":[{"attributes":{"values":{"url":"/postlogin"}}}]}""")
+        givenGet("/postlogin", page("""<a href="/finaltok">continue</a>"""))
+        givenGet("/finaltok", page("access_token=AAA&id_token=III&x=1"))
+
+        // When
+        val result = runBlocking { sut.authenticate(mobileId) }
+
+        // Then
+        val failure = result.shouldBeLeft().shouldBeInstanceOf<HonLoginFlowBroken>()
+        withClue("the reason must say WHICH token is missing") {
+            failure.reason shouldContain "refresh_token"
+        }
+    }
+
     @Test fun `authenticate does not overwrite the persisted refresh token when tokens are incomplete`() {
         // Given: a previously persisted good refresh token, and a token page whose fragment
         // is missing id_token (shape change) — adopting it would persist an empty token.
