@@ -12,6 +12,10 @@ import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.ACTUATOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.domain.aDevice
+import org.agrfesta.sh.api.providers.hon.HonApplianceStore
+import org.agrfesta.sh.api.providers.hon.devices.HonAcAs25Prototype
+import org.agrfesta.sh.api.providers.hon.devices.HonAcAs35Prototype
+import org.agrfesta.sh.api.providers.hon.devices.HonDevicesFactory
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClient
 import org.agrfesta.sh.api.providers.netatmo.NetatmoConfiguration
 import org.agrfesta.sh.api.providers.netatmo.devices.NetatmoDevicesFactory
@@ -44,7 +48,8 @@ class DevicePrototypesContractTest {
 
     private val factories: Map<Provider, ProviderDevicesFactory> = listOf(
         SwitchBotDevicesFactory(mockk<SwitchBotDevicesClient>()),
-        NetatmoDevicesFactory(netatmoConfig, mockk<NetatmoClient>(), mockk<TimeProvider>())
+        NetatmoDevicesFactory(netatmoConfig, mockk<NetatmoClient>(), mockk<TimeProvider>()),
+        HonDevicesFactory(HonApplianceStore())
     ).associateBy { it.provider }
 
     private val prototypes: List<DevicePrototype> = listOf(
@@ -52,7 +57,9 @@ class DevicePrototypesContractTest {
         SwitchBotMeterPlusPrototype(),
         SwitchBotWoIOSensorPrototype(),
         SwitchBotHubPrototype(),
-        NetatmoSmartherPrototype()
+        NetatmoSmartherPrototype(),
+        HonAcAs25Prototype(),
+        HonAcAs35Prototype()
     )
 
     @TestFactory

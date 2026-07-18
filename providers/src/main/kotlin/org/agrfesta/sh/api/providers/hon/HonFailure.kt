@@ -27,3 +27,19 @@ data class HonNetworkError(val reason: String?) : HonFailure
 
 /** The cloud answered with a body that is not valid JSON. */
 data object HonNonJsonResponse : HonFailure
+
+/**
+ * Maps each failure to an exception with a human-readable message, for the seams that surface
+ * `exception.message` to the user (diagnostics, sync reports). Mirrors Netatmo's
+ * `NetatmoClientFailure.toException()`.
+ */
+internal fun HonFailure.toException(): Exception = when (this) {
+    is HonLoginFlowBroken -> RuntimeException("hOn login flow broken: $reason")
+    HonMfaRequired -> RuntimeException("hOn account requires email-OTP MFA: cannot authenticate unattended")
+    is HonRefreshFailed -> RuntimeException("hOn refresh token rejected (HTTP $statusCode)")
+    HonCommandRejected -> RuntimeException("hOn rejected the command")
+    HonUnauthorized -> RuntimeException("hOn kept answering 401/403 after a full re-authentication")
+    is HonServerError -> RuntimeException("hOn server error (HTTP $statusCode)")
+    is HonNetworkError -> RuntimeException("hOn network error: $reason")
+    HonNonJsonResponse -> RuntimeException("hOn answered a non-JSON body")
+}
