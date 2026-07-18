@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.5] - 2026-07-18
+
 ### Added
 - Add hOn provider to the device sync: appliances are discovered as devices; the known AC models are registered in the catalog (roles arrive with the readings/commands issues). (#249)
 
