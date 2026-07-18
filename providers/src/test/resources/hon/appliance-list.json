@@ -1,0 +1,239 @@
+{
+  "executionTime": 127,
+  "success": true,
+  "modules": {
+    "applianceList": {
+      "success": true,
+      "executionTime": 127,
+      "payload": {
+        "appliances": [
+          {
+            "PK": "user#eu-west-1:00000000-0000-0000-0000-000000000001",
+            "SK_Secondary": "AC#selfClean56#2026-08-31",
+            "applianceId": "aa-bb-cc-00-00-01#2026-07-02T17:29:47Z",
+            "applianceModelId": 13336,
+            "applianceStatus": 1,
+            "applianceTypeId": 11,
+            "applianceTypeName": "AC",
+            "attributes": [
+              {
+                "parValue": "0.0.0",
+                "id": 554727705,
+                "parName": "acuVersion",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:30:08Z"
+              },
+              {
+                "parValue": "1",
+                "id": 554727702,
+                "parName": "chipset",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:30:08Z"
+              },
+              {
+                "parValue": "450",
+                "id": 556756019,
+                "parName": "dictionaryId",
+                "status": 1,
+                "lastUpdate": "2026-07-16T11:05:06Z"
+              },
+              {
+                "parValue": "1",
+                "id": 554727857,
+                "parName": "eppParserSet",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:31:02Z"
+              },
+              {
+                "parValue": "iotfw_epp_ulg",
+                "id": 554727708,
+                "parName": "fwLabel",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:30:08Z"
+              },
+              {
+                "parValue": "4.4.5",
+                "id": 554727704,
+                "parName": "idfVersion",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:30:08Z"
+              },
+              {
+                "parValue": "10.4.3",
+                "id": 554727703,
+                "parName": "kernelVersion",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:30:08Z"
+              },
+              {
+                "parValue": "it-IT",
+                "id": 554727701,
+                "parName": "lang",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:30:08Z"
+              },
+              {
+                "parValue": "06.26.00",
+                "id": 554727706,
+                "parName": "uiVersion",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:30:08Z"
+              }
+            ],
+            "brand": "haier",
+            "code": "AACCTEST001",
+            "connectivity": "wifi|ble",
+            "coords": {
+              "lng": 9.0000000,
+              "lat": 45.0000000
+            },
+            "eepromId": 41,
+            "eepromName": "no_eeprom",
+            "enrollmentDate": "2026-07-02T17:29:47.880Z",
+            "firstEnrollment": true,
+            "firstEnrollmentTBC": true,
+            "fwVersion": "6.8.0",
+            "id": 13336,
+            "lastUpdate": "2026-07-02T17:30:08Z",
+            "macAddress": "aa-bb-cc-00-00-01",
+            "modelName": "AS25PBPHRA-PRE",
+            "nickName": "Studio ",
+            "serialNumber": "AACCTEST001N00000001",
+            "series": "pearl",
+            "sfPersonAccountId": "001XX00000TESTXQA0",
+            "unitConfiguration": "1to2",
+            "SK": "app#aa-bb-cc-00-00-01",
+            "seriesVersion": "premium",
+            "sections": {
+              "chatbot": true,
+              "double_pairing_hidden": true,
+              "epp_enabled": false
+            },
+            "topics": {
+              "publish": [],
+              "subscribe": [
+                "$aws/events/presence/disconnected/aa-bb-cc-00-00-01",
+                "$aws/events/presence/connected/aa-bb-cc-00-00-01",
+                "haier/things/aa-bb-cc-00-00-01/event/appliancestatus/update",
+                "haier/things/aa-bb-cc-00-00-01/event/discovery/update"
+              ]
+            }
+          },
+          {
+            "PK": "user#eu-west-1:00000000-0000-0000-0000-000000000001",
+            "SK_Secondary": "AC#selfClean56#2026-08-31",
+            "applianceId": "aa-bb-cc-00-00-02#2026-07-02T17:16:07Z",
+            "applianceModelId": 13337,
+            "applianceStatus": 1,
+            "applianceTypeId": 11,
+            "applianceTypeName": "AC",
+            "attributes": [
+              {
+                "parValue": "0.0.0",
+                "id": 554725834,
+                "parName": "acuVersion",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:16:32Z"
+              },
+              {
+                "parValue": "1",
+                "id": 554725831,
+                "parName": "chipset",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:16:32Z"
+              },
+              {
+                "parValue": "450",
+                "id": 556756033,
+                "parName": "dictionaryId",
+                "status": 1,
+                "lastUpdate": "2026-07-16T11:05:09Z"
+              },
+              {
+                "parValue": "1",
+                "id": 554725929,
+                "parName": "eppParserSet",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:17:22Z"
+              },
+              {
+                "parValue": "iotfw_epp_ulg",
+                "id": 554725837,
+                "parName": "fwLabel",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:16:32Z"
+              },
+              {
+                "parValue": "4.4.5",
+                "id": 554725833,
+                "parName": "idfVersion",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:16:32Z"
+              },
+              {
+                "parValue": "10.4.3",
+                "id": 554725832,
+                "parName": "kernelVersion",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:16:32Z"
+              },
+              {
+                "parValue": "it-IT",
+                "id": 554725830,
+                "parName": "lang",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:16:32Z"
+              },
+              {
+                "parValue": "06.26.00",
+                "id": 554725835,
+                "parName": "uiVersion",
+                "status": 1,
+                "lastUpdate": "2026-07-02T17:16:32Z"
+              }
+            ],
+            "brand": "haier",
+            "code": "AACCTEST002",
+            "connectivity": "wifi|ble",
+            "coords": {
+              "lng": 9.0000000,
+              "lat": 45.0000000
+            },
+            "eepromId": 41,
+            "eepromName": "no_eeprom",
+            "enrollmentDate": "2026-07-02T17:16:07.885Z",
+            "firstEnrollment": true,
+            "firstEnrollmentTBC": true,
+            "fwVersion": "6.8.0",
+            "id": 13337,
+            "lastUpdate": "2026-07-02T17:16:32Z",
+            "macAddress": "aa-bb-cc-00-00-02",
+            "modelName": "AS35PBPHRA-PRE",
+            "nickName": "Clima Camera da letto",
+            "serialNumber": "AACCTEST002X00000002",
+            "series": "pearl",
+            "sfPersonAccountId": "001XX00000TESTXQA0",
+            "unitConfiguration": "1to2",
+            "SK": "app#aa-bb-cc-00-00-02",
+            "seriesVersion": "premium",
+            "sections": {
+              "chatbot": true,
+              "double_pairing_hidden": true,
+              "epp_enabled": false
+            },
+            "topics": {
+              "publish": [],
+              "subscribe": [
+                "$aws/events/presence/disconnected/aa-bb-cc-00-00-02",
+                "$aws/events/presence/connected/aa-bb-cc-00-00-02",
+                "haier/things/aa-bb-cc-00-00-02/event/appliancestatus/update",
+                "haier/things/aa-bb-cc-00-00-02/event/discovery/update"
+              ]
+            }
+          }
+        ]
+      },
+      "authInfo": {}
+    }
+  }
+}
