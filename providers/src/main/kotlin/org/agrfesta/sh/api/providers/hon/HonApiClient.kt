@@ -86,14 +86,14 @@ class HonApiClient(
 
     /** Current state of the device (the polling call): payload of `GET /commands/v1/context`. */
     suspend fun loadAttributes(appliance: HonApplianceRef): Either<HonFailure, JsonNode> =
-        get(
-            "/commands/v1/context",
-            mapOf(
-                "macAddress" to appliance.macAddress,
-                "applianceType" to appliance.applianceType,
-                "category" to "CYCLE",
-            ),
-        ).map { it.at("/payload") }
+        get("/commands/v1/context", contextParams(appliance)).map { it.at("/payload") }
+
+    /** The context query of [loadAttributes]/[rawContext]: single source of the wire encoding. */
+    private fun contextParams(appliance: HonApplianceRef): Map<String, String> = mapOf(
+        "macAddress" to appliance.macAddress,
+        "applianceType" to appliance.applianceType,
+        "category" to "CYCLE",
+    )
 
     /** Model sheet (`payload.applianceModel` of `GET /commands/v1/appliance-model`). */
     suspend fun loadApplianceModel(appliance: HonApplianceRef): Either<HonFailure, JsonNode> =
@@ -136,18 +136,33 @@ class HonApiClient(
         appliance: HonApplianceRef,
         command: String,
         parameters: Map<String, String>,
+        ancillaryParameters: Map<String, String> = emptyMap(),
         programName: String = "",
     ): Either<HonFailure, Unit> {
         // No pre-auth here: post() -> request() authenticates once. A second
         // ensureAuthenticated() would double the credential submissions per call.
         // The cloud wants EXACTLY 3 fraction digits + "Z" (naive UTC).
+        // Body mirrors the addhOn-proven one field by field (applianceOptions, attributes,
+        // ancillaryParameters included): the cloud may reject leaner variants.
         val timestamp = timeProvider.now().atOffset(ZoneOffset.UTC).format(TIMESTAMP_FMT) + "Z"
         val body = json.createObjectNode().apply {
             put("macAddress", appliance.macAddress)
             put("timestamp", timestamp)
             put("commandName", command)
             put("transactionId", "${appliance.macAddress}_$timestamp")
+            set<JsonNode>("applianceOptions", json.createObjectNode())
             set<JsonNode>("device", HonConstants.devicePayload(mobileId(), mobile = true))
+            set<JsonNode>(
+                "attributes",
+                json.createObjectNode()
+                    .put("channel", "mobileApp")
+                    .put("origin", "standardProgram")
+                    .put("energyLabel", "0"),
+            )
+            set<JsonNode>(
+                "ancillaryParameters",
+                json.createObjectNode().apply { ancillaryParameters.forEach { (k, v) -> put(k, v) } },
+            )
             set<JsonNode>(
                 "parameters",
                 json.createObjectNode().apply { parameters.forEach { (k, v) -> put(k, v) } },
@@ -174,6 +189,13 @@ class HonApiClient(
     /** Raw body of `GET /commands/v1/context`, **verbatim**, for provider diagnostics. */
     suspend fun rawContext(params: Map<String, String>): Either<HonFailure, String> =
         getRaw("/commands/v1/context", params)
+
+    /**
+     * Raw body of `GET /commands/v1/context` for [appliance], **verbatim** — the same query
+     * [loadAttributes] builds, so the wire encoding cannot drift between the two callers.
+     */
+    suspend fun rawContext(appliance: HonApplianceRef): Either<HonFailure, String> =
+        rawContext(contextParams(appliance))
 
     /** Raw body of `GET /commands/v1/retrieve`, **verbatim**, for provider diagnostics. */
     suspend fun rawCommands(params: Map<String, String>): Either<HonFailure, String> =

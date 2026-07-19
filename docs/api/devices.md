@@ -125,8 +125,9 @@ through **verbatim**. Nothing is persisted or cached — the response reflects e
 says at call time, **including failures** (the diagnostic value lives in not masking them).
 
 The response shape is **provider-specific** and intentionally not described by a fixed schema (e.g.
-SwitchBot returns the device status; Netatmo returns the device's room status). Fields our domain does not
-model (e.g. `hubDeviceId`, `enableCloudService`) are included as-is.
+SwitchBot returns the device status; Netatmo returns the device's room status; hOn returns the
+appliance's raw command context). Fields our domain does not model (e.g. `hubDeviceId`,
+`enableCloudService`) are included as-is.
 
 ### Path parameters
 

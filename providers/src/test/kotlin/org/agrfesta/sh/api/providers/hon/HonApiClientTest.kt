@@ -334,6 +334,71 @@ class HonApiClientTest {
         }
     }
 
+    @Test fun `sendCommand sends the ancillary parameters block`() {
+        // Given
+        propertyRepository.givenProperty(HonAuth.HON_REFRESH_TOKEN_KEY, "RRR0")
+        givenRefreshableSession()
+        registry.given(
+            { it.method == HttpMethod.Post && it.url.encodedPath == "/commands/v1/send" },
+            ResponseSpec("""{"payload":{"resultCode":"0"}}"""),
+        )
+        val appliance = HonApplianceRef(macAddress = "00-4b-12", applianceType = "AC")
+
+        // When
+        runBlocking {
+            sut.sendCommand(
+                appliance = appliance,
+                command = "settings",
+                parameters = mapOf("tempSel" to "24"),
+                ancillaryParameters = mapOf("remoteActionable" to "1", "remoteVisible" to "1"),
+            )
+        }
+
+        // Then
+        runBlocking {
+            registry.verifyRequest(HttpMethod.Post, "/commands/v1/send") { request ->
+                val body = mapper.readTree(request.getBodyAsString())
+                withClue("the real hOn app sends ancillaryParameters alongside parameters") {
+                    body.at("/ancillaryParameters/remoteActionable").asText() shouldBe "1"
+                    body.at("/ancillaryParameters/remoteVisible").asText() shouldBe "1"
+                }
+            }
+        }
+    }
+
+    @Test fun `sendCommand sends the app attributes and applianceOptions blocks`() {
+        // Given
+        propertyRepository.givenProperty(HonAuth.HON_REFRESH_TOKEN_KEY, "RRR0")
+        givenRefreshableSession()
+        registry.given(
+            { it.method == HttpMethod.Post && it.url.encodedPath == "/commands/v1/send" },
+            ResponseSpec("""{"payload":{"resultCode":"0"}}"""),
+        )
+        val appliance = HonApplianceRef(macAddress = "00-4b-12", applianceType = "AC")
+
+        // When
+        runBlocking {
+            sut.sendCommand(appliance, command = "settings", parameters = mapOf("tempSel" to "24"))
+        }
+
+        // Then: mirror of the addhOn-proven send body — the cloud may reject leaner ones
+        runBlocking {
+            registry.verifyRequest(HttpMethod.Post, "/commands/v1/send") { request ->
+                val body = mapper.readTree(request.getBodyAsString())
+                withClue("attributes block identifies the mobile-app channel") {
+                    body.at("/attributes/channel").asText() shouldBe "mobileApp"
+                    body.at("/attributes/origin").asText() shouldBe "standardProgram"
+                    body.at("/attributes/energyLabel").asText() shouldBe "0"
+                }
+                withClue("applianceOptions is always present (empty for the AC)") {
+                    withClue("applianceOptions must be an empty object") {
+                        body.get("applianceOptions") shouldBe mapper.createObjectNode()
+                    }
+                }
+            }
+        }
+    }
+
     @Test fun `sendCommand omits programName for non-startProgram commands`() {
         // Given
         propertyRepository.givenProperty(HonAuth.HON_REFRESH_TOKEN_KEY, "RRR0")
