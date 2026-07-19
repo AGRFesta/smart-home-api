@@ -3,16 +3,18 @@ package org.agrfesta.sh.api.providers.hon.devices
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.mockk
 import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.domain.aDevice
+import org.agrfesta.sh.api.providers.hon.HonApiClient
 import org.agrfesta.sh.api.providers.hon.HonApplianceStore
 import org.agrfesta.sh.api.providers.hon.HonService
 import org.junit.jupiter.api.Test
 
 class HonDevicesFactoryTest {
     private val store = HonApplianceStore()
-    private val factory = HonDevicesFactory(store)
+    private val factory = HonDevicesFactory(store, mockk<HonApiClient>())
 
     @Test
     fun `builds the HonAc driver for the known AC models`() {

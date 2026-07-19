@@ -21,10 +21,10 @@ class HonPrototypesTest {
         listOf(HonService.AC_AS25PBPHRA_PRE_MODEL, HonService.AC_AS35PBPHRA_PRE_MODEL).forEach { model ->
             withClue("$model should resolve to an AC prototype bound to HonAc") {
                 val prototype = catalog.prototypeOf(DeviceModel(model)).shouldNotBeNull()
-                // Roles stay empty until HonAc implements the capabilities: SENSOR arrives with
-                // the readings issue, ACTUATOR with the commands issue (#250/#251) — see
-                // DevicePrototypesContractTest, which pins roles to the driver's interfaces.
-                prototype.roles shouldBe emptySet<DeviceFeature>()
+                // ACTUATOR only: the AC is deliberately NOT a sensor (its ambient readings are
+                // position-biased, live-verified in #250/#251) — DevicePrototypesContractTest
+                // pins roles to the driver's capability interfaces.
+                prototype.roles shouldBe setOf(DeviceFeature.ACTUATOR)
                 prototype.driverType shouldBe HonAc::class
                 prototype.provider shouldBe Provider.HON
             }

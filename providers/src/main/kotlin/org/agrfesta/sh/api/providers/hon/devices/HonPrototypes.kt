@@ -14,10 +14,10 @@ import org.springframework.stereotype.Component
  * [HonService]'s constants as the single source of truth, avoiding drift with the provider
  * mapping.
  *
- * Roles are empty until [HonAc] implements the capability interfaces (SENSOR arrives with the
- * readings issue, ACTUATOR with the commands issue — #250/#251): roles are user-visible
- * behavior (feature filters, area assignments) and must match what the driver can actually do,
- * as pinned by `DevicePrototypesContractTest` (precedent: `SwitchBotHubPrototype`).
+ * Roles carry ACTUATOR only: [HonAc] is an [org.agrfesta.sh.api.core.application.ports.outbounds.devices.AirConditioner],
+ * deliberately NOT a Sensor — the AC's ambient readings are position-biased and untrustworthy
+ * (live-verified, see #250/#251). Roles must match the driver's capability interfaces, as
+ * pinned by `DevicePrototypesContractTest`.
  */
 
 @Component
@@ -25,7 +25,7 @@ class HonAcAs25Prototype : DevicePrototype {
     override val model = DeviceModel(HonService.AC_AS25PBPHRA_PRE_MODEL)
     override val provider = Provider.HON
     override val driverType = HonAc::class
-    override val roles = emptySet<DeviceFeature>()
+    override val roles = setOf(DeviceFeature.ACTUATOR)
 }
 
 @Component
@@ -33,5 +33,5 @@ class HonAcAs35Prototype : DevicePrototype {
     override val model = DeviceModel(HonService.AC_AS35PBPHRA_PRE_MODEL)
     override val provider = Provider.HON
     override val driverType = HonAc::class
-    override val roles = emptySet<DeviceFeature>()
+    override val roles = setOf(DeviceFeature.ACTUATOR)
 }

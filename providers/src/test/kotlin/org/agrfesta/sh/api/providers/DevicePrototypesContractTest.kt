@@ -49,7 +49,7 @@ class DevicePrototypesContractTest {
     private val factories: Map<Provider, ProviderDevicesFactory> = listOf(
         SwitchBotDevicesFactory(mockk<SwitchBotDevicesClient>()),
         NetatmoDevicesFactory(netatmoConfig, mockk<NetatmoClient>(), mockk<TimeProvider>()),
-        HonDevicesFactory(HonApplianceStore())
+        HonDevicesFactory(HonApplianceStore(), mockk())
     ).associateBy { it.provider }
 
     private val prototypes: List<DevicePrototype> = listOf(

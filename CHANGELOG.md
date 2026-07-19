@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Expose the hOn AC raw cloud state through `GET /devices/{uuid}/diagnostics`: the AC driver is now inspectable per device, like the SwitchBot and Netatmo drivers. (#251)
+- hOn AC devices now expose the `ACTUATOR` feature in device responses. (#251)
+
 ## [1.4.5] - 2026-07-18
 
 ### Added
