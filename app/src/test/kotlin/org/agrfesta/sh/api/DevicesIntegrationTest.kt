@@ -1,17 +1,22 @@
 package org.agrfesta.sh.api
 
 import arrow.core.getOrElse
+import arrow.core.right
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.comparables.shouldBeEqualComparingTo
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
+import org.agrfesta.sh.api.controllers.AcStateResponse
 import org.agrfesta.sh.api.controllers.AssignmentResponse
 import org.agrfesta.sh.api.controllers.DeviceResponse
 import org.agrfesta.sh.api.controllers.DeviceViewResponse
@@ -27,9 +32,13 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepos
 import org.agrfesta.sh.api.core.application.readmodels.devices.AssignmentRole
 import org.agrfesta.sh.api.core.domain.alerts.AlertTarget
 import org.agrfesta.sh.api.core.domain.alerts.AlertType
+import org.agrfesta.sh.api.core.domain.devices.AcFanSpeed
+import org.agrfesta.sh.api.core.domain.devices.AcMode
+import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.DeviceFeature.SENSOR
 import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.DeviceStatus
+import org.agrfesta.sh.api.core.domain.devices.Provider.HON
 import org.agrfesta.sh.api.core.domain.devices.Provider.NETATMO
 import org.agrfesta.sh.api.core.domain.devices.Provider.SWITCHBOT
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
@@ -39,6 +48,9 @@ import org.agrfesta.sh.api.domain.aSensorProviderData
 import org.agrfesta.sh.api.domain.anAlert
 import org.agrfesta.sh.api.domain.anArea
 import org.agrfesta.sh.api.persistence.jdbc.repositories.DevicesJdbcRepository
+import org.agrfesta.sh.api.providers.hon.HonApplianceRef
+import org.agrfesta.sh.api.providers.hon.HonApplianceStore
+import org.agrfesta.sh.api.providers.hon.HonService
 import org.agrfesta.sh.api.providers.netatmo.NetatmoIntegrationAsserter
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDeviceType
 import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDevice
@@ -46,6 +58,7 @@ import org.agrfesta.sh.api.providers.switchbot.aSwitchBotDevicesListSuccessRespo
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -58,9 +71,11 @@ class DevicesIntegrationTest(
     private val alertsRepository: AlertsRepository,
     private val objectMapper: ObjectMapper,
     private val netatmoIntegrationAsserter: NetatmoIntegrationAsserter,
-    private val catalog: DeviceModelCatalog
+    private val catalog: DeviceModelCatalog,
+    private val honApplianceStore: HonApplianceStore
 ) : AbstractIntegrationTest() {
     private val now = Instant.now()
+    private val honAcModel = DeviceModel(HonService.AC_AS35PBPHRA_PRE_MODEL)
 
     @BeforeEach
     fun init() {
@@ -229,6 +244,85 @@ class DevicesIntegrationTest(
             .asString()
 
         responseBody shouldBe rawBody
+    }
+
+    @Test
+    fun `GET air-conditioner returns the hOn driver control state end-to-end`() {
+        val mac = aRandomUniqueString()
+        val deviceId = UUID.randomUUID()
+        devicesDao.create(deviceId, aProviderDeviceData(provider = HON, providerId = mac, model = honAcModel))
+            .getOrElse { error("Failed to create device: $it") }
+        // The appliance-list fields the driver needs are populated by the device sync at runtime.
+        honApplianceStore.save(HonApplianceRef(macAddress = mac, applianceType = "AC"))
+        val contextPayload = objectMapper.readTree(
+            """
+            {"shadow":{"parameters":{
+              "onOffStatus":{"parNewVal":"1"},
+              "machMode":{"parNewVal":"1"},
+              "tempSel":{"parNewVal":"22.00"},
+              "windSpeed":{"parNewVal":"5"}
+            }}}
+            """.trimIndent(),
+        )
+        coEvery { honApiClient.loadAttributes(any()) } returns contextPayload.right()
+
+        val responseBody = given()
+            .contentType(ContentType.JSON)
+            .authenticated()
+            .`when`()
+            .get("/devices/{uuid}/air-conditioner", deviceId)
+            .then()
+            .statusCode(200)
+            .contentType(ContentType.JSON)
+            .extract()
+            .asString()
+
+        val response = objectMapper.readValue(responseBody, AcStateResponse::class.java)
+        response.power shouldBe ActuatorStatus.ON
+        response.mode shouldBe AcMode.COOL
+        withClue("targetTemperature should carry the device value regardless of BigDecimal scale") {
+            response.targetTemperature.shouldNotBeNull() shouldBeEqualComparingTo BigDecimal("22")
+        }
+        response.fanSpeed shouldBe AcFanSpeed.AUTO
+    }
+
+    @Test
+    fun `PATCH air-conditioner drives the hOn device and returns 204 end-to-end`() {
+        val mac = aRandomUniqueString()
+        val deviceId = UUID.randomUUID()
+        devicesDao.create(deviceId, aProviderDeviceData(provider = HON, providerId = mac, model = honAcModel))
+            .getOrElse { error("Failed to create device: $it") }
+        honApplianceStore.save(HonApplianceRef(macAddress = mac, applianceType = "AC"))
+        // Minimal catalog admitting the requested change; the full wire contract is pinned by HonAcTest.
+        val catalogPayload = objectMapper.readTree(
+            """
+            {"settings":{"setParameters":{
+              "parameters":{
+                "machMode":{"typology":"enum","enumValues":[0,1,2,4,6]},
+                "tempSel":{"typology":"range","minimumValue":"16","maximumValue":"30",
+                  "incrementValue":"1","defaultValue":"22"}
+              },
+              "ancillaryParameters":{}
+            }}}
+            """.trimIndent(),
+        )
+        val contextPayload = objectMapper.readTree(
+            """{"shadow":{"parameters":{"machMode":{"parNewVal":"0"},"tempSel":{"parNewVal":"20.00"}}}}""",
+        )
+        coEvery { honApiClient.loadCommands(any()) } returns catalogPayload.right()
+        coEvery { honApiClient.loadAttributes(any()) } returns contextPayload.right()
+        coEvery { honApiClient.sendCommand(any(), any(), any(), any(), any()) } returns Unit.right()
+
+        given()
+            .contentType(ContentType.JSON)
+            .authenticated()
+            .body("""{"mode":"COOL","targetTemperature":22}""")
+            .`when`()
+            .patch("/devices/{uuid}/air-conditioner", deviceId)
+            .then()
+            .statusCode(204)
+
+        coVerify { honApiClient.sendCommand(any(), "settings", any(), any(), any()) }
     }
 
     private fun ProviderDeviceData.asSBDeviceJsonNode(): JsonNode =

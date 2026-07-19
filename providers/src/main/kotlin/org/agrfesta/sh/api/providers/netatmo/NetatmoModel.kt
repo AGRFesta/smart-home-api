@@ -16,7 +16,7 @@ data class NetatmoAuthFailure(val exception: Exception) : NetatmoClientFailure
 
 object NetatmoSetStatusSuccess
 
-data class NetatmoContractBreak(val message: String, val response: String? = null) : NetatmoClientFailure
+data class NetatmoContractBreak(override val message: String, val response: String? = null) : NetatmoClientFailure
 
 data class NetatmoHomeStatus(
     @field:JsonProperty("id") val id: String,

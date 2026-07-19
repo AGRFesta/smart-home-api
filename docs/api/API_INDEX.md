@@ -12,6 +12,8 @@ below. See [SECURITY.md](../SECURITY.md).
 | `GET`    | `/devices` | [devices](devices.md#get-devices) | List/search managed devices, filterable by provider/status/feature |
 | `GET`    | `/devices/{uuid}` | [devices](devices.md#get-devicesuuid) | Per-device aggregate — base fields + current area assignments + cached battery level + open alert types |
 | `GET`    | `/devices/{uuid}/diagnostics` | [devices](devices.md#get-devicesuuiddiagnostics) | Provider's realtime raw payload (passthrough, no persistence) |
+| `GET`    | `/devices/{uuid}/air-conditioner` | [devices](devices.md#get-devicesuuidair-conditioner) | AC control state — power, mode, target temperature, fan speed (realtime from the provider) |
+| `PATCH`  | `/devices/{uuid}/air-conditioner` | [devices](devices.md#patch-devicesuuidair-conditioner) | Drive the AC with a partial update (only provided fields change) |
 | `POST`   | `/devices/synchronizations` | [devices](devices.md#post-devicessynchronizations) | Synchronise persisted devices with provider snapshot |
 | `GET`    | `/providers/{provider}/diagnostics` | [providers](providers.md#get-providersproviderdiagnostics) | Run a named read-only probe against the provider's cloud, raw passthrough (diagnostic contract, no schema guarantee) |
 | `GET`    | `/alerts` | [alerts](alerts.md#get-alerts) | List alerts, defaulting to currently OPEN, filterable by status |

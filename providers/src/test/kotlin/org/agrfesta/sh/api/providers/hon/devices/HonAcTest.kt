@@ -15,6 +15,9 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.AcFanSpeed
 import org.agrfesta.sh.api.core.domain.devices.AcMode
+import org.agrfesta.sh.api.core.domain.devices.AcPowerCommand
+import org.agrfesta.sh.api.core.domain.devices.AcSettingsUpdate
+import org.agrfesta.sh.api.core.domain.devices.AcState
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError
 import org.agrfesta.sh.api.providers.FakePropertyRepository
@@ -128,12 +131,12 @@ class HonAcTest {
     }
 
     @Test
-    fun `setMode sends the full settings command with the requested machMode`() {
+    fun `updateSettings sends the full settings command with the requested machMode`() {
         // Given
         val harness = writableHarness()
 
         // When: cooling is requested (machMode 1 on this firmware)
-        val result = harness.sut.setMode(AcMode.COOL)
+        val result = harness.sut.updateSettings(AcSettingsUpdate(mode = AcMode.COOL))
 
         // Then
         result.shouldBeRight()
@@ -162,7 +165,7 @@ class HonAcTest {
     }
 
     @Test
-    fun `setMode translates every domain mode to its firmware machMode code`() {
+    fun `updateSettings translates every domain mode to its firmware machMode code`() {
         // Given: golden codes from the real AS35 catalog — auto=0, cool=1, dry=2, heat=4, fan=6
         val expectedCodes = mapOf(
             AcMode.AUTO to "0",
@@ -177,7 +180,7 @@ class HonAcTest {
             val harness = writableHarness()
 
             // When
-            val result = harness.sut.setMode(mode)
+            val result = harness.sut.updateSettings(AcSettingsUpdate(mode = mode))
 
             // Then
             withClue("$mode should be accepted by the catalog validation") { result.shouldBeRight() }
@@ -229,30 +232,12 @@ class HonAcTest {
     }
 
     @Test
-    fun `setTargetTemperature sends a clean integer tempSel`() {
-        // Given
-        val harness = writableHarness()
-
-        // When: the Temperature VO normalizes the quantity — the wire form must be "23", never "23.0"
-        val result = harness.sut.setTargetTemperature(Temperature.of("23.0"))
-
-        // Then
-        result.shouldBeRight()
-        runBlocking {
-            harness.registry.verifyRequest(HttpMethod.Post, "/commands/v1/send") { request ->
-                mapper.readTree(request.getBodyAsString())
-                    .at("/parameters/tempSel").asText() shouldBe "23"
-            }
-        }
-    }
-
-    @Test
-    fun `setFanSpeed translates the domain speed to its firmware windSpeed code`() {
+    fun `updateSettings translates the domain speed to its firmware windSpeed code`() {
         // Given: golden codes from the real AS35 catalog — high=1, medium=2, low=3, auto=5
         val harness = writableHarness()
 
         // When
-        val result = harness.sut.setFanSpeed(AcFanSpeed.HIGH)
+        val result = harness.sut.updateSettings(AcSettingsUpdate(fanSpeed = AcFanSpeed.HIGH))
 
         // Then
         result.shouldBeRight()
@@ -261,6 +246,80 @@ class HonAcTest {
                 mapper.readTree(request.getBodyAsString())
                     .at("/parameters/windSpeed").asText() shouldBe "1"
             }
+        }
+    }
+
+    @Test
+    fun `updateSettings with a single field sends ONE settings command overlaying only that field`() {
+        // Given
+        val harness = writableHarness()
+
+        // When: only the target temperature is provided
+        val result = harness.sut.updateSettings(AcSettingsUpdate(targetTemperature = Temperature.of("23.0")))
+
+        // Then
+        result.shouldBeRight()
+        runBlocking {
+            harness.registry.verifyRequest(HttpMethod.Post, "/commands/v1/send") { request ->
+                val body = mapper.readTree(request.getBodyAsString())
+                body.get("commandName").asText() shouldBe "settings"
+                withClue("the provided temperature overlays the read-modify-write state") {
+                    body.at("/parameters/tempSel").asText() shouldBe "23"
+                }
+                withClue("the fields not provided keep the values the device context reports") {
+                    body.at("/parameters/onOffStatus").asText() shouldBe "0"
+                    body.at("/parameters/machMode").asText() shouldBe "1"
+                    body.at("/parameters/windSpeed").asText() shouldBe "3"
+                }
+                withClue("ALL 38 settings parameters travel, resolved from the real device context") {
+                    body.get("parameters").size() shouldBe 38
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `updateSettings with every field overlays them all in a single settings command`() {
+        // Given
+        val harness = writableHarness()
+
+        // When
+        val result = harness.sut.updateSettings(
+            AcSettingsUpdate(
+                power = AcPowerCommand.ON,
+                mode = AcMode.HEAT,
+                targetTemperature = Temperature.of("22"),
+                fanSpeed = AcFanSpeed.AUTO,
+            ),
+        )
+
+        // Then
+        result.shouldBeRight()
+        runBlocking {
+            harness.registry.verifyRequest(HttpMethod.Post, "/commands/v1/send") { request ->
+                val body = mapper.readTree(request.getBodyAsString())
+                withClue("every provided field overlays the read-modify-write state in ONE command") {
+                    body.at("/parameters/onOffStatus").asText() shouldBe "1"
+                    body.at("/parameters/machMode").asText() shouldBe "4"
+                    body.at("/parameters/tempSel").asText() shouldBe "22"
+                    body.at("/parameters/windSpeed").asText() shouldBe "5"
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `updateSettings with an out-of-range temperature is rejected with a readable reason`() {
+        // Given: the real AS35 catalog admits tempSel 16..30
+        val harness = writableHarness()
+
+        // When
+        val result = harness.sut.updateSettings(AcSettingsUpdate(targetTemperature = Temperature.of("35")))
+
+        // Then
+        val failure = result.shouldBeLeft().shouldBeInstanceOf<AcSettingOutOfRange>()
+        withClue("the reason should explain the rejection to an API client") {
+            failure.reason shouldBe "Value '35' for 'tempSel' is out of the admitted range"
         }
     }
 
@@ -308,12 +367,15 @@ class HonAcTest {
         }
 
         // When
-        val result = harness.sut.setMode(AcMode.COOL)
+        val result = harness.sut.updateSettings(AcSettingsUpdate(mode = AcMode.COOL))
 
         // Then
         val failure = result.shouldBeLeft().shouldBeInstanceOf<HonAcProviderFailure>()
         withClue("the wrapped transport failure must be the command rejection") {
             failure.failure shouldBe HonCommandRejected
+        }
+        withClue("the human-readable cause travels with the failure, ready for API clients") {
+            failure.message shouldBe "hOn rejected the command"
         }
     }
 
@@ -323,12 +385,82 @@ class HonAcTest {
         val harness = Harness()
 
         // When
-        val result = harness.sut.setMode(AcMode.COOL)
+        val result = harness.sut.updateSettings(AcSettingsUpdate(mode = AcMode.COOL))
+
+        // Then
+        val failure = result.shouldBeLeft().shouldBeInstanceOf<AcApplianceNotSynced>()
+        withClue("the not-synced cause is readable for API clients") {
+            failure.message shouldBe "Appliance not synced yet: run the device synchronization first"
+        }
+        withClue("the status read shares the same contract as the writes") {
+            harness.sut.getActuatorStatus().shouldBeLeft().shouldBeInstanceOf<AcApplianceNotSynced>()
+        }
+    }
+
+    @Test
+    fun `getState before the device sync surfaces as not-synced, not as a crash`() {
+        // Given: a fresh restart — the in-memory store has no appliance ref yet
+        val harness = Harness()
+
+        // When
+        val result = harness.sut.getState()
 
         // Then
         result.shouldBeLeft().shouldBeInstanceOf<AcApplianceNotSynced>()
-        withClue("the status read shares the same contract as the writes") {
-            harness.sut.getActuatorStatus().shouldBeLeft().shouldBeInstanceOf<AcApplianceNotSynced>()
+    }
+
+    @Test
+    fun `getState reads power, mode, target temperature and fan speed from the device context`() {
+        // Given: the REAL captured context — onOffStatus 0, machMode 1, tempSel 26.00, windSpeed 3
+        val harness = Harness().apply {
+            givenSyncedAppliance()
+            givenContext()
+        }
+
+        // When
+        val result = harness.sut.getState()
+
+        // Then
+        result.shouldBeRight() shouldBe AcState(
+            power = ActuatorStatus.OFF,
+            mode = AcMode.COOL,
+            targetTemperature = Temperature.of("26"),
+            fanSpeed = AcFanSpeed.LOW,
+        )
+    }
+
+    @Test
+    fun `getState must not guess when the context omits parameters or reports unmapped codes`() {
+        // Given: a context reporting nothing at all
+        val empty = Harness().apply {
+            givenSyncedAppliance()
+            givenContext("""{"payload":{"shadow":{"parameters":{}}}}""")
+        }
+        val unknownState = AcState(
+            power = ActuatorStatus.UNDEFINED,
+            mode = null,
+            targetTemperature = null,
+            fanSpeed = null,
+        )
+
+        // When / Then
+        withClue("missing parameters must read as unknown, never crash") {
+            empty.sut.getState().shouldBeRight() shouldBe unknownState
+        }
+
+        // Given: a context reporting codes/values our domain does not map
+        val unmapped = Harness().apply {
+            givenSyncedAppliance()
+            givenContext(
+                """{"payload":{"shadow":{"parameters":{
+                    "machMode":{"parNewVal":"9"},
+                    "tempSel":{"parNewVal":"not-a-number"},
+                    "windSpeed":{"parNewVal":"9"}
+                }}}}""",
+            )
+        }
+        withClue("unmapped codes must read as unknown, never crash") {
+            unmapped.sut.getState().shouldBeRight() shouldBe unknownState
         }
     }
 

@@ -169,6 +169,155 @@ Returned when the persisted device cannot be read.
 { "message": "Unable to retrieve device '<uuid>'!" }
 ```
 
+## GET /devices/{uuid}/air-conditioner
+
+Returns the **control state** of an air conditioner — power, operating mode, target temperature and
+fan speed — read in realtime from the device's provider (never persisted nor cached).
+
+Every field except `power` is nullable: the device may not report a parameter, or report a value our
+domain does not map. In that case the field is `null` (and `power` is `"UNDEFINED"`) — "unknown" is
+surfaced as-is, never masked with a default.
+
+### Path parameters
+
+| Param  | Example                                | Description                |
+|--------|----------------------------------------|----------------------------|
+| `uuid` | `3fa85f64-5717-4562-b3fc-2c963f66afa6` | The persisted device UUID. |
+
+### Response `200 OK`
+
+```json
+{
+  "power": "OFF",
+  "mode": "COOL",
+  "targetTemperature": 26,
+  "fanSpeed": "LOW"
+}
+```
+
+| Field               | Description                                                                  |
+|---------------------|------------------------------------------------------------------------------|
+| `power`             | `ON`, `OFF`, or `UNDEFINED` when the device does not report it.              |
+| `mode`              | `AUTO`, `COOL`, `HEAT`, `DRY`, `FAN_ONLY`; `null` when unknown.              |
+| `targetTemperature` | Target temperature in °C (number); `null` when unknown.                      |
+| `fanSpeed`          | `AUTO`, `LOW`, `MEDIUM`, `HIGH`; `null` when unknown.                        |
+
+### Response `404 Not Found`
+
+Returned when `uuid` does not match any persisted device.
+
+### Response `409 Conflict`
+
+Returned when the device exists but is not an air conditioner (or its provider has no driver).
+The no-driver case is deliberately folded into this 409: from the client's perspective the
+actionable fact is the same — this device cannot be driven as an air conditioner (unlike the
+diagnostics endpoint's 501, which flags a provider-level diagnostics capability gap).
+
+```json
+{ "message": "Device '<uuid>' is not an air conditioner!" }
+```
+
+### Response `502 Bad Gateway`
+
+Returned when the provider is reached but returns an error or is unreachable; the failure is
+surfaced in the body. This includes the not-synced-yet case (after a restart, until the device
+synchronisation runs).
+
+```json
+{ "message": "<provider failure>" }
+```
+
+### Response `500 Internal Server Error`
+
+Returned when the persisted device cannot be read.
+
+```json
+{ "message": "Unable to retrieve device '<uuid>'!" }
+```
+
+## PATCH /devices/{uuid}/air-conditioner
+
+Drives an air conditioner with a **partial update**: only the provided fields change, the device
+keeps its current value for the rest (the driver composes the full command via read-modify-write —
+one PATCH, one wire command, no races between fields).
+
+### Path parameters
+
+| Param  | Example                                | Description                |
+|--------|----------------------------------------|----------------------------|
+| `uuid` | `3fa85f64-5717-4562-b3fc-2c963f66afa6` | The persisted device UUID. |
+
+### Request
+
+All fields are optional, but **at least one** must be provided.
+
+```json
+{
+  "power": "ON",
+  "mode": "COOL",
+  "targetTemperature": 22,
+  "fanSpeed": "AUTO"
+}
+```
+
+| Field               | Description                                                       |
+|---------------------|-------------------------------------------------------------------|
+| `power`             | `ON` or `OFF` (`UNDEFINED` is a reading, not a command).          |
+| `mode`              | `AUTO`, `COOL`, `HEAT`, `DRY`, `FAN_ONLY`.                        |
+| `targetTemperature` | Target temperature in °C (number).                                |
+| `fanSpeed`          | `AUTO`, `LOW`, `MEDIUM`, `HIGH`.                                  |
+
+### Response `204 No Content`
+
+The device accepted the command. No body: read the fresh state via
+[`GET /devices/{uuid}/air-conditioner`](#get-devicesuuidair-conditioner) if needed (note the
+provider's shadow state may lag the command by a few seconds).
+
+### Response `400 Bad Request`
+
+Returned when the body is empty, a field value is not admitted, or the device's catalog rejects the
+value (e.g. temperature out of the device's admitted range). The message explains the rejection.
+
+```json
+{ "message": "Invalid mode 'FROSTY', allowed: AUTO, COOL, HEAT, DRY, FAN_ONLY" }
+```
+
+```json
+{ "message": "Value '35' for 'tempSel' is out of the admitted range" }
+```
+
+### Response `404 Not Found`
+
+Returned when `uuid` does not match any persisted device.
+
+### Response `409 Conflict`
+
+Returned when the device exists but is not an air conditioner (or its provider has no driver).
+The no-driver case is deliberately folded into this 409: from the client's perspective the
+actionable fact is the same — this device cannot be driven as an air conditioner (unlike the
+diagnostics endpoint's 501, which flags a provider-level diagnostics capability gap).
+
+```json
+{ "message": "Device '<uuid>' is not an air conditioner!" }
+```
+
+### Response `502 Bad Gateway`
+
+Returned when the provider is reached but returns an error, is unreachable, or the cloud rejects
+the command; the failure is surfaced in the body.
+
+```json
+{ "message": "<provider failure>" }
+```
+
+### Response `500 Internal Server Error`
+
+Returned when the persisted device cannot be read.
+
+```json
+{ "message": "Unable to retrieve device '<uuid>'!" }
+```
+
 ## POST /devices/synchronizations
 
 Synchronises the persisted device list with the current snapshot from all registered providers.

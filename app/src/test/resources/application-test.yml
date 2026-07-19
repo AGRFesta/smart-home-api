@@ -13,4 +13,10 @@ providers:
     base-url: https://switch-bot.fake
     token: fake-token
     secret: fake-secret
+  hon:
+    enabled: true
+    email: fake@example.com
+    password: fake-pw
+    auth-api-url: https://hon-auth.fake
+    api-url: https://hon-api.fake
 
