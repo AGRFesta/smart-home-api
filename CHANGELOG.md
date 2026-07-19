@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Add `GET /devices/{uuid}/air-conditioner` returning the AC control state — power, mode, target temperature, fan speed — realtime from the provider. (#252)
+- Add `PATCH /devices/{uuid}/air-conditioner` driving the AC with a partial update (power, mode, target temperature, fan speed); catalog rejections map to 400 with the reason. (#252)
 - Expose the hOn AC raw cloud state through `GET /devices/{uuid}/diagnostics`: the AC driver is now inspectable per device, like the SwitchBot and Netatmo drivers. (#251)
 - hOn AC devices now expose the `ACTUATOR` feature in device responses. (#251)
 

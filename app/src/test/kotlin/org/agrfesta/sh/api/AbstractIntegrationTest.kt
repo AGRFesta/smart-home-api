@@ -1,10 +1,14 @@
 package org.agrfesta.sh.api
 
+import arrow.core.right
+import com.fasterxml.jackson.databind.JsonNode
 import com.ninjasquad.springmockk.MockkBean
 import com.ninjasquad.springmockk.SpykBean
+import io.mockk.coEvery
 import io.restassured.RestAssured
 import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
+import org.agrfesta.sh.api.providers.hon.HonApiClient
 import org.agrfesta.sh.api.providers.switchbot.SwitchBotDevicesClient
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
@@ -30,6 +34,12 @@ abstract class AbstractIntegrationTest {
     @MockkBean
     protected lateinit var switchBotDevicesClient: SwitchBotDevicesClient
 
+    // hOn is enabled in the test profile so its Spring wiring (factory, appliance store, provider)
+    // is exercised end-to-end; only the transport is mocked, mirroring switchBotDevicesClient.
+    // relaxUnitFun lets the container call the AutoCloseable close() on shutdown without a stub.
+    @MockkBean(relaxUnitFun = true)
+    protected lateinit var honApiClient: HonApiClient
+
     @Autowired
     protected lateinit var redisTemplate: RedisTemplate<String, Any>
 
@@ -41,5 +51,9 @@ abstract class AbstractIntegrationTest {
         RestAssured.baseURI = "http://localhost:$port"
 
         redisTemplate.connectionFactory?.connection?.serverCommands()?.flushDb()
+
+        // Default: hOn contributes no devices to synchronization, so existing sync assertions
+        // are unaffected. Tests that drive an hOn AC override the read/write calls they need.
+        coEvery { honApiClient.loadAppliances() } returns emptyList<JsonNode>().right()
     }
 }

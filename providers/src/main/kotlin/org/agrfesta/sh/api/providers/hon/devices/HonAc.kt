@@ -7,8 +7,9 @@ import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.AirConditioner
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.Inspectable
 import org.agrfesta.sh.api.core.domain.commons.Temperature
-import org.agrfesta.sh.api.core.domain.devices.AcFanSpeed
-import org.agrfesta.sh.api.core.domain.devices.AcMode
+import org.agrfesta.sh.api.core.domain.devices.AcPowerCommand
+import org.agrfesta.sh.api.core.domain.devices.AcSettingsUpdate
+import org.agrfesta.sh.api.core.domain.devices.AcState
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.failures.ActuatorOperationFailure
@@ -48,40 +49,48 @@ class HonAc(
             }
         }
 
-    override fun getActuatorStatus(): Either<ActuatorOperationFailure, ActuatorStatus> =
+    override fun getState(): Either<ActuatorOperationFailure, AcState> =
         runBlocking {
             either {
                 val ref = ensureNotNull(appliances.refOf(deviceProviderId)) { AcApplianceNotSynced }
                 val context = client.loadAttributes(ref).mapLeft(::HonAcProviderFailure).bind()
-                when (context.at("/shadow/parameters/onOffStatus/parNewVal").asText()) {
-                    "1" -> ActuatorStatus.ON
-                    "0" -> ActuatorStatus.OFF
-                    else -> ActuatorStatus.UNDEFINED
-                }
+                val parameters = context.at("/shadow/parameters")
+                AcState(
+                    power = when (parameters.at("/onOffStatus/parNewVal").asText()) {
+                        "1" -> ActuatorStatus.ON
+                        "0" -> ActuatorStatus.OFF
+                        else -> ActuatorStatus.UNDEFINED
+                    },
+                    mode = parameters.at("/machMode/parNewVal").asText().toAcMode(),
+                    targetTemperature = parameters.at("/tempSel/parNewVal").asText()
+                        .toBigDecimalOrNull()?.let { Temperature.of(it) },
+                    fanSpeed = parameters.at("/windSpeed/parNewVal").asText().toAcFanSpeed(),
+                )
             }
         }
 
-    override fun on(): Either<ActuatorOperationFailure, Unit> = applySetting("onOffStatus", "1")
+    override fun getActuatorStatus(): Either<ActuatorOperationFailure, ActuatorStatus> =
+        getState().map { it.power }
 
-    override fun off(): Either<ActuatorOperationFailure, Unit> = applySetting("onOffStatus", "0")
+    override fun updateSettings(update: AcSettingsUpdate): Either<ActuatorOperationFailure, Unit> =
+        applySettings(update.honChanges())
 
-    override fun setMode(mode: AcMode): Either<ActuatorOperationFailure, Unit> =
-        applySetting("machMode", mode.honCode())
+    override fun on(): Either<ActuatorOperationFailure, Unit> =
+        updateSettings(AcSettingsUpdate(power = AcPowerCommand.ON))
 
-    override fun setTargetTemperature(temperature: Temperature): Either<ActuatorOperationFailure, Unit> =
-        applySetting("tempSel", temperature.value.toPlainString())
+    override fun off(): Either<ActuatorOperationFailure, Unit> =
+        updateSettings(AcSettingsUpdate(power = AcPowerCommand.OFF))
 
-    override fun setFanSpeed(speed: AcFanSpeed): Either<ActuatorOperationFailure, Unit> =
-        applySetting("windSpeed", speed.honCode())
-
-    /** One read-modify-write round: catalog + context -> validated overlay -> send. */
-    private fun applySetting(parameter: String, value: String): Either<ActuatorOperationFailure, Unit> =
+    /** One read-modify-write round: catalog + context -> validated overlays -> ONE send. */
+    private fun applySettings(changes: Map<String, String>): Either<ActuatorOperationFailure, Unit> =
         runBlocking {
             either {
                 val ref = ensureNotNull(appliances.refOf(deviceProviderId)) { AcApplianceNotSynced }
                 val catalog = client.loadCommands(ref).mapLeft(::HonAcProviderFailure).bind()
                 val context = client.loadAttributes(ref).mapLeft(::HonAcProviderFailure).bind()
-                val command = AcSettingsCommand(catalog, context).with(parameter, value).bind()
+                val command = changes.entries.fold(AcSettingsCommand(catalog, context)) { cmd, (parameter, value) ->
+                    cmd.with(parameter, value).bind()
+                }
                 client.sendCommand(
                     appliance = ref,
                     command = SETTINGS_COMMAND,
@@ -90,27 +99,6 @@ class HonAc(
                 ).mapLeft(::HonAcProviderFailure).bind()
             }
         }
-
-    /**
-     * Domain mode -> hOn `machMode` code. Protocol constants (ported from addhOn's
-     * `AC_MODE_MAP`): the catalog only carries the admitted codes per firmware, never their
-     * semantics — [applySetting] still validates the code against the device's enum.
-     */
-    private fun AcMode.honCode(): String = when (this) {
-        AcMode.AUTO -> "0"
-        AcMode.COOL -> "1"
-        AcMode.DRY -> "2"
-        AcMode.HEAT -> "4"
-        AcMode.FAN_ONLY -> "6"
-    }
-
-    /** Domain fan speed -> hOn `windSpeed` code (ported from addhOn's `AC_FAN_MAP`). */
-    private fun AcFanSpeed.honCode(): String = when (this) {
-        AcFanSpeed.HIGH -> "1"
-        AcFanSpeed.MEDIUM -> "2"
-        AcFanSpeed.LOW -> "3"
-        AcFanSpeed.AUTO -> "5"
-    }
 
     companion object {
         private const val SETTINGS_COMMAND = "settings"
