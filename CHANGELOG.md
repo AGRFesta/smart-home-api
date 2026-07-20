@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.6] - 2026-07-20
+
 ### Added
 - Add `GET /devices/{uuid}/air-conditioner` returning the AC control state — power, mode, target temperature, fan speed — realtime from the provider. (#252)
 - Add `PATCH /devices/{uuid}/air-conditioner` driving the AC with a partial update (power, mode, target temperature, fan speed); catalog rejections map to 400 with the reason. (#252)
