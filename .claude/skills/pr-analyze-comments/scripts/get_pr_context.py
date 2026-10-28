@@ -17,42 +17,19 @@ Classification trichotomy:
     role=author    -> the author's own prior reply (context, not an action)
     no marker      -> a genuine human comment (surface as human input)
 
-The single source of truth for the marker schema is docs/REVIEW_WORKFLOW.md.
+Parsing and classification come from `.claude/lib/markers.py`, which both skills
+share; the schema is documented in docs/REVIEW_WORKFLOW.md.
 """
 
 import json
-import re
+import os
 import subprocess
 import sys
 
-# Matches one marker block and captures its inner "key=value key=value" payload.
-MARKER_RE = re.compile(r"<!--\s*smarthome:(.*?)-->", re.DOTALL)
-# Matches a single key=value token inside a marker payload.
-PAIR_RE = re.compile(r"(\w[\w-]*)=([^\s]+)")
-
-
-def parse_markers(body: str) -> dict:
-    """Extract and merge all smarthome markers found in a comment body."""
-    markers: dict = {}
-    if not body:
-        return markers
-    for payload in MARKER_RE.findall(body):
-        for key, value in PAIR_RE.findall(payload):
-            markers[key] = value
-    return markers
-
-
-def strip_markers(body: str) -> str:
-    """Return the human-readable body with smarthome markers removed."""
-    if not body:
-        return ""
-    return MARKER_RE.sub("", body).strip()
-
-
-def classify_role(markers: dict) -> str:
-    """Map a marker set to a role. Unmarked comments are genuine humans."""
-    role = markers.get("role")
-    return role if role in ("reviewer", "author") else "human"
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "lib"))
+from ghcli import gh_json  # noqa: E402
+from markers import classify_role, parse_markers, strip_markers  # noqa: E402
 
 
 def make_comment(*, comment_type, author_login, body, created_at,
@@ -126,12 +103,22 @@ def build_inline_threads(inline_comments: list) -> list:
     return result
 
 
-def gh_json(args: list):
-    proc = subprocess.run(
-        ["gh", *args],
-        capture_output=True, text=True, check=True, encoding="utf-8",
-    )
-    return json.loads(proc.stdout)
+def inline_comments_from(inline_raw: list) -> list:
+    """Map the raw inline-comment payload to classified comments."""
+    return [
+        make_comment(
+            comment_type="inline_code_comment",
+            author_login=(c.get("user") or {}).get("login", ""),
+            body=(c.get("body") or "").strip(),
+            created_at=c.get("created_at"),
+            comment_id=c.get("id"),
+            in_reply_to_id=c.get("in_reply_to_id"),
+            file=c.get("path", ""),
+            line=c.get("line") or c.get("original_line"),
+        )
+        for c in inline_raw
+        if (c.get("body") or "").strip()
+    ]
 
 
 def fetch_and_build_pr_context():
@@ -144,7 +131,14 @@ def fetch_and_build_pr_context():
         pr_number = pr_data.get("number")
 
         # 2. Inline review comments (the threaded, line-anchored feedback).
-        inline_raw = gh_json(["api", f"repos/:owner/:repo/pulls/{pr_number}/comments"])
+        #    Paginate: gh api caps at 30 items/page by default and won't fetch
+        #    further pages unless asked. Without --paginate a PR with a long
+        #    review history returns a truncated list, which breaks thread
+        #    reconstruction and drops the reviewed-sha anchor.
+        inline_raw = gh_json([
+            "api", "--paginate",
+            f"repos/:owner/:repo/pulls/{pr_number}/comments?per_page=100",
+        ])
 
         # --- A. Flat PR-level comments ---
         items = []
@@ -174,21 +168,7 @@ def fetch_and_build_pr_context():
             items.append(item)
 
         # --- C. Inline code comments (grouped into threads) ---
-        inline_comments = [
-            make_comment(
-                comment_type="inline_code_comment",
-                author_login=(c.get("user") or {}).get("login", ""),
-                body=(c.get("body") or "").strip(),
-                created_at=c.get("created_at"),
-                comment_id=c.get("id"),
-                in_reply_to_id=c.get("in_reply_to_id"),
-                file=c.get("path", ""),
-                line=c.get("line") or c.get("original_line"),
-            )
-            for c in inline_raw
-            if (c.get("body") or "").strip()
-        ]
-        inline_threads = build_inline_threads(inline_comments)
+        inline_threads = build_inline_threads(inline_comments_from(inline_raw))
 
         # Most recent SHA the reviewer claims to have reviewed (delta anchor).
         # Pick by max created_at, not iteration order — items/threads are not

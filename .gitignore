@@ -54,3 +54,9 @@ bruno/environments/*.bru
 
 ### Caddy ###
 caddy/Caddyfile
+
+### Local issue drafts ###
+issues/
+
+### Python (Claude tooling) ###
+__pycache__/

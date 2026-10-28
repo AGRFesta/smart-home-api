@@ -23,6 +23,7 @@ When generating or modifying tests, you must adhere to the following rules:
 * **Descriptive Naming:** Test names must clearly state the behavior being verified and the context (e.g., in Kotest use clear string descriptions like `"should return error when input is negative"`).
 * **Assertions & Arrow `Either`:** * For collections or complex objects, wrap assertions with `withClue("context message") { ... }` instead of relying solely on `shouldBe` diff output.
     * When asserting on Arrow `Either` results, **never** just check if it is left or right. You must assert the exact type of the domain error using strongly typed assertions (e.g., `result.shouldBeLeft().shouldBeInstanceOf<AreaCreationFailure.NameAlreadyExists>()`).
+    * ❗️ **On an `Either` whose `Right` is nullable, `shouldBeRight()` hands back a nullable** — the repository lookups that return `null` for "not found" (`PropertyRepository.findEntry`, `TemperatureSettingsRepository.findAreaSetting`) are all of this shape. Reaching through it with `?.` and comparing against `null` is **vacuous**: `result.shouldBeRight()?.expiresAt shouldBe null` is satisfied by a `Right(null)`, i.e. by the row not being found at all, which is the opposite of what such a test means. Assert the **whole value** instead — `result.shouldBeRight() shouldBe PropertyEntry(...)` — which no miss can satisfy. The trap needs all three of nullable `Right`, `?.`, and an expected `null`: with a non-null expectation the safe call is harmless, which is why it is invisible when you write it and why the test stays green with the right name on it.
 
 ---
 
@@ -75,6 +76,9 @@ The user supervises **outcomes** ("on the loop"), not individual phases ("in the
 ### Per-cycle test execution
 - Run only the test class(es) relevant to the current cycle: `./gradlew test --tests "ClassName"`.
 - The full suite runs **once**, at the Definition of Done — never per cycle.
+- Run every test of a cycle in this session, never through a subagent. This includes the
+  persistence-slice and integration runs of a cycle. The observed output is the evidence for the
+  pre-declared RED below, so only the Definition of Done is delegated.
 
 ### Pre-declared RED (the substitute for human confirmation)
 - **Before** running a newly written test, state the exact expected failure: the failing test name and the failure kind — a specific assertion mismatch, or a `NotImplementedError` from a specific `TODO("...")`.
@@ -152,13 +156,15 @@ The user supervises **outcomes** ("on the loop"), not individual phases ("in the
    **Definition of Done**.
 
 ## Definition of Done (end of flow)
-Run all of these after the last cycle, before handing back to the user:
+Run all of these after the last cycle, before handing back to the user. Steps 1 and 2 run through the
+`definition-of-done` agent, which returns the verdict and changes nothing;
+[`.claude/skills/close-the-issue/SKILL.md`](../.claude/skills/close-the-issue/SKILL.md) § Build and
+static analysis owns how.
 1. `./gradlew build` — full build, all modules, all tests (this is the only full-suite run of the flow).
 2. `./gradlew detekt` — run it **explicitly** (do not assume `build` covers it) and leave it clean. If a
    finding can only be fixed by changing behaviour, escalate instead of fixing.
-3. **Docs & changelog** per `CLAUDE.md` conventions: if an endpoint was added or changed, update
-   `docs/api/<resource>.md`, the `API_INDEX.md` table, **and the Bruno collection** (`bruno/<resource>/`
-   — one `.bru` file per endpoint, mirroring the existing folder structure); then add the
-   `CHANGELOG.md` entry under `## [Unreleased]`.
+3. **Docs & changelog** — apply the checklists in
+   [`.claude/skills/close-the-issue/SKILL.md`](../.claude/skills/close-the-issue/SKILL.md) § The
+   checklists, which owns them: the REST endpoint and the changelog.
 4. **Final report to the user:** the completed test list with each cycle's outcome, any deviation from
    the approved plan, and the build/detekt results. The user takes it from here (git, PR).
