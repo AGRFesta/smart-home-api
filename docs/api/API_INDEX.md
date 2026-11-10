@@ -3,6 +3,9 @@
 All endpoints require authentication via Bearer token, **except** the public health probes noted
 below. See [SECURITY.md](../SECURITY.md).
 
+**A request body may carry fields the endpoint does not know: they are ignored.** Validation applies
+to the fields the endpoint declares; an unknown field never causes a `400`.
+
 | Method | Path     | Resource | Description                        |
 |--------|----------|----------|------------------------------------|
 | `GET`    | `/actuator/health` | [health](health.md#get-actuatorhealth) | Public health status (details when authenticated) |
@@ -32,3 +35,12 @@ below. See [SECURITY.md](../SECURITY.md).
 | `GET`    | `/areas/{areaId}/heating-schedule` | [areas](areas.md#get-areasareaidheating-schedule) | Get the heating schedule for an area |
 | `PUT`    | `/areas/{areaId}/heating-schedule` | [areas](areas.md#put-areasareaidheating-schedule) | Create or replace the heating schedule for an area |
 | `DELETE` | `/areas/{areaId}/heating-schedule` | [areas](areas.md#delete-areasareaidheating-schedule) | Delete the heating schedule for an area |
+
+---
+
+# Design notes
+
+**Unknown request fields are ignored.** A client built against a later version of the API may send
+a field that this version does not know yet. Rejecting it would break that client for no gain: the
+endpoint has no use for the field. A misspelt required field is still rejected, because the field it
+was meant to be is missing.
