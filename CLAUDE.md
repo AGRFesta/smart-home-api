@@ -76,5 +76,4 @@ documents, and replies in chat.
 - **Security:** `docs/SECURITY.md` — API key (SHA-256).
 - **Domain Models:** `docs/domain/` — the decisions behind the model (e.g. `DEVICES.md` for device
   status semantics and synchronization flow).
-- **Workflow:** `docs/TDD_WORKFLOW.md` (loaded by `tdd-feature`) · `docs/REVIEW_WORKFLOW.md`
-  (reviewer/author loop, marker schema, human gates) · `docs/MUTATION_TESTING.md`.
+- **Workflow:** `docs/TDD_WORKFLOW.md` (loaded by `tdd-feature`) · `docs/MUTATION_TESTING.md`.

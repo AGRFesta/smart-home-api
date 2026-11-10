@@ -24,8 +24,7 @@ rationale paragraph is a copy that diverges silently at the first edit.
 | Documentation, comments, `COMMENT ON`, the `❗️` marker | this file |
 | The TDD cycle | `TDD_WORKFLOW.md` |
 | The issue format, the Example Mapping inside it, the test list | `ISSUE_FORMAT.md` |
-| What an issue updates before it closes: surface docs, Bruno, the changelog | `.claude/skills/close-the-issue/SKILL.md` |
-| The reviewer/author loop and the marker schema | `REVIEW_WORKFLOW.md` |
+| What an issue updates before it closes: surface docs, Bruno, the changelog, the code review reminder | `.claude/skills/close-the-issue/SKILL.md` |
 
 **KDoc states the contract and links the section; it does not re-argue it.**
 

@@ -1,6 +1,6 @@
 ---
 name: close-the-issue
-description: "Use at the end of every issue, before handing the work back to the user — after the last TDD cycle, after a structural refactoring, after a documentation or tooling change. Carries the Definition of Done that every issue shares: the full build, detekt, and the checklists for a REST endpoint (docs/api, API_INDEX.md, the Bruno collection) and the CHANGELOG.md line."
+description: "Use at the end of every issue, before handing the work back to the user — after the last TDD cycle, after a structural refactoring, after a documentation or tooling change. Carries the Definition of Done that every issue shares: the full build, detekt, and the checklists for a REST endpoint (docs/api, API_INDEX.md, the Bruno collection) and the CHANGELOG.md line, and the reminder to run /code-review in a fresh session."
 ---
 
 # Close the issue
@@ -49,3 +49,8 @@ Apply each one whose condition the change meets.
 A session that ran the TDD workflow reports as step 4 of its Definition of Done. Any other session
 tells the user what changed, which checklists applied, and the build and detekt results. The user
 takes it from here: git and the pull request are theirs.
+
+When the issue changed code, the report ends by reminding the user to run `/code-review` on the
+branch in a fresh session before the merge. **Never run it in the session that wrote the code.**
+That session collects and filters the findings, and it discards the ones that contradict its own
+choices.

@@ -167,4 +167,7 @@ static analysis owns how.
    [`.claude/skills/close-the-issue/SKILL.md`](../.claude/skills/close-the-issue/SKILL.md) § The
    checklists, which owns them: the REST endpoint and the changelog.
 4. **Final report to the user:** the completed test list with each cycle's outcome, any deviation from
-   the approved plan, and the build/detekt results. The user takes it from here (git, PR).
+   the approved plan, and the build/detekt results. The user takes it from here (git, PR). The report
+   ends with the code review reminder that
+   [`.claude/skills/close-the-issue/SKILL.md`](../.claude/skills/close-the-issue/SKILL.md) § Report
+   owns.
