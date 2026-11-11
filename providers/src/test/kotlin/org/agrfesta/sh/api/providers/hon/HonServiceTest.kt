@@ -17,10 +17,10 @@ import org.agrfesta.sh.api.core.domain.devices.DeviceModel
 import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError
-import org.agrfesta.sh.api.providers.FakePropertyRepository
 import org.agrfesta.sh.api.providers.createMockEngine
 import org.agrfesta.sh.api.providers.netatmo.BehaviorRegistry
 import org.agrfesta.sh.api.providers.netatmo.ResponseSpec
+import org.agrfesta.sh.api.utils.FakePropertyRepository
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.UUID

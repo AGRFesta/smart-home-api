@@ -1,6 +1,7 @@
-package org.agrfesta.sh.api.providers
+package org.agrfesta.sh.api.utils
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.right
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
@@ -13,17 +14,24 @@ import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 /**
  * In-memory [PropertyRepository] for state-based tests (Chicago style): arrange with
  * [givenProperty], assert on [storedValue] — no interaction verification needed.
+ * [givenUpsertFails] makes every later [upsert] return [PropertyRepositoryError] and store nothing.
  */
 class FakePropertyRepository : PropertyRepository {
     private val store = mutableMapOf<String, String>()
+    private var upsertFails = false
 
     fun givenProperty(key: String, value: String) {
         store[key] = value
     }
 
+    fun givenUpsertFails() {
+        upsertFails = true
+    }
+
     fun storedValue(key: String): String? = store[key]
 
     override fun upsert(key: String, value: String, ttl: Long?): Either<PropertyRepositoryError, Unit> {
+        if (upsertFails) return PropertyRepositoryError.left()
         store[key] = value
         return Unit.right()
     }

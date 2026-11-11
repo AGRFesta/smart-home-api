@@ -23,6 +23,7 @@ to the fields the endpoint declares; an unknown field never causes a `400`.
 | `GET`    | `/notifications` | [notifications](notifications.md#get-notifications) | Paginated list of the emitted alert notifications, most recent first |
 | `GET`    | `/home`  | [home](home.md#get-home) | BFF dashboard — global state + areas |
 | `GET`    | `/home/stream` | [home](home.md#get-homestream) | SSE stream — pushes the dashboard on every home-state change |
+| `PUT`    | `/heating/enabled` | [heating](heating.md#put-heatingenabled) | Switch heating on or off (the `heating.enabled` flag) |
 | `POST`   | `/areas` | [areas](areas.md#post-areas) | Create a new area |
 | `GET`    | `/areas` | [areas](areas.md#get-areas) | List all areas |
 | `GET`    | `/areas/{id}` | [areas](areas.md#get-areasid) | Get a single area by id |
