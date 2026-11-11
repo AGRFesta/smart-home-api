@@ -14,7 +14,8 @@ data object PropertyRepositoryError :
     GetPropertyFailure,
     FindPropertyFailure,
     UpsertPropertyFailure,
-    UpsertPropertyBatchFailure
+    UpsertPropertyBatchFailure,
+    SetHeatingEnabledFailure
 
 data object EmptyPropertyBatch : UpsertPropertyBatchFailure
 

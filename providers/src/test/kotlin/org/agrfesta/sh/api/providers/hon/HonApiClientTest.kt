@@ -15,11 +15,11 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.application.ports.outbounds.RandomGenerator
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
-import org.agrfesta.sh.api.providers.FakePropertyRepository
 import org.agrfesta.sh.api.providers.createMockEngine
 import org.agrfesta.sh.api.providers.netatmo.BehaviorRegistry
 import org.agrfesta.sh.api.providers.netatmo.ResponseSpec
 import org.agrfesta.sh.api.providers.netatmo.getBodyAsString
+import org.agrfesta.sh.api.utils.FakePropertyRepository
 import org.junit.jupiter.api.Test
 import java.net.UnknownHostException
 import java.time.Duration

@@ -41,7 +41,7 @@ Bearer token required. Returns `401 Unauthorized` if the token is missing or inv
 
 | Field | Type | Notes |
 |---|---|---|
-| `globalState.heatingActive` | `FieldResult<boolean>` | Whether the shared heater is currently active |
+| `globalState.heatingActive` | `FieldResult<boolean>` | Whether heating is enabled: the `heating.enabled` flag, set by [`PUT /heating/enabled`](heating.md#put-heatingenabled). It does not say whether a heater is on; a missing flag reads as `false` |
 | `globalState.strategy` | `FieldResult<"ECONOMY" \| "COMFORT" \| null>` | Active heating strategy; `null` if none configured |
 | `areas[].id` | `UUID` | Area identifier |
 | `areas[].name` | `string` | Area display name |

@@ -20,7 +20,6 @@ import org.agrfesta.sh.api.core.domain.devices.AcSettingsUpdate
 import org.agrfesta.sh.api.core.domain.devices.AcState
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.failures.DevicesProviderError
-import org.agrfesta.sh.api.providers.FakePropertyRepository
 import org.agrfesta.sh.api.providers.createMockEngine
 import org.agrfesta.sh.api.providers.hon.HON_OBJECT_MAPPER
 import org.agrfesta.sh.api.providers.hon.HonApiClient
@@ -32,6 +31,7 @@ import org.agrfesta.sh.api.providers.hon.HonConfiguration
 import org.agrfesta.sh.api.providers.netatmo.BehaviorRegistry
 import org.agrfesta.sh.api.providers.netatmo.ResponseSpec
 import org.agrfesta.sh.api.providers.netatmo.getBodyAsString
+import org.agrfesta.sh.api.utils.FakePropertyRepository
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.UUID
