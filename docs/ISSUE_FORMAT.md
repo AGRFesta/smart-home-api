@@ -33,7 +33,8 @@ understood or no longer small, the status returns to `mapping`.
   `heating.enabled`), and so do the section headings and the `Given` / `When` / `Then` keywords.
 - **At closing, the draft is translated to English and becomes the GitHub issue text.** The
   translation uses the vocabulary of the test names and the code, which the loop has already fixed.
-  The test list, the answered questions and the discovery markers are removed.
+  The test list, the answered questions and the discovery markers are removed. A link to another
+  draft becomes its GitHub number (`#263`), because `issues/` does not reach GitHub.
 
 ## Nature
 

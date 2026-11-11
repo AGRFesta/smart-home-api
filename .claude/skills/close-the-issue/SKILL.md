@@ -43,6 +43,8 @@ Apply each one whose condition the change meets.
   (contracts, behaviours), `Fixed` (bugs with observable impact), `Security` (CVE bumps). **No**
   line for tests, internal refactoring, style cleanup or developer tooling. Example:
   `- Add \`GET /home/stream\` SSE endpoint for real-time dashboard. (#173)`
+- **The issue draft.** Set the status of `issues/ISSUE-<number>-*.md` to `closing` and turn the
+  draft into the GitHub issue text, as `docs/ISSUE_FORMAT.md` § Lifecycle says.
 
 ## 3. Report
 
