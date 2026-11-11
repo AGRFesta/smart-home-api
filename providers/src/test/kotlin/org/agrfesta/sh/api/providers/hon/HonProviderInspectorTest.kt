@@ -14,10 +14,10 @@ import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.domain.failures.MissingProbeParams
 import org.agrfesta.sh.api.core.domain.failures.ProviderInspectionFailure
 import org.agrfesta.sh.api.core.domain.failures.UnknownProbe
-import org.agrfesta.sh.api.providers.FakePropertyRepository
 import org.agrfesta.sh.api.providers.createMockEngine
 import org.agrfesta.sh.api.providers.netatmo.BehaviorRegistry
 import org.agrfesta.sh.api.providers.netatmo.ResponseSpec
+import org.agrfesta.sh.api.utils.FakePropertyRepository
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.UUID
