@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Add `PUT /heating/enabled` to switch heating on or off; only a JSON boolean `enabled` is accepted. (#261)
+- Add `PUT /heating/strategy` to set the shared heating strategy; only `ECONOMY` or `COMFORT` is accepted, ignoring case and surrounding spaces. (#264)
+
+### Fixed
+- Fix `GET /home` reporting `globalState.strategy` as `null` when the saved strategy name has surrounding spaces; it now reads the name the same way the heating evaluation does. (#264)
 
 ## [1.4.6] - 2026-07-20
 
