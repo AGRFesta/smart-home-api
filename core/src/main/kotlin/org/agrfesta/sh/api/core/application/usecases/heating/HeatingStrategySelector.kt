@@ -11,7 +11,6 @@ import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.ECONOMY
 import org.agrfesta.sh.api.core.domain.heating.decideComfort
 import org.agrfesta.sh.api.core.domain.heating.decideEconomy
 import org.agrfesta.sh.api.utils.LoggerDelegate
-import java.util.Locale
 
 /**
  * Thin selector that resolves the active [SharedHeatingStrategy] from the property store and exposes
@@ -54,10 +53,9 @@ class HeatingStrategySelector(
             ifRight = { it.value.toSharedHeatingStrategyOrDefault() }
         )
 
-    private fun String.toSharedHeatingStrategyOrDefault(): SharedHeatingStrategy = try {
-        SharedHeatingStrategy.valueOf(trim().uppercase(Locale.ROOT))
-    } catch (_: IllegalArgumentException) {
-        logger.error("'$this' is not a valid heating strategy. Falling back to ${defaultStrategy.name}")
-        defaultStrategy
-    }
+    private fun String.toSharedHeatingStrategyOrDefault(): SharedHeatingStrategy =
+        SharedHeatingStrategy.fromName(this) ?: run {
+            logger.error("'$this' is not a valid heating strategy. Falling back to ${defaultStrategy.name}")
+            defaultStrategy
+        }
 }

@@ -112,15 +112,7 @@ class GetHomeDashboardService(
         propertyRepository.findEntry(HEATING_STRATEGY_KEY)
             .fold(
                 { FieldFailure("Unable to retrieve heating strategy") },
-                { entry ->
-                    FieldSuccess(
-                        entry?.value?.let {
-                            try {
-                                SharedHeatingStrategy.valueOf(it.uppercase())
-                            } catch (_: IllegalArgumentException) { null }
-                        }
-                    )
-                }
+                { entry -> FieldSuccess(entry?.value?.let { SharedHeatingStrategy.fromName(it) }) }
             )
 
     private fun resolveCurrentTemperature(

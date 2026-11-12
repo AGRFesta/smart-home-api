@@ -1,0 +1,17 @@
+meta {
+  name: Set Heating Strategy
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{BASE_URL}}/heating/strategy
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "strategy": "COMFORT"
+  }
+}

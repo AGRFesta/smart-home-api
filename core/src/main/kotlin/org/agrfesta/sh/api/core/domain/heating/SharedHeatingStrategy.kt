@@ -1,5 +1,7 @@
 package org.agrfesta.sh.api.core.domain.heating
 
+import java.util.Locale
+
 /**
  * Enumeration of available strategies for controlling shared heating areas.
  *
@@ -8,5 +10,16 @@ package org.agrfesta.sh.api.core.domain.heating
  */
 enum class SharedHeatingStrategy {
     ECONOMY,
-    COMFORT
+    COMFORT;
+
+    companion object {
+        /**
+         * Returns the strategy named by [name], ignoring case and surrounding spaces, or `null` when
+         * [name] names no strategy.
+         */
+        fun fromName(name: String): SharedHeatingStrategy? {
+            val normalized = name.trim().uppercase(Locale.ROOT)
+            return entries.firstOrNull { it.name == normalized }
+        }
+    }
 }

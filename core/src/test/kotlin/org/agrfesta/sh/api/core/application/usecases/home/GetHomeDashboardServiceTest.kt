@@ -136,6 +136,16 @@ class GetHomeDashboardServiceTest {
         withClue("strategy") { result.globalState.strategy shouldBe FieldSuccess(SharedHeatingStrategy.COMFORT) }
     }
 
+    @Test fun `execute() strategy is COMFORT when heating_strategy property has surrounding spaces`() {
+        every { propertyRepository.findEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry("  comfort  ").right()
+
+        val result = sut.execute().shouldBeRight()
+
+        withClue("strategy should ignore the spaces around the saved name") {
+            result.globalState.strategy shouldBe FieldSuccess(SharedHeatingStrategy.COMFORT)
+        }
+    }
+
     @Test fun `execute() strategy is null when heating_strategy property is absent`() {
         val result = sut.execute().shouldBeRight()
 
