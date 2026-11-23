@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -27,6 +28,7 @@ import org.agrfesta.sh.api.domain.aProviderDeviceData
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.UUID
+import kotlin.coroutines.cancellation.CancellationException
 
 class RefreshDevicesServiceTest {
     private val devicesRepository: DevicesRepository = mockk()
@@ -260,6 +262,52 @@ class RefreshDevicesServiceTest {
         withClue("detachedDevices") {
             result.detachedDevices.shouldContainExactly(storedOrphanDevice.copy(status = DeviceStatus.DETACHED))
         }
+    }
+
+    @Test
+    fun `execute() detaches the devices of a provider that throws and synchronizes the other providers`() {
+        // Given
+        val storedDeviceOfThrowingProvider = aDevice(status = DeviceStatus.PAIRED)
+        val newDeviceData = aProviderDeviceData()
+        val generatedUuid = UUID.randomUUID()
+        val throwingProvider: DevicesProvider = mockk()
+        val workingProvider: DevicesProvider = mockk()
+        every { devicesRepository.getAll() } returns listOf(storedDeviceOfThrowingProvider).right()
+        every { throwingProvider.getAllDevices() } throws RuntimeException("provider driver failure")
+        every { workingProvider.getAllDevices() } returns listOf(newDeviceData).right()
+        every { randomGenerator.uuid() } returns generatedUuid
+        val sut = RefreshDevicesService(devicesRepository, setOf(throwingProvider, workingProvider), randomGenerator)
+
+        // When
+        val result = sut.execute().shouldBeRight()
+
+        // Then
+        withClue("the device of the working provider should be registered as new") {
+            result.newDevices.shouldContainExactly(Device(uuid = generatedUuid, providerData = newDeviceData))
+        }
+        withClue("the device of the throwing provider should be DETACHED") {
+            result.detachedDevices.shouldContainExactly(
+                storedDeviceOfThrowingProvider.copy(status = DeviceStatus.DETACHED)
+            )
+        }
+    }
+
+    @Test
+    fun `execute() propagates an InterruptedException thrown by a provider`() {
+        // Given
+        every { provider.getAllDevices() } throws InterruptedException("synchronization thread interrupted")
+
+        // When / Then
+        shouldThrow<InterruptedException> { sut.execute() }
+    }
+
+    @Test
+    fun `execute() propagates a CancellationException thrown by a provider`() {
+        // Given
+        every { provider.getAllDevices() } throws CancellationException("synchronization coroutine cancelled")
+
+        // When / Then
+        shouldThrow<CancellationException> { sut.execute() }
     }
 
     @Test

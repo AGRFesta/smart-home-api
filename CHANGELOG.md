@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix `GET /home` reporting `globalState.strategy` as `null` when the saved strategy name has surrounding spaces; it now reads the name the same way the heating evaluation does. (#264)
 - Fix heaters staying on while heating is enabled: every evaluation commands every registered heater, turns OFF a heater with no heatable area, and commands each heater of an area with several heaters instead of only the first. (#262)
 - Fix one unreachable Netatmo Smarther stopping the whole heating evaluation: a 5xx, a timeout, a refused connection, a non-JSON error body or a home status without rooms is now the failed outcome of that Smarther, and every other heater still receives its command. (#272)
+- Fix one unreachable provider stopping `POST /devices/synchronizations`: a Netatmo 5xx, timeout, refused connection or non-JSON response, or any exception a provider throws, now marks only that provider's devices `DETACHED`, and the other providers are still synchronized. (#274)
 
 ## [1.4.6] - 2026-07-20
 

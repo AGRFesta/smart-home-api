@@ -124,6 +124,29 @@ class NetatmoClientAsserter(
             )
         )
     }
+
+    /** Netatmo answers [status] to every `/api/homesdata` request, with a plain-text [content]. */
+    fun givenHomeDataFetchTextResponse(status: HttpStatusCode, content: String) {
+        registry.given(
+            matcher = { req -> req.method == Get && req.url.encodedPath == "/api/homesdata" },
+            responses = arrayOf(
+                ResponseSpec(
+                    content = content,
+                    status = status,
+                    headers = headersOf(HttpHeaders.ContentType, "text/plain")
+                )
+            )
+        )
+    }
+
+    /** Every `/api/homesdata` request ends with [failure] thrown by the engine, before any response. */
+    fun givenHomeDataFetchError(failure: Throwable) {
+        registry.given(
+            matcher = { req -> req.method == Get && req.url.encodedPath == "/api/homesdata" },
+            responses = arrayOf(ResponseSpec(content = "", failure = failure))
+        )
+    }
+
     suspend fun verifyHomeDataFetchRequest(accessToken: String, homeId: String? = null) {
         registry.verifyRequest(Get, "/api/homesdata") { request ->
             request.headers[Authorization] shouldBe "Bearer $accessToken"

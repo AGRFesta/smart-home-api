@@ -54,6 +54,9 @@ stateDiagram-v2
 ### Key design decision: provider failure → DETACHED
 
 If a provider fails during synchronization, its devices are treated as unreachable and marked `DETACHED`.
+A provider fails when it returns a failure or when it throws an exception: the synchronization treats both
+the same way, and the other providers are still synchronized.
+
 This is intentional: the system always reflects the last confirmed state. A transient provider outage
 will resolve itself on the next successful sync cycle, at which point all re-appearing devices are
 automatically re-paired (`DETACHED` → `PAIRED`).
