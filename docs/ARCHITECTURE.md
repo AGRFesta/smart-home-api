@@ -97,6 +97,7 @@ Technological implementations of the Outbound Ports.
 ### Error Handling — `Either` over Exceptions
 Every operation that can fail returns `Either<DomainError, Success>`.
 - Exceptions are **never** allowed to propagate into the service or domain layers. They are caught at infrastructure boundaries and converted into typed errors (sealed interfaces organized by domain concern, like `AreaCreationFailure`).
+- `EvaluateHeatingStateService` also converts an exception from a device driver into a failure of that device (`ActuatorFailureByException`, `FailureByException`). No test verifies that a driver never throws, and one driver that throws would otherwise stop the command of every heater.
 
 #### Two kinds of failure interfaces in `:core`
 Not all failure interfaces in `:core` are `sealed`, and this is intentional:

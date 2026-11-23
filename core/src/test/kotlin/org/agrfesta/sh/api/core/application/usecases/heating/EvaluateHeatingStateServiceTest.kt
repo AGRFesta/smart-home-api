@@ -31,6 +31,7 @@ import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.Device
 import org.agrfesta.sh.api.core.domain.devices.Provider
+import org.agrfesta.sh.api.core.domain.failures.ActuatorFailureByException
 import org.agrfesta.sh.api.core.domain.failures.ActuatorOperationFailure
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.core.domain.failures.AreasUnavailable
@@ -682,6 +683,128 @@ class EvaluateHeatingStateServiceTest {
                 HeaterActionOutcome(heater1.uuid, HeaterCommand.ON, ActuationOutcome.Failed(failure)),
                 HeaterActionOutcome(heater2.uuid, HeaterCommand.OFF, ActuationOutcome.Issued)
             )
+        }
+    }
+
+    @Test
+    fun `execute() reports a failed OFF and turns ON the other heater when the OFF of a heater without areas throws`() {
+        // Given
+        val (heater1Dto, heater1) = aStubbedHeater()
+        val (heater2Dto, heater2) = aStubbedHeater()
+        val exception = IllegalStateException("driver broke the port contract")
+        every { heater2.off() } throws exception
+        val (sensorDto, livingRoom) =
+            anAreaServedBy(listOf(heater1Dto), current = Temperature.of("18"), target = Temperature.of("21"))
+        every { devicesRepository.getAll() } returns listOf(sensorDto, heater1Dto, heater2Dto).right()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(livingRoom).right()
+        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(COMFORT.name).right()
+
+        // When
+        val result = sutWithRealSelector().execute()
+
+        // Then
+        withClue("an OFF that throws should be reported as failed and should not stop the ON of the other heater") {
+            val heaters = result.shouldBeRight().shouldBeInstanceOf<HeatingEvaluationReport.Evaluated>().heaters
+            heaters shouldContainExactlyInAnyOrder listOf(
+                HeaterActionOutcome(heater1.uuid, HeaterCommand.ON, ActuationOutcome.Issued),
+                HeaterActionOutcome(
+                    heater2.uuid,
+                    HeaterCommand.OFF,
+                    ActuationOutcome.Failed(ActuatorFailureByException(exception))
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `execute() reports a failed ON when the ON of a heater throws`() {
+        // Given
+        val heater = givenHeatableArea().heater
+        every { decide(any()) } returns HeaterCommand.ON
+        val exception = IllegalStateException("driver broke the port contract")
+        every { heater.on() } throws exception
+
+        // When
+        val result = sut.execute()
+
+        // Then
+        withClue("an ON that throws should be reported as a failed ON, carrying the exception") {
+            result shouldBe HeatingEvaluationReport.Evaluated(
+                listOf(
+                    HeaterActionOutcome(
+                        heater.uuid,
+                        HeaterCommand.ON,
+                        ActuationOutcome.Failed(ActuatorFailureByException(exception))
+                    )
+                )
+            ).right()
+        }
+    }
+
+    @Test
+    fun `execute() reports a failed OFF when the OFF decided for a heater throws`() {
+        // Given
+        val heater = givenHeatableArea().heater
+        every { decide(any()) } returns HeaterCommand.OFF
+        val exception = IllegalStateException("driver broke the port contract")
+        every { heater.off() } throws exception
+
+        // When
+        val result = sut.execute()
+
+        // Then
+        withClue("an OFF decided by the strategy that throws should be reported as a failed OFF") {
+            result shouldBe HeatingEvaluationReport.Evaluated(
+                listOf(
+                    HeaterActionOutcome(
+                        heater.uuid,
+                        HeaterCommand.OFF,
+                        ActuationOutcome.Failed(ActuatorFailureByException(exception))
+                    )
+                )
+            ).right()
+        }
+    }
+
+    @Test
+    fun `execute() decides with an UNDEFINED heater status when the status fetch of the heater throws`() {
+        // Given
+        val heater = givenHeatableArea().heater
+        every { heater.getActuatorStatus() } throws IllegalStateException("driver broke the port contract")
+        val snapshots = slot<Collection<HeatableAreaSnapshot>>()
+        every { decide(capture(snapshots)) } returns HeaterCommand.NONE
+
+        // When
+        sut.execute()
+
+        // Then
+        withClue("a status fetch that throws should degrade to UNDEFINED, as a failed fetch does") {
+            snapshots.captured.single().heaterStatus shouldBe ActuatorStatus.UNDEFINED
+        }
+    }
+
+    @Test
+    fun `execute() leaves out of the area temperature the reading of a sensor whose fetch throws`() {
+        // Given — two sensors in one area: 10 and throwing -> the area temperature is 10
+        val sensorDto1 = aSensor()
+        val sensor1 = sensorDto1.toSensorMockk(factory)
+        every { sensor1.fetchReadings() } returns aThermoHygroDataValue(temperature = Temperature.of("10")).right()
+        val sensorDto2 = aSensor()
+        val sensor2 = sensorDto2.toSensorMockk(factory)
+        every { sensor2.fetchReadings() } throws IllegalStateException("driver broke the port contract")
+        val (heaterDto, _) = aStubbedHeater()
+        val areaDto = anAreaWithDevicesView(sensors = listOf(sensorDto1, sensorDto2), actuators = listOf(heaterDto))
+        every { devicesRepository.getAll() } returns listOf(sensorDto1, sensorDto2, heaterDto).right()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(areaDto).right()
+        val snapshots = slot<Collection<HeatableAreaSnapshot>>()
+        every { decide(capture(snapshots)) } returns HeaterCommand.NONE
+
+        // When
+        sut.execute()
+
+        // Then
+        withClue("a fetch that throws should be skipped, as a failed fetch is") {
+            snapshots.captured.single().currentTemperature shouldBe Temperature.of("10")
         }
     }
 

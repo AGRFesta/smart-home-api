@@ -19,4 +19,5 @@ internal fun NetatmoClientFailure.toException(): Exception = when (this) {
     is NetatmoInvalidAccessToken -> RuntimeException("Netatmo access token is not valid")
     is NetatmoContractBreak -> RuntimeException("Netatmo contract break: $message")
     is KtorRequestFailure -> RuntimeException("HTTP $failureStatusCode: $body")
+    is NetatmoConnectionFailure -> RuntimeException("Netatmo unreachable: ${cause.message}")
 }

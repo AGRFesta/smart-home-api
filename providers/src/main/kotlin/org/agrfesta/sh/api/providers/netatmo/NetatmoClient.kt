@@ -13,6 +13,7 @@ import io.ktor.client.engine.okhttp.OkHttpConfig
 import io.ktor.client.engine.okhttp.OkHttpEngine
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
@@ -122,13 +123,11 @@ class NetatmoClient(
      */
     suspend fun getHomeStatusRaw(homeId: String): Either<NetatmoClientFailure, String> =
         getToken().flatMap { token ->
-            try {
+            request {
                 client.get("${config.baseUrl}/api/homestatus") {
                     parameter("home_id", homeId)
                     headers { append(HttpHeaders.Authorization, "Bearer $token") }
-                }.bodyAsText().right()
-            } catch (e: ClientRequestException) {
-                handleClientRequestException(e).left()
+                }.bodyAsText()
             }
         }
 
@@ -140,9 +139,9 @@ class NetatmoClient(
      * For other modules, the state is controlled at the module level.
      */
     suspend fun setState(newState: NetatmoHomeStatusChange): Either<NetatmoClientFailure, NetatmoSetStatusSuccess> {
+        val json = mapper.writeValueAsString(NetatmoStatusChangeRequest(newState))
         return getToken().flatMap { token ->
-            try {
-                val json = mapper.writeValueAsString(NetatmoStatusChangeRequest(newState))
+            request {
                 client.post("${config.baseUrl}/api/setstate") {
                     contentType(ContentType.Application.Json)
                     setBody(TextContent(json, contentType = ContentType.Application.Json))
@@ -150,25 +149,42 @@ class NetatmoClient(
                         append(HttpHeaders.Authorization, "Bearer $token")
                     }
                 }
-                NetatmoSetStatusSuccess.right()
-            } catch (e: ClientRequestException) {
-                handleClientRequestException(e).left()
+                NetatmoSetStatusSuccess
             }
         }
     }
 
+    /**
+     * Runs a request to Netatmo and maps every way it can fail to a [NetatmoClientFailure]: a 4xx, a 5xx,
+     * and a request that ends without a response.
+     */
+    private suspend fun <T> request(block: suspend () -> T): Either<NetatmoClientFailure, T> =
+        try {
+            block().right()
+        } catch (e: ClientRequestException) {
+            handleClientRequestException(e).left()
+        } catch (e: ServerResponseException) {
+            e.toRequestFailure().left()
+        } catch (e: IOException) {
+            NetatmoConnectionFailure(e).left()
+        }
+
     private suspend fun handleClientRequestException(e: ClientRequestException): NetatmoClientFailure {
-        val body = e.response.body<JsonNode>()
+        val content = e.response.bodyAsText()
+        val body: JsonNode? = try { mapper.readTree(content) } catch (_: IOException) { null }
         val status = e.response.status
-        val errorMessage: String? = body.at("/error/message").asText()
+        val errorMessage: String? = body?.at("/error/message")?.asText()
         return if (errorMessage != null && errorMessage == "Invalid access token") {
             logger.error("Netatmo access token is not valid!")
             cache.remove(NETATMO_ACCESS_TOKEN_CACHE_KEY)
             NetatmoInvalidAccessToken
         } else {
-            KtorRequestFailure(failureStatusCode = status, body = body.toString())
+            KtorRequestFailure(failureStatusCode = status, body = body?.toString() ?: content)
         }
     }
+
+    private suspend fun ServerResponseException.toRequestFailure() =
+        KtorRequestFailure(failureStatusCode = response.status, body = response.bodyAsText())
 
     private suspend fun getToken(): Either<NetatmoClientFailure, String> =
         cache.get(NETATMO_ACCESS_TOKEN_CACHE_KEY).fold(
