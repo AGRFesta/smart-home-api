@@ -212,11 +212,19 @@ findings, and it discards the ones that contradict its own choices.
 **The fresh session reads the issue draft before it reviews.** The draft is the specification the
 user approved, not the reasoning of the session that wrote the code. A review without it reports
 the decisions the draft already records, and it cannot find a rule that the code does not
-implement. The reminder therefore gives the user this message to send before `/code-review`, with
-the path of the draft filled in:
+implement.
+
+❗️ **The diff never carries the draft.** `.gitignore` excludes `issues/`, and `/code-review` reads
+the diff of the branch. A message that only names the path leaves the draft outside the review. The
+message therefore asks the session to read the file and to summarise it: the summary shows that the
+text is in the context before the review starts.
+
+The reminder gives the user this message to send before `/code-review`, with the path of the draft
+filled in:
 
 ```text
-Read issues/ISSUE-<number>-<name>.md before the review. Use it this way:
+Read issues/ISSUE-<number>-<name>.md in full with the Read tool, then summarise its Rules,
+Out of scope and Known limits in five lines. Use it this way in the review that follows:
 - `Rules` and `Contract` are a checklist. Report a rule or a contract row that the diff does not
   implement or does not test.
 - `Out of scope` and `Known limits` are decisions. Do not report what they already record. An
@@ -224,6 +232,10 @@ Read issues/ISSUE-<number>-<name>.md before the review. Use it this way:
 - A finding that disputes a decision of the issue is allowed. Mark it as a dispute, quote the
   decision, and say why it is wrong.
 ```
+
+The user sends `/code-review` after the summary. When the findings show that the review ignored the
+draft, the fallback is a review without the skill: the same message, followed by a request to
+review `git diff main...HEAD` against the draft. One session then reads both the draft and the diff.
 
 ### After the code review
 
