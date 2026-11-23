@@ -17,7 +17,9 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.Parameters
+import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
+import java.math.BigDecimal
 import org.agrfesta.test.mothers.aRandomNonNegativeInt
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.anUrl
@@ -180,6 +182,13 @@ class NetatmoClientAsserter(
             )
         )
     }
+    /** Every `/api/homestatus` request ends with [failure] thrown by the engine, before any response. */
+    fun givenHomeStatusFetchError(failure: Throwable) {
+        registry.given(
+            matcher = { req -> req.method == Get && req.url.encodedPath == "/api/homestatus" },
+            responses = arrayOf(ResponseSpec(content = "", failure = failure))
+        )
+    }
     suspend fun verifyHomeStatusFetchRequest(accessToken: String, homeId: String) {
         registry.verifyRequest(Get, "/api/homestatus") { request ->
             request.headers[Authorization] shouldBe "Bearer $accessToken"
@@ -221,6 +230,48 @@ class NetatmoClientAsserter(
             responses = arrayOf(
                 ResponseSpec(
                     content = json,
+                    status = status,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            )
+        )
+    }
+    /** Netatmo answers [status] to every `/api/setstate` request, with a plain-text [content]. */
+    fun givenSetStatusTextFailure(status: HttpStatusCode, content: String) {
+        registry.given(
+            matcher = { req -> req.method == Post && req.url.encodedPath == "/api/setstate" },
+            responses = arrayOf(
+                ResponseSpec(
+                    content = content,
+                    status = status,
+                    headers = headersOf(HttpHeaders.ContentType, "text/plain")
+                )
+            )
+        )
+    }
+    /** Every `/api/setstate` request ends with [failure] thrown by the engine, before any response. */
+    fun givenSetStatusError(failure: Throwable) {
+        registry.given(
+            matcher = { req -> req.method == Post && req.url.encodedPath == "/api/setstate" },
+            responses = arrayOf(ResponseSpec(content = "", failure = failure))
+        )
+    }
+    /** Netatmo answers [status] only to the `/api/setstate` requests that set [setPointTemperature]. */
+    fun givenSetStatusFailureFor(
+        setPointTemperature: BigDecimal,
+        status: HttpStatusCode,
+        content: String = """{"error":{"code":${aRandomNonNegativeInt()},"message":"${aRandomUniqueString()}"}}"""
+    ) {
+        registry.given(
+            matcher = { req ->
+                req.method == Post && req.url.encodedPath == "/api/setstate" &&
+                    (req.body as? TextContent)?.text
+                        ?.let { mapper.readTree(it).at("/home/rooms/0/therm_setpoint_temperature").decimalValue() }
+                        ?.compareTo(setPointTemperature) == 0
+            },
+            responses = arrayOf(
+                ResponseSpec(
+                    content = content,
                     status = status,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )

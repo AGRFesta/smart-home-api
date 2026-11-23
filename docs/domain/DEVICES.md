@@ -85,6 +85,17 @@ The persisted `model` is **always set** (`NOT NULL`): it is populated from the p
 every sync, for every device the provider reports (new and updated alike). Detached devices retain
 their last known `model`, since the provider no longer reports them.
 
+### Netatmo: one Smarther per home
+
+❗️ The Netatmo integration assumes one home with one thermostat. The device sync
+(`NetatmoService.getAllDevices()`) registers every module of the first Netatmo home as a
+`netatmo/Smarther`, and so as a heater. `NetatmoDevicesFactory` gives every Netatmo device the `homeId`
+and `roomId` of `NetatmoConfiguration`, not a room of its own, so every Smarther commands the same room.
+
+A second module would therefore command the room of the first one. The heating evaluation turns OFF
+every heater without a heatable area, so a second module left outside the areas would turn off the
+room that the first one heats.
+
 ---
 
 ## Who uses a Device, and how
@@ -150,5 +161,5 @@ cached** — and intentionally surfaces provider failures rather than masking th
 - **Per-provider source.** Each driver decides which provider call(s) expose the device's realtime truth:
   - **SwitchBot** (`SwitchBotMeter`) → `GET /devices/{id}/status`, body passed through byte-for-byte.
   - **Netatmo** (`NetatmoSmarther`) → home status, from which the driver extracts **its own room** (by
-    `roomId`). Single-thermostat-per-home is assumed today, consistent with `fetchReadings()`; handling
-    multiple devices per room is deferred.
+    `roomId`). The integration assumes one thermostat per home: see
+    [Netatmo: one Smarther per home](#netatmo-one-smarther-per-home).

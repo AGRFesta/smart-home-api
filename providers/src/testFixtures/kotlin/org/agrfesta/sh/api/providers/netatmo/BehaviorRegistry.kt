@@ -13,12 +13,14 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * Response specification used by the registry.
+ * Response specification used by the registry. A non-null [failure] is thrown by the engine instead of
+ * a response, as a timeout or a refused connection would be.
  */
 data class ResponseSpec(
     val content: String,
     val status: HttpStatusCode = HttpStatusCode.OK,
-    val headers: Headers = headersOf(HttpHeaders.ContentType, "application/json")
+    val headers: Headers = headersOf(HttpHeaders.ContentType, "application/json"),
+    val failure: Throwable? = null
 )
 
 /**

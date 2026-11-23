@@ -78,8 +78,9 @@ class NetatmoSmarther(
     }
 
     override fun getActuatorStatus(): Either<NetatmoClientFailure, ActuatorStatus> =
-        runBlocking { client.getHomeStatus(homeId) }.map {
-            val room = it.rooms.first()
+        runBlocking { client.getHomeStatus(homeId) }.flatMap {
+            it.rooms.firstOrNull()?.right() ?: NetatmoContractBreak("Not expecting to have no rooms").left()
+        }.map { room ->
             val now = timeProvider.now()
             if (
                 room.setPointMode == SET_POINT_MODE &&

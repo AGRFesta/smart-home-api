@@ -15,6 +15,9 @@ interface ActuatorOperationFailure {
     val message: String? get() = null
 }
 
+/** An [ActuatorOperationFailure] made from an exception that a driver threw in place of returning a failure. */
+data class ActuatorFailureByException(val reason: Exception) : ActuatorOperationFailure
+
 /**
  * An [ActuatorOperationFailure] caused by the requested setting being rejected by the
  * device's validation (value not admitted, out of range, unknown parameter): the request is

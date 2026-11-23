@@ -7,8 +7,13 @@ import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.ktor.client.engine.mock.toByteArray
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.http.HttpHeaders.Authorization
 import io.ktor.http.HttpMethod.Companion.Post
+import io.ktor.http.HttpStatusCode.Companion.BadGateway
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
+import io.ktor.http.HttpStatusCode.Companion.InternalServerError
+import io.ktor.http.HttpStatusCode.Companion.ServiceUnavailable
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -26,6 +31,7 @@ import org.agrfesta.sh.api.providers.netatmo.KtorRequestFailure
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClient
 import org.agrfesta.sh.api.providers.netatmo.NetatmoClientAsserter
 import org.agrfesta.sh.api.providers.netatmo.NetatmoConfiguration
+import org.agrfesta.sh.api.providers.netatmo.NetatmoConnectionFailure
 import org.agrfesta.sh.api.providers.netatmo.NetatmoContractBreak
 import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
 import org.agrfesta.sh.api.providers.netatmo.aNetatmoHomeStatus
@@ -40,6 +46,7 @@ import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.anUrl
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.net.ConnectException
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
@@ -149,6 +156,34 @@ class NetatmoSmartherTest {
         sut.fetchReadings().shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
 
         clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
+    }
+
+    @Test
+    fun `fetchReadings() Returns KtorRequestFailure when Netatmo answers 502`() {
+        // Given
+        clientAsserter.givenHomeStatusFetchFailure(status = BadGateway)
+
+        // When
+        val result = sut.fetchReadings()
+
+        // Then
+        result.shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
+            .failureStatusCode shouldBe BadGateway
+    }
+
+    @Test
+    fun `fetchReadings() Returns NetatmoConnectionFailure when the request to Netatmo times out`() {
+        // Given
+        clientAsserter.givenHomeStatusFetchError(
+            HttpRequestTimeoutException("${config.baseUrl}/api/homestatus", 60_000L)
+        )
+
+        // When
+        val result = sut.fetchReadings()
+
+        // Then
+        result.shouldBeLeft().shouldBeInstanceOf<NetatmoConnectionFailure>()
+            .cause.shouldBeInstanceOf<HttpRequestTimeoutException>()
     }
 
     @Test
@@ -315,6 +350,32 @@ class NetatmoSmartherTest {
         clientAsserter.verifyHomeStatusFetchRequest(accessToken, config.homeId)
     }
 
+    @Test
+    fun `getActuatorStatus() Returns NetatmoContractBreak when home status has no rooms`() {
+        // Given
+        clientAsserter.givenHomeStatusFetchResponse(aNetatmoHomeStatus(rooms = listOf()))
+
+        // When
+        val result = sut.getActuatorStatus()
+
+        // Then
+        result.shouldBeLeft().shouldBeInstanceOf<NetatmoContractBreak>()
+            .message shouldBe "Not expecting to have no rooms"
+    }
+
+    @Test
+    fun `getActuatorStatus() Returns KtorRequestFailure when Netatmo answers 500`() {
+        // Given
+        clientAsserter.givenHomeStatusFetchFailure(status = InternalServerError)
+
+        // When
+        val result = sut.getActuatorStatus()
+
+        // Then
+        result.shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
+            .failureStatusCode shouldBe InternalServerError
+    }
+
     // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // /// on() /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -346,6 +407,34 @@ class NetatmoSmartherTest {
             """
             requestBody shouldEqualSpecifiedJson expectedJson
         }
+    }
+
+    @Test
+    fun `on() Returns NetatmoConnectionFailure when the request to Netatmo times out`() {
+        // Given
+        val timeout = HttpRequestTimeoutException("${config.baseUrl}/api/setstate", 60_000L)
+        clientAsserter.givenSetStatusError(timeout)
+
+        // When
+        val result = sut.on()
+
+        // Then
+        result.shouldBeLeft().shouldBeInstanceOf<NetatmoConnectionFailure>()
+            .cause.shouldBeInstanceOf<HttpRequestTimeoutException>()
+    }
+
+    @Test
+    fun `on() Returns NetatmoConnectionFailure when the connection to Netatmo is refused`() {
+        // Given
+        val refused = ConnectException("Connection refused")
+        clientAsserter.givenSetStatusError(refused)
+
+        // When
+        val result = sut.on()
+
+        // Then
+        result.shouldBeLeft().shouldBeInstanceOf<NetatmoConnectionFailure>()
+            .cause.shouldBeInstanceOf<ConnectException>()
     }
 
     @Test
@@ -393,6 +482,31 @@ class NetatmoSmartherTest {
         clientAsserter.givenSetStatusFailure()
 
         sut.off().shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
+    }
+
+    @Test
+    fun `off() Returns KtorRequestFailure with the raw body when Netatmo answers 400 with a body that is not JSON`() {
+        // Given
+        clientAsserter.givenSetStatusTextFailure(status = BadRequest, content = "Bad Request")
+
+        // When
+        val result = sut.off()
+
+        // Then
+        result.shouldBeLeft() shouldBe KtorRequestFailure(failureStatusCode = BadRequest, body = "Bad Request")
+    }
+
+    @Test
+    fun `off() Returns KtorRequestFailure when Netatmo answers 503`() {
+        // Given
+        clientAsserter.givenSetStatusFailure(status = ServiceUnavailable)
+
+        // When
+        val result = sut.off()
+
+        // Then
+        result.shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
+            .failureStatusCode shouldBe ServiceUnavailable
     }
 
     // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

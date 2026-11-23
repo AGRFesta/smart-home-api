@@ -7,6 +7,7 @@ import org.agrfesta.sh.api.providers.netatmo.BehaviorRegistry
 fun createMockEngine(registry: BehaviorRegistry) = MockEngine { request ->
     val spec = registry.matchAndPop(request)
         ?: error("Unexpected request: ${request.method} ${request.url}")
+    spec.failure?.let { throw it }
     respond(
         content = spec.content,
         status = spec.status,
