@@ -1,58 +1,40 @@
 ---
 name: close-the-issue
-description: "Use at the end of every issue, before handing the work back to the user — after the last TDD cycle, after a structural refactoring, after a documentation or tooling change. Carries the Definition of Done that every issue shares: the full build, detekt, and the checklists for a REST endpoint (docs/api, API_INDEX.md, the Bruno collection) and the CHANGELOG.md line, and the reminder to run /code-review in a fresh session."
+description: "Use when the user says that the code review of an issue has passed, or asks to close the issue. Never use it at the end of development: development ends with the Definition of Done in docs/TDD_WORKFLOW.md, before the review. Carries the closing steps: the check that build and detekt pass on the reviewed code, and the translation of the issue draft into the GitHub issue text."
 ---
 
 # Close the issue
 
-This file owns what every issue updates before it is handed back. `docs/TDD_WORKFLOW.md`
-§ Definition of Done links it as its step 3.
+This file owns what happens to an issue after its code review has passed. `docs/TDD_WORKFLOW.md`
+§ Definition of Done owns what happens before the review: the build, detekt, the surface docs, the
+changelog and the code review reminder.
 
-## 1. Build and static analysis
+## 1. When it applies
 
-A session that ran the TDD workflow has done this as steps 1 and 2 of its Definition of Done. Any
-other session does it here.
+**Only the user starts the closing.** Git and the pull request are theirs, so no session can observe
+that the review has passed. A session that finished development stops at the Definition of Done and
+does not load this skill.
 
-Run both commands through the `definition-of-done` agent (`.claude/agents/definition-of-done.md`),
-not in this session:
+Read the header of `issues/ISSUE-<number>-*.md`. A status other than `review` means the Definition
+of Done has not run on this issue: report it to the user and stop.
 
-- `./gradlew build` — every module, every test.
-- `./gradlew detekt` — run explicitly, because `build` does not cover it. Leave it clean.
+## 2. Build and detekt on the reviewed code
 
-The agent keeps the Gradle output out of this session and returns the verdict: two lines on success,
-the failing tests with their assertion output verbatim on failure, the failure class when it is
-infrastructural. It changes no file, so every fix is made here. An infrastructural failure is
-escalated to the user, as `docs/TDD_WORKFLOW.md` § Escalation conditions says.
+A finding fixed after the review changed the code, and the verdict of the Definition of Done covers
+the code as it stood when it ran.
 
-❗️ **The test runs of a TDD cycle stay in this session.** Each one is the evidence for a pre-declared
-RED, and only the Definition of Done has no declaration to judge: it passes or it fails.
-`docs/TDD_WORKFLOW.md` § Per-cycle test execution owns the rule.
+Run `./gradlew build` and `./gradlew detekt` through the `definition-of-done` agent, as
+`docs/TDD_WORKFLOW.md` § Build and detekt through the agent says. Skip the run only when this
+session ran both after the last change to a file.
 
-## 2. The checklists
+A failure ends the closing. The fix is development: report the failure to the user and leave the
+draft at `review`.
 
-Apply each one whose condition the change meets.
+## 3. The issue draft
 
-- **A REST endpoint was added or changed.** Update `docs/api/<resource>.md`, the table in
-  `docs/api/API_INDEX.md`, and the Bruno collection: `bruno/<resource>/`, one `.bru` file per
-  endpoint, mirroring the existing folder structure. A request inherits the collection's bearer
-  auth (`auth: inherit`); `docs/SECURITY.md` owns the API key.
-- **A domain decision was added or changed.** Re-read the owning file in `docs/domain/` and update
-  it so that it is still true.
-- **The changelog.** One line under `## [Unreleased]` in `CHANGELOG.md`, in the imperative mood, with
-  the issue number in parentheses. Sections: `Added` (endpoints, observable behaviours), `Changed`
-  (contracts, behaviours), `Fixed` (bugs with observable impact), `Security` (CVE bumps). **No**
-  line for tests, internal refactoring, style cleanup or developer tooling. Example:
-  `- Add \`GET /home/stream\` SSE endpoint for real-time dashboard. (#173)`
-- **The issue draft.** Set the status of `issues/ISSUE-<number>-*.md` to `closing` and turn the
-  draft into the GitHub issue text, as `docs/ISSUE_FORMAT.md` § Lifecycle says.
+Set the status of the draft to `closing` and turn the draft into the GitHub issue text, as
+`docs/ISSUE_FORMAT.md` § Lifecycle says.
 
-## 3. Report
+## 4. Report
 
-A session that ran the TDD workflow reports as step 4 of its Definition of Done. Any other session
-tells the user what changed, which checklists applied, and the build and detekt results. The user
-takes it from here: git and the pull request are theirs.
-
-When the issue changed code, the report ends by reminding the user to run `/code-review` on the
-branch in a fresh session before the merge. **Never run it in the session that wrote the code.**
-That session collects and filters the findings, and it discards the ones that contradict its own
-choices.
+Tell the user the build and detekt results and the path of the translated draft.

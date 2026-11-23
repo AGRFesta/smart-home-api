@@ -156,18 +156,80 @@ The user supervises **outcomes** ("on the loop"), not individual phases ("in the
    **Definition of Done**.
 
 ## Definition of Done (end of flow)
-Run all of these after the last cycle, before handing back to the user. Steps 1 and 2 run through the
-`definition-of-done` agent, which returns the verdict and changes nothing;
-[`.claude/skills/close-the-issue/SKILL.md`](../.claude/skills/close-the-issue/SKILL.md) § Build and
-static analysis owns how.
+This section owns what every issue completes before its code review. A session that ran the loop
+above runs these steps after the last cycle. A session that did not run the loop — a structural
+refactoring, a documentation or tooling change — runs them after its last change.
+
+**Everything the issue adds to git belongs here**, because the code review reads the diff. What
+happens after the review belongs to
+[`.claude/skills/close-the-issue/SKILL.md`](../.claude/skills/close-the-issue/SKILL.md).
+
 1. `./gradlew build` — full build, all modules, all tests (this is the only full-suite run of the flow).
 2. `./gradlew detekt` — run it **explicitly** (do not assume `build` covers it) and leave it clean. If a
    finding can only be fixed by changing behaviour, escalate instead of fixing.
-3. **Docs & changelog** — apply the checklists in
-   [`.claude/skills/close-the-issue/SKILL.md`](../.claude/skills/close-the-issue/SKILL.md) § The
-   checklists, which owns them: the REST endpoint and the changelog.
-4. **Final report to the user:** the completed test list with each cycle's outcome, any deviation from
-   the approved plan, and the build/detekt results. The user takes it from here (git, PR). The report
-   ends with the code review reminder that
-   [`.claude/skills/close-the-issue/SKILL.md`](../.claude/skills/close-the-issue/SKILL.md) § Report
-   owns.
+3. **Docs and changelog** — apply each checklist of [The checklists](#the-checklists) whose
+   condition the change meets.
+4. **The issue draft** — set the status of `issues/ISSUE-<number>-*.md` to `review`, and change
+   nothing else in it. The code review reads the draft as development left it, with its test list
+   and its answered questions. [`ISSUE_FORMAT.md`](ISSUE_FORMAT.md) § Sections owns the statuses.
+5. **Final report to the user** — a session that ran the loop reports the completed test list with
+   each cycle's outcome, any deviation from the approved plan, and the build and detekt results. Any
+   other session reports what changed, which checklists applied, and the build and detekt results.
+   The user takes it from here: git and the pull request are theirs. When the issue changed code,
+   the report ends with the reminder of [The code review reminder](#the-code-review-reminder).
+
+### Build and detekt through the agent
+
+Run steps 1 and 2 through the `definition-of-done` agent (`.claude/agents/definition-of-done.md`),
+not in this session. The agent keeps the Gradle output out of this session and returns the verdict:
+two lines on success, the failing tests with their assertion output verbatim on failure, the failure
+class when it is infrastructural. It changes no file, so every fix is made in this session. An
+infrastructural failure is escalated to the user, as
+[Escalation conditions](#escalation-conditions--stop-and-return-to-the-user-when) says.
+
+### The checklists
+
+- **A REST endpoint was added or changed.** Update `docs/api/<resource>.md`, the table in
+  `docs/api/API_INDEX.md`, and the Bruno collection: `bruno/<resource>/`, one `.bru` file per
+  endpoint, mirroring the existing folder structure. A request inherits the collection's bearer
+  auth (`auth: inherit`); `docs/SECURITY.md` owns the API key.
+- **A domain decision was added or changed.** Re-read the owning file in `docs/domain/` and update
+  it so that it is still true.
+- **A refactoring invariant has no test.** Run the manual check that the draft names for it, and
+  report the result.
+- **The changelog.** One line under `## [Unreleased]` in `CHANGELOG.md`, in the imperative mood, with
+  the issue number in parentheses. Sections: `Added` (endpoints, observable behaviours), `Changed`
+  (contracts, behaviours), `Fixed` (bugs with observable impact), `Security` (CVE bumps). **No**
+  line for tests, internal refactoring, style cleanup or developer tooling. Example:
+  `- Add \`GET /home/stream\` SSE endpoint for real-time dashboard. (#173)`
+
+### The code review reminder
+
+The report reminds the user to run `/code-review` on the branch in a fresh session before the
+merge. **Never run it in the session that wrote the code.** That session collects and filters the
+findings, and it discards the ones that contradict its own choices.
+
+**The fresh session reads the issue draft before it reviews.** The draft is the specification the
+user approved, not the reasoning of the session that wrote the code. A review without it reports
+the decisions the draft already records, and it cannot find a rule that the code does not
+implement. The reminder therefore gives the user this message to send before `/code-review`, with
+the path of the draft filled in:
+
+```text
+Read issues/ISSUE-<number>-<name>.md before the review. Use it this way:
+- `Rules` and `Contract` are a checklist. Report a rule or a contract row that the diff does not
+  implement or does not test.
+- `Out of scope` and `Known limits` are decisions. Do not report what they already record. An
+  answered question is a decision too.
+- A finding that disputes a decision of the issue is allowed. Mark it as a dispute, quote the
+  decision, and say why it is wrong.
+```
+
+### After the code review
+
+- **A finding the user accepts is a bug fix when it changes behaviour.** It enters the loop at
+  Phase 0, as any bug fix does. The Definition of Done then runs again, because its verdict covers
+  the code as it stood when it ran.
+- **The user declares that the review has passed.** Git and the pull request are theirs, so no
+  session can observe it. Only then does
+  [`.claude/skills/close-the-issue/SKILL.md`](../.claude/skills/close-the-issue/SKILL.md) apply.

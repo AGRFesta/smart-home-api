@@ -1,6 +1,6 @@
 ---
 name: definition-of-done
-description: "Runs steps 1 and 2 of the Definition of Done — `./gradlew build`, then `./gradlew detekt` — and returns the verdict: two lines on success, the failing tests and their assertion output verbatim on failure, the failure class when the failure is infrastructural. Runs commands and reads files; changes nothing. Invoke it at the end of an issue, never for the test runs of a TDD cycle."
+description: "Runs steps 1 and 2 of the Definition of Done — `./gradlew build`, then `./gradlew detekt` — and returns the verdict: two lines on success, the failing tests and their assertion output verbatim on failure, the failure class when the failure is infrastructural. Runs commands and reads files; changes nothing. Invoke it at the end of development and again when the issue closes, never for the test runs of a TDD cycle."
 tools: Bash, Read, Grep, Glob
 model: haiku
 ---

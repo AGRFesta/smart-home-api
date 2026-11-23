@@ -31,6 +31,9 @@ understood or no longer small, the status returns to `mapping`.
   gives the issue its number for branches and commits. The draft records that number in its header.
 - **A draft is written in Italian.** Code identifiers stay in English (`failedHeaters`,
   `heating.enabled`), and so do the section headings and the `Given` / `When` / `Then` keywords.
+- **The draft stays as development left it until the code review has passed.** The review reads
+  the draft, and the test list and the answered questions tell it what was already decided.
+  [`TDD_WORKFLOW.md`](TDD_WORKFLOW.md) § The code review reminder owns how the review uses it.
 - **At closing, the draft is translated to English and becomes the GitHub issue text.** The
   translation uses the vocabulary of the test names and the code, which the loop has already fixed.
   The test list, the answered questions and the discovery markers are removed. A link to another
@@ -110,7 +113,7 @@ heaters off in the next. The split holds under two conditions:
 ````markdown
 # <Imperative title: what changes>
 
-> GitHub: #<N> · Nature: feature | bug | refactoring | removal · Status: mapping | ready | in-progress | closing
+> GitHub: #<N> · Nature: feature | bug | refactoring | removal · Status: mapping | ready | in-progress | review | closing
 
 ## Context
 <Why this issue exists and how things stand today. Short prose.>
@@ -181,7 +184,8 @@ Then  <observable outcome, with values>
   | `mapping` | Refinement | Example Mapping in progress |
   | `ready` | Refinement → Development | The user declared the map ready; development may start |
   | `in-progress` | Development | Test list approved, TDD loop running |
-  | `closing` | Development | Translation and publication |
+  | `review` | Development | The Definition of Done has run; the code review reads the draft |
+  | `closing` | Development | The review has passed; translation and publication |
 - **Story**: one sentence. Two sentences that each stand alone are two stories.
 - **Rules**: each rule is one declarative sentence, followed by its examples and its questions. An
   example takes the `Given` / `When` / `Then` form, or a table when the cases differ only in values.
@@ -204,8 +208,8 @@ system would notice the difference:
   ([`DOCUMENTATION_STYLE.md`](DOCUMENTATION_STYLE.md) § 1), written during development.
 
 An issue has no Design, Acceptance criteria, Tests, Documentation or Changelog section. Rules and
-examples carry the acceptance criteria; the test list carries the tests; the closing checklist in
-[`close-the-issue`](../.claude/skills/close-the-issue/SKILL.md) carries the documentation and the
+examples carry the acceptance criteria; the test list carries the tests; the checklists in
+[`TDD_WORKFLOW.md`](TDD_WORKFLOW.md) § Definition of Done carry the documentation and the
 changelog.
 
 ### What the map holds
@@ -248,7 +252,7 @@ Its invariants take the place of the rules: each states what must not change and
 ````markdown
 # <Imperative title: what changes>
 
-> GitHub: #<N> · Nature: refactoring · Status: mapping | ready | in-progress | closing
+> GitHub: #<N> · Nature: refactoring · Status: mapping | ready | in-progress | review | closing
 
 ## Context
 <Why the structure must change, and how it stands today.>
@@ -279,7 +283,7 @@ Each step ends with `./gradlew build` and `./gradlew detekt` green.
 ````
 
 - **Invariants** are numbered `I1`, `I2`, …, with the rules of [Identifiers](#identifiers). An invariant
-  that no test verifies names the manual check; that check is part of closing the issue.
+  that no test verifies names the manual check; that check is part of the Definition of Done.
 - **Steps** are ordered. A step that leaves the build red is split, or merged with the next one.
 
 ### Markers during the loop
