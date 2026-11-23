@@ -3,9 +3,12 @@ package org.agrfesta.sh.api.core.application.usecases.heating
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.assertions.withClue
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -221,37 +224,61 @@ class EvaluateHeatingStateServiceTest {
     }
 
     @Test
-    fun `execute() does nothing when area sensors are missing from device registry`() {
+    fun `execute() turns OFF the heater of an area whose sensors are missing from the device registry`() {
         // Given — sensor referenced in area DTO but absent from device registry: no sensor resolves,
         //         area has no resolved sensors → not heatable
         val sensorDto = aSensor()
-        val actuatorDto = anActuator()
-        actuatorDto.toSharedHeaterMockk(factory)
-        val areaDto = anAreaWithDevicesView(sensors = listOf(sensorDto), actuators = listOf(actuatorDto))
-        every { devicesRepository.getAll() } returns listOf(actuatorDto).right() // sensorDto absent from registry
+        val (heaterDto, heater) = aStubbedHeater()
+        val areaDto = anAreaWithDevicesView(sensors = listOf(sensorDto), actuators = listOf(heaterDto))
+        every { devicesRepository.getAll() } returns listOf(heaterDto).right() // sensorDto absent from registry
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(areaDto).right()
 
         // When
         sut.execute()
 
         // Then
-        verify(exactly = 0) { decide(any()) }
+        withClue("a heater whose only area has no resolvable sensor should receive OFF, without a strategy decision") {
+            verify(exactly = 1) { heater.off() }
+            verify(exactly = 0) { decide(any()) }
+        }
     }
 
     @Test
-    fun `execute() does nothing when area has no sensors (not heatable)`() {
-        // Given — area with a resolved heater but no sensors: not heatable
-        val actuatorDto = anActuator()
-        actuatorDto.toSharedHeaterMockk(factory)
-        val areaDto = anAreaWithDevicesView(sensors = emptyList(), actuators = listOf(actuatorDto))
-        every { devicesRepository.getAll() } returns listOf(actuatorDto).right()
+    fun `execute() turns OFF a heater whose only area has no sensor`() {
+        // Given — the sensor left the area: the area is no longer heatable, its heater is still registered
+        val (heaterDto, heater) = aStubbedHeater()
+        val areaDto = anAreaWithDevicesView(sensors = emptyList(), actuators = listOf(heaterDto))
+        every { devicesRepository.getAll() } returns listOf(heaterDto).right()
         every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(areaDto).right()
 
         // When
-        sut.execute()
+        val result = sut.execute()
 
         // Then
-        verify(exactly = 0) { decide(any()) }
+        withClue("a heater with no heatable area should receive OFF, so it does not stay on") {
+            result shouldBe HeatingEvaluationReport.Evaluated(
+                listOf(HeaterActionOutcome(heater.uuid, HeaterCommand.OFF, ActuationOutcome.Issued))
+            ).right()
+            verify(exactly = 1) { heater.off() }
+        }
+    }
+
+    @Test
+    fun `execute() turns OFF a registered heater assigned to no area`() {
+        // Given
+        val (heaterDto, heater) = aStubbedHeater()
+        every { devicesRepository.getAll() } returns listOf(heaterDto).right()
+
+        // When
+        val result = sut.execute()
+
+        // Then
+        withClue("a registered heater outside every area should receive OFF, so it does not stay on") {
+            result shouldBe HeatingEvaluationReport.Evaluated(
+                listOf(HeaterActionOutcome(heater.uuid, HeaterCommand.OFF, ActuationOutcome.Issued))
+            ).right()
+            verify(exactly = 1) { heater.off() }
+        }
     }
 
     @Test
@@ -555,6 +582,109 @@ class EvaluateHeatingStateServiceTest {
         }
     }
 
+    @Test
+    fun `execute() turns ON every heater of an area under COMFORT`() {
+        // Given — the living room, at 18° with target 21°, is served by two heaters
+        val (heater1Dto, heater1) = aStubbedHeater()
+        val (heater2Dto, heater2) = aStubbedHeater()
+        val (sensorDto, livingRoom) = anAreaServedBy(
+            heaterDtos = listOf(heater1Dto, heater2Dto),
+            current = Temperature.of("18"),
+            target = Temperature.of("21")
+        )
+        every { devicesRepository.getAll() } returns listOf(sensorDto, heater1Dto, heater2Dto).right()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(livingRoom).right()
+        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(COMFORT.name).right()
+
+        // When
+        val result = sutWithRealSelector().execute()
+
+        // Then
+        withClue("each heater of an area should receive its own command: both heaters ON") {
+            val heaters = result.shouldBeRight().shouldBeInstanceOf<HeatingEvaluationReport.Evaluated>().heaters
+            heaters shouldContainExactlyInAnyOrder listOf(
+                HeaterActionOutcome(heater1.uuid, HeaterCommand.ON, ActuationOutcome.Issued),
+                HeaterActionOutcome(heater2.uuid, HeaterCommand.ON, ActuationOutcome.Issued)
+            )
+            verify(exactly = 1) { heater1.on() }
+            verify(exactly = 1) { heater2.on() }
+        }
+    }
+
+    @Test
+    fun `execute() turns OFF the other heaters without areas when one OFF fails`() {
+        // Given
+        val (heater1Dto, heater1) = aStubbedHeater()
+        val (heater2Dto, heater2) = aStubbedHeater()
+        val failure = object : ActuatorOperationFailure {}
+        every { heater1.off() } returns failure.left()
+        every { devicesRepository.getAll() } returns listOf(heater1Dto, heater2Dto).right()
+
+        // When
+        val result = sut.execute()
+
+        // Then
+        withClue("a failed OFF should be reported and should not stop the OFF of the other heater") {
+            val heaters = result.shouldBeRight().shouldBeInstanceOf<HeatingEvaluationReport.Evaluated>().heaters
+            heaters shouldContainExactlyInAnyOrder listOf(
+                HeaterActionOutcome(heater1.uuid, HeaterCommand.OFF, ActuationOutcome.Failed(failure)),
+                HeaterActionOutcome(heater2.uuid, HeaterCommand.OFF, ActuationOutcome.Issued)
+            )
+        }
+    }
+
+    @Test
+    fun `execute() turns ON a heater of a heatable area when the OFF of a heater without areas fails`() {
+        // Given
+        val (heater1Dto, heater1) = aStubbedHeater()
+        val (heater2Dto, heater2) = aStubbedHeater()
+        val failure = object : ActuatorOperationFailure {}
+        every { heater2.off() } returns failure.left()
+        val (sensorDto, livingRoom) =
+            anAreaServedBy(listOf(heater1Dto), current = Temperature.of("18"), target = Temperature.of("21"))
+        every { devicesRepository.getAll() } returns listOf(sensorDto, heater1Dto, heater2Dto).right()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(livingRoom).right()
+        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(COMFORT.name).right()
+
+        // When
+        val result = sutWithRealSelector().execute()
+
+        // Then
+        withClue("a failed OFF should be reported and should not stop the ON of the other heater") {
+            val heaters = result.shouldBeRight().shouldBeInstanceOf<HeatingEvaluationReport.Evaluated>().heaters
+            heaters shouldContainExactlyInAnyOrder listOf(
+                HeaterActionOutcome(heater1.uuid, HeaterCommand.ON, ActuationOutcome.Issued),
+                HeaterActionOutcome(heater2.uuid, HeaterCommand.OFF, ActuationOutcome.Failed(failure))
+            )
+        }
+    }
+
+    @Test
+    fun `execute() turns OFF a heater without areas when the ON of a heater of a heatable area fails`() {
+        // Given
+        val (heater1Dto, heater1) = aStubbedHeater()
+        val (heater2Dto, heater2) = aStubbedHeater()
+        val failure = object : ActuatorOperationFailure {}
+        every { heater1.on() } returns failure.left()
+        val (sensorDto, livingRoom) =
+            anAreaServedBy(listOf(heater1Dto), current = Temperature.of("18"), target = Temperature.of("21"))
+        every { devicesRepository.getAll() } returns listOf(sensorDto, heater1Dto, heater2Dto).right()
+        every { areasWithDevicesRepository.getAllAreasWithDevices() } returns listOf(livingRoom).right()
+        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(COMFORT.name).right()
+
+        // When
+        val result = sutWithRealSelector().execute()
+
+        // Then
+        withClue("a failed ON should be reported and should not stop the OFF of the other heater") {
+            val heaters = result.shouldBeRight().shouldBeInstanceOf<HeatingEvaluationReport.Evaluated>().heaters
+            heaters shouldContainExactlyInAnyOrder listOf(
+                HeaterActionOutcome(heater1.uuid, HeaterCommand.ON, ActuationOutcome.Failed(failure)),
+                HeaterActionOutcome(heater2.uuid, HeaterCommand.OFF, ActuationOutcome.Issued)
+            )
+        }
+    }
+
     private fun sutWithRealSelector(default: SharedHeatingStrategy = ECONOMY) =
         EvaluateHeatingStateService(
             devicesRepository,
@@ -584,11 +714,18 @@ class EvaluateHeatingStateServiceTest {
         heaterDto: Device,
         current: Temperature,
         target: Temperature
+    ): Pair<Device, AreaWithDevicesView> = anAreaServedBy(listOf(heaterDto), current, target)
+
+    /** One area with a single sensor reading [current] and a [target] setting, served by [heaterDtos]. */
+    private fun anAreaServedBy(
+        heaterDtos: List<Device>,
+        current: Temperature,
+        target: Temperature
     ): Pair<Device, AreaWithDevicesView> {
         val sensorDto = aSensor()
         val sensor = sensorDto.toSensorMockk(factory)
         every { sensor.fetchReadings() } returns aThermoHygroDataValue(temperature = current).right()
-        val areaDto = anAreaWithDevicesView(sensors = listOf(sensorDto), actuators = listOf(heaterDto))
+        val areaDto = anAreaWithDevicesView(sensors = listOf(sensorDto), actuators = heaterDtos)
         every { temperatureSettingsRepository.findAreaSetting(areaDto.uuid) } returns
             AreaTemperatureSetting(areaDto.uuid, target, emptySet()).right()
         return sensorDto to areaDto
