@@ -2,9 +2,14 @@ package org.agrfesta.sh.api.providers.netatmo
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.HttpRequestTimeoutException
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.Forbidden
+import io.ktor.http.HttpStatusCode.Companion.OK
+import io.ktor.http.HttpStatusCode.Companion.ServiceUnavailable
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
@@ -18,6 +23,7 @@ import org.agrfesta.test.mothers.aRandomNonNegativeInt
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.agrfesta.test.mothers.anUrl
 import org.junit.jupiter.api.Test
+import java.net.ConnectException
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -231,6 +237,67 @@ class NetatmoClientTest {
             result.shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
             clientAsserter.verifyHomeDataFetchRequest(accessToken, homeId)
         }
+    }
+
+    @Test fun `getHomesData() Returns KtorRequestFailure 503 when Netatmo responds 503`() {
+        // Given
+        clientAsserter.givenHomeDataFetchFailure(status = ServiceUnavailable)
+
+        // When
+        val result = runBlocking { sut.getHomesData() }
+
+        // Then
+        result.shouldBeLeft().shouldBeInstanceOf<KtorRequestFailure>()
+            .failureStatusCode shouldBe ServiceUnavailable
+    }
+
+    @Test fun `getHomesData() Returns NetatmoConnectionFailure when the request to Netatmo times out`() {
+        // Given
+        clientAsserter.givenHomeDataFetchError(
+            HttpRequestTimeoutException("${config.baseUrl}/api/homesdata", 60_000L)
+        )
+
+        // When
+        val result = runBlocking { sut.getHomesData() }
+
+        // Then
+        result.shouldBeLeft().shouldBeInstanceOf<NetatmoConnectionFailure>()
+            .cause.shouldBeInstanceOf<HttpRequestTimeoutException>()
+    }
+
+    @Test fun `getHomesData() Returns NetatmoConnectionFailure when the connection to Netatmo is refused`() {
+        // Given
+        clientAsserter.givenHomeDataFetchError(ConnectException("Connection refused"))
+
+        // When
+        val result = runBlocking { sut.getHomesData() }
+
+        // Then
+        result.shouldBeLeft().shouldBeInstanceOf<NetatmoConnectionFailure>()
+            .cause.shouldBeInstanceOf<ConnectException>()
+    }
+
+    @Test fun `getHomesData() Returns KtorRequestFailure 400 with the raw body when it is not JSON`() {
+        // Given
+        clientAsserter.givenHomeDataFetchTextResponse(status = BadRequest, content = "Bad Request")
+
+        // When
+        val result = runBlocking { sut.getHomesData() }
+
+        // Then
+        result.shouldBeLeft() shouldBe KtorRequestFailure(failureStatusCode = BadRequest, body = "Bad Request")
+    }
+
+    @Test fun `getHomesData() Returns NetatmoContractBreak when Netatmo responds 200 with a body that is not JSON`() {
+        // Given
+        val content = "<html><body>Service temporarily unavailable</body></html>"
+        clientAsserter.givenHomeDataFetchTextResponse(status = OK, content = content)
+
+        // When
+        val result = runBlocking { sut.getHomesData() }
+
+        // Then
+        result.shouldBeLeft().shouldBeInstanceOf<NetatmoContractBreak>().response shouldBe content
     }
 
     @Test fun `getHomesData() Returns a failure when fails to fetch persisted token`() {

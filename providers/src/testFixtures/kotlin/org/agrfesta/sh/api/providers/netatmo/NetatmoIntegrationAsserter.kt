@@ -1,6 +1,8 @@
 package org.agrfesta.sh.api.providers.netatmo
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import org.agrfesta.sh.api.core.domain.commons.ThermoHygroData
 import org.agrfesta.sh.api.core.domain.devices.ProviderDeviceData
 import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
@@ -46,9 +48,9 @@ class NetatmoIntegrationAsserter(
         asserter.givenHomeDataFetchResponse(homeData)
     }
 
-    fun givenHomeDataFetchFailure() {
+    fun givenHomeDataFetchFailure(status: HttpStatusCode = BadRequest) {
         cache.set("provider.netatmo.access-token", token)
-        asserter.givenHomeDataFetchFailure()
+        asserter.givenHomeDataFetchFailure(status = status)
     }
 
 }

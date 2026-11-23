@@ -11,6 +11,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.ktor.http.HttpStatusCode
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -143,6 +144,39 @@ class DevicesIntegrationTest(
                 expectedDetachedDevice,
                 newDevice.toDevice(syncedModel)
             )
+    }
+
+    @Test
+    fun `synchronize() registers the SwitchBot devices and detaches the Netatmo devices when Netatmo responds 503`() {
+        // Given
+        val newSBDeviceData = aProviderDeviceData(provider = SWITCHBOT)
+        val storedNetatmoDeviceData = aProviderDeviceData(provider = NETATMO)
+        devicesDao.create(UUID.randomUUID(), storedNetatmoDeviceData)
+            .getOrElse { error("Failed to create device: $it") }
+        coEvery {
+            switchBotDevicesClient.getDevices()
+        } returns objectMapper.aSwitchBotDevicesListSuccessResponse(listOf(newSBDeviceData.asSBDeviceJsonNode()))
+        netatmoIntegrationAsserter.givenHomeDataFetchFailure(status = HttpStatusCode.ServiceUnavailable)
+
+        // When
+        given()
+            .contentType(ContentType.JSON)
+            .authenticated()
+            .`when`()
+            .post("/devices/synchronizations")
+            .then()
+            .statusCode(200)
+
+        // Then
+        val persisted = devicesDao.getAll().getOrElse { error("Failed to fetch devices: $it") }
+        withClue(
+            "the SwitchBot device should be registered as PAIRED and the Netatmo device should be DETACHED"
+        ) {
+            persisted.map { Triple(it.provider, it.deviceProviderId, it.status) }.shouldContainExactlyInAnyOrder(
+                Triple(SWITCHBOT, newSBDeviceData.deviceProviderId, DeviceStatus.PAIRED),
+                Triple(NETATMO, storedNetatmoDeviceData.deviceProviderId, DeviceStatus.DETACHED)
+            )
+        }
     }
 
     @Test

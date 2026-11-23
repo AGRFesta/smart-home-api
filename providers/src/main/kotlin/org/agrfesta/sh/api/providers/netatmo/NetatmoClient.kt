@@ -90,14 +90,18 @@ class NetatmoClient(
      */
     suspend fun getHomesData(homeId: String? = null): Either<NetatmoClientFailure, JsonNode> {
         return getToken().flatMap { token ->
-            try {
-                val content = client.get("${config.baseUrl}/api/homesdata") {
+            request {
+                client.get("${config.baseUrl}/api/homesdata") {
                     homeId?.let { parameter("home_id", it) }
                     headers { append(HttpHeaders.Authorization, "Bearer $token") }
                 }.bodyAsText()
+            }
+        }.flatMap { content ->
+            try {
                 mapper.readTree(content).right()
-            } catch (e: ClientRequestException) {
-                handleClientRequestException(e).left()
+            } catch (e: IOException) {
+                logger.warn("Failed to parse homes data response: ${e.message}", e)
+                NetatmoContractBreak("Unexpected homes data response", content).left()
             }
         }
     }
