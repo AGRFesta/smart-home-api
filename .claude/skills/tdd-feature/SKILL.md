@@ -14,7 +14,8 @@ The work applies this skill when it adds a behaviour or fixes a bug. The issue f
 wording of the request: read the issue before choosing.
 
 - **The issue declares pure structural refactoring** — no new behaviour, no bug fix. The workflow does
-  not apply: do not read `docs/TDD_WORKFLOW.md`, and make the change directly.
+  not apply: make the change directly. Of `docs/TDD_WORKFLOW.md`, only § Definition of Done applies,
+  after the last change.
 - **The issue declares nothing about its nature.** The workflow applies. Only the exception is
   declared, so silence means a feature or a bug fix.
 - **No issue, and the request adds or changes behaviour.** The workflow applies.

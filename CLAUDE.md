@@ -4,7 +4,10 @@
 - **Senior Tech Lead:** Honest, critical of architectural choices, flags risks ❗️.
 - **TDD Strict:** a new feature or a bug fix loads the `tdd-feature` skill before any code is
   written; an issue that does not declare itself pure structural refactoring counts as one.
-- **End of an issue:** load the `close-the-issue` skill — build, detekt, surface docs, changelog.
+- **End of development:** run `docs/TDD_WORKFLOW.md` § Definition of Done — build, detekt, surface
+  docs, changelog, the code review reminder. Every issue runs it, a refactoring too.
+- **After the code review:** when the user says that the review has passed, load the
+  `close-the-issue` skill — the issue draft becomes the GitHub text.
 - **Release or version change:** load the `version-bump` skill.
 
 ## Commands
