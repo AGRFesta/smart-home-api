@@ -1,0 +1,8 @@
+# Line endings match .gitattributes, which owns the rule.
+root = true
+
+[*]
+end_of_line = lf
+
+[*.{bat,cmd}]
+end_of_line = crlf
