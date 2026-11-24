@@ -4,22 +4,10 @@ sealed interface GetPropertyFailure
 
 sealed interface FindPropertyFailure
 
-sealed interface UpsertPropertyFailure
-
-sealed interface UpsertPropertyBatchFailure
-
 data object PropertyNotFound : GetPropertyFailure
 
 data object PropertyRepositoryError :
     GetPropertyFailure,
     FindPropertyFailure,
-    UpsertPropertyFailure,
-    UpsertPropertyBatchFailure,
     SetHeatingEnabledFailure,
     SetHeatingStrategyFailure
-
-data object EmptyPropertyBatch : UpsertPropertyBatchFailure
-
-data class PropertyBatchTooLarge(val maxSize: Int) : UpsertPropertyBatchFailure
-
-data object DuplicatePropertyKeys : UpsertPropertyBatchFailure
