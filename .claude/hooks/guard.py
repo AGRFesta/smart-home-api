@@ -11,7 +11,7 @@ instead.
 in-place flag — and a write onto a working-tree file through a `>` or `>>`
 redirect, through `tee`, or through PowerShell's `Set-Content`, `Out-File` and
 `Add-Content`. `CLAUDE.md` § Editing files owns why: such a command rewrites the
-line endings and the non-ASCII characters, and nothing reports either.
+non-ASCII characters, and nothing reports it.
 
 **A write onto a path in the working tree that git does not ignore** — the same
 redirects and writers, such as a `build_output.log` left at the root. Git does
@@ -131,8 +131,8 @@ WORD_BOUNDARIES = " \t\r\n;&|("
 SUBSHELL = re.compile(r"^\$?\(+")
 
 EDIT_INSTEAD = (
-    "Use the Edit or Write tool, which writes the line endings and the encoding "
-    "the file already has. A substitution across several files is made with "
+    "Use the Edit or Write tool, which writes the encoding the file already "
+    "has. A substitution across several files is made with "
     "Edit, once per file."
 )
 
@@ -288,8 +288,8 @@ def _stream_editor(tokens: list) -> str:
         if any(_in_place(argument, program) for argument in tokens[index + 1:]):
             return (
                 f"Refused: `{program}` rewriting a file in place. It rewrites the "
-                f"line endings and the non-ASCII characters, and neither `git "
-                f"diff` nor the build reports it. " + EDIT_INSTEAD
+                f"non-ASCII characters, and neither `git diff` nor the build "
+                f"reports it. " + EDIT_INSTEAD
             )
     return ""
 
@@ -349,8 +349,8 @@ def _write(segment: str, mask: str, tokens: list, cwd: str) -> str:
         if _writes_source_file(target) and _working_tree_path(target, cwd) is not None:
             return (
                 f"Refused: writing `{_unquote(target)}` from the shell. It rewrites "
-                f"the whole file, including the line endings and the non-ASCII "
-                f"characters, and nothing reports either. " + EDIT_INSTEAD
+                f"the whole file, including the non-ASCII characters, and "
+                f"nothing reports it. " + EDIT_INSTEAD
             )
     return ""
 

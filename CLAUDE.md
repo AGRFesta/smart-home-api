@@ -24,11 +24,13 @@
 ## Editing files
 **Change a file with the Edit and Write tools.** A stream editor — `sed -i`, `perl -pi` — and a
 shell write onto a source file — `>`, `>>`, `tee`, `Set-Content` — rewrite the whole file, and ❗️
-**two of the things they rewrite, nothing reports**:
-- **The line endings.** The working tree is CRLF (`core.autocrlf=true`). A stream editor writes LF,
-  so the file becomes mixed while `git diff` stays clean — the index holds LF either way.
-- **The non-ASCII characters.** Sources and docs carry `§` and `❗️`. One written through a shell
-  escape can land as a latin-1 byte, which reads back as `�`.
+**the non-ASCII characters they rewrite, nothing reports.** Sources and docs carry `§` and `❗️`. One
+written through a shell escape can land as a latin-1 byte, which reads back as `�`.
+
+**Every text file is LF**, in the index and in the working tree, whatever `core.autocrlf` says;
+`*.bat` and `*.cmd` are CRLF. `.gitattributes` owns the rule, and `.editorconfig` repeats it for the
+IDE. A copy checked out before `.gitattributes` keeps its old line endings until
+`git rm --cached -r -q .` followed by `git reset --hard` rewrites it, on a clean working tree.
 
 **A substitution across several files is made with Edit, once per file.** `sed -n`, `grep`, `find`
 and `od` read and change nothing; they are the right tools for reading one. A `PreToolUse` hook
