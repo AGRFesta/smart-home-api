@@ -1,5 +1,7 @@
 package org.agrfesta.sh.api
 
+import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.withClue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -8,14 +10,28 @@ import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import io.restassured.path.json.JsonPath
+import kotlinx.coroutines.runBlocking
 import org.agrfesta.sh.api.controllers.authenticated
+import org.agrfesta.sh.api.core.application.ports.inbounds.areas.AssignActuatorToAreaUseCase
+import org.agrfesta.sh.api.core.application.ports.outbounds.Cache
+import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
+import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.application.usecases.heating.EvaluateHeatingStateService.Companion.HEATING_ENABLED_KEY
 import org.agrfesta.sh.api.core.application.usecases.heating.HeatingStrategySelector.Companion.HEATING_STRATEGY_KEY
+import org.agrfesta.sh.api.core.domain.devices.DeviceModel
+import org.agrfesta.sh.api.core.domain.devices.Provider
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.COMFORT
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.ECONOMY
+import org.agrfesta.sh.api.domain.anActuatorProviderData
+import org.agrfesta.sh.api.domain.anArea
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
+import org.agrfesta.sh.api.providers.netatmo.NetatmoClientAsserter
+import org.agrfesta.sh.api.providers.netatmo.NetatmoService.Companion.NETATMO_ACCESS_TOKEN_CACHE_KEY
+import org.agrfesta.test.mothers.aJsonNode
+import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -25,7 +41,12 @@ import java.util.concurrent.TimeUnit.SECONDS
 import kotlin.concurrent.thread
 
 class HeatingIntegrationTest(
-    private val propertyRepository: PropertyJdbcRepository
+    private val propertyRepository: PropertyJdbcRepository,
+    private val areasRepository: AreasRepository,
+    private val devicesRepository: DevicesRepository,
+    private val assignActuatorToArea: AssignActuatorToAreaUseCase,
+    private val netatmoClientAsserter: NetatmoClientAsserter,
+    private val cache: Cache
 ) : AbstractIntegrationTest() {
 
     // /// setHeatingEnabled ////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,6 +65,40 @@ class HeatingIntegrationTest(
 
         // When / Then
         assertSwitchIsSavedPushedAndReflected(enabled = false)
+    }
+
+    @Test fun `setHeatingEnabled() turns off every registered Smarther, assigned to an area or not, when disabling`() {
+        // Given
+        netatmoClientAsserter.clear()
+        cache.set(NETATMO_ACCESS_TOKEN_CACHE_KEY, aRandomUniqueString())
+        netatmoClientAsserter.givenSetStatusResponse(aJsonNode(), times = 2)
+        propertyRepository.upsert(HEATING_ENABLED_KEY, "true")
+        val livingRoom = anArea()
+        areasRepository.save(livingRoom)
+        val assigned = randomGenerator.uuid()
+        devicesRepository.create(assigned, aSmartherData()).shouldBeRight()
+        assignActuatorToArea.execute(livingRoom.uuid, assigned).shouldBeRight()
+        devicesRepository.create(randomGenerator.uuid(), aSmartherData()).shouldBeRight()
+
+        // When
+        val responseBody = given()
+            .authenticated()
+            .contentType(ContentType.JSON)
+            .body("""{ "enabled": false }""")
+            .`when`()
+            .put("/heating/enabled")
+            .then()
+            .statusCode(200)
+            .extract().body().asString()
+
+        // Then
+        withClue("the response should report no failed heater") {
+            responseBody shouldEqualJson """{ "enabled": false }"""
+        }
+        withClue("each Smarther should receive one OFF: the room setpoint at its minimum of 7") {
+            runBlocking { netatmoClientAsserter.setPointTemperaturesSent() } shouldBe
+                listOf(BigDecimal("7"), BigDecimal("7"))
+        }
     }
 
     // /// setHeatingStrategy ///////////////////////////////////////////////////////////////////////////////////////////
@@ -132,6 +187,9 @@ class HeatingIntegrationTest(
             reader.close()
         }
     }
+
+    private fun aSmartherData() =
+        anActuatorProviderData(provider = Provider.NETATMO, model = DeviceModel("netatmo/Smarther"))
 
     private fun getHome(): JsonPath = given()
         .authenticated()

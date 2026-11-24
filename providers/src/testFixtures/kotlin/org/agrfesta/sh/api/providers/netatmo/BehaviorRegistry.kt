@@ -89,6 +89,12 @@ class BehaviorRegistry {
         }
     }
 
+    /** The recorded requests with [method] and [path], in the order they were sent. */
+    fun recordedRequests(method: HttpMethod, path: String): List<HttpRequestData> =
+        synchronized(recordedRequests) {
+            recordedRequests.filter { it.method == method && it.url.encodedPath == path }
+        }
+
     fun clear() {
         behaviors.clear()
         synchronized(recordedRequests) { recordedRequests.clear() }

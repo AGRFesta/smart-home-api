@@ -7,10 +7,8 @@ import org.agrfesta.sh.api.core.application.ports.inbounds.heating.EvaluateHeati
 import org.agrfesta.sh.api.core.application.ports.outbounds.TimeProvider
 import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasWithDevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DeviceDriver
-import org.agrfesta.sh.api.core.application.ports.outbounds.devices.DevicesRepository
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.FailureByException
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.Heater
-import org.agrfesta.sh.api.core.application.ports.outbounds.devices.ProviderDevicesFactory
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.Sensor
 import org.agrfesta.sh.api.core.application.ports.outbounds.devices.SensorReadingsFailure
 import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
@@ -20,10 +18,8 @@ import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
 import org.agrfesta.sh.api.core.domain.devices.SensorReadings
 import org.agrfesta.sh.api.core.domain.devices.averageTemperature
-import org.agrfesta.sh.api.core.domain.failures.ActuatorFailureByException
 import org.agrfesta.sh.api.core.domain.failures.ActuatorOperationFailure
 import org.agrfesta.sh.api.core.domain.failures.AreasUnavailable
-import org.agrfesta.sh.api.core.domain.failures.DevicesUnavailable
 import org.agrfesta.sh.api.core.domain.failures.EvaluateHeatingStateFailure
 import org.agrfesta.sh.api.core.domain.failures.HeatingFlagUnavailable
 import org.agrfesta.sh.api.core.domain.heating.ActuationOutcome
@@ -40,17 +36,16 @@ import java.util.UUID
 @Suppress("LongParameterList")
 @Service
 class EvaluateHeatingStateService(
-    private val devicesRepository: DevicesRepository,
-    providerDevicesFactories: Collection<ProviderDevicesFactory>,
+    private val registeredDeviceDrivers: RegisteredDeviceDrivers,
     private val areasWithDevicesRepository: AreasWithDevicesRepository,
     private val temperatureSettingsRepository: TemperatureSettingsRepository,
     private val strategySelector: HeatingStrategySelector,
     private val propertyRepository: PropertyRepository,
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    private val heatingActuationLock: HeatingActuationLock
 ) : EvaluateHeatingStateUseCase {
 
     private val logger by LoggerDelegate()
-    private val mappedDevicesFactories = providerDevicesFactories.associateBy { it.provider }
 
     companion object {
         const val HEATING_ENABLED_KEY = "heating.enabled"
@@ -66,25 +61,14 @@ class EvaluateHeatingStateService(
         val heaters: Collection<Heater>
     )
 
-    override fun execute(): Either<EvaluateHeatingStateFailure, HeatingEvaluationReport> = either {
-        if (isEnabled().bind()) evaluateHeaters().bind() else HeatingEvaluationReport.Skipped
-    }
+    override fun execute(): Either<EvaluateHeatingStateFailure, HeatingEvaluationReport> =
+        heatingActuationLock.withLock {
+            either { if (isEnabled().bind()) evaluateHeaters().bind() else HeatingEvaluationReport.Skipped }
+        }
 
     /** Commands every registered heater: by the strategy decision over its heatable areas, or OFF without any. */
     private fun evaluateHeaters(): Either<EvaluateHeatingStateFailure, HeatingEvaluationReport> = either {
-        val deviceRecords = devicesRepository.getAll().mapLeft { DevicesUnavailable }.bind()
-        val devicesRegistry = deviceRecords.mapNotNull { record ->
-            val factory = mappedDevicesFactories[record.provider]
-            if (factory == null) {
-                logger.error(
-                    "No ProviderDevicesFactory registered for provider '${record.provider}', " +
-                        "skipping device '${record.uuid}'"
-                )
-                null
-            } else {
-                factory.createDevice(record)
-            }
-        }.associateBy { it.uuid }
+        val devicesRegistry = registeredDeviceDrivers.load().bind()
         val areaDtos = areasWithDevicesRepository.getAllAreasWithDevices().mapLeft { AreasUnavailable }.bind()
         val decide = strategySelector.select()
         val currentTime = timeProvider.currentLocalTime()
@@ -94,7 +78,11 @@ class EvaluateHeatingStateService(
         val heatersWithoutAreas = devicesRegistry.values.filterIsInstance<Heater>() - areasByHeater.keys
         val offOutcomes = heatersWithoutAreas.map { heater ->
             logger.info("Heater '${heater.uuid}' has no heatable area: turning it OFF")
-            HeaterActionOutcome(heater.uuid, HeaterCommand.OFF, callHeater { heater.off() }.toActuationOutcome())
+            HeaterActionOutcome(
+                heater.uuid,
+                HeaterCommand.OFF,
+                callHeater(logger) { heater.off() }.toActuationOutcome()
+            )
         }
         val decidedOutcomes = areasByHeater.map { (heater, areas) ->
             heater.commandByDecision(areas, decide, currentTime)
@@ -107,7 +95,7 @@ class EvaluateHeatingStateService(
         decide: HeatingDecider,
         currentTime: LocalTime
     ): HeaterActionOutcome {
-        val heaterStatus = callHeater { getActuatorStatus() }.fold(
+        val heaterStatus = callHeater(logger) { getActuatorStatus() }.fold(
             ifLeft = {
                 logger.warn("Unable to fetch heater status for heater '$uuid', defaulting to UNDEFINED: $it")
                 ActuatorStatus.UNDEFINED
@@ -125,24 +113,12 @@ class EvaluateHeatingStateService(
         val command = decide(snapshots)
         logger.info("Heating decision for heater '$uuid': $command (snapshots: $snapshots)")
         val outcome = when (command) {
-            HeaterCommand.ON -> callHeater { on() }.toActuationOutcome()
-            HeaterCommand.OFF -> callHeater { off() }.toActuationOutcome()
+            HeaterCommand.ON -> callHeater(logger) { on() }.toActuationOutcome()
+            HeaterCommand.OFF -> callHeater(logger) { off() }.toActuationOutcome()
             HeaterCommand.NONE -> ActuationOutcome.NotNeeded
         }
         return HeaterActionOutcome(uuid, command, outcome)
     }
-
-    /** Runs a heater operation; an exception from the driver becomes a failure, so it cannot stop the evaluation. */
-    @Suppress("TooGenericExceptionCaught")
-    private fun <T> callHeater(
-        operation: () -> Either<ActuatorOperationFailure, T>
-    ): Either<ActuatorOperationFailure, T> =
-        try {
-            operation()
-        } catch (e: Exception) {
-            logger.error("Heater driver threw instead of returning a failure", e)
-            ActuatorFailureByException(e).left()
-        }
 
     private fun Either<ActuatorOperationFailure, Unit>.toActuationOutcome(): ActuationOutcome = fold(
         ifLeft = { ActuationOutcome.Failed(it) },

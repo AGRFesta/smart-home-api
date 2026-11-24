@@ -223,16 +223,17 @@ class NetatmoClientAsserter(
         registry.verifyRequest(Get, "/api/homestatus", times = 0)
     }
 
-    fun givenSetStatusResponse(response: JsonNode) {
+    /** Netatmo answers [response] to the next [times] `/api/setstate` requests. */
+    fun givenSetStatusResponse(response: JsonNode, times: Int = 1) {
         registry.given(
             matcher = { req -> req.method == Post && req.url.encodedPath == "/api/setstate" },
-            responses = arrayOf(
+            responses = Array(times) {
                 ResponseSpec(
                     content = response.toString(),
                     status = OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json")
                 )
-            )
+            }
         )
     }
     fun givenSetStatusFailure(
@@ -312,6 +313,12 @@ class NetatmoClientAsserter(
     suspend fun verifyNoSetStatusRequest() {
         registry.verifyRequest(Post, "/api/setstate", times = 0)
     }
+    /** The room setpoint of every `/api/setstate` request, in the order they were sent, without trailing zeros. */
+    suspend fun setPointTemperaturesSent(): List<BigDecimal> =
+        registry.recordedRequests(Post, "/api/setstate").map { request ->
+            mapper.readTree(request.getBodyAsString())
+                .at("/home/rooms/0/therm_setpoint_temperature").decimalValue().stripTrailingZeros()
+        }
 
 
     private fun parseFormBody(body: String): Map<String, String> {

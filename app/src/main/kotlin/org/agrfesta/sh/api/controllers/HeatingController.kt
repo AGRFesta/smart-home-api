@@ -1,10 +1,12 @@
 package org.agrfesta.sh.api.controllers
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.agrfesta.sh.api.core.application.ports.inbounds.heating.SetHeatingEnabledUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.heating.SetHeatingStrategyUseCase
+import org.agrfesta.sh.api.core.domain.failures.DevicesUnavailable
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy
 import org.springframework.http.MediaType
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 @RestController
 @RequestMapping("/heating")
@@ -39,9 +42,14 @@ class HeatingController(
                 when (failure) {
                     PropertyRepositoryError -> internalServerError()
                         .body(MessageResponse("Unable to save the heating.enabled flag"))
+                    DevicesUnavailable -> internalServerError().body(
+                        MessageResponse("Heating disabled, but the heaters were not turned off: repeat the request")
+                    )
                 }
             },
-            ifRight = { ok(HeatingEnabledResponse(enabled = enabled)) }
+            ifRight = { report ->
+                ok(HeatingEnabledResponse(enabled = enabled, failedHeaters = report.failedHeaters.toList()))
+            }
         )
     }
 
@@ -83,6 +91,10 @@ class HeatingController(
     }
 }
 
-data class HeatingEnabledResponse(val enabled: Boolean)
+data class HeatingEnabledResponse(
+    val enabled: Boolean,
+    @field:JsonInclude(JsonInclude.Include.NON_EMPTY)
+    val failedHeaters: List<UUID> = emptyList()
+)
 
 data class HeatingStrategyResponse(val strategy: SharedHeatingStrategy)
