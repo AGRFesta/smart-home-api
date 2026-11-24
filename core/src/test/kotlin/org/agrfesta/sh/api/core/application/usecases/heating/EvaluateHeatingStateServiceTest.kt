@@ -72,13 +72,13 @@ class EvaluateHeatingStateServiceTest {
     private val decide: HeatingDecider = mockk()
 
     private val sut = EvaluateHeatingStateService(
-        devicesRepository,
-        listOf(factory),
+        RegisteredDeviceDrivers(devicesRepository, listOf(factory)),
         areasWithDevicesRepository,
         temperatureSettingsRepository,
         strategySelector,
         propertyRepository,
-        timeProvider
+        timeProvider,
+        HeatingActuationLock()
     )
 
     init {
@@ -810,13 +810,13 @@ class EvaluateHeatingStateServiceTest {
 
     private fun sutWithRealSelector(default: SharedHeatingStrategy = ECONOMY) =
         EvaluateHeatingStateService(
-            devicesRepository,
-            listOf(factory),
+            RegisteredDeviceDrivers(devicesRepository, listOf(factory)),
             areasWithDevicesRepository,
             temperatureSettingsRepository,
             HeatingStrategySelector(default, Percentage.of("0.5"), propertyRepository),
             propertyRepository,
-            timeProvider
+            timeProvider,
+            HeatingActuationLock()
         )
 
     /**

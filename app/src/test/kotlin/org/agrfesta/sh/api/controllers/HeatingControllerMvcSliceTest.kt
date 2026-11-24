@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
+import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
@@ -11,7 +12,9 @@ import io.mockk.every
 import io.mockk.verify
 import org.agrfesta.sh.api.core.application.ports.inbounds.heating.SetHeatingEnabledUseCase
 import org.agrfesta.sh.api.core.application.ports.inbounds.heating.SetHeatingStrategyUseCase
+import org.agrfesta.sh.api.core.domain.failures.DevicesUnavailable
 import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
+import org.agrfesta.sh.api.core.domain.heating.SetHeatingEnabledReport
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.COMFORT
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.ECONOMY
 import org.agrfesta.sh.api.security.SecurityConfig
@@ -27,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.util.UUID
 
 @WebMvcTest(HeatingController::class)
 @Import(SecurityConfig::class)
@@ -48,6 +52,8 @@ class HeatingControllerMvcSliceTest(
 
     private val authTestSupport = AuthTestSupport(mockMvc, objectMapper)
 
+    private val noFailedHeaters = SetHeatingEnabledReport(failedHeaters = emptySet())
+
     @TestFactory fun `setHeatingEnabled() auth tests`() = authTestSupport.dynamicTestsBy {
         put("/heating/enabled")
             .contentType(MediaType.APPLICATION_JSON)
@@ -56,7 +62,7 @@ class HeatingControllerMvcSliceTest(
 
     @Test fun `setHeatingEnabled() ignores a field the endpoint does not declare`() {
         // Given
-        every { setHeatingEnabledUseCase.execute(true) } returns Unit.right()
+        every { setHeatingEnabledUseCase.execute(true) } returns noFailedHeaters.right()
 
         // When
         val result = putEnabled("""{ "enabled": true, "foo": 1 }""")
@@ -67,7 +73,7 @@ class HeatingControllerMvcSliceTest(
 
     @Test fun `setHeatingEnabled() returns 200 with enabled true and enables heating`() {
         // Given
-        every { setHeatingEnabledUseCase.execute(true) } returns Unit.right()
+        every { setHeatingEnabledUseCase.execute(true) } returns noFailedHeaters.right()
 
         // When
         val responseBody = putEnabled("""{ "enabled": true }""")
@@ -83,7 +89,7 @@ class HeatingControllerMvcSliceTest(
 
     @Test fun `setHeatingEnabled() returns 200 with enabled false and disables heating`() {
         // Given
-        every { setHeatingEnabledUseCase.execute(false) } returns Unit.right()
+        every { setHeatingEnabledUseCase.execute(false) } returns noFailedHeaters.right()
 
         // When
         val responseBody = putEnabled("""{ "enabled": false }""")
@@ -94,6 +100,39 @@ class HeatingControllerMvcSliceTest(
         withClue("the response should echo the saved flag") {
             objectMapper.readValue(responseBody, HeatingEnabledResponse::class.java) shouldBe
                 HeatingEnabledResponse(enabled = false)
+        }
+    }
+
+    @Test fun `setHeatingEnabled() returns 200 with the heaters whose OFF failed`() {
+        // Given
+        val failedHeater = UUID.randomUUID()
+        every { setHeatingEnabledUseCase.execute(false) } returns
+            SetHeatingEnabledReport(failedHeaters = setOf(failedHeater)).right()
+
+        // When
+        val responseBody = putEnabled("""{ "enabled": false }""")
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        // Then
+        withClue("the response should list the heaters that did not turn off") {
+            responseBody shouldEqualJson """{ "enabled": false, "failedHeaters": ["$failedHeater"] }"""
+        }
+    }
+
+    @Test fun `setHeatingEnabled() returns 200 without failedHeaters when every heater turned off`() {
+        // Given
+        every { setHeatingEnabledUseCase.execute(false) } returns
+            SetHeatingEnabledReport(failedHeaters = emptySet()).right()
+
+        // When
+        val responseBody = putEnabled("""{ "enabled": false }""")
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        // Then
+        withClue("failedHeaters should be absent when no heater failed") {
+            responseBody shouldEqualJson """{ "enabled": false }"""
         }
     }
 
@@ -110,6 +149,22 @@ class HeatingControllerMvcSliceTest(
         withClue("the response should explain that the flag was not saved") {
             objectMapper.readValue(responseBody, MessageResponse::class.java) shouldBe
                 MessageResponse("Unable to save the heating.enabled flag")
+        }
+    }
+
+    @Test fun `setHeatingEnabled() returns 500 when heating is disabled but the heaters cannot be turned off`() {
+        // Given
+        every { setHeatingEnabledUseCase.execute(false) } returns DevicesUnavailable.left()
+
+        // When
+        val responseBody = putEnabled("""{ "enabled": false }""")
+            .andExpect(status().isInternalServerError)
+            .andReturn().response.contentAsString
+
+        // Then
+        withClue("the response should say that heating is disabled and the request should be repeated") {
+            objectMapper.readValue(responseBody, MessageResponse::class.java) shouldBe
+                MessageResponse("Heating disabled, but the heaters were not turned off: repeat the request")
         }
     }
 
