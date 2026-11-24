@@ -20,8 +20,8 @@ clients where a persistent connection is not suitable (widgets, Wear OS, one-off
  (every minute) ───► FetchSensorReadingsService ──onRight──┐                             │
                          │                                  │                             │
  config change           │                                  ▼                             │
- (PUT heating/           │                       HomeStateRefreshPublisher  (outbound port)
-  property) ───► Upsert / Replace / Delete ──onRight──►     │                             │
+ (PUT /heating/…)        │                       HomeStateRefreshPublisher  (outbound port)
+            ───► Set / Replace / Delete ──onRight──►        │                             │
                          │   *Service                       │                             │
                          └──────────────────────────────────┼─────────────────────────────┘
                                                             │ publish()
@@ -50,7 +50,7 @@ On connection, `HomeController.getHomeStream()` calls `HomeStreamBroadcaster.reg
 |---|---|---|
 | Device polling cycle | `FetchSensorReadingsService` (on a successful `Right`) | Inherited from `DevicesDataFetchScheduler` (every minute) |
 | Heating target / schedule change | `ReplaceHeatingScheduleService`, `DeleteHeatingScheduleService` | Immediately on successful save |
-| Shared strategy / heating-enabled change | `SetHeatingStrategyService`, `SetHeatingEnabledService`, `UpsertPropertyService`, `UpsertPropertyBatchService` | Immediately on successful upsert |
+| Shared strategy / heating-enabled change | `SetHeatingStrategyService`, `SetHeatingEnabledService` | Immediately on successful upsert |
 
 A trigger only fires on the **success** path of the originating operation. If a polling cycle fails, no event is
 published and clients retain their last received state.

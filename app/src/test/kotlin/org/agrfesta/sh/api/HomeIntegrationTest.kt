@@ -24,7 +24,6 @@ import org.agrfesta.sh.api.domain.anAlert
 import org.agrfesta.sh.api.domain.anArea
 import org.agrfesta.sh.api.persistence.jdbc.repositories.PropertyJdbcRepository
 import org.agrfesta.test.mothers.aRandomThermoHygroData
-import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import java.net.URI
 import java.net.http.HttpClient
@@ -130,6 +129,7 @@ class HomeIntegrationTest(
     // /// getHomeStream ////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test fun `getHomeStream() sends an initial event and pushes a new one after a configuration change`() {
+        propertyRepository.upsert(HEATING_ENABLED_KEY, "false")
         val dataEvents = LinkedBlockingQueue<String>()
         val client = HttpClient.newHttpClient()
         val streamRequest = HttpRequest.newBuilder()
@@ -156,13 +156,13 @@ class HomeIntegrationTest(
                 dataEvents.poll(5, SECONDS).shouldNotBeNull() shouldContain "globalState"
             }
 
-            // Configuration change → must trigger an immediate push
+            // The flag changes from false to true: a change of configuration must trigger an immediate push
             given()
                 .authenticated()
                 .contentType(ContentType.JSON)
-                .body(mapOf("value" to "true"))
+                .body("""{ "enabled": true }""")
                 .`when`()
-                .put("/properties/${aRandomUniqueString()}")
+                .put("/heating/enabled")
                 .then()
                 .statusCode(200)
 

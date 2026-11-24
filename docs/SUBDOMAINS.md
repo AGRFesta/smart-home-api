@@ -136,7 +136,7 @@ They deserve no rich modeling — and correctly have none:
 | Subdomain | Location | Type |
 |---|---|---|
 | Authentication (API key SHA-256) | `app/security` | Generic |
-| Settings / Properties (key-value) | `PropertyRepository`, `UpsertProperty*` use cases | Generic |
+| Settings / Properties (key-value) | `PropertyRepository` | Generic |
 | Caching | Redis adapters in `:persistence` | Generic (purely technical) |
 
 The **`/home` dashboard + SSE stream** is not counted as a subdomain: it is a read-model / BFF

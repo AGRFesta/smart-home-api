@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Turn every registered heater off when `PUT /heating/enabled` disables heating, after any heating evaluation in progress; the response lists the heaters whose OFF failed in `failedHeaters`. (#263)
 
+### Removed
+- Remove `GET /properties/{key}`, `PUT /properties/{key}` and `POST /properties/batch`: they exposed the provider refresh tokens to any API key. `PUT /heating/enabled` and `PUT /heating/strategy` replace them for the heating settings. (#265)
+
 ### Fixed
 - Fix `GET /home` reporting `globalState.strategy` as `null` when the saved strategy name has surrounding spaces; it now reads the name the same way the heating evaluation does. (#264)
 - Fix heaters staying on while heating is enabled: every evaluation commands every registered heater, turns OFF a heater with no heatable area, and commands each heater of an area with several heaters instead of only the first. (#262)
