@@ -1,0 +1,6 @@
+# Every text file is LF in the index and in the working tree, whatever core.autocrlf says.
+# Windows batch scripts are the exception: cmd.exe needs CRLF.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.jar binary
