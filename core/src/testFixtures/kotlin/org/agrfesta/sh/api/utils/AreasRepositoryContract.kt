@@ -120,6 +120,19 @@ abstract class AreasRepositoryContract {
             .shouldBeInstanceOf<AreaNameConflict>()
     }
 
+    @Test
+    fun `save() Persists area whose name differs from an existing one only by case`() {
+        val first = anArea(name = "living-${aRandomUniqueString()}").also { sut.save(it).shouldBeRight() }
+        val area = anArea(name = first.name.uppercase())
+
+        sut.save(area).shouldBeRight()
+
+        withClue("both areas should be found, each by its own name") {
+            sut.findAreaByName(first.name).shouldBeRight() shouldBe first
+            sut.findAreaByName(area.name).shouldBeRight() shouldBe area
+        }
+    }
+
     // getAll()
 
     @Test
