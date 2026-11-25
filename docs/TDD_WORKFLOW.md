@@ -34,18 +34,60 @@ The project has three distinct test layers. Use the right one for the right scop
 
 | Level | Annotation / Base class | Scope | When to use |
 |---|---|---|---|
-| **Unit** | plain JUnit5 + MockK | Single class in isolation | Domain logic, value objects, pure functions |
+| **Unit** | plain JUnit5 + in-memory fakes of the outbound ports | Single class in isolation | Domain logic, value objects, pure functions |
 | **MVC Slice** | `@WebMvcTest` + `@Import(SecurityConfig::class)` | Controller + Spring Security only | HTTP mapping, request validation, auth, error responses |
 | **Persistence Slice** | extends `AbstractDaoJdbcImplTest` (`@JdbcTest`) | JDBC layer + real Postgres via Testcontainers | Outbound adapter (DAO) behaviour, SQL queries, error mapping |
 | **Integration** | extends `AbstractIntegrationTest` | Full Spring context + real Postgres + real Redis | Verify wiring between all components. One test per flow covering the happy path. |
 
 ### Test Frameworks & Tools
 - **Assertions:** [Kotest](https://kotest.io/) — `shouldBe`, `withClue { }`, `shouldBeRight`, `shouldBeLeft`.
-- **Mocking:** [MockK](https://mockk.io/) for plain unit tests; [SpringMockK](https://github.com/Ninja-Squad/springmockk) (`@MockkBean`, `@SpykBean`) for slice and integration tests.
+- **Test doubles in unit tests:** an in-memory fake in `core/src/testFixtures` replaces an outbound
+  port, as the rule "State over interactions" above prescribes. [MockK](https://mockk.io/) replaces
+  a collaborator only where that rule admits interaction verification, and stubs a read-only port
+  with one method, such as `TimeProvider` or `RandomGenerator`.
+- **Test doubles in slice and integration tests:** [SpringMockK](https://github.com/Ninja-Squad/springmockk) (`@MockkBean`, `@SpykBean`).
 - **HTTP testing (integration):** [RestAssured](https://rest-assured.io/).
 - **HTTP testing (slice):** Spring `MockMvc`.
 - **Infrastructure:** [Testcontainers](https://testcontainers.com/).
 - **Property-based testing:** [Kotest Property](https://kotest.io/docs/proptest/property-based-testing.html) — `checkAll`, `Arb`. Annotate the class/method with `@PropertyBasedTest`, use the shared `pbtConfig` (fixed seed, reproducible) and the domain `Arb`s in `core` test fixtures (`Arb.percentage()`, `Arb.temperature()`).
+
+### Contract tests of a fake
+
+A fake replaces an adapter in the unit tests of the core. A contract test checks that the fake
+returns the same outcomes as the adapter. It is an abstract test class that describes the outcomes of
+one port through the methods of that port only, and two subclasses run it: one on the fake, one on
+the adapter. When a case passes on one side and fails on the other, the build fails.
+
+- **Where it lives:** the abstract class `<Port>Contract` sits in `core/src/testFixtures`, next to the
+  fake. Its subclasses build the implementation under test.
+- **How it runs on the fake:** a class `Fake<Port>ContractTest` in `core/src/test` extends the
+  contract and builds a new fake.
+- **How it runs on the adapter:** an inner class `@Nested inner class Contract` inside the adapter test
+  extends the contract and returns the adapter. The inner class inherits the Spring context of the
+  outer class. ❗️ The contract is an abstract class, never a JUnit interface with default `@Test`
+  methods: without `-Xjvm-default=all`, JUnit does not see the Kotlin default methods, the contract
+  runs zero tests, and the build stays green.
+- **The state is prepared through the port only**, never with a `given…` method of the fake nor with
+  the JDBC repository inside the adapter: the same case must run on both sides.
+- **An input from the environment is controlled through an abstract method of the contract.** Such an
+  input is a value that the adapter reads from another port, like the current instant from
+  `TimeProvider`. The contract declares an abstract method, for example `givenNow(instant)`, and each
+  subclass implements it on its side: the adapter test stubs the `@MockkBean` that
+  `AbstractJdbcAdapterTest` declares, the fake test changes
+  the dependency that the fake receives in its constructor. The fake receives the same port that the
+  adapter reads, and has no `given…` method for the environment.
+- **The contract covers the domain outcomes:** found, missing, conflict, round trip. The infrastructure
+  failures stay out of it, because each side simulates them differently: the fake with
+  `given…Fails()`, the adapter with a `@SpykBean` that throws a `DataAccessException`. They are tested
+  in the adapter test and in the tests of the fake.
+- **A case is written once.** An adapter test that verifies a domain outcome moves to the contract; it
+  is not copied.
+- **A new case of the contract runs on the adapter first.** When the adapter does not satisfy it, the
+  case reveals a production bug, which becomes its own `bug` issue.
+- **The fake covers only the cases that the tests use.** A later test extends it when it needs more.
+
+A contract test does not see an error that the adapter makes symmetrically, such as a field written
+to and read from the wrong column. Only an adapter test that reads the row with SQL sees it.
 
 ### Property-Based Tests (PBT): when and how
 
