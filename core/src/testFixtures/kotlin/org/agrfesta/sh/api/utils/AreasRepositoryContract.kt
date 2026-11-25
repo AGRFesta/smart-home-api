@@ -166,6 +166,21 @@ abstract class AreasRepositoryContract {
     }
 
     @Test
+    fun `update() Updates area that keeps its own name`() {
+        val area = anArea(name = aRandomUniqueString(), isIndoor = true).also { sut.save(it).shouldBeRight() }
+        val updated = area.copy(isIndoor = false)
+
+        val result = sut.update(updated)
+
+        withClue("update keeping the area's own name should not be a name conflict") {
+            result.shouldBeRight() shouldBe updated
+        }
+        withClue("stored area should reflect the update") {
+            sut.getAreaById(area.uuid).shouldBeRight() shouldBe updated
+        }
+    }
+
+    @Test
     fun `update() Returns AreaNotFound when area does not exist`() {
         val missingAreaId = UUID.randomUUID()
 
