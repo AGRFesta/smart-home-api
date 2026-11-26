@@ -4,6 +4,7 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.assertions.withClue
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -144,12 +145,12 @@ abstract class AreasRepositoryContract {
 
     @Test
     fun `getAll() Returns all persisted areas`() {
-        sut.save(anArea(name = aRandomUniqueString())).shouldBeRight()
-        sut.save(anArea(name = aRandomUniqueString())).shouldBeRight()
+        val first = anArea(name = aRandomUniqueString()).also { sut.save(it).shouldBeRight() }
+        val second = anArea(name = aRandomUniqueString()).also { sut.save(it).shouldBeRight() }
 
         sut.getAll()
             .shouldBeRight()
-            .shouldHaveSize(2)
+            .shouldContainExactlyInAnyOrder(first, second)
     }
 
     // update()
