@@ -1,29 +1,22 @@
 package org.agrfesta.sh.api.core.application.usecases.heating
 
-import arrow.core.left
-import arrow.core.right
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.mockk
-import org.agrfesta.sh.api.core.application.ports.outbounds.settings.PropertyRepository
 import org.agrfesta.sh.api.core.application.usecases.heating.HeatingStrategySelector.Companion.HEATING_STRATEGY_KEY
 import org.agrfesta.sh.api.core.domain.commons.Percentage
-import org.agrfesta.sh.api.core.domain.commons.PropertyEntry
 import org.agrfesta.sh.api.core.domain.commons.Temperature
 import org.agrfesta.sh.api.core.domain.devices.ActuatorStatus
-import org.agrfesta.sh.api.core.domain.failures.PropertyNotFound
-import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
 import org.agrfesta.sh.api.core.domain.heating.HeatableAreaSnapshot
 import org.agrfesta.sh.api.core.domain.heating.HeaterCommand
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.COMFORT
 import org.agrfesta.sh.api.core.domain.heating.SharedHeatingStrategy.ECONOMY
+import org.agrfesta.sh.api.utils.FakePropertyRepository
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class HeatingStrategySelectorTest {
-    private val propertyRepository: PropertyRepository = mockk()
+    private val propertyRepository = FakePropertyRepository()
 
     private val sut = HeatingStrategySelector(
         defaultStrategy = ECONOMY,
@@ -44,7 +37,7 @@ class HeatingStrategySelectorTest {
     @Test
     fun `select() returns the comfort decision when the configured strategy is COMFORT`() {
         // Given
-        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(COMFORT.name).right()
+        propertyRepository.givenProperty(HEATING_STRATEGY_KEY, COMFORT.name)
 
         // When
         val decide = sut.select()
@@ -58,7 +51,7 @@ class HeatingStrategySelectorTest {
     @Test
     fun `select() returns the economy decision when the configured strategy is ECONOMY`() {
         // Given
-        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry(ECONOMY.name).right()
+        propertyRepository.givenProperty(HEATING_STRATEGY_KEY, ECONOMY.name)
 
         // When
         val decide = sut.select()
@@ -72,9 +65,7 @@ class HeatingStrategySelectorTest {
     @Test
     fun `select() resolves the configured strategy ignoring case`() {
         // Given
-        every {
-            propertyRepository.getEntry(HEATING_STRATEGY_KEY)
-        } returns PropertyEntry(COMFORT.name.lowercase()).right()
+        propertyRepository.givenProperty(HEATING_STRATEGY_KEY, COMFORT.name.lowercase())
 
         // When
         val decide = sut.select()
@@ -88,7 +79,7 @@ class HeatingStrategySelectorTest {
     @Test
     fun `select() resolves the configured strategy ignoring surrounding whitespace`() {
         // Given
-        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyEntry("  comfort  ").right()
+        propertyRepository.givenProperty(HEATING_STRATEGY_KEY, "  comfort  ")
 
         // When
         val decide = sut.select()
@@ -102,9 +93,7 @@ class HeatingStrategySelectorTest {
     @Test
     fun `select() falls back to the default strategy when the configured value is invalid`() {
         // Given — default is ECONOMY
-        every {
-            propertyRepository.getEntry(HEATING_STRATEGY_KEY)
-        } returns PropertyEntry("not-a-strategy").right()
+        propertyRepository.givenProperty(HEATING_STRATEGY_KEY, "not-a-strategy")
 
         // When / Then
         val decide = shouldNotThrowAny { sut.select() } // must fall back, not blow up on an unknown name
@@ -115,8 +104,7 @@ class HeatingStrategySelectorTest {
 
     @Test
     fun `select() falls back to the default strategy when the entry is missing`() {
-        // Given — default is ECONOMY
-        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyNotFound.left()
+        // Given — default is ECONOMY, and no HEATING_STRATEGY_KEY entry is stored
 
         // When / Then
         val decide = shouldNotThrowAny { sut.select() } // missing entry must fall back, not blow up
@@ -128,7 +116,8 @@ class HeatingStrategySelectorTest {
     @Test
     fun `select() falls back to the default strategy when the property fetch fails`() {
         // Given — default is ECONOMY
-        every { propertyRepository.getEntry(HEATING_STRATEGY_KEY) } returns PropertyRepositoryError.left()
+        propertyRepository.givenProperty(HEATING_STRATEGY_KEY, COMFORT.name)
+        propertyRepository.givenReadFails()
 
         // When / Then
         val decide = shouldNotThrowAny { sut.select() } // fetch error must fall back, not blow up
