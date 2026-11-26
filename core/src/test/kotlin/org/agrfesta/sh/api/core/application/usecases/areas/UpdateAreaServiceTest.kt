@@ -1,24 +1,21 @@
 package org.agrfesta.sh.api.core.application.usecases.areas
 
-import arrow.core.left
-import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.mockk.every
-import io.mockk.mockk
-import org.agrfesta.sh.api.core.application.ports.outbounds.areas.AreasRepository
 import org.agrfesta.sh.api.core.domain.failures.AreaNameConflict
 import org.agrfesta.sh.api.core.domain.failures.AreaNotFound
 import org.agrfesta.sh.api.core.domain.failures.AreaRepositoryError
 import org.agrfesta.sh.api.domain.anArea
+import org.agrfesta.sh.api.utils.FakeAreasRepository
 import org.agrfesta.test.mothers.aRandomUniqueString
 import org.junit.jupiter.api.Test
 import java.util.*
 
 class UpdateAreaServiceTest {
-    private val areasRepository: AreasRepository = mockk()
+    private val areasRepository = FakeAreasRepository()
 
     private val sut = UpdateAreaService(areasRepository)
 
@@ -26,23 +23,28 @@ class UpdateAreaServiceTest {
     fun `execute() Returns updated Area on success`() {
         // Given
         val existing = anArea()
+        areasRepository.givenArea(existing)
         val updatedArea = existing.copy(name = aRandomUniqueString(), isIndoor = !existing.isIndoor)
-        every { areasRepository.update(updatedArea) } returns updatedArea.right()
 
         // When
         val result = sut.execute(existing.uuid, updatedArea.name, updatedArea.isIndoor)
 
         // Then
         result.shouldBeRight() shouldBe updatedArea
+        withClue("stored area should carry the new name and isIndoor") {
+            areasRepository.storedArea(existing.uuid) shouldBe updatedArea
+        }
     }
 
     @Test
     fun `execute() Returns AreaNameConflict when new name clashes`() {
         // Given
-        every { areasRepository.update(any()) } returns AreaNameConflict.left()
+        val other = anArea()
+        val existing = anArea()
+        areasRepository.givenArea(other, existing)
 
         // When
-        val result = sut.execute(UUID.randomUUID(), aRandomUniqueString(), true)
+        val result = sut.execute(existing.uuid, other.name, true)
 
         // Then
         result.shouldBeLeft() shouldBe AreaNameConflict
@@ -52,7 +54,6 @@ class UpdateAreaServiceTest {
     fun `execute() Returns AreaNotFound when area does not exist`() {
         // Given
         val areaId = UUID.randomUUID()
-        every { areasRepository.update(any()) } returns AreaNotFound(areaId).left()
 
         // When
         val result = sut.execute(areaId, aRandomUniqueString(), true)
@@ -65,10 +66,12 @@ class UpdateAreaServiceTest {
     @Test
     fun `execute() Returns AreaRepositoryError when repository fails`() {
         // Given
-        every { areasRepository.update(any()) } returns AreaRepositoryError.left()
+        val existing = anArea()
+        areasRepository.givenArea(existing)
+        areasRepository.givenWriteFails()
 
         // When
-        val result = sut.execute(UUID.randomUUID(), aRandomUniqueString(), true)
+        val result = sut.execute(existing.uuid, aRandomUniqueString(), true)
 
         // Then
         result.shouldBeLeft().shouldBe(AreaRepositoryError)
