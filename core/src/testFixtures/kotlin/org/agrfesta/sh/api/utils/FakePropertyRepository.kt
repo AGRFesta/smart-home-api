@@ -15,10 +15,12 @@ import org.agrfesta.sh.api.core.domain.failures.PropertyRepositoryError
  * In-memory [PropertyRepository] for state-based tests (Chicago style): arrange with
  * [givenProperty], assert on [storedValue] — no interaction verification needed.
  * [givenUpsertFails] makes every later [upsert] return [PropertyRepositoryError] and store nothing.
+ * [givenReadFails] makes every later [findEntry] and [getEntry] return [PropertyRepositoryError].
  */
 class FakePropertyRepository : PropertyRepository {
     private val store = mutableMapOf<String, String>()
     private var upsertFails = false
+    private var readFails = false
 
     fun givenProperty(key: String, value: String) {
         store[key] = value
@@ -26,6 +28,10 @@ class FakePropertyRepository : PropertyRepository {
 
     fun givenUpsertFails() {
         upsertFails = true
+    }
+
+    fun givenReadFails() {
+        readFails = true
     }
 
     fun storedValue(key: String): String? = store[key]
@@ -42,8 +48,10 @@ class FakePropertyRepository : PropertyRepository {
     }
 
     override fun findEntry(key: String): Either<FindPropertyFailure, PropertyEntry?> =
-        store[key]?.let { PropertyEntry(it) }.right()
+        if (readFails) PropertyRepositoryError.left() else store[key]?.let { PropertyEntry(it) }.right()
 
-    override fun getEntry(key: String): Either<GetPropertyFailure, PropertyEntry> =
-        store[key]?.let { Either.Right(PropertyEntry(it)) } ?: Either.Left(PropertyNotFound)
+    override fun getEntry(key: String): Either<GetPropertyFailure, PropertyEntry> = when {
+        readFails -> PropertyRepositoryError.left()
+        else -> store[key]?.let { Either.Right(PropertyEntry(it)) } ?: Either.Left(PropertyNotFound)
+    }
 }

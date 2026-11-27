@@ -30,6 +30,8 @@ dependencies {
     testFixturesImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     testFixturesImplementation("org.junit.jupiter:junit-jupiter-api")
     testFixturesImplementation(libs.kotest.property)
+    testFixturesImplementation(libs.kotest.assertions.core)
+    testFixturesImplementation(libs.kotest.assertions.arrow)
 
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
