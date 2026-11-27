@@ -104,7 +104,10 @@ class HeatingStrategySelectorTest {
 
     @Test
     fun `select() falls back to the default strategy when the entry is missing`() {
-        // Given — default is ECONOMY, and no HEATING_STRATEGY_KEY entry is stored
+        // Given — default is ECONOMY
+        withClue("the repository should hold no HEATING_STRATEGY_KEY entry") {
+            propertyRepository.storedValue(HEATING_STRATEGY_KEY) shouldBe null
+        }
 
         // When / Then
         val decide = shouldNotThrowAny { sut.select() } // missing entry must fall back, not blow up
